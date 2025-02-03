@@ -339,11 +339,7 @@ class SpinMeasurements:
 
     def sigvstime_scan(self, **kwargs):
         
-<<<<<<< HEAD
         with InstrumentManager() as mgr, DataSource('sigvstime') as sigvstime_data:
-=======
-        with InstrumentManager() as mgr, DataSource(kwargs['dataset']) as sigvstime_data:
->>>>>>> 61efcdadbef20fd4fd1f2f9261e0003f84de6f01
             # run laser on continuously here from laser driver
             laser = mgr.laser
             ps = mgr.ps
@@ -366,11 +362,7 @@ class SpinMeasurements:
 
             for i in range(10000):
                 # print("Scan index ", i)
-<<<<<<< HEAD
                 sig_result = read(signal_array, ps_seq, n_runs, 10)
-=======
-                sig_result = read(signal_array, ps_seq, n_runs, 1)
->>>>>>> 61efcdadbef20fd4fd1f2f9261e0003f84de6f01
 
                 sig_result = np.mean(sig_result)
 
@@ -390,27 +382,14 @@ class SpinMeasurements:
                                 'ylabel': 'APD Voltage (V)',
                                 'datasets': {'signal': signal_sweeps}})
 
-<<<<<<< HEAD
-                self.queue_from_exp.put_nowait(['0', 0, 'in progress'])
-                
-=======
->>>>>>> 61efcdadbef20fd4fd1f2f9261e0003f84de6f01
                 # sigvstime_data.push({'idx': i,
                 #                      't': t, 
                 #                      'sig_data': PL_data})
                 
                 if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                     # the GUI has asked us nicely to exit. Save data if requested.
-<<<<<<< HEAD
-                    # print(f"is there a queue to exp? {self.queue_to_exp.get()}")
-                    self.equipment_off()
-                    self.queue_from_exp.put_nowait(['0', 0, 'stopped'])
-                    if kwargs['save'] == True:
-                        self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
-=======
                     if kwargs['save'] == True:
                         flexSave(kwargs['dataset'], kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
->>>>>>> 61efcdadbef20fd4fd1f2f9261e0003f84de6f01
                     return
             
     # def oscilloscope_awg_delay_scan(self, **kwargs):
@@ -496,22 +475,12 @@ class SpinMeasurements:
             delta = 0
             iq_phases = [delta+0, delta+90] # set IQ phase relations for lower sideband [lower I, lower Q]
                 
-<<<<<<< HEAD
-            sig_gen_freq = kwargs['center_freq'] + kwargs['half_span_sideband_freq'] # set freq to sig gen 
-
-            max_sideband_freq = 2*kwargs['half_span_sideband_freq'] # set span of ODMR sweep as max sideband modulation frequency --> 100 MHz max. for SG396 IQ bandwidth
-
-            # define parameter array that will be swept over in experiment & shuffle
-            mod_freqs = np.linspace(0, max_sideband_freq, kwargs['num_pts'])            
-            mod_freqs = np.flip(mod_freqs)         
-=======
             sig_gen_freq = kwargs['freq'] # set freq to sig gen 
 
             max_sideband_freq = kwargs['max_sideband_freq'] # set span of ODMR sweep as max sideband modulation frequency --> 100 MHz max. for SG396 IQ bandwidth
 
             # define parameter array that will be swept over in experiment & shuffle
             mod_freqs = np.linspace(0, max_sideband_freq, kwargs['num_pts'])            
->>>>>>> 61efcdadbef20fd4fd1f2f9261e0003f84de6f01
             
             np.random.shuffle(mod_freqs)
             
@@ -528,11 +497,7 @@ class SpinMeasurements:
             sig_gen.set_frequency(sig_gen_freq) # set carrier frequency
             sig_gen.set_rf_amplitude(kwargs['rf_power'])
             sig_gen.set_mod_type('QAM')
-<<<<<<< HEAD
             sig_gen.set_mod_function('IQ', 5)
-=======
-            sig_gen.set_mod_function('external')
->>>>>>> 61efcdadbef20fd4fd1f2f9261e0003f84de6f01
             sig_gen.set_mod_toggle(1)
             
             ps.probe_time = kwargs['probe'] * 1e9
@@ -578,23 +543,14 @@ class SpinMeasurements:
                     for i in range(kwargs['iters']):
                         
                         # read samples to buffer
-<<<<<<< HEAD
                         odmr_result = read(odmr_buffer[0], ps_seq, kwargs['runs'], 10) 
-=======
-                        odmr_result = read(odmr_buffer[0], ps_seq, kwargs['runs'], kwargs['timeout']) 
->>>>>>> 61efcdadbef20fd4fd1f2f9261e0003f84de6f01
                             
                         # partition buffer into signal and background datasets
                         sig = self.analog_math(odmr_result, 'Rabi', kwargs['num_pts'])[0]
                         bg = self.analog_math(odmr_result, 'Rabi', kwargs['num_pts'])[1]
                         
-<<<<<<< HEAD
                         # sig = np.abs(sig)
                         # bg = np.abs(bg)
-=======
-                        sig = np.abs(sig)
-                        bg = np.abs(bg)
->>>>>>> 61efcdadbef20fd4fd1f2f9261e0003f84de6f01
 
                         # correct the y-axis data ordering for plots
                         sig = np.array([sig[i] for i in index_order])
@@ -618,26 +574,17 @@ class SpinMeasurements:
 
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
-<<<<<<< HEAD
                             # print(f"is there a queue to exp? {self.queue_to_exp.get()}")
                             self.equipment_off()
                             self.queue_from_exp.put_nowait(['0', 0, 'stopped'])
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
-=======
-                            if kwargs['save'] == True:
-                                flexSave(kwargs['dataset'], kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
->>>>>>> 61efcdadbef20fd4fd1f2f9261e0003f84de6f01
                             return
 
                         pbar.update(1)
                         percent_completed = str(int(((i+1)/kwargs['iters'])*100))
                         time_per_iter = (pbar.last_print_t - pbar.start_t)/pbar.n
-<<<<<<< HEAD
                         self.queue_from_exp.put_nowait([percent_completed, time_per_iter, 'in progress'])
-=======
-                        self.queue_from_exp.put_nowait([percent_completed, time_per_iter])
->>>>>>> 61efcdadbef20fd4fd1f2f9261e0003f84de6f01
                 
                 # Automatically save data if action requested.
                 if kwargs['save'] == True:
@@ -863,11 +810,7 @@ class SpinMeasurements:
             sig_gen.set_frequency(sig_gen_freq) # set SG396 carrier frequency to drive NVs at selected sideband
             sig_gen.set_rf_amplitude(kwargs['rf_power'])
             sig_gen.set_mod_type('QAM')
-<<<<<<< HEAD
             sig_gen.set_mod_function('IQ', 5)
-=======
-            sig_gen.set_mod_function('external')
->>>>>>> 61efcdadbef20fd4fd1f2f9261e0003f84de6f01
             sig_gen.set_mod_toggle(1)
 
             # else:
@@ -929,11 +872,7 @@ class SpinMeasurements:
                     for i in range(kwargs['iters']):
                         
                         # read samples to buffer
-<<<<<<< HEAD
                         rabi_result = read(rabi_buffer[0], ps_seq, kwargs['runs'], 10) 
-=======
-                        rabi_result = read(rabi_buffer[0], ps_seq, kwargs['runs'], kwargs['timeout']) 
->>>>>>> 61efcdadbef20fd4fd1f2f9261e0003f84de6f01
                             
                         # partition buffer into signal and background datasets
                         sig = self.analog_math(rabi_result, 'Rabi', kwargs['num_pts'])[0]
@@ -964,7 +903,6 @@ class SpinMeasurements:
                         })
 
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
-<<<<<<< HEAD
                             # the GUI has asked us nicely to exit. Save data if requested.
                             # print(f"is there a queue to exp? {self.queue_to_exp.get()}")
                             self.equipment_off()
@@ -973,22 +911,11 @@ class SpinMeasurements:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                             return
                                 
-=======
-                            # the GUI has asked us nicely to exit
-                            if kwargs['save'] == True:
-                                flexSave(kwargs['dataset'], kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
-                            return
-                        
->>>>>>> 61efcdadbef20fd4fd1f2f9261e0003f84de6f01
                         pbar.update(1)
                         percent_completed = str(int(((i+1)/kwargs['iters'])*100))
                         
                         time_per_iter = (pbar.last_print_t - pbar.start_t)/pbar.n
-<<<<<<< HEAD
                         self.queue_from_exp.put_nowait([percent_completed, time_per_iter, 'in progress'])
-=======
-                        self.queue_from_exp.put_nowait([percent_completed, time_per_iter])
->>>>>>> 61efcdadbef20fd4fd1f2f9261e0003f84de6f01
 
                 if kwargs['save'] == True:
                     flexSave(kwargs['dataset'], kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
