@@ -20,7 +20,6 @@ from nspyre import nspyreApp
 import gui_test
 import gui_all_instruments_current
 import gui_experiments_current
-import gui_experiments
 import gui_calculations
 
 from drivers.insmgr import MyInstrumentManager
