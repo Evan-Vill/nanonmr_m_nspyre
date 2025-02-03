@@ -226,7 +226,7 @@ class SpinMeasurements:
                 params, covariance = curve_fit(self.negative_lorentzian, x_values, y_values, p0=initial_guess)
                 y_fit = self.negative_lorentzian(x_fit, *params)
                 # compute fitted value of interest (resonance for ODMR, pi pulse for Rabi, etc.)
-                fitted_value = round(x_fit[np.argmin(y_fit)],3)
+                fitted_value = round(x_fit[np.argmin(y_fit)],4)
             case 'rabi':
                 params, covariance = curve_fit(self.decaying_cosine, x_values, y_values, p0=initial_guess)
                 y_fit = self.decaying_cosine(x_fit, *params)

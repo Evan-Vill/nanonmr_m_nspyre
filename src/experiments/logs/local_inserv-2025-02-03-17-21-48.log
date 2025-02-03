@@ -2016,3 +2016,4 @@ AdaptBlockInfo(insts=((0, {}), (2, {}), (4, {'idx': 0, 'res': '$4load_global.0'}
 2025-02-03 17:30:59.249 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn17' object at 0x00000260E6617C90> disconnected.
 2025-02-03 17:30:59.249 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 52733)
 2025-02-03 17:30:59.253 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn16' object at 0x00000260E65F26D0> disconnected.
+2025-02-03 17:30:59.253 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 52720)

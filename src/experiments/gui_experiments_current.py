@@ -1029,7 +1029,7 @@ class ExpWidget(QWidget):
                 self.dig_params_widget.setEnabled(True)
 
             if queueText[2] is not None:
-                self.fit_val_label_2.setText(f"{round(queueText[2],3)}")
+                self.fit_val_label_2.setText(f"{queueText[2]}")
 
         self.updateTimer.start(self.QUEUE_CHECK_TIME)
 
