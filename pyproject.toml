@@ -1,0 +1,26 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "nspyre-template"
+version = "1.0"
+license = "MIT"
+description = "An nspyre experiment template."
+authors = [
+	"Jacob Feder <jacobsfeder@gmail.com>",
+]
+maintainers = [
+	"Jacob Feder <jacobsfeder@gmail.com>"
+]
+readme = "README.md"
+repository = "https://github.com/nspyre-org/template"
+packages = [{include = "template", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+numpy = "^1.23"
+nspyre = "^0.6"
+
+[tool.poetry.scripts]
+template = 'template.gui.app:main'
