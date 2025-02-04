@@ -245,24 +245,32 @@ class SpinMeasurements:
 
         return fitted_value, x_fit, y_fit
     
-    def fit_deer_data(self, exp, sig_data, back_data, *args):
-        # Combine all signal sweeps into a single 3D array and average
-        all_signal_data = np.stack(sig_data, axis=-1)  # Shape: (2, 10, 5)
-        averaged_sig = np.mean(all_signal_data[1, :, :], axis=1)  # Shape: (10,)
+    def fit_deer_data(self, exp, dark_sig_data, dark_back_data, echo_sig_data, echo_back_data, *args):
+        # Combine all dark signal sweeps into a single 3D array and average
+        all_dark_signal_data = np.stack(dark_sig_data, axis=-1)  # Shape: (2, 10, 5)
+        averaged_dark_sig = np.mean(all_dark_signal_data[1, :, :], axis=1)  # Shape: (10,)
 
-        # Combine all background sweeps into a single 3D array and average
-        all_background_data = np.stack(back_data, axis=-1)  # Shape: (2, 10, 5)
-        averaged_bg = np.mean(all_background_data[1, :, :], axis=1)  # Shape: (10,)
+        # Combine all dark background sweeps into a single 3D array and average
+        all_dark_background_data = np.stack(dark_back_data, axis=-1)  # Shape: (2, 10, 5)
+        averaged_dark_bg = np.mean(all_dark_background_data[1, :, :], axis=1)  # Shape: (10,)
+
+        # Combine all dark signal sweeps into a single 3D array and average
+        all_echo_signal_data = np.stack(echo_sig_data, axis=-1)  # Shape: (2, 10, 5)
+        averaged_echo_sig = np.mean(all_echo_signal_data[1, :, :], axis=1)  # Shape: (10,)
+
+        # Combine all dark background sweeps into a single 3D array and average
+        all_echo_background_data = np.stack(echo_back_data, axis=-1)  # Shape: (2, 10, 5)
+        averaged_echo_bg = np.mean(all_echo_background_data[1, :, :], axis=1)  # Shape: (10,)
 
         # Compute the microwave_times (assumed constant across sweeps)
-        x_values = all_signal_data[0, :, 0]  # Shape: (10,)
+        x_values = all_dark_signal_data[0, :, 0]  # Shape: (10,)
         x_fit = np.linspace(min(x_values), max(x_values), 1000) # finer resolution for fitting
 
         # Compute the ratio/difference of averaged signal and background for fitting
-        if exp == 'ODMR' or exp == 'Rabi':
-            y_values = averaged_sig / averaged_bg  # Shape: (10,)
-        elif exp == 'T1' or exp == 'T2':
-            y_values = averaged_bg - averaged_sig
+        deer = (averaged_dark_bg - averaged_dark_sig) / (averaged_dark_bg + averaged_dark_sig)
+        echo = (averaged_echo_bg - averaged_echo_sig) / (averaged_echo_bg + averaged_echo_sig)
+
+        y_values = deer / echo
 
         # Initial guesses for parameters: A, gamma, f, phi, C
         # initial_guess = [0.02, 0.001, 200, 0, 1]
@@ -270,24 +278,17 @@ class SpinMeasurements:
 
         # Perform curve fitting 
         match exp:
-            case 'ODMR':
+            case 'deer':
                 params, covariance = curve_fit(self.negative_lorentzian, x_values, y_values, p0=initial_guess)
                 y_fit = self.negative_lorentzian(x_fit, *params)
-            case 'Rabi':
+                fitted_value = round(x_fit[np.argmin(y_fit)],3)
+            case 'deer rabi':
                 params, covariance = curve_fit(self.decaying_cosine, x_values, y_values, p0=initial_guess)
                 y_fit = self.decaying_cosine(x_fit, *params)
-            case 'T1':
-                params, covariance = curve_fit(self.stretched_exponential, x_values, y_values, p0=initial_guess)
-                y_fit = self.stretched_exponential(x_fit, *params)
-            case 'T2':
-                params, covariance = curve_fit(self.mod_stretched_exponential, x_values, y_values, p0=initial_guess)
-                y_fit = self.mod_stretched_exponential(x_fit, *params)
-                
+                fitted_value = round(x_fit[np.argmin(y_fit)],2)
         # # Extract fitted parameters
         # A_fit, gamma_fit, f_fit, phi_fit, C_fit = params
 
-        # compute fitted value of interest (resonance for ODMR, pi pulse for Rabi, etc.)
-        fitted_value = x_fit[np.argmin(y_fit)]
         # print(f"Fitted pi pulse = {fitted_value} ns")
         return fitted_value, x_fit, y_fit
 
@@ -984,7 +985,7 @@ class SpinMeasurements:
                     for i in range(kwargs['iters']):
                         
                         rabi_result_raw = obtain(dig.acquire()) # acquire data from digitizer
-                        
+                        # print(np.shape(rabi_result_raw))
                         # average all data over each trigger/segment 
                         rabi_result=np.mean(rabi_result_raw,axis=1)
                         segments=(np.shape(rabi_result))[0]
@@ -2247,7 +2248,7 @@ class SpinMeasurements:
                             with warnings.catch_warnings():
                                 warnings.simplefilter("error", OptimizeWarning)
                                 try:
-                                    fit_value, fit_x, fit_y = self.fit_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
+                                    fit_value, fit_x, fit_y = self.fit_deer_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
                                 except (RuntimeError, OptimizeWarning) as e:
                                     _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
@@ -2273,7 +2274,7 @@ class SpinMeasurements:
                                 with warnings.catch_warnings():
                                     warnings.simplefilter("error", OptimizeWarning)
                                     try:
-                                        fit_value, fit_x, fit_y = self.fit_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
+                                        fit_value, fit_x, fit_y = self.fit_deer_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
                                     except (RuntimeError, OptimizeWarning) as e:
                                         _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
@@ -2290,7 +2291,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_x, fit_y = self.fit_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
+                            fit_value, fit_x, fit_y = self.fit_deer_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
                         except (RuntimeError, OptimizeWarning) as e:
                             _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
                 
@@ -2473,7 +2474,7 @@ class SpinMeasurements:
                             with warnings.catch_warnings():
                                 warnings.simplefilter("error", OptimizeWarning)
                                 try:
-                                    fit_value, fit_x, fit_y = self.fit_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
+                                    fit_value, fit_x, fit_y = self.fit_deer_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
                                 except (RuntimeError, OptimizeWarning) as e:
                                     _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
@@ -2500,7 +2501,7 @@ class SpinMeasurements:
                                 with warnings.catch_warnings():
                                     warnings.simplefilter("error", OptimizeWarning)
                                     try:
-                                        fit_value, fit_x, fit_y = self.fit_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
+                                        fit_value, fit_x, fit_y = self.fit_deer_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
                                     except (RuntimeError, OptimizeWarning) as e:
                                         _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
@@ -2517,7 +2518,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_x, fit_y = self.fit_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
+                            fit_value, fit_x, fit_y = self.fit_deer_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
                         except (RuntimeError, OptimizeWarning) as e:
                             _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
                 

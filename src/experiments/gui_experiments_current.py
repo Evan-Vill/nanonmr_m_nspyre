@@ -136,7 +136,7 @@ class ExpWidget(QWidget):
         self.fit_t1_defaults = [0.01, 1, 1, 0] # defaults = 0.01 amplitude, 1 ms T1, 1 stretching factor, 0 vertical offset
         self.fit_t2_defaults = [0.1, 2, 1, 1, 0.2, 0, 1, 0.2, 0] # defaults = 0.1 amplitude, 2 us T2, 1 stretching factor, 1 amp first sine wave, 0.2 MHz first sine wave, 0 phase first sine wave, 1 amp second sine wave, 0.2 MHz second sine wave, 0 phase second sine wave
         self.fit_deer_defaults = [0.1, 560, 10, 1] # defaults = 10% contrast, 560 MHz central freq, 10 MHz linewidth, 1 vertical offset
-        self.fit_deer_rabi_defaults = []
+        self.fit_deer_rabi_defaults = [0.1, 0.001, 100, 0, 1]
 
         # experiment dictionary - associates experiment function, default parameter array, dataset, laser parameters and digitizer parameters to an experiment type
         self.exp_dict = {"Signal vs Time": ["sigvstime_scan", self.sigvstime_params_defaults, self.sigvstime_mw_params_defaults, 'sigvstime', self.laser_params_defaults, self.digitizer_defaults], # ODMR MW params hidden and serves as placeholder for sig vs time experiment in GUI
@@ -1349,6 +1349,16 @@ class ExpWidget(QWidget):
                 self.fit_val_label_1.show()
                 self.fit_val_label_2.show()
                 self.live_fit_checkbox.show()
+            
+            if self.daq_b1.isChecked() == True:
+                self.dig_params_widget.setEnabled(True)
+            else:
+                self.dig_params_widget.setEnabled(False)
+            
+            if self.auto_fit_checkbox.isChecked() == True:
+                self.fit_params_widget.setEnabled(True)
+            else:
+                self.fit_params_widget.setEnabled(False)
 
             match self.experiments.currentText():
                 case 'CW ODMR' | 'Pulsed ODMR':
