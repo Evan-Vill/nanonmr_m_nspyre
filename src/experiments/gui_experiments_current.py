@@ -464,7 +464,7 @@ class ExpWidget(QWidget):
                                 'widget': SpinBox(value = defaults[7], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)}}
             case 'Signal vs Time':
                 params = {
-                'sampling_rate': {'display_text': 'Sampling Rate: ',
+                'exp_sampling_rate': {'display_text': 'Exp. Sampling Rate: ',
                         'widget': SpinBox(value = defaults[0], suffix = 'Hz', siPrefix = True, bounds = (10, 1e6), dec = True)},
                 'sigvstime_detector': {'display_text': 'Detector: ',
                                         'widget': ComboBox(items = defaults[1])}}
@@ -768,9 +768,9 @@ class ExpWidget(QWidget):
         match tag:
             case 'Signal vs Time': # not used - hidden
                 params = {
-                'sampling_rate': {'display_text': 'Sampling Rate: ',
+                'sampling_rate_0': {'display_text': 'Sampling Rate: ',
                         'widget': SpinBox(value = defaults[0], suffix = 'Hz', siPrefix = True, bounds = (10, 1e6), dec = True)},
-                'sigvstime_detector': {'display_text': 'Detector: ',
+                'sigvstime_detector_0': {'display_text': 'Detector: ',
                                         'widget': ComboBox(items = defaults[1])}}
             case 'CW ODMR':
                 params = {
@@ -1143,6 +1143,7 @@ class ExpWidget(QWidget):
         #         saved_params[10] = self.nmr_seq_opts
 
         self.exp_dict[self.experiments.currentText()][1] = saved_params
+        self.exp_dict[self.experiments.currentText()][2] = saved_mw_params
         self.exp_dict[self.experiments.currentText()][4] = saved_laser_params
         self.exp_dict[self.experiments.currentText()][5] = saved_dig_params
 

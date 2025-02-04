@@ -1,0 +1,250 @@
+2025-02-03 17:42:43.835 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:43:19.359 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001638FE08FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_current.SpinMeasurements'>, 'fun_name': 'odmr_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001639372E3D0>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x0000016396AB78D0>, 'fun_args': [], 'fun_kwargs': {'runs': 12, 'iters': 100, 'num_pts': 40, 'center_freq': 2310000000.0, 'half_span_sideband_freq': 20000000.0, 'rf_power': 0.0001, 'probe': 2.5e-05, 'laser_power': 110, 'sideband_freq': 30000000.0, 'sideband_power': 0.15, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 512, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 5.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': False, 'dataset': 'odmr', 'filename': '', 'directory': '', 'seq': 'CW ODMR', 'fit': True, 'fit_live': True, 'fit_params': [0.01, 2.0, 0.006, 1.0]}}].
+2025-02-03 17:43:29.602 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-02-03 17:43:41.076 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001638FE08FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_current.SpinMeasurements'>, 'fun_name': 'odmr_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001639372E3D0>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x0000016396AB78D0>, 'fun_args': [], 'fun_kwargs': {'runs': 12, 'iters': 100, 'num_pts': 40, 'center_freq': 2310000000.0, 'half_span_sideband_freq': 20000000.0, 'rf_power': 0.0001, 'probe': 2.5e-05, 'laser_power': 110, 'sideband_freq': 30000000.0, 'sideband_power': 0.15, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 512, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 5.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': False, 'dataset': 'odmr', 'filename': '', 'directory': '', 'seq': 'CW ODMR', 'fit': True, 'fit_live': True, 'fit_params': [0.01, 2.31, 0.006, 1.0]}}].
+2025-02-03 17:46:52.880 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001638FE08FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_current.SpinMeasurements'>, 'fun_name': 'odmr_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x0000016396AA61D0>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x000001639ACB2150>, 'fun_args': [], 'fun_kwargs': {'runs': 120, 'iters': 30, 'num_pts': 40, 'center_freq': 2310000000.0, 'half_span_sideband_freq': 20000000.0, 'rf_power': 0.0001, 'probe': 2.5e-05, 'laser_power': 110, 'sideband_freq': 30000000.0, 'sideband_power': 0.15, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 512, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 5.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': False, 'dataset': 'odmr', 'filename': '', 'directory': '', 'seq': 'CW ODMR', 'fit': True, 'fit_live': True, 'fit_params': [0.01, 2.31, 0.006, 1.0]}}].
+2025-02-03 17:47:22.643 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-02-03 17:47:22.643 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\nnmr_nspyre\src\experiments\gui_experiments_current.py", line 1403, in run
+2025-02-03 17:47:22.643 [CRITICAL] (          logging.py:  32)     fun_kwargs = dict(**self.params_widget.all_params(), **self.mw_params_widget.all_params(), 
+2025-02-03 17:47:22.643 [CRITICAL] (          logging.py:  32)                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-02-03 17:47:22.643 [CRITICAL] (          logging.py:  32) TypeError: dict() got multiple values for keyword argument 'sampling_rate'
+2025-02-03 17:49:35.610 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-02-03 17:49:35.610 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\nnmr_nspyre\src\experiments\gui_experiments_current.py", line 1403, in run
+2025-02-03 17:49:35.610 [CRITICAL] (          logging.py:  32)     fun_kwargs = dict(**self.params_widget.all_params(), **self.mw_params_widget.all_params(), 
+2025-02-03 17:49:35.610 [CRITICAL] (          logging.py:  32)                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-02-03 17:49:35.610 [CRITICAL] (          logging.py:  32) TypeError: dict() got multiple values for keyword argument 'sigvstime_detector'
+2025-02-03 17:50:47.323 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001638FE08FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_current.SpinMeasurements'>, 'fun_name': 'sigvstime_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001639AD5B2D0>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x0000016396B26910>, 'fun_args': [], 'fun_kwargs': {'exp_sampling_rate': 1000.0, 'sigvstime_detector': 'APD', 'sampling_rate_0': 1000.0, 'sigvstime_detector_0': 'APD', 'laser_power': 30, 'sideband_freq': 30000000.0, 'sideband_power': 0.45, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 512, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 5.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': False, 'dataset': 'sigvstime', 'filename': '', 'directory': '', 'seq': 'Signal vs Time', 'fit': False, 'fit_live': False, 'fit_params': [0.0]}}].
+2025-02-03 17:50:55.136 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-02-03 17:50:55.157 [   ERROR] ( flex_line_plot_3.py:1869) Data series [diff] does not exist.
+2025-02-03 17:50:55.157 [   ERROR] ( flex_line_plot_3.py:1869) Data series [diff] does not exist.
+2025-02-03 17:50:55.157 [   ERROR] ( flex_line_plot_3.py:1869) Data series [div] does not exist.
+2025-02-03 17:50:55.157 [   ERROR] ( flex_line_plot_3.py:1869) Data series [div] does not exist.
+2025-02-03 17:50:55.197 [   ERROR] ( flex_line_plot_3.py:1869) Data series [background] does not exist.
+2025-02-03 17:50:55.197 [   ERROR] ( flex_line_plot_3.py:1869) Data series [background] does not exist.
+2025-02-03 17:50:55.197 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-02-03 17:50:55.197 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-02-03 17:50:55.217 [CRITICAL] (          logging.py:  32)     raise err
+2025-02-03 17:50:55.217 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-02-03 17:50:55.217 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-02-03 17:50:55.217 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-02-03 17:50:55.217 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32) KeyError: 'diff_avg'
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32)     raise err
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32) KeyError: 'diff_latest'
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32)     raise err
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32) KeyError: 'div_avg'
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32)     raise err
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-02-03 17:50:55.220 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-02-03 17:50:55.227 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-02-03 17:50:55.227 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-02-03 17:50:55.227 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-02-03 17:50:55.229 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-02-03 17:50:55.229 [CRITICAL] (          logging.py:  32) KeyError: 'div_latest'
+2025-02-03 17:50:55.229 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-02-03 17:50:55.237 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-02-03 17:50:55.237 [CRITICAL] (          logging.py:  32)     raise err
+2025-02-03 17:50:55.237 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-02-03 17:50:55.237 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-02-03 17:50:55.237 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32) KeyError: 'sig_avg'
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32)     raise err
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32) KeyError: 'sig_latest'
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32)     raise err
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32) KeyError: 'sig_first'
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32)     raise err
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-02-03 17:50:55.247 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-02-03 17:50:55.257 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-02-03 17:50:55.257 [CRITICAL] (          logging.py:  32) KeyError: 'sig_latest_10'
+2025-02-03 17:50:55.257 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-02-03 17:50:55.257 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-02-03 17:50:55.257 [CRITICAL] (          logging.py:  32)     raise err
+2025-02-03 17:50:55.257 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-02-03 17:50:55.257 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-02-03 17:50:55.257 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-02-03 17:50:55.257 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-02-03 17:50:55.257 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-02-03 17:50:55.257 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-02-03 17:50:55.257 [CRITICAL] (          logging.py:  32) KeyError: 'bg_avg'
+2025-02-03 17:50:55.257 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-02-03 17:50:55.257 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-02-03 17:50:55.257 [CRITICAL] (          logging.py:  32)     raise err
+2025-02-03 17:50:55.257 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-02-03 17:50:55.257 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-02-03 17:50:55.257 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-02-03 17:50:55.257 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-02-03 17:50:55.257 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-02-03 17:50:55.257 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-02-03 17:50:55.257 [CRITICAL] (          logging.py:  32) KeyError: 'bg_latest'
+2025-02-03 17:51:01.842 [    INFO] (             misc.py: 208) Running process function [<bound method NanoNMRMagnetMotion.disable_all of <nnmr_magnet_motion.NanoNMRMagnetMotion object at 0x000001639371F010>>] with args: [()] kwargs: [{}].
+2025-02-03 17:51:01.842 [    INFO] (gui_all_instruments_current.py: 652) All magnet stages have been parked upon startup of magnet alignment widget.
+2025-02-03 17:51:25.536 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:25.536 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:26.407 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:26.417 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:26.417 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:26.429 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:26.447 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:26.447 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:26.447 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:26.457 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:26.487 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:26.487 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:26.518 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:26.518 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:26.528 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:26.528 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:26.538 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:26.538 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:26.548 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:26.548 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:26.559 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:26.559 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:26.569 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:26.569 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:26.579 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:26.579 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:26.589 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:26.589 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:26.600 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:26.600 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:26.610 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:26.611 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:26.630 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:26.630 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:26.641 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:26.641 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:26.661 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:26.661 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:26.682 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:26.682 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:26.702 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:26.702 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:26.752 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:26.752 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:26.773 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:26.773 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:26.783 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:26.786 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:27.079 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:27.079 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:27.099 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:27.099 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:27.305 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:27.305 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:27.326 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:27.326 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:27.336 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:27.336 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:27.356 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:27.356 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:28.867 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:28.877 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:51:28.888 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:51:28.898 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:52:11.093 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:52:11.103 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:52:11.113 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:52:11.127 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:52:30.748 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:52:31.005 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:52:41.615 [    INFO] (             misc.py: 208) Running process function [<bound method NanoNMRMagnetMotion.enable_all of <nnmr_magnet_motion.NanoNMRMagnetMotion object at 0x0000016396B34D90>>] with args: [()] kwargs: [{}].
+2025-02-03 17:52:44.975 [    INFO] (             misc.py: 208) Running process function [<bound method NanoNMRMagnetMotion.standby_all of <nnmr_magnet_motion.NanoNMRMagnetMotion object at 0x000001639BFF5310>>] with args: [()] kwargs: [{'queue': <multiprocessing.queues.Queue object at 0x000001639AD3A010>}].
+2025-02-03 17:58:49.174 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001638FE08FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_current.SpinMeasurements'>, 'fun_name': 'sigvstime_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001639AD5B2D0>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x0000016396B26910>, 'fun_args': [], 'fun_kwargs': {'exp_sampling_rate': 1000.0, 'sigvstime_detector': 'APD', 'sampling_rate_0': 1000.0, 'sigvstime_detector_0': 'APD', 'laser_power': 30, 'sideband_freq': 30000000.0, 'sideband_power': 0.45, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 512, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 5.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': False, 'dataset': 'sigvstime', 'filename': '', 'directory': '', 'seq': 'Signal vs Time', 'fit': False, 'fit_live': False, 'fit_params': [0.0]}}].
+2025-02-03 17:59:01.414 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:59:01.424 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:59:01.946 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:59:01.946 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:59:03.284 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:59:03.305 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 17:59:03.305 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 17:59:03.335 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 18:01:16.993 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 18:01:17.006 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 18:01:17.023 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 18:01:17.034 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 18:01:31.173 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001638FE08FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_current.SpinMeasurements'>, 'fun_name': 'sigvstime_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001639AD5B2D0>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x0000016396B26910>, 'fun_args': [], 'fun_kwargs': {'exp_sampling_rate': 1000.0, 'sigvstime_detector': 'APD', 'sampling_rate_0': 1000.0, 'sigvstime_detector_0': 'APD', 'laser_power': 30, 'sideband_freq': 30000000.0, 'sideband_power': 0.45, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 512, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 5.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': False, 'dataset': 'sigvstime', 'filename': '', 'directory': '', 'seq': 'Signal vs Time', 'fit': False, 'fit_live': False, 'fit_params': [0.0]}}].
+2025-02-03 18:01:39.637 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 18:01:39.655 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 18:01:39.665 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 18:01:39.688 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 18:04:03.171 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 18:04:03.191 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 18:04:03.201 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 18:04:03.211 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 18:04:34.932 [    INFO] (             misc.py: 208) Running process function [<bound method NanoNMRMagnetMotion.move_to_orientation of <nnmr_magnet_motion.NanoNMRMagnetMotion object at 0x000001639ACC12D0>>] with args: [()] kwargs: [{'stage': 'thor_azi', 'new_angle': 53.0, 'queue': <multiprocessing.queues.Queue object at 0x000001639AD3A010>, 'abs': True}].
+2025-02-03 18:04:56.093 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 18:04:56.093 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 18:04:57.024 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 18:04:57.024 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 18:04:57.934 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 18:04:57.947 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 18:04:58.753 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 18:04:58.757 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 18:04:59.430 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 18:04:59.430 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 18:05:00.660 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 18:05:00.660 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 18:05:01.274 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 18:05:01.274 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 18:05:04.973 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 18:05:07.339 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 18:05:10.965 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 18:05:13.332 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 18:05:18.413 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 18:05:18.545 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 18:05:19.190 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-02-03 18:05:19.333 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-02-03 18:05:32.040 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-02-03 18:05:58.775 [    INFO] (             misc.py: 208) Running process function [<bound method NanoNMRMagnetMotion.move_to_orientation of <nnmr_magnet_motion.NanoNMRMagnetMotion object at 0x00000163970BFA10>>] with args: [()] kwargs: [{'stage': 'thor_polar', 'new_angle': 36.0, 'queue': <multiprocessing.queues.Queue object at 0x000001639AD3A010>, 'abs': True}].
+2025-02-03 18:06:10.000 [    INFO] (             misc.py: 208) Running process function [<bound method NanoNMRMagnetMotion.move_to_orientation of <nnmr_magnet_motion.NanoNMRMagnetMotion object at 0x000001639704E210>>] with args: [()] kwargs: [{'stage': 'zaber', 'new_pos': 52.46, 'queue': <multiprocessing.queues.Queue object at 0x000001639AD3A010>, 'abs': True}].
+2025-02-03 18:06:30.535 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001638FE08FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_current.SpinMeasurements'>, 'fun_name': 'odmr_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001639AD5B2D0>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x0000016396B26910>, 'fun_args': [], 'fun_kwargs': {'runs': 12, 'iters': 100, 'num_pts': 30, 'center_freq': 2310000000.0, 'half_span_sideband_freq': 20000000.0, 'rf_power': 0.0001, 'probe': 2.5e-05, 'laser_power': 110, 'sideband_freq': 30000000.0, 'sideband_power': 0.15, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 512, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 5.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': False, 'dataset': 'odmr', 'filename': '', 'directory': '', 'seq': 'CW ODMR', 'fit': True, 'fit_live': True, 'fit_params': [0.01, 2.31, 0.006, 1.0]}}].
+2025-02-03 18:06:52.717 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001638FE08FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_current.SpinMeasurements'>, 'fun_name': 'odmr_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001639AD5B2D0>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x0000016396B26910>, 'fun_args': [], 'fun_kwargs': {'runs': 120, 'iters': 30, 'num_pts': 50, 'center_freq': 2310000000.0, 'half_span_sideband_freq': 20000000.0, 'rf_power': 0.0001, 'probe': 2.5e-05, 'laser_power': 110, 'sideband_freq': 30000000.0, 'sideband_power': 0.15, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 512, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 5.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': False, 'dataset': 'odmr', 'filename': '', 'directory': '', 'seq': 'CW ODMR', 'fit': True, 'fit_live': True, 'fit_params': [0.01, 2.31, 0.006, 1.0]}}].
+2025-02-03 18:07:35.543 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001638FE08FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_current.SpinMeasurements'>, 'fun_name': 'rabi_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001639AD5B2D0>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x0000016396B26910>, 'fun_args': [], 'fun_kwargs': {'runs': 120, 'iters': 30, 'start': 0.0, 'stop': 3e-07, 'num_pts': 100, 'freq': 2307700000.0, 'rf_power': 0.0005, 'pulse_axis': 'y', 'laser_power': 110, 'sideband_freq': 30000000.0, 'sideband_power': 0.45, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 512, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 5.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': False, 'dataset': 'rabi', 'filename': '', 'directory': '', 'seq': 'Rabi', 'fit': True, 'fit_live': True, 'fit_params': [0.02, 0.001, 200.0, 0.0, 1.0]}}].
+2025-02-03 18:07:46.024 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-02-03 18:08:15.046 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001638FE08FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_current.SpinMeasurements'>, 'fun_name': 'rabi_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001639AD5B2D0>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x0000016396B26910>, 'fun_args': [], 'fun_kwargs': {'runs': 120, 'iters': 30, 'start': 0.0, 'stop': 3e-07, 'num_pts': 100, 'freq': 2307700000.0, 'rf_power': 0.0007, 'pulse_axis': 'y', 'laser_power': 110, 'sideband_freq': 30000000.0, 'sideband_power': 0.45, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 512, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 5.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': False, 'dataset': 'rabi', 'filename': '', 'directory': '', 'seq': 'Rabi', 'fit': True, 'fit_live': True, 'fit_params': [0.02, 0.001, 200.0, 0.0, 1.0]}}].

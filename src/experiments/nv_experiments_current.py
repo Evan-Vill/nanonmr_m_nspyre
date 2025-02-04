@@ -388,7 +388,7 @@ class SpinMeasurements:
             daq = mgr.daq
             dig = mgr.dig
 
-            ps_seq = ps.SigvsTime(1/kwargs['sampling_rate'] * 1e9) # pulse streamer sequence for CW ODMR
+            ps_seq = ps.SigvsTime(1/kwargs['exp_sampling_rate'] * 1e9) # pulse streamer sequence for CW ODMR
 
             # configure digitizer (need to use DC coupling for signal vs time)           
             dig_config = self.digitizer_configure(num_pts_in_exp = 1, iters = 1, 

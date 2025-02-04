@@ -22,7 +22,7 @@ class Pulses():
     '''
     ALL UNITS: [ns]
     '''
-    def __init__(self, laser_time = 15e3, initial_delay = 100, singlet_decay = 500, readout_time = 2100, 
+    def __init__(self, laser_time = 15e3, initial_delay = 100, singlet_decay = 500, readout_time = 1000, 
                  MW_buffer_time = 100, probe_time = 50e3, clock_time = 11, trig_spot = 70, 
                  awg_trig_time = 10, awg_pulse_delay = 0, ip="10.135.70.193"):
         '''
@@ -109,11 +109,11 @@ class Pulses():
         trig_off = sampling_interval - self.clock_time
         dig_clock_seq = [(trig_off, 0), (self.clock_time, 1)]
 
-        seq.setDigital(1, dig_clock_seq) # digitizer trigger
+        seq.setDigital(1, dig_clock_seq) # integrator trigger
 
         return seq
 
-    def CW_ODMR(self, num_freqs, mw_probe_time):
+    def CW_ODMR(self, num_freqs):
         
         '''
         CW ODMR Sequence
@@ -128,31 +128,29 @@ class Pulses():
             # create sequence object
             seq_on = self.Pulser.createSequence()
             seq_off = self.Pulser.createSequence()
-        
-            # digitizer trigger timing
-            # clock_off = mw_probe_time - self.clock_time - 15000
-            clock_off1 = mw_probe_time - 2*2000 - self.clock_time
-            clock_off2 = 2*2000
-            # print(f"clock off 2: {clock_off}")
-            iq_off = mw_probe_time - self.awg_trig_time
 
-            # laser_seq = [mw_probe_time, 1)]
-            # laser_seq = [(1000, 0), (1000, 1), (mw_probe_time - 4000, 0), (1000, 1), (1000, 0)]
+            # digitizer trigger timing
+            clock_off1 = self.probe_time - 2*self.readout_time - self.clock_time
+            clock_off2 = 2*self.readout_time
+
+            iq_off = self.probe_time - self.awg_trig_time
+
+            laser_seq = [(self.probe_time, 1)]
+            # laser_seq = [(1000, 0), (1000, 1), (self.probe_time - 4000, 0), (1000, 1), (1000, 0)]
 
             # define sequence structure for clock and MW I/Q channels
-            # dig_clock_seq = [(15000, 0), (self.clock_time, 1), (clock_off, 0)]
             dig_clock_seq = [(clock_off1, 0), (self.clock_time, 1), (clock_off2, 0)]
-            # dig_clock_seq = [(mw_probe_time, 0), (self.clock_time, 1), (clock_off2, 0), (clock_off1, 0)]
+            # dig_clock_seq = [(self.probe_time, 0), (self.clock_time, 1), (clock_off2, 0), (clock_off1, 0)]
 
             mw_iq_seq_on = [(self.awg_trig_time, 1), (iq_off, 0)]
-            mw_iq_seq_off = [(mw_probe_time, 0)]
+            mw_iq_seq_off = [(self.probe_time, 0)]
 
             # assign sequences to respective channels
-            # seq_on.setDigital(3, laser_seq) # laser 
+            seq_on.setDigital(3, laser_seq) # laser 
             seq_on.setDigital(1, dig_clock_seq) # digitizer trigger
             seq_on.setDigital(2, mw_iq_seq_on) # MW IQ
 
-            # seq_off.setDigital(3, laser_seq) # laser 
+            seq_off.setDigital(3, laser_seq) # laser 
             seq_off.setDigital(1, dig_clock_seq) # digitizer trigger
             seq_off.setDigital(2, mw_iq_seq_off) # MW IQ
 
@@ -1820,7 +1818,7 @@ class Pulses():
                 iq_off2 = (pihalf_x - self.awg_trig_time) + tau
                 iq_off3 = (pi_y - self.awg_trig_time) + tau
                 iq_off4 = (pihalf_y - self.awg_trig_time) + 100
-                iq_off5 = dark_pi + t_corr
+                iq_off5 = t_corr
                 iq_off6 = iq_off2
                 iq_off7 = iq_off3
                 iq_off8 = (pihalf_y - self.awg_trig_time) + self.MW_buffer_time + self.readout_time + laser_off3
@@ -1828,7 +1826,7 @@ class Pulses():
                 awg_off1 = 15 + iq_off1 + pihalf_x + self.awg_pulse_delay # additional initial delay at beginning to offset entire AWG pulse seq
                 awg_off2 = (tau - self.awg_pulse_delay - self.awg_trig_time) + pi_y + self.awg_pulse_delay
                 awg_off3 = (tau - self.awg_pulse_delay - self.awg_trig_time) + pihalf_y + iq_off4 
-                awg_off4 = (dark_pi - self.awg_trig_time) + t_corr + pihalf_x
+                awg_off4 = t_corr + pihalf_x
                 awg_off5 = awg_off2
                 awg_off6 = (tau - self.awg_pulse_delay - self.awg_trig_time) + pihalf_y + iq_off4 - 15
 
@@ -1890,110 +1888,6 @@ class Pulses():
 
             for t in params:
                 seqs += SingleDEERCorrT1(t)
-
-            # return SingleDEER()
-            return seqs
-    
-    def Electron_T2(self, params, tau, pihalf_x, pihalf_y, pi_x, pi_y, dark_pi_half, dark_pi):
-            '''
-            Surface electron T2 pulse sequence.
-            MW sequence: pi/2(x) - tau - pi(y) - tau - pi/2(x)
-
-            '''
-            longest_time = self.convert_type(round(max(params)), float)
-            tau = self.convert_type(round(tau), float)
-            pihalf_x = self.convert_type(round(pihalf_x), float)
-            pihalf_y = self.convert_type(round(pihalf_y), float)
-            pi_x = self.convert_type(round(pi_x), float)
-            pi_y = self.convert_type(round(pi_y), float)
-            dark_pi_half = self.convert_type(round(dark_pi_half), float)
-            dark_pi = self.convert_type(round(dark_pi), float)
-
-
-            def SingleElectronT2(t_corr):
-                '''
-                CREATE SINGLE DEER SEQUENCE TO REPEAT THROUGHOUT EXPERIMENT
-                '''
-                t_corr = self.convert_type(round(t_corr), float)
-                pad_time = longest_time - t_corr
-                '''
-                DEFINE RELEVANT ON, OFF TIMES FOR DEVICES
-                '''            
-                # TODO: optimize final 100 ns wait time before second DEER subsequence
-                t2_corr_time = pihalf_x + tau + pi_y + tau + pihalf_y + 100 + (dark_pi_half + t_corr + dark_pi + t_corr + dark_pi_half + 100) + pihalf_x + tau + pi_y + tau + pihalf_y
-            
-                laser_off1 = self.initial_delay
-                laser_off2 = self.singlet_decay + t2_corr_time + self.MW_buffer_time
-                laser_off3 = self.initial_delay + 1000 
-
-                # digitizer trigger timing
-                clock_off1 = laser_off1 + self.laser_time + laser_off2 + self.trig_spot - self.clock_time
-                clock_off2 = - self.trig_spot + self.readout_time + laser_off3
-
-                # mw I & Q off windows 
-                iq_off1 = laser_off1 + self.laser_time + self.singlet_decay
-                iq_off2 = (pihalf_x - self.awg_trig_time) + tau
-                iq_off3 = (pi_y - self.awg_trig_time) + tau
-                iq_off4 = (pihalf_y - self.awg_trig_time) + 100
-                iq_off5 = (dark_pi_half + t_corr + dark_pi + t_corr + dark_pi_half + 100)
-                iq_off6 = iq_off2
-                iq_off7 = iq_off3
-                iq_off8 = (pihalf_y - self.awg_trig_time) + self.MW_buffer_time + self.readout_time + laser_off3
-
-                awg_off1 = 15 + iq_off1 + pihalf_x + self.awg_pulse_delay # additional initial delay at beginning to offset entire AWG pulse seq
-                awg_off2 = (tau - self.awg_pulse_delay - self.awg_trig_time) + pi_y + self.awg_pulse_delay
-                awg_off3 = (tau - self.awg_pulse_delay - self.awg_trig_time) + pihalf_y + iq_off4 
-                awg_off4 = (dark_pi_half - self.awg_trig_time) + t_corr
-                awg_off5 = (dark_pi - self.awg_trig_time) + t_corr
-                awg_off6 = (dark_pi_half - self.awg_trig_time) + 100 + pihalf_x
-                awg_off7 = awg_off2
-                awg_off8 = (tau - self.awg_pulse_delay - self.awg_trig_time) + pihalf_y + iq_off4 - 15
-
-                # awg_off4 = t_corr + pihalf_x
-                # awg_off5 = awg_off2
-                # awg_off6 = (tau - self.awg_pulse_delay - self.awg_trig_time) + pihalf_y + iq_off4 - 15
-
-                '''
-                CONSTRUCT PULSE SEQUENCE
-                '''
-                # create sequence objects for MW on and off blocks
-                seq = self.Pulser.createSequence() # y, -y normalization
-                seq_ref = self.Pulser.createSequence()
-
-                # define sequence structure for laser
-                # laser_seq = [(laser_off, 0), (laser_on, 1)]
-                laser_seq = [(laser_off1, 0), (self.laser_time, 1), (laser_off2, 0), (self.readout_time, 1), (laser_off3, 0)]
-                
-                # define sequence structure for digitizer trigger
-                dig_clock_seq = [(clock_off1, 0), (self.clock_time, 1), (clock_off2, 0)]
-                
-                # sequence structure for I & Q MW channels on SRS SG396
-                mw_iq_seq = [(iq_off1, 0), (self.awg_trig_time, 1), (iq_off2, 0), (self.awg_trig_time, 1), (iq_off3, 0), (self.awg_trig_time, 1), (iq_off4, 0),  
-                             (iq_off5, 0), (self.awg_trig_time, 1), (iq_off6, 0), (self.awg_trig_time, 1), (iq_off7, 0), (self.awg_trig_time, 1), (iq_off8, 0)]
-                
-                # sequence structure for I & Q MW channels (MW off)
-                awg_seq =  [(awg_off1, 0), (self.awg_trig_time, 1), (awg_off2, 0), (self.awg_trig_time, 1), (awg_off3, 0),
-                            (self.awg_trig_time, 1), (awg_off4, 0), (self.awg_trig_time, 1), (awg_off5, 0),
-                            (self.awg_trig_time, 1), (awg_off6, 0), (self.awg_trig_time, 1), (awg_off7, 0), (self.awg_trig_time, 1), (awg_off8, 0)]
-
-                # assign sequences to respective channels for seq_on
-                seq.setDigital(3, laser_seq) # laser
-                seq.setDigital(1, dig_clock_seq) # digitizer trigger
-                seq.setDigital(4, awg_seq)
-                seq.setDigital(2, mw_iq_seq) # MW IQ
-
-                # assign sequences to respective channels for seq_on
-                seq_ref.setDigital(3, laser_seq) # laser
-                seq_ref.setDigital(1, dig_clock_seq) # digitizer trigger
-                seq_ref.setDigital(4, awg_seq)
-                seq_ref.setDigital(2, mw_iq_seq) # MW IQ
-
-                return seq + seq_ref
-            
-            seqs = self.Pulser.createSequence()
-
-            for t in params:
-                seqs += SingleElectronT2(t)
 
             # return SingleDEER()
             return seqs
@@ -2225,6 +2119,7 @@ class Pulses():
         '''
         Coherent averaged synchronized readout (CASR).
         '''
+        longest_time = self.convert_type(round(max(params)), float)
         tau = self.convert_type(round(tau), float)
         pihalf_x = self.convert_type(round(pihalf_x), float)
         pihalf_y = self.convert_type(round(pihalf_y), float)
@@ -2270,18 +2165,21 @@ class Pulses():
 
             '''
             DEFINE SPECIAL TIME INTERVALS FOR EXPERIMENT
+
+            pad_time = padding time to equalize duration of every run (for different tau durations)
             '''
+            pad_time = longest_time 
 
             # total time for correlation spectroscopy MW pulse sequence
-            casr_time = pihalf_x + (tau/2 + 0*pi_x + 4*pi_x + 4*pi_y + 7*tau + tau/2)*n + pihalf_y
-
+            casr_time = pihalf_x + (tau/2 + 0*pi_x + 4*pi_x + 4*pi_y + 7*tau + tau/2)*n + pihalf_y + t_corr + \
+                             pihalf_x + (tau/2 + 0*pi_x + 4*pi_x + 4*pi_y + 7*tau + tau/2)*n + pihalf_y
             '''
             DEFINE RELEVANT ON, OFF TIMES FOR DEVICES
             '''     
             # total sequence time 100 ns + 6 us + 500 ns + corr spec time + 100 ns + 400 ns + 100 ns + pad time       
             laser_off1 = self.initial_delay
             laser_off2 = self.singlet_decay + casr_time + self.MW_buffer_time
-            laser_off3 = 100
+            laser_off3 = pad_time
 
             # digitizer trigger timing
             clock_off1 = laser_off1 + self.laser_time + laser_off2 + self.trig_spot - self.clock_time
