@@ -42,6 +42,10 @@ class SpinMeasurements:
         self.queue_to_exp = queue_to_exp
         self.queue_from_exp = queue_from_exp
 
+    def run_save(self, data_name, file_name, directory):
+        logging.info("Saving file with flexSave...")
+        flexSave(data_name, data_name, file_name, directory)
+        
     # def __enter__(self):
     #     """Perform experiment setup."""
     #     # config logging messages
