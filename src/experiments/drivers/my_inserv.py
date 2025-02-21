@@ -56,13 +56,13 @@ with InstrumentServer() as local_inserv:
                      args = ['dev8181', '127.0.0.1', 8004])
     
     local_inserv.add(name = 'ps',
-                     class_path = _HERE / 'ps_driver_current.py',
+                     class_path = _HERE / 'ps_driver_current_v3.py',
                      class_name = 'Pulses')
     
-    local_inserv.add(name = 'dig', 
-                     class_path = _HERE  / 'digitizer_driver_current.py', 
-                     class_name = 'FIFO', 
-                     args = ['/dev/spcm0'])
+    # local_inserv.add(name = 'dig', 
+    #                  class_path = _HERE  / 'digitizer_driver_current.py', 
+    #                  class_name = 'FIFO', 
+    #                  args = ['/dev/spcm0'])
 
     local_inserv.add(name = 'daq',
                      class_path = _HERE / 'daq_driver_current.py',

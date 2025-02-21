@@ -31,6 +31,7 @@ class HDAWG:
         self.set_channels()
         self.sampling_rate = 2.4e9 # Hz
         self.voltage_range = 0.8
+        self.voltage_range_rf = 2
         self.control_both_groups = -1
 
         zhinst.utils.disable_everything(self.daq, self.device)
@@ -45,7 +46,7 @@ class HDAWG:
             [f"/{self.device}/awgs/0/auxtriggers/1/slope", 1],           
             
             [f"/{self.device}/awgs/1/auxtriggers/0/channel", 2],
-            [f"/{self.device}/awgs/1/auxtriggers/1/channel", 2],
+            [f"/{self.device}/awgs/1/auxtriggers/1/channel", 3],
             [f"/{self.device}/awgs/1/auxtriggers/0/slope", 1],
             [f"/{self.device}/awgs/1/auxtriggers/1/slope", 1],
 
@@ -62,6 +63,7 @@ class HDAWG:
 
             # for electron/nuclear spin driving
             [f"/{self.device}/sigouts/2/on", 1],
+            [f"/{self.device}/sigouts/3/on", 1],
 
             [f"/{self.device}/dios/0/output", 0],
             [f"/{self.device}/dios/0/drive", 1],
@@ -72,6 +74,7 @@ class HDAWG:
             [f"/{self.device}/sigouts/0/range", self.voltage_range],
             [f"/{self.device}/sigouts/1/range", self.voltage_range],
             [f"/{self.device}/sigouts/2/range", self.voltage_range],
+            [f"/{self.device}/sigouts/3/range", self.voltage_range_rf]
             # [f"/{self.device}/awgs/0/outputs/{self.awg_channel}/amplitude", self.amplitude]
 
             # ['/%s/awgs/0/outputs/%d/amplitude' % (self.device, self.awg_channel), self.amplitude],
@@ -221,10 +224,6 @@ class HDAWG:
 
         self.set_voltage_offsets(kwargs['i_offset'], kwargs['q_offset']) # set I and Q offset voltages to suppress carrier freq
 
-        self.set_disabled()
-
-        time.sleep(0.2)
-
         match kwargs['seq']:
             case 'Test':
                 # wave I_pihalf_x = rect(10000.0, 0.5625);
@@ -270,6 +269,7 @@ class HDAWG:
 
                 self.set_awg_oscillator_control('off')
 
+            # FIXME: outdated loop structure
             case 'Calibrate':
                 i_wave = [self.create_rect_wave("I", kwargs['pi']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
                 q_wave = [self.create_rect_wave("Q", kwargs['pi']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
@@ -399,6 +399,41 @@ class HDAWG:
                 self.set_awg_oscillator_control('on')
 
                 self.control_both_groups = 0
+
+            case 'Pulsed ODMR RF':           
+                odmr_side_freqs = kwargs['sideband_freqs'] # define frequency array
+                
+                # define the sideband frequencies for the ODMR experiment over range ("start", "stop", step defined by num_pts)
+                i_wave = [self.create_rect_wave("I_pi", kwargs['pi_pulse']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave = [self.create_rect_wave("Q_pi", kwargs['pi_pulse']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                
+                odmr_pulses: List[str] = []
+                
+                # loop through each sideband frequency, set lower frequency and output first then set upper frequency and output
+                for i in range(kwargs['num_pts']):
+                    odmr_pulses.append(f"""setDouble('oscs/0/freq', {odmr_side_freqs[i]}); 
+{self.set_sine_phase(0, kwargs['iq_phases'][0])}
+{self.set_sine_phase(1, kwargs['iq_phases'][1])}
+repeat(2){{{self.create_iq_pulses(1, 1, "I_pi", 2, "Q_pi")} waitWave();}}""")
+                
+                inf_repeat = [self.repeat_inf()]
+                inf_end = [f"}}"]
+
+                self.awg_iq_program_text = "\n".join(i_wave + q_wave + inf_repeat + odmr_pulses + inf_end)
+
+                awg_wave = [self.create_rect_wave("waveRF", kwargs['rf_length']*self.sampling_rate, self.convert_mw_power_rf(kwargs['rf_power']))]
+                awg_pulses = [f"""repeat({kwargs['num_pts']}){{
+repeat(1){{resetOscPhase();
+{self.set_sine_phase(1, kwargs['rf_phase'])}
+{self.create_pulses(2, 2, "waveRF")} waitWave();}}}}"""]
+                
+                self.awg_program_text = "\n".join(awg_wave + inf_repeat + awg_pulses + inf_end)
+                
+                self.daq.setDouble(f"/{self.device}/oscs/1/freq", kwargs['rf_freq'])
+
+                self.set_awg_oscillator_control('on')
+
+                self.control_both_groups = 2
 
             case 'T1':
                 i_wave = [self.create_rect_wave("I_pi", kwargs['pi_pulse']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
@@ -643,6 +678,145 @@ repeat({kwargs['n']}){{
 
                 self.control_both_groups = 0
 
+            case 'T2 RF':
+                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]          
+                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]            
+                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+
+                awg_pulses: List[str] = [] # lines telling AWG to emit pulse
+                
+                # XY8
+#                 awg_pulses.append(f"""repeat({kwargs['num_pts']}){{
+# {self.set_pulse_phases('x', kwargs['iq_phases'])}
+# {self.create_iq_pulses(1, 1, "I_pihalf_x", 2, "Q_pihalf_x")} waitWave();              
+# repeat({kwargs['n']}){{
+# {self.set_pulse_phases('x', kwargs['iq_phases'])}
+# {self.create_iq_pulses(1, 1, "I_pi_x", 2, "Q_pi_x")} waitWave();
+# {self.set_pulse_phases('y', kwargs['iq_phases'])}
+# {self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();
+# {self.set_pulse_phases('x', kwargs['iq_phases'])}
+# {self.create_iq_pulses(1, 1, "I_pi_x", 2, "Q_pi_x")} waitWave();
+# {self.set_pulse_phases('y', kwargs['iq_phases'])}
+# {self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();
+# {self.set_pulse_phases('y', kwargs['iq_phases'])}
+# {self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();
+# {self.set_pulse_phases('x', kwargs['iq_phases'])}
+# {self.create_iq_pulses(1, 1, "I_pi_x", 2, "Q_pi_x")} waitWave();
+# {self.set_pulse_phases('y', kwargs['iq_phases'])}
+# {self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();
+# {self.set_pulse_phases('x', kwargs['iq_phases'])}
+# {self.create_iq_pulses(1, 1, "I_pi_x", 2, "Q_pi_x")} waitWave();}}
+# {self.set_pulse_phases('x', kwargs['iq_phases'])}
+# {self.create_iq_pulses(1, 1, "I_pihalf_x", 2, "Q_pihalf_x")} waitWave();
+
+# {self.set_pulse_phases('x', kwargs['iq_phases'])}
+# {self.create_iq_pulses(1, 1, "I_pihalf_x", 2, "Q_pihalf_x")} waitWave();
+# repeat({kwargs['n']}){{
+# {self.set_pulse_phases('x', kwargs['iq_phases'])}
+# {self.create_iq_pulses(1, 1, "I_pi_x", 2, "Q_pi_x")} waitWave();
+# {self.set_pulse_phases('y', kwargs['iq_phases'])}
+# {self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();
+# {self.set_pulse_phases('x', kwargs['iq_phases'])}
+# {self.create_iq_pulses(1, 1, "I_pi_x", 2, "Q_pi_x")} waitWave();
+# {self.set_pulse_phases('y', kwargs['iq_phases'])}
+# {self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();
+# {self.set_pulse_phases('y', kwargs['iq_phases'])}
+# {self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();
+# {self.set_pulse_phases('x', kwargs['iq_phases'])}
+# {self.create_iq_pulses(1, 1, "I_pi_x", 2, "Q_pi_x")} waitWave();
+# {self.set_pulse_phases('y', kwargs['iq_phases'])}
+# {self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();
+# {self.set_pulse_phases('x', kwargs['iq_phases'])}
+# {self.create_iq_pulses(1, 1, "I_pi_x", 2, "Q_pi_x")} waitWave();}}
+# {self.set_pulse_phases('-x', kwargs['iq_phases'])}
+# {self.create_iq_pulses(1, 1, "I_pihalf_x", 2, "Q_pihalf_x")} waitWave();}}""")
+
+                # YY8    
+                awg_pulses.append(f"""repeat({kwargs['num_pts']}){{
+{self.set_pulse_phases('x', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pihalf_x", 2, "Q_pihalf_x")} waitWave();
+repeat({kwargs['n']}){{
+{self.set_pulse_phases('-y', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();
+{self.set_pulse_phases('y', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();
+{self.set_pulse_phases('y', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();
+{self.set_pulse_phases('-y', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();
+{self.set_pulse_phases('-y', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();
+{self.set_pulse_phases('-y', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();
+{self.set_pulse_phases('y', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();
+{self.set_pulse_phases('y', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();}}
+{self.set_pulse_phases('x', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pihalf_x", 2, "Q_pihalf_x")} waitWave();
+
+{self.set_pulse_phases('x', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pihalf_x", 2, "Q_pihalf_x")} waitWave();
+repeat({kwargs['n']}){{
+{self.set_pulse_phases('-y', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();
+{self.set_pulse_phases('y', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();
+{self.set_pulse_phases('y', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();
+{self.set_pulse_phases('-y', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();
+{self.set_pulse_phases('-y', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();
+{self.set_pulse_phases('-y', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();
+{self.set_pulse_phases('y', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();
+{self.set_pulse_phases('y', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();}}
+{self.set_pulse_phases('-x', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pihalf_x", 2, "Q_pihalf_x")} waitWave();}}""")
+
+                inf_repeat = [self.repeat_inf()]
+                inf_end = [f"}}"]
+
+                self.awg_iq_program_text = "\n".join(i_wave_pihalf_x + q_wave_pihalf_x + i_wave_pihalf_y + q_wave_pihalf_y + 
+                                             i_wave_pi_x + q_wave_pi_x + i_wave_pi_y + q_wave_pi_y + 
+                                             inf_repeat + awg_pulses + inf_end)
+
+                self.daq.setDouble(f"/{self.device}/oscs/0/freq", kwargs['sideband_freq'])
+
+                rf_times = kwargs['rf_length']
+
+                awg_phase = [self.set_sine_phase(1, kwargs['rf_phase'])]
+                awg_waves: List[str] = [] # defines wave structures
+                awg_pulses: List[str] = [] # lines telling AWG to emit pulse
+                
+                for i in range(kwargs['num_pts']):
+                    # awg_waves.append(f"wave {i} = rect({rabi_pulses[i]}, {kwargs['awg_power']});")
+                    awg_waves.append(self.create_rect_wave(f"waveRF{i}", rf_times[i]*self.sampling_rate, self.convert_mw_power_rf(kwargs['rf_power'])))
+                    
+                    awg_pulses.append(f"""repeat(2){{{self.create_pulses(2, 2, f"waveRF{i}")} waitWave();}}""")
+
+#                 awg_wave = [self.create_rect_wave("waveRF", kwargs['rf_length']*self.sampling_rate, self.convert_mw_power_rf(kwargs['rf_power']))]
+#                 awg_pulses = [f"""repeat({kwargs['num_pts']}){{
+# repeat(1){{
+# {self.set_sine_phase(0, kwargs['rf_phase'])}
+# {self.create_pulses(2, 2, "waveRF")} waitWave();}}}}"""]
+                
+                self.awg_program_text = "\n".join(awg_phase + awg_waves + inf_repeat + awg_pulses + inf_end)
+                
+                self.daq.setDouble(f"/{self.device}/oscs/1/freq", kwargs['rf_freq'])
+
+                self.set_awg_oscillator_control('off')
+
+                self.control_both_groups = 2
+
             case 'DEER':  
                 i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
                 q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
@@ -672,8 +846,6 @@ repeat(2){{{self.set_pulse_phases('x', kwargs['iq_phases'])}
                 
                 inf_repeat = [self.repeat_inf()]
                 inf_end = [f"}}"]
-
-                iters_end = [f"}}}}"]
 
                 self.awg_iq_program_text = "\n".join(i_wave_pihalf_x + q_wave_pihalf_x + i_wave_pihalf_y + q_wave_pihalf_y + 
                                              i_wave_pi_x + q_wave_pi_x + i_wave_pi_y + q_wave_pi_y + 
@@ -851,7 +1023,6 @@ repeat(3){{{self.set_pulse_phases('x', kwargs['iq_phases'])}
                     awg_pulses.append(f"""repeat(2){{{self.create_pulses(1, 1, "waveRF")} {self.create_pulses(1, 1, "waveRF")}
 {self.create_pulses(1, 1, f"w{i}")} {self.create_pulses(1, 1, "waveRF")} {self.create_pulses(1, 1, "waveRF")}}}""")
 
-                iters_end = [f"}}}}"]
                 self.awg_program_text = "\n".join(awg_wave + awg_waves + inf_repeat + awg_pulses + inf_end)
 
                 self.daq.setDouble(f"/{self.device}/oscs/1/freq", kwargs['dark_freq'])
@@ -992,7 +1163,16 @@ repeat(4){{{self.set_pulse_phases('x', kwargs['iq_phases'])}
 {self.set_pulse_phases('y', kwargs['iq_phases'])}
 {self.create_iq_pulses(1, 1, "I_pihalf_y", 2, "Q_pihalf_y")} waitWave();}}
 
-repeat(4){{{self.set_pulse_phases('x', kwargs['iq_phases'])}
+repeat(2){{{self.set_pulse_phases('x', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pihalf_x", 2, "Q_pihalf_x")} waitWave();
+
+{self.set_pulse_phases('y', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();
+
+{self.set_pulse_phases('y', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pihalf_y", 2, "Q_pihalf_y")} waitWave();
+
+{self.set_pulse_phases('x', kwargs['iq_phases'])}
 {self.create_iq_pulses(1, 1, "I_pihalf_x", 2, "Q_pihalf_x")} waitWave();
 
 {self.set_pulse_phases('y', kwargs['iq_phases'])}
@@ -1012,10 +1192,74 @@ repeat(4){{{self.set_pulse_phases('x', kwargs['iq_phases'])}
                 awg_wave = [self.create_rect_wave("waveRF", kwargs['dark_pulse']*self.sampling_rate, self.convert_mw_power(kwargs['mw_power']))]
                 awg_pulses = [f"""repeat({kwargs['num_pts']}){{
 repeat(1){{
-repeat(19){{
+repeat(18){{
 {self.create_pulses(1, 1, "waveRF")}}}}}}}"""]
                 
                 self.awg_program_text = "\n".join(awg_wave + inf_repeat + awg_pulses + inf_end)
+                
+                self.daq.setDouble(f"/{self.device}/oscs/1/freq", kwargs['dark_freq'])
+
+                self.set_awg_oscillator_control('off')
+
+                self.control_both_groups = 2
+
+            case 'DEER T2':
+                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]          
+                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]            
+                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+
+                awg_iq_pulses: List[str] = []
+
+                awg_iq_pulses.append(f"""repeat({kwargs['num_pts']}){{
+repeat(3){{{self.set_pulse_phases('x', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pihalf_x", 2, "Q_pihalf_x")} waitWave();
+
+{self.set_pulse_phases('y', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();
+
+{self.set_pulse_phases('y', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pihalf_y", 2, "Q_pihalf_y")} waitWave();}}
+
+repeat(1){{{self.set_pulse_phases('x', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pihalf_x", 2, "Q_pihalf_x")} waitWave();
+
+{self.set_pulse_phases('y', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pi_y", 2, "Q_pi_y")} waitWave();
+
+{self.set_pulse_phases('-y', kwargs['iq_phases'])}
+{self.create_iq_pulses(1, 1, "I_pihalf_y", 2, "Q_pihalf_y")} waitWave();}}}}""")
+                
+                inf_repeat = [self.repeat_inf()]
+                inf_end = [f"}}"]
+
+                self.awg_iq_program_text = "\n".join(i_wave_pihalf_x + q_wave_pihalf_x + i_wave_pihalf_y + q_wave_pihalf_y + 
+                                             i_wave_pi_x + q_wave_pi_x + i_wave_pi_y + q_wave_pi_y + 
+                                             inf_repeat + awg_iq_pulses + inf_end)
+                
+                #awg_wave = [f"wave waveRF = rect({kwargs['dark_pi']*self.sampling_rate}, {kwargs['awg_power']});"] 
+                awg_pihalf_wave = [self.create_rect_wave("wave_pihalf_RF", kwargs['dark_half_pulse']*self.sampling_rate, self.convert_mw_power(kwargs['mw_power']))]
+                awg_pi_wave = [self.create_rect_wave("wave_pi_RF", kwargs['dark_pulse']*self.sampling_rate, self.convert_mw_power(kwargs['mw_power']))]
+
+                awg_pulses = [f"""repeat({kwargs['num_pts']}){{
+repeat(2){{
+repeat(2){{
+{self.create_pulses(1, 1, "wave_pi_RF")} waitWave();}}
+
+repeat(1){{
+{self.create_pulses(1, 1, "wave_pihalf_RF")} waitWave();
+{self.create_pulses(1, 1, "wave_pi_RF")} waitWave();
+{self.create_pulses(1, 1, "wave_pihalf_RF")} waitWave();
+}}
+
+repeat(2){{
+{self.create_pulses(1, 1, "wave_pi_RF")} waitWave();}}}}}}"""]
+                
+                self.awg_program_text = "\n".join(awg_pihalf_wave + awg_pi_wave + inf_repeat + awg_pulses + inf_end)
                 
                 self.daq.setDouble(f"/{self.device}/oscs/1/freq", kwargs['dark_freq'])
 
@@ -1131,7 +1375,7 @@ repeat({kwargs['n']}){{
                 self.awg_program = textwrap.dedent(f"{self.awg_program_text}")
                 self.compile_sequence(1, self.awg_program)
 
-            elif self.control_both_groups == 2:
+            else:
                 self.awg_iq_program = textwrap.dedent(f"{self.awg_iq_program_text}")
                 self.compile_sequence(0, self.awg_iq_program)
                 time.sleep(0.1)
@@ -1141,7 +1385,7 @@ repeat({kwargs['n']}){{
         except ValueError:
             raise ValueError
         else:
-            time.sleep(0.2)
+            # time.sleep(0.5)
             self.set_awg_enabled()
 
     def compile_sequence(self, group, program):
@@ -1219,7 +1463,7 @@ repeat({kwargs['n']}){{
 
             print("Sequence successfully uploaded.")
 
-        time.sleep(0.2)
+        # time.sleep(0.2)
         self.set_group_enabled(group)
         time.sleep(0.2)
         self.daq.sync()
@@ -1232,6 +1476,13 @@ repeat({kwargs['n']}){{
         else:
             return power/self.voltage_range
 
+    def convert_mw_power_rf(self, power):
+        I = 500/np.sqrt(2)
+        if power > I:
+            raise Exception("Power exceeds IQ port handling for SRS 396 signal generator.")
+        else:
+            return power/self.voltage_range_rf
+        
 # generate separate one-task functions for each command: create rectangular waves; repeat iterations; repeat runs; create pulses
     def create_rect_wave(self, name, length, power):
         return f"wave {name} = rect({length}, {power});"
