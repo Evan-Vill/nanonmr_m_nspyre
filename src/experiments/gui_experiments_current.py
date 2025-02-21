@@ -9,6 +9,7 @@ import logging
 from functools import partial
 from importlib import reload
 from multiprocessing import Queue
+from queue import Empty  # Import Empty exception from queue module
 from typing import Optional
 
 from inspect import signature
@@ -62,11 +63,13 @@ class ExpWidget(QWidget):
         self.dig_termination_opts = ["1M", "50"]
         
         self.sigvstime_detector_opts = ["APD", "BPD", "PMT"]
+        self.sigvstime_mw_detector_opts = ["APD", "BPD", "PMT"]
 
         self.rabi_axis_opts = ["y", "x"]
         self.opt_t1_array_opts = ["geomspace", "linspace"]
         self.mw_t1_array_opts = ["geomspace", "linspace"]
         self.t2_array_opts = ["geomspace", "linspace"]
+        self.t2_rf_array_opts = ["geomspace", "linspace"]
         self.dq_array_opts = ["geomspace", "linspace"]
         self.fid_array_opts = ["geomspace", "linspace"]
         self.fid_cd_array_opts = ["geomspace", "linspace"]
@@ -76,58 +79,64 @@ class ExpWidget(QWidget):
         self.corr_t1_array_opts = ["geomspace", "linspace"]
         
         self.sigvstime_params_defaults = [1e3, self.sigvstime_detector_opts]
-        self.sigvstime_mw_params_defaults = [1e3, self.sigvstime_detector_opts] # not needed - hidden in GUI
+        self.sigvstime_mw_params_defaults = [1e3, self.sigvstime_mw_detector_opts] # not needed - hidden in GUI
 
-        self.laser_params_defaults = [30, 30e6, 0.45, self.sideband_opts, -0.002, -0.004, self.detector_opts]
-        self.digitizer_defaults = [512, 500e6, 5, self.dig_ro_chan_opts, self.dig_coupling_opts, self.dig_termination_opts, 32, 5]
+        self.laser_params_defaults = [30, 30e-6, 2.5e-6, 30e6, 0.45, self.sideband_opts, -0.002, -0.004, self.detector_opts]
+        self.digitizer_defaults = [256, 100e6, 1, self.dig_ro_chan_opts, self.dig_coupling_opts, self.dig_termination_opts, 32, 5]
 
         # split up defaults into the non-MW and MW settings to save vertical space in GUI
-        self.odmr_params_defaults = [12, 10, 30]
+        self.odmr_params_defaults = [120, 10, 50]
         self.odmr_mw_params_defaults = [2.87e9, 100e6, 1e-9, 25e-6]
 
-        self.rabi_params_defaults = [12, 10, 0, 500e-9, 100]   
+        self.rabi_params_defaults = [120, 10, 0, 500e-9, 100]   
         self.rabi_mw_params_defaults = [2.87e9, 1e-9, self.rabi_axis_opts]
 
-        self.pulsed_odmr_params_defaults = [12, 10, 30]
+        self.pulsed_odmr_params_defaults = [120, 10, 50]
         self.pulsed_odmr_mw_params_defaults = [2.87e9, 100e6, 1e-9, 100e-9]
+        
+        self.pulsed_odmr_rf_params_defaults = [120, 10, 50]
+        self.pulsed_odmr_rf_mw_params_defaults = [2.87e9, 100e6, 1e-9, 100e-9, 500e3, 0.3, 0]
 
-        self.opt_t1_params_defaults = [12, 10, 50e-9, 100e-6, 100, self.opt_t1_array_opts]
+        self.opt_t1_params_defaults = [120, 10, 50e-9, 100e-6, 100, self.opt_t1_array_opts]
         self.opt_t1_mw_params_defaults = [12, 10, 50e-9, 100e-6, 100, self.opt_t1_array_opts] # not needed - hidden in GUI
 
-        self.mw_t1_params_defaults = [12, 10, 50e-9, 100e-6, 100, self.mw_t1_array_opts]
+        self.mw_t1_params_defaults = [120, 10, 50e-9, 100e-6, 100, self.mw_t1_array_opts]
         self.mw_t1_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 'y']
 
-        self.t2_params_defaults = [12, 10, 50e-9, 20e-6, 100, self.t2_array_opts]
+        self.t2_params_defaults = [120, 10, 50e-9, 20e-6, 100, self.t2_array_opts]
         self.t2_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 'y', self.t2_seq_opts, 1]
 
-        self.dq_params_defaults = [12, 10, 50e-9, 100e-6, 100, self.dq_array_opts]
+        self.t2_rf_params_defaults = [120, 10, 50e-9, 20e-6, 100, self.t2_rf_array_opts]
+        self.t2_rf_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 'y', 1e6, 0.1, 0, 1]
+
+        self.dq_params_defaults = [120, 10, 50e-9, 100e-6, 100, self.dq_array_opts]
         self.dq_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 2.87e9, 1e-9, 20e-9, 'y']
 
-        self.deer_params_defaults = [12, 10, 350e6, 750e6, 201, 800e-9]      
+        self.deer_params_defaults = [120, 10, 350e6, 750e6, 100, 800e-9]      
         self.deer_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 'y', 0.2, 40e-9, self.deer_drive_opts] 
 
-        self.deer_rabi_params_defaults = [12, 10, 3e-9, 100e-9, 100, 800e-9]     
+        self.deer_rabi_params_defaults = [120, 10, 3e-9, 100e-9, 100, 800e-9]     
         self.deer_rabi_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 'y', 560e6, 0.2]     
 
-        self.deer_fid_params_defaults = [12, 10, 50e-9, 20e-6, 100, self.fid_array_opts]    
+        self.deer_fid_params_defaults = [120, 10, 50e-9, 20e-6, 100, self.fid_array_opts]    
         self.deer_fid_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 'y', 560e6, 0.2, 40e-9, 1]    
 
-        self.deer_fid_cd_params_defaults = [12, 10, 50e-9, 20e-6, 100, self.fid_cd_array_opts]        
+        self.deer_fid_cd_params_defaults = [120, 10, 50e-9, 20e-6, 100, self.fid_cd_array_opts]        
         self.deer_fid_cd_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 'y', 560e6, 0.2, 40e-9, 0.1, 1]
 
-        self.deer_corr_rabi_params_defaults = [12, 10, 3e-9, 100e-9, 100, 800e-9, 1e-6]
+        self.deer_corr_rabi_params_defaults = [120, 10, 3e-9, 100e-9, 100, 800e-9, 1e-6]
         self.deer_corr_rabi_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 'y', 560e6, 40e-9, 0.2, 300]
 
-        self.deer_corr_t1_params_defaults = [12, 10, 50e-9, 1e-6, 100, self.corr_t1_array_opts, 800e-9]
+        self.deer_corr_t1_params_defaults = [120, 10, 50e-9, 1e-6, 100, self.corr_t1_array_opts, 800e-9]
         self.deer_corr_t1_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 'y', 560e6, 40e-9, 0.2]
 
-        self.deer_t2_params_defaults = [12, 10, 50e-9, 1e-6, 100, self.corr_t1_array_opts, 800e-9]
+        self.deer_t2_params_defaults = [120, 10, 50e-9, 1e-6, 100, self.corr_t1_array_opts, 800e-9, 500e-9]
         self.deer_t2_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 'y', 560e6, 40e-9, 0.2] 
 
-        self.nmr_params_defaults = [12, 10, 50e-9, 100e-6, 100, 1e-6]
+        self.nmr_params_defaults = [120, 10, 50e-9, 100e-6, 100, 1e-6]
         self.nmr_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 'y', 1]
 
-        self.casr_params_defaults = [12, 10, 10, 1e-6]
+        self.casr_params_defaults = [120, 10, 10, 1e-6]
         self.casr_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 1]
 
         self.fit_none_default = [0]
@@ -144,18 +153,20 @@ class ExpWidget(QWidget):
                     "Laser": [None, self.laser_params_defaults],
                     "Digitizer": [None, self.digitizer_defaults],
                     "Pulsed ODMR": ["pulsed_odmr_scan", self.pulsed_odmr_params_defaults, self.pulsed_odmr_mw_params_defaults, 'odmr', self.laser_params_defaults, self.digitizer_defaults],
+                    "RF Coil: Pulsed ODMR": ["pulsed_odmr_rf_scan", self.pulsed_odmr_rf_params_defaults, self.pulsed_odmr_rf_mw_params_defaults, 'odmr rf', self.laser_params_defaults, self.digitizer_defaults],
                     "Rabi": ["rabi_scan", self.rabi_params_defaults, self.rabi_mw_params_defaults, 'rabi', self.laser_params_defaults, self.digitizer_defaults],
                     "Optical T1": ["OPT_T1_scan", self.opt_t1_params_defaults, self.opt_t1_mw_params_defaults, 't1', self.laser_params_defaults, self.digitizer_defaults],
                     "MW T1": ["MW_T1_scan", self.mw_t1_params_defaults, self.mw_t1_mw_params_defaults, 't1', self.laser_params_defaults, self.digitizer_defaults],
                     "T2": ["T2_scan", self.t2_params_defaults, self.t2_mw_params_defaults, 't2', self.laser_params_defaults, self.digitizer_defaults],
+                    "RF Coil: T2": ["T2_rf_scan", self.t2_rf_params_defaults, self.t2_rf_mw_params_defaults, 't2', self.laser_params_defaults, self.digitizer_defaults],
                     "DQ Relaxation": ["DQ_scan", self.dq_params_defaults, self.dq_mw_params_defaults, 'dq', self.laser_params_defaults, self.digitizer_defaults],
                     "DEER": ["DEER_scan", self.deer_params_defaults, self.deer_mw_params_defaults, 'deer', self.laser_params_defaults, self.digitizer_defaults],
                     "DEER Rabi": ["DEER_rabi_scan", self.deer_rabi_params_defaults, self.deer_rabi_mw_params_defaults, 'deer rabi', self.laser_params_defaults, self.digitizer_defaults],
                     "DEER FID": ["DEER_FID_scan", self.deer_fid_params_defaults, self.deer_fid_mw_params_defaults, 'fid', self.laser_params_defaults, self.digitizer_defaults],
                     "DEER FID Continuous Drive": ["DEER_FID_CD_scan", self.deer_fid_cd_params_defaults, self.deer_fid_cd_mw_params_defaults, 'fid cd', self.laser_params_defaults, self.digitizer_defaults],
                     "DEER Correlation Rabi": ["DEER_corr_rabi_scan", self.deer_corr_rabi_params_defaults, self.deer_corr_rabi_mw_params_defaults, 'corr rabi', self.laser_params_defaults, self.digitizer_defaults],
-                    "DEER T1": ["DEER_T1_scan", self.deer_corr_t1_params_defaults, self.deer_corr_t1_mw_params_defaults, 'corr t1', self.laser_params_defaults, self.digitizer_defaults],
-                    "DEER T2": ["DEER_T2_scan", self.deer_t2_params_defaults, self.deer_t2_mw_params_defaults, 'corr t2', self.laser_params_defaults, self.digitizer_defaults],
+                    "DEER T1": ["DEER_T1_scan", self.deer_corr_t1_params_defaults, self.deer_corr_t1_mw_params_defaults, 'deer t1', self.laser_params_defaults, self.digitizer_defaults],
+                    "DEER T2": ["DEER_T2_scan", self.deer_t2_params_defaults, self.deer_t2_mw_params_defaults, 'deer t2', self.laser_params_defaults, self.digitizer_defaults],
                     "NMR: Correlation Spectroscopy": ["Corr_Spec_scan", self.nmr_params_defaults, self.nmr_mw_params_defaults, 'nmr', self.laser_params_defaults, self.digitizer_defaults],
                     "NMR: CASR": ["CASR_scan", self.casr_params_defaults, self.casr_mw_params_defaults, 'nmr', self.laser_params_defaults, self.digitizer_defaults]}
         
@@ -164,11 +175,13 @@ class ExpWidget(QWidget):
         self.experiments.addItems(["Select an experiment from dropdown menu", 
                                  "Signal vs Time", 
                                  "CW ODMR", 
+                                 "Rabi",
                                  "Pulsed ODMR",
-                                 "Rabi", 
+                                 "RF Coil: Pulsed ODMR",
+                                 "RF Coil: T2", 
+                                 "T2",
                                  "Optical T1",
                                  "MW T1", 
-                                 "T2", 
                                  "DQ Relaxation",
                                  "DEER", 
                                  "DEER Rabi",
@@ -432,18 +445,22 @@ class ExpWidget(QWidget):
                 params = {
                         'laser_power': {'display_text': 'Power (%): ',
                                 'widget': SpinBox(value = defaults[0], int = True, bounds=(0, 110), dec = True)},
+                        'laser_init': {'display_text': 'Initialization Time (pulsed): ',
+                                'widget': SpinBox(value = defaults[1], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
+                        'laser_readout': {'display_text': 'Readout Time (pulsed): ',
+                                'widget': SpinBox(value = defaults[2], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
                         'sideband_freq': {'display_text': 'Sideband Mod. Frequency: ',
-                                        'widget': SpinBox(value = defaults[1], suffix = 'Hz', siPrefix = True, bounds = (100, 100e6), dec = True)},
+                                        'widget': SpinBox(value = defaults[3], suffix = 'Hz', siPrefix = True, bounds = (100, 100e6), dec = True)},
                         'sideband_power': {'display_text': 'Sideband Power: ',
-                                        'widget': SpinBox(value = defaults[2], suffix = 'V', siPrefix = True)},
-                        'sideband': {'display_text': 'Sideband: ',
-                                        'widget': ComboBox(items = defaults[3])},
-                        'i_offset': {'display_text': 'I Offset: ',
                                         'widget': SpinBox(value = defaults[4], suffix = 'V', siPrefix = True)},
+                        'sideband': {'display_text': 'Sideband: ',
+                                        'widget': ComboBox(items = defaults[5])},
+                        'i_offset': {'display_text': 'I Offset: ',
+                                        'widget': SpinBox(value = defaults[6], suffix = 'V', siPrefix = True)},
                         'q_offset': {'display_text': 'Q Offset: ',
-                                        'widget': SpinBox(value = defaults[5], suffix = 'V', siPrefix = True)},
+                                        'widget': SpinBox(value = defaults[7], suffix = 'V', siPrefix = True)},
                         'detector': {'display_text': 'Detector: ',
-                                        'widget': ComboBox(items = defaults[6])}}                
+                                        'widget': ComboBox(items = defaults[8])}}                
             case 'Digitizer':
                 params = {
                         'segment_size': {'display_text': '# Samples (seg. size): ',
@@ -485,6 +502,14 @@ class ExpWidget(QWidget):
                                 'widget': SpinBox(value = defaults[1], int = True, bounds=(1, None))},
                         'num_pts': {'display_text': '# Frequencies: ',
                                 'widget': SpinBox(value = defaults[2], int = True, bounds=(1, None), dec = True)}}            
+            case 'RF Coil: Pulsed ODMR':    
+                params = {
+                        'runs': {'display_text': '# Averages: ',
+                                'widget': SpinBox(value = defaults[0], int = True, bounds=(1, None))},
+                        'iters': {'display_text': '# Experiment Iterations: ',
+                                'widget': SpinBox(value = defaults[1], int = True, bounds=(1, None))},
+                        'num_pts': {'display_text': '# Frequencies: ',
+                                'widget': SpinBox(value = defaults[2], int = True, bounds=(1, None), dec = True)}}         
             case 'Rabi':    
                 params = {
                         'runs': {'display_text': '# Averages: ',
@@ -525,6 +550,20 @@ class ExpWidget(QWidget):
                                 'widget': SpinBox(value = defaults[4], int = True, bounds=(1, None), dec = True)},
                         'array_type': {'display_text': 'Array Type: ',
                                 'widget': ComboBox(items = defaults[5])}}
+            case 'RF Coil: T2':
+                params = {
+                        'runs': {'display_text': '# Averages: ',
+                                'widget': SpinBox(value = defaults[0], int = True, bounds=(1, None))},
+                        'iters': {'display_text': '# Experiment Iterations: ',
+                                'widget': SpinBox(value = defaults[1], int = True, bounds=(1, None))},
+                        'start': {'display_text': 'Start \u03C4 Time: ',
+                                'widget': SpinBox(value = defaults[2], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
+                        'stop': {'display_text': 'Stop \u03C4 Time: ',
+                                'widget': SpinBox(value = defaults[3], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
+                        'num_pts': {'display_text': '# \u03C4: ',
+                                'widget': SpinBox(value = defaults[4], int = True, bounds=(1, None), dec = True)},
+                        'array_type': {'display_text': 'Array Type: ',
+                                'widget': ComboBox(items = defaults[5])}}   
             case 'T2':
                 params = {
                         'runs': {'display_text': '# Averages: ',
@@ -647,16 +686,18 @@ class ExpWidget(QWidget):
                                 'widget': SpinBox(value = defaults[0], int = True, bounds=(1, None))},
                         'iters': {'display_text': '# Experiment Iterations: ',
                                 'widget': SpinBox(value = defaults[1], int = True, bounds=(1, None))},
-                        'start': {'display_text': 'Start \u03C4_corr Time: ',
+                        'start': {'display_text': 'Start t Time: ',
                                 'widget': SpinBox(value = defaults[2], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
-                        'stop': {'display_text': 'Stop \u03C4_corr Time: ',
+                        'stop': {'display_text': 'Stop t Time: ',
                                 'widget': SpinBox(value = defaults[3], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
-                        'num_pts': {'display_text': '# \u03C4 Points: ',
+                        'num_pts': {'display_text': '# t Points: ',
                                 'widget': SpinBox(value = defaults[4], int = True, bounds=(1, None), dec = True)},
                         'array_type': {'display_text': 'Array Type: ',
                                 'widget': ComboBox(items = defaults[5])},
                         'tau': {'display_text': 'Free Precession \u03C4: ',
-                                'widget': SpinBox(value = defaults[6], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)}}       
+                                'widget': SpinBox(value = defaults[6], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
+                        'deer_t2_buffer': {'display_text': 't Buffer Time: ',
+                                'widget': SpinBox(value = defaults[7], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)}}       
             case 'NMR: Correlation Spectroscopy':    
                 params = {
                 'runs': {'display_text': '# Averages: ',
@@ -792,6 +833,22 @@ class ExpWidget(QWidget):
                                 'widget': SpinBox(value = defaults[2], suffix = 'W', siPrefix = True)},
                         'pi': {'display_text': '\u03C0 Pulse: ',
                                 'widget': SpinBox(value = defaults[3], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)}}
+            case 'RF Coil: Pulsed ODMR':    
+                params = {
+                        'center_freq': {'display_text': 'Center Frequency: ',
+                                'widget': SpinBox(value = defaults[0], suffix = 'Hz', siPrefix = True, bounds = (100e3, 6e9), dec = True)},
+                        'half_span_sideband_freq': {'display_text': 'Half Frequency Span: ',
+                                'widget': SpinBox(value = defaults[1], suffix = 'Hz', siPrefix = True, bounds = (100e3, 100e6), dec = True)},
+                        'rf_power': {'display_text': 'NV MW Power: ',
+                                'widget': SpinBox(value = defaults[2], suffix = 'W', siPrefix = True)},
+                        'pi': {'display_text': '\u03C0 Pulse: ',
+                                'widget': SpinBox(value = defaults[3], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
+                        'rf_pulse_freq': {'display_text': 'RF Frequency: ',
+                                'widget': SpinBox(value = defaults[4], suffix = 'Hz', siPrefix = True, bounds = (100e3, 100e6), dec = True)},
+                        'rf_pulse_power': {'display_text': 'RF Power: ',
+                                'widget': SpinBox(value = defaults[5], suffix = 'V', siPrefix = True)},
+                        'rf_pulse_phase': {'display_text': 'RF Phase (deg.): ',
+                                'widget': SpinBox(value = defaults[6], int = True, bounds=(0, 360))}}
             case 'Rabi':    
                 params = {
                         'freq': {'display_text': 'NV Frequency: ',
@@ -838,6 +895,24 @@ class ExpWidget(QWidget):
                                 'widget': ComboBox(items = defaults[4])},
                         'n': {'display_text': '# Seqs. (n): ',
                                 'widget': SpinBox(value = defaults[5], int = True, bounds=(1, None))}}
+            case 'RF Coil: T2':
+                params = {
+                        'freq': {'display_text': 'NV Frequency: ',
+                                'widget': SpinBox(value = defaults[0], suffix = 'Hz', siPrefix = True, bounds = (100e3, 6e9), dec = True)},
+                        'rf_power': {'display_text': 'NV MW Power: ',
+                                'widget': SpinBox(value = defaults[1], suffix = 'W', siPrefix = True)},
+                        'pi': {'display_text': '\u03C0 Pulse: ',
+                                'widget': SpinBox(value = defaults[2], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
+                        'pulse_axis': {'display_text': 'Pulse Axis',
+                                'widget': QtWidgets.QLineEdit(defaults[3])},
+                        'rf_pulse_freq': {'display_text': 'RF Frequency: ',
+                                'widget': SpinBox(value = defaults[4], suffix = 'Hz', siPrefix = True, bounds = (100e3, 750e6), dec = True)},
+                        'rf_pulse_power': {'display_text': 'RF Power: ',
+                                'widget': SpinBox(value = defaults[5], suffix = 'V', siPrefix = True)},
+                        'rf_pulse_phase': {'display_text': 'RF Phase (deg.): ',
+                                'widget': SpinBox(value = defaults[6], int = True, bounds=(0, 360))},
+                        'n': {'display_text': '# Seqs. (n): ',
+                                'widget': SpinBox(value = defaults[7], int = True, bounds=(1, None))}}
             case 'DQ Relaxation':
                 params = {
                         'freq_minus': {'display_text': 'NV Frequency |-1>: ',
@@ -994,24 +1069,35 @@ class ExpWidget(QWidget):
                                 'widget': SpinBox(value = defaults[3], int = True, bounds=(1, None))}}
 
         return params
-            
+
     def check_queue_from_exp(self):
         # queue checker to control progress bar display
-        while not self.queue_from_exp.empty(): #if there is something in the queue
-            queueText = self.queue_from_exp.get_nowait() #get it
+        try:
+            if self.queue_from_exp is None:
+                print("Queue is None. Stopping queue checks.")
+                return
 
-            self.progress_bar.setValue(int(queueText[0]))
-            
-            if queueText[1] == 'in progress':
-                self.status.setStyleSheet("color: black; background-color: gold; border: 4px solid black;")
-                # self.status.setText(f"{self.experiments.currentText()} scan in progress... ({round(float(queueText[1]),2)} s/it)")
-                self.status.setText(f"{self.experiments.currentText()} scan in progress...")
-                self.experiments.setEnabled(False) # disable widgets during experiment
-                self.params_widget.setEnabled(False)
-                self.save_params.setEnabled(False)
-                self.laser_params_widget.setEnabled(False)
-                self.dig_params_widget.setEnabled(False)
-            elif queueText[1] == 'complete':
+            while not self.queue_from_exp.empty():  # If there is something in the queue
+                try:
+                    queueText = self.queue_from_exp.get_nowait()  # Get it
+                except (OSError, EOFError) as e:
+                    print(f"Queue connection error: {e}. Stopping queue checks.")
+                    self.queue_from_exp = None  # Mark queue as invalid
+                    return
+                except Empty:
+                    return  # Queue is empty, exit function safely
+
+                self.progress_bar.setValue(int(queueText[0]))
+
+                if queueText[1] == 'in progress':
+                    self.status.setStyleSheet("color: black; background-color: gold; border: 4px solid black;")
+                    self.status.setText(f"{self.experiments.currentText()} scan in progress...")
+                    self.experiments.setEnabled(False)
+                    self.params_widget.setEnabled(False)
+                    self.save_params.setEnabled(False)
+                    self.laser_params_widget.setEnabled(False)
+                    self.dig_params_widget.setEnabled(False)
+                elif queueText[1] == 'complete':
                     self.status.setStyleSheet("color: black; background-color: limegreen; border: 4px solid black;")
                     self.status.setText(f"{self.experiments.currentText()} scan complete.")
                     self.experiments.setEnabled(True)
@@ -1019,19 +1105,79 @@ class ExpWidget(QWidget):
                     self.save_params.setEnabled(True)
                     self.laser_params_widget.setEnabled(True)
                     self.dig_params_widget.setEnabled(True)
-            else:
-                self.status.setStyleSheet("color: black; background-color: red; border: 4px solid black;")
-                self.status.setText(f"{self.experiments.currentText()} scan stopped.")
-                self.experiments.setEnabled(True)
-                self.params_widget.setEnabled(True)
-                self.save_params.setEnabled(True)
-                self.laser_params_widget.setEnabled(True)
-                self.dig_params_widget.setEnabled(True)
+                elif queueText[1] == 'failed':
+                    self.status.setStyleSheet("color: black; background-color: red; border: 4px solid black;")
+                    self.status.setText(f"{self.experiments.currentText()} scan failed. Exception type '{queueText[3]}'.")
+                    self.experiments.setEnabled(True)
+                    self.params_widget.setEnabled(True)
+                    self.save_params.setEnabled(True)
+                    self.laser_params_widget.setEnabled(True)
+                    self.dig_params_widget.setEnabled(True)
+                else:
+                    self.status.setStyleSheet("color: black; background-color: white; border: 4px solid black;")
+                    self.status.setText(f"{self.experiments.currentText()} scan stopped.")
+                    self.experiments.setEnabled(True)
+                    self.params_widget.setEnabled(True)
+                    self.save_params.setEnabled(True)
+                    self.laser_params_widget.setEnabled(True)
+                    self.dig_params_widget.setEnabled(True)
 
-            if queueText[2] is not None:
-                self.fit_val_label_2.setText(f"{queueText[2]}")
+                if queueText[2] is not None:
+                    self.fit_val_label_2.setText(f"{queueText[2]}")
 
-        self.updateTimer.start(self.QUEUE_CHECK_TIME)
+        except Exception as e:
+            print(f"Unexpected error in check_queue_from_exp: {e}")
+            self.queue_from_exp = None  # If any unexpected error occurs, stop checking queue
+
+        # Restart the timer only if the queue is still valid
+        if self.queue_from_exp is not None:
+            self.updateTimer.start(self.QUEUE_CHECK_TIME)
+
+#     def check_queue_from_exp(self):
+#         # queue checker to control progress bar display
+#         while not self.queue_from_exp.empty(): #if there is something in the queue
+#             queueText = self.queue_from_exp.get_nowait() #get it
+
+#             self.progress_bar.setValue(int(queueText[0]))
+            
+#             if queueText[1] == 'in progress':
+#                 self.status.setStyleSheet("color: black; background-color: gold; border: 4px solid black;")
+#                 # self.status.setText(f"{self.experiments.currentText()} scan in progress... ({round(float(queueText[1]),2)} s/it)")
+#                 self.status.setText(f"{self.experiments.currentText()} scan in progress...")
+#                 self.experiments.setEnabled(False) # disable widgets during experiment
+#                 self.params_widget.setEnabled(False)
+#                 self.save_params.setEnabled(False)
+#                 self.laser_params_widget.setEnabled(False)
+#                 self.dig_params_widget.setEnabled(False)
+#             elif queueText[1] == 'complete':
+#                     self.status.setStyleSheet("color: black; background-color: limegreen; border: 4px solid black;")
+#                     self.status.setText(f"{self.experiments.currentText()} scan complete.")
+#                     self.experiments.setEnabled(True)
+#                     self.params_widget.setEnabled(True)
+#                     self.save_params.setEnabled(True)
+#                     self.laser_params_widget.setEnabled(True)
+#                     self.dig_params_widget.setEnabled(True)
+#             elif queueText[1] == 'failed':
+#                     self.status.setStyleSheet("color: black; background-color: red; border: 4px solid black;")
+#                     self.status.setText(f"{self.experiments.currentText()} scan failed. Exception type '{queueText[3]}'.")
+#                     self.experiments.setEnabled(True)
+#                     self.params_widget.setEnabled(True)
+#                     self.save_params.setEnabled(True)
+#                     self.laser_params_widget.setEnabled(True)
+#                     self.dig_params_widget.setEnabled(True)
+#             else:
+#                 self.status.setStyleSheet("color: black; background-color: white; border: 4px solid black;")
+#                 self.status.setText(f"{self.experiments.currentText()} scan stopped.")
+#                 self.experiments.setEnabled(True)
+#                 self.params_widget.setEnabled(True)
+#                 self.save_params.setEnabled(True)
+#                 self.laser_params_widget.setEnabled(True)
+#                 self.dig_params_widget.setEnabled(True)
+
+#             if queueText[2] is not None:
+#                 self.fit_val_label_2.setText(f"{queueText[2]}")
+
+#         self.updateTimer.start(self.QUEUE_CHECK_TIME)
 
     def toggle_daq(self, b):
         match b.text():
@@ -1088,10 +1234,10 @@ class ExpWidget(QWidget):
 
         if self.experiments.currentText() != 'Signal vs Time':
             # update laser param comboboxes
-            self.sideband_opts.insert(0, self.sideband_opts.pop(self.sideband_opts.index(saved_laser_params[3])))
-            saved_laser_params[3] = self.sideband_opts
-            self.detector_opts.insert(0, self.detector_opts.pop(self.detector_opts.index(saved_laser_params[6])))
-            saved_laser_params[6] = self.detector_opts
+            self.sideband_opts.insert(0, self.sideband_opts.pop(self.sideband_opts.index(saved_laser_params[5])))
+            saved_laser_params[5] = self.sideband_opts
+            self.detector_opts.insert(0, self.detector_opts.pop(self.detector_opts.index(saved_laser_params[8])))
+            saved_laser_params[8] = self.detector_opts
 
             # update digitizer param comboboxes
             self.dig_ro_chan_opts.insert(0, self.dig_ro_chan_opts.pop(self.dig_ro_chan_opts.index(saved_dig_params[3])))
@@ -1121,6 +1267,9 @@ class ExpWidget(QWidget):
             case 'DQ Relaxation':
                 self.dq_array_opts.insert(0, self.dq_array_opts.pop(self.dq_array_opts.index(saved_params[5])))
                 saved_params[5] = self.dq_array_opts   
+            case 'RF Coil: T2':
+                self.t2_rf_array_opts.insert(0, self.t2_rf_array_opts.pop(self.t2_rf_array_opts.index(saved_params[5])))
+                saved_params[5] = self.t2_rf_array_opts
             case 'T2':
                 self.t2_array_opts.insert(0, self.t2_array_opts.pop(self.t2_array_opts.index(saved_params[5])))
                 saved_params[5] = self.t2_array_opts
@@ -1143,10 +1292,11 @@ class ExpWidget(QWidget):
         #         saved_params[10] = self.nmr_seq_opts
 
         self.exp_dict[self.experiments.currentText()][1] = saved_params
-        self.exp_dict[self.experiments.currentText()][2] = saved_mw_params
+        if self.experiments.currentText() != 'Signal vs Time':
+            self.exp_dict[self.experiments.currentText()][2] = saved_mw_params
         self.exp_dict[self.experiments.currentText()][4] = saved_laser_params
         self.exp_dict[self.experiments.currentText()][5] = saved_dig_params
-
+        
     def auto_fit_changed(self):
         if self.auto_fit_checkbox.isChecked() == True:
             self.to_fit = True
@@ -1208,7 +1358,7 @@ class ExpWidget(QWidget):
         try:
             self.params_widget = ParamsWidget(self.create_params_widget(self.experiments.currentText(), self.exp_dict[self.experiments.currentText()][1]), get_param_value_funs = {ComboBox: self.get_combobox_val})
             self.mw_params_widget = ParamsWidget(self.create_mw_params_widget(self.experiments.currentText(), self.exp_dict[self.experiments.currentText()][2]), get_param_value_funs = {ComboBox: self.get_combobox_val})
-
+            
         except KeyError: 
             # if "Select dropdown option" is selected, populate GUI with disabled ODMR widgets as filler
             self.params_widget = ParamsWidget(self.create_params_widget('CW ODMR', self.exp_dict['CW ODMR'][1]))
@@ -1415,6 +1565,11 @@ class ExpWidget(QWidget):
 
         self.queue_to_exp.put('start')
 
+        # **Restart the queue if it was invalid**
+        if self.queue_from_exp is None:
+            print("Reinitializing queue for new experiment.")
+            self.queue_from_exp: Queue = Queue() # Recreate the queue
+
         # reload the module at runtime in case any changes were made to the code
         if self.daq_b1.isChecked(): # digitizer settings
             reload(nv_experiments_current)
@@ -1445,8 +1600,15 @@ class ExpWidget(QWidget):
             fun_kwargs = fun_kwargs)
 
         else:
-            raise ValueError("Must choose data acquisition method.") 
+            self.status.setStyleSheet("color: black; background-color: red; border: 4px solid black;")
+            self.status.setText(f"{self.experiments.currentText()} scan couldn't start because no acquisition mode selected. Choose either 'Digitizer' or 'NI DAQ'.")
+            raise ValueError(f"{self.experiments.currentText()} scan couldn't start because no data acquisition mode selected. Choose either 'Digitizer' or 'NI DAQ'.") 
         
+        # **Restart the timer if the queue is valid**
+        if self.queue_from_exp is not None:
+            print("Restarting updateTimer to check the queue.")
+            self.updateTimer.start(self.QUEUE_CHECK_TIME)
+
     def stop(self, log: bool = True):
         """Request the experiment subprocess to stop by sending the string :code:`stop`
         to :code:`queue_to_exp`.
