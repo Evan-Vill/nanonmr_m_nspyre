@@ -81,7 +81,7 @@ class ExpWidget(QWidget):
         self.sigvstime_params_defaults = [1e3, self.sigvstime_detector_opts]
         self.sigvstime_mw_params_defaults = [1e3, self.sigvstime_mw_detector_opts] # not needed - hidden in GUI
 
-        self.laser_params_defaults = [30, 30e-6, 2.5e-6, 30e6, 0.45, self.sideband_opts, -0.002, -0.004, self.detector_opts]
+        self.laser_params_defaults = [0, 30e-6, 2.5e-6, 30e6, 0.45, self.sideband_opts, -0.002, -0.004, self.detector_opts]
         self.digitizer_defaults = [1024, 500e6, 1, self.dig_ro_chan_opts, self.dig_coupling_opts, self.dig_termination_opts, 32, 5]
 
         # split up defaults into the non-MW and MW settings to save vertical space in GUI
