@@ -284,7 +284,7 @@ class SpinMeasurements:
             ps.start_now()
             
             for i in range(10000):                
-                sig_result_raw = (self.dig.acquire()) # acquire data from digitizer
+                sig_result_raw = self.dig.acquire() # acquire data from digitizer
 
                 # average all data over each trigger/segment 
                 sig_result = np.mean(sig_result_raw,axis=1)
@@ -423,7 +423,7 @@ class SpinMeasurements:
                     # start experiment loop
                     for i in range(kwargs['iters']):
                         
-                        odmr_result_raw = (self.dig.acquire()) # acquire data from digitizer
+                        odmr_result_raw = self.dig.acquire() # acquire data from digitizer
                         odmr_result = np.mean(odmr_result_raw,axis=1)
                         
                         # partition buffer into signal and background datasets
@@ -619,7 +619,7 @@ class SpinMeasurements:
                     mgr.thor_polar.update_positions_callback() # update position
                     pos = mgr.thor_polar.current_position # set pos to be position as move is beginning
                 
-                    odmr_result_raw = (self.dig.acquire()) # acquire data from digitizer
+                    odmr_result_raw = self.dig.acquire() # acquire data from digitizer
 
                     # average all data over each trigger/segment 
                     odmr_result=np.mean(odmr_result_raw,axis=1)
@@ -789,7 +789,7 @@ class SpinMeasurements:
 
                     # start experiment loop
                     for i in range(kwargs['iters']):
-                        rabi_result_raw = (self.dig.acquire()) # acquire data from digitizer
+                        rabi_result_raw = self.dig.acquire() # acquire data from digitizer
                         # average all data over each trigger/segment 
                         rabi_result_raw = rabi_result_raw[:,50:]
                         rabi_result=np.mean(rabi_result_raw,axis=1)
@@ -975,7 +975,7 @@ class SpinMeasurements:
 
                     # start experiment loop
                     for i in range(kwargs['iters']):
-                        pulsed_odmr_result_raw = (self.dig.acquire()) # acquire data from digitizer
+                        pulsed_odmr_result_raw = self.dig.acquire() # acquire data from digitizer
                         # average all data over each trigger/segment 
                         pulsed_odmr_result=np.mean(pulsed_odmr_result_raw,axis=1)
 
@@ -1177,7 +1177,7 @@ class SpinMeasurements:
                     # start experiment loop
                     for i in range(kwargs['iters']):
                         
-                        pulsed_odmr_result_raw = (self.dig.acquire()) # acquire data from digitizer                
+                        pulsed_odmr_result_raw = self.dig.acquire() # acquire data from digitizer                
                         # average all data over each trigger/segment 
                         pulsed_odmr_result = np.mean(pulsed_odmr_result_raw,axis=1)
 
@@ -1321,7 +1321,7 @@ class SpinMeasurements:
                 self.dig.start_buffer()
                 ps.stream(sequence, kwargs['runs']) # execute chosen sequence on Pulse Streamer
 
-                t1_result_raw = (self.dig.acquire())
+                t1_result_raw = self.dig.acquire()
                 
                 t1_result = np.mean(t1_result_raw, axis=1)
                 
@@ -1490,7 +1490,7 @@ class SpinMeasurements:
                     # start experiment loop
                     for i in range(kwargs['iters']):
                         
-                        t1_result_raw = (self.dig.acquire()) # acquire data from digitizer
+                        t1_result_raw = self.dig.acquire() # acquire data from digitizer
 
                         # define dummy array to contain experiment data --> size (runs*num_pts) --> (segment_size)
                         t1_result=np.mean(t1_result_raw,axis=1)
@@ -1741,7 +1741,7 @@ class SpinMeasurements:
                     # start experiment loop
                     for i in range(kwargs['iters']):
                         
-                        t2_result_raw = (self.dig.acquire()) # acquire data from digitizer
+                        t2_result_raw = self.dig.acquire() # acquire data from digitizer
 
                         # define dummy array to contain experiment data --> size (runs*num_pts) --> (segment_size)
                         t2_result = np.mean(t2_result_raw, axis=1)
@@ -1957,7 +1957,7 @@ class SpinMeasurements:
                     # start experiment loop
                     for i in range(kwargs['iters']):
                         
-                        t2_result_raw = (self.dig.acquire()) # acquire data from digitizer
+                        t2_result_raw = self.dig.acquire() # acquire data from digitizer
 
                         # define dummy array to contain experiment data --> size (runs*num_pts) --> (segment_size)
                         t2_result = np.mean(t2_result_raw, axis=1)
@@ -2154,7 +2154,7 @@ class SpinMeasurements:
                     # start experiment loop
                     for i in range(kwargs['iters']):
                         
-                        dq_result_raw = (self.dig.acquire()) # acquire data from digitizer
+                        dq_result_raw = self.dig.acquire() # acquire data from digitizer
 
                         # average all data over each trigger/segment 
                         dq_result=np.mean(dq_result_raw,axis=1)
@@ -2363,7 +2363,7 @@ class SpinMeasurements:
                     time_start = time.time()
                     # start experiment loop
                     for i in range(kwargs['iters']):
-                        deer_result_raw = (self.dig.acquire()) # acquire data from digitizer
+                        deer_result_raw = self.dig.acquire() # acquire data from digitizer
                         # print(np.shape(deer_result_raw))
                         deer_result_raw = deer_result_raw[:,50:]
                         # define dummy array to contain experiment data --> size (runs*num_pts) --> (segment_size)
@@ -2569,7 +2569,7 @@ class SpinMeasurements:
                     # start experiment loop
                     for i in range(kwargs['iters']):
                         
-                        deer_result_raw = (self.dig.acquire()) # acquire data from digitizer
+                        deer_result_raw = self.dig.acquire() # acquire data from digitizer
 
                         # average all data over each trigger/segment 
                         deer_result=np.mean(deer_result_raw,axis=1)
@@ -2773,7 +2773,7 @@ class SpinMeasurements:
 
                     # start experiment loop
                     for i in range(kwargs['iters']):
-                        deer_result_raw = (self.dig.acquire()) # acquire data from digitizer
+                        deer_result_raw = self.dig.acquire() # acquire data from digitizer
                         # average all data over each trigger/segment 
                         deer_result=np.mean(deer_result_raw,axis=1)
 
@@ -2959,7 +2959,7 @@ class SpinMeasurements:
                     # start experiment loop
                     for i in range(kwargs['iters']):
                         
-                        cd_result_raw = (self.dig.acquire()) # acquire data from digitizer
+                        cd_result_raw = self.dig.acquire() # acquire data from digitizer
 
                         # average all data over each trigger/segment 
                         cd_result=np.mean(cd_result_raw,axis=1)
@@ -3142,7 +3142,7 @@ class SpinMeasurements:
                     # start experiment loop
                     for i in range(kwargs['iters']):
                         
-                        corr_result_raw = (self.dig.acquire()) # acquire data from digitizer
+                        corr_result_raw = self.dig.acquire() # acquire data from digitizer
 
                         # average all data over each trigger/segment 
                         corr_result=np.mean(corr_result_raw,axis=1)
@@ -3317,7 +3317,7 @@ class SpinMeasurements:
 
                     # start experiment loop
                     for i in range(kwargs['iters']):
-                        corr_result_raw = (self.dig.acquire()) # acquire data from digitizer
+                        corr_result_raw = self.dig.acquire() # acquire data from digitizer
 
                         # average all data over each trigger/segment 
                         corr_result=np.mean(corr_result_raw,axis=1)
@@ -3498,7 +3498,7 @@ class SpinMeasurements:
                     # start experiment loop
                     for i in range(kwargs['iters']):
                         
-                        deer_t2_result_raw = (self.dig.acquire()) # acquire data from digitizer
+                        deer_t2_result_raw = self.dig.acquire() # acquire data from digitizer
 
                         # average all data over each trigger/segment 
                         deer_t2_result = np.mean(deer_t2_result_raw, axis=1)
@@ -3666,7 +3666,7 @@ class SpinMeasurements:
                     # start experiment loop
                     for i in range(kwargs['iters']):
                         
-                        nmr_result_raw = (self.dig.acquire()) # acquire data from digitizer
+                        nmr_result_raw = self.dig.acquire() # acquire data from digitizer
 
                         # average all data over each trigger/segment 
                         nmr_result=np.mean(nmr_result_raw,axis=1)
@@ -3812,7 +3812,7 @@ class SpinMeasurements:
                         self.dig.start_buffer()
                         ps.stream(sequence, kwargs['runs']) # execute chosen sequence on Pulse Streamer
 
-                        nmr_result_raw = (self.dig.acquire())
+                        nmr_result_raw = self.dig.acquire()
                         
                         # average all data over each trigger/segment 
                         nmr_result=np.mean(nmr_result_raw,axis=1)
