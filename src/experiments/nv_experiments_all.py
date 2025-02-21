@@ -72,11 +72,11 @@ class SpinMeasurements:
             dark_sig, dark_bg, echo_sig, echo_bg = sliced_arrays[:, 0], sliced_arrays[:, 1], sliced_arrays[:, 2], sliced_arrays[:, 3]
 
             runs = len(dark_sig) // pts  # Number of runs
-            # Reshape arrays to have `pts` rows and `runs` columns, then compute mean along axis 1
-            dark_ms1_array = np.mean(np.reshape(dark_sig, (pts, runs)), axis=1)
-            dark_ms0_array = np.mean(np.reshape(dark_bg, (pts, runs)), axis=1)
-            echo_ms1_array = np.mean(np.reshape(echo_sig, (pts, runs)), axis=1)
-            echo_ms0_array = np.mean(np.reshape(echo_bg, (pts, runs)), axis=1)
+            # Reshape arrays to have `runs` rows and `pts` columns, then compute mean along axis 0
+            dark_ms1_array = np.mean(dark_sig.reshape(runs, pts), axis=0).magnitude
+            dark_ms0_array = np.mean(dark_bg.reshape(runs, pts), axis=0).magnitude
+            echo_ms1_array = np.mean(echo_sig.reshape(runs, pts), axis=0).magnitude
+            echo_ms0_array = np.mean(echo_bg.reshape(runs, pts), axis=0).magnitude
 
             return [dark_ms1_array, dark_ms0_array, echo_ms1_array, echo_ms0_array]
 
@@ -85,13 +85,13 @@ class SpinMeasurements:
             dark_sig, dark_bg, echo_sig, echo_bg, cd_sig, cd_bg = sliced_arrays[:, 0], sliced_arrays[:, 1], sliced_arrays[:, 2], sliced_arrays[:, 3], sliced_arrays[:, 4], sliced_arrays[:, 5]
 
             runs = len(dark_sig) // pts  # Number of runs
-            # Reshape arrays to have `pts` rows and `runs` columns, then compute mean along axis 1
-            dark_ms1_array = np.mean(np.reshape(dark_sig, (pts, runs)), axis=1)
-            dark_ms0_array = np.mean(np.reshape(dark_bg, (pts, runs)), axis=1)
-            echo_ms1_array = np.mean(np.reshape(echo_sig, (pts, runs)), axis=1)
-            echo_ms0_array = np.mean(np.reshape(echo_bg, (pts, runs)), axis=1)
-            cd_ms1_array = np.mean(np.reshape(cd_sig, (pts, runs)), axis=1)
-            cd_ms0_array = np.mean(np.reshape(cd_bg, (pts, runs)), axis=1)
+            # Reshape arrays to have `runs` rows and `pts` columns, then compute mean along axis 0
+            dark_ms1_array = np.mean(dark_sig.reshape(runs, pts), axis=0).magnitude
+            dark_ms0_array = np.mean(dark_bg.reshape(runs, pts), axis=0).magnitude
+            echo_ms1_array = np.mean(echo_sig.reshape(runs, pts), axis=0).magnitude
+            echo_ms0_array = np.mean(echo_bg.reshape(runs, pts), axis=0).magnitude
+            cd_ms1_array = np.mean(cd_sig.reshape(runs, pts), axis=0).magnitude
+            cd_ms0_array = np.mean(cd_bg.reshape(runs, pts), axis=0).magnitude
 
             return [dark_ms1_array, dark_ms0_array, echo_ms1_array, echo_ms0_array, cd_ms1_array, cd_ms0_array]
         
@@ -101,9 +101,9 @@ class SpinMeasurements:
 
             runs = len(sig) // pts  # Number of runs
 
-            # Reshape arrays to have `pts` rows and `runs` columns, then compute mean along axis 1
-            ms1_array = np.mean(np.reshape(sig, (pts, runs)), axis=1)
-            ms0_array = np.mean(np.reshape(bg, (pts, runs)), axis=1)
+            # Reshape arrays to have `runs` rows and `pts` columns, then compute mean along axis 0
+            ms1_array = np.mean(sig.reshape(runs, pts), axis=0).magnitude
+            ms0_array = np.mean(bg.reshape(runs, pts), axis=0).magnitude
 
             return [ms1_array, ms0_array]
 
