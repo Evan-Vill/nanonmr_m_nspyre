@@ -2417,109 +2417,76 @@ class Pulses():
 
         return seqs
     
-    def CASR(self, tau, pihalf_x, pihalf_y, pi_x, pi_y, n, n_sr, read_time):
+    def CASR(self, nuclear_pihalf, laser_time, singlet_decay, pihalf_x, pihalf_y, pi_x, pi_y, tau, n, mw_buffer_time, read_time, wait_time, n_R):
         '''
         Coherent averaged synchronized readout (CASR).
         '''
-        tau = self.convert_type(round(tau), float)
+        nuclear_pihalf = self.convert_type(round(nuclear_pihalf), float)
+        laser_time = self.convert_type(round(laser_time), float)
+        singlet_decay = self.convert_type(round(singlet_decay), float)
         pihalf_x = self.convert_type(round(pihalf_x), float)
         pihalf_y = self.convert_type(round(pihalf_y), float)
         pi_x = self.convert_type(round(pi_x), float)
         pi_y = self.convert_type(round(pi_y), float)
+        tau = self.convert_type(round(tau), float)
         n = self.convert_type(round(n), int)
-        n_sr = self.convert_type(round(n_sr), int) # number of subsequences (synchronized readouts) per "run"
+        mw_buffer_time = self.convert_type(round(mw_buffer_time), float)
         read_time = self.convert_type(round(read_time), float)
+        wait_time = self.convert_type(round(wait_time), float)
+        n_R = self.convert_type(round(n_R), int) # number of subsequences (synchronized readouts) per "run"
 
-        def PiPulsesN(axes, tau, N):
-            if axes == 'xy':
-                # xy4_I_seq = [self.Pi('x', pi_x)[0], (tau, self.IQ0[0]), self.Pi('y', pi_y)[0], (tau, self.IQ0[0]), self.Pi('x', pi_x)[0], (tau, self.IQ0[0]), self.Pi('y', pi_y)[0]]
-                xy8_iq_seq = [(tau/2, 0), (self.awg_trig_time, 1), 
-                              ((pi_x - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1), 
-                              ((pi_y - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1), 
-                              ((pi_x - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1), 
-                              ((pi_y - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1),
-                              ((pi_y - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1),
-                              ((pi_x - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1),
-                              ((pi_y - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1),
-                              ((pi_x - self.awg_trig_time) + tau/2, 0)]
+        def PiPulsesN(tau, N):
+            xy8_iq_seq = [(tau/2, 0), (self.awg_trig_time, 1), 
+                          ((pi_x - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1), 
+                          ((pi_y - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1), 
+                          ((pi_x - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1), 
+                          ((pi_y - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1),
+                          ((pi_y - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1),
+                          ((pi_x - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1),
+                          ((pi_y - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1),
+                          ((pi_x - self.awg_trig_time) + tau/2, 0)]
 
-                mw_IQ = (xy8_iq_seq)*N
+            mw_IQ = (xy8_iq_seq)*N
                 
-            elif axes == 'yy':
-                yy8_iq_seq = [(tau/2, 0), (self.awg_trig_time, 1), 
-                              ((pi_y - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1), 
-                              ((pi_y - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1), 
-                              ((pi_y - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1), 
-                              ((pi_y - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1),
-                              ((pi_y - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1),
-                              ((pi_y - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1),
-                              ((pi_y - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1),
-                              ((pi_y - self.awg_trig_time) + tau/2, 0)]
-
-                mw_IQ = (yy8_iq_seq)*N
-            
             return mw_IQ
 
         def SingleCASR():
-            '''
-            CREATE SINGLE HAHN-ECHO SEQUENCE TO REPEAT THROUGHOUT EXPERIMENT
-            '''
-
-            '''
-            DEFINE SPECIAL TIME INTERVALS FOR EXPERIMENT
-            '''
-
-            # total time for correlation spectroscopy MW pulse sequence
-            casr_time = pihalf_x + (tau/2 + 0*pi_x + 4*pi_x + 4*pi_y + 7*tau + tau/2)*n + pihalf_y
-
-            '''
-            DEFINE RELEVANT ON, OFF TIMES FOR DEVICES
-            '''     
-            # total sequence time 100 ns + 6 us + 500 ns + corr spec time + 100 ns + 400 ns + 100 ns + pad time       
-            laser_off1 = self.initial_delay
-            laser_off2 = self.singlet_decay + casr_time + self.MW_buffer_time
-            laser_off3 = 100
-
-            # digitizer trigger timing
-            # clock_off1 = laser_off1 + self.laser_time + laser_off2 + self.trig_spot - self.clock_time
-            # clock_off2 = - self.trig_spot + read_time + laser_off3     
-            clock_off1 = laser_off1 + self.laser_time + laser_off2
-            clock_off2 = - self.clock_time + read_time + laser_off3
-
-            # mw I & Q off windows 
-            iq_off_start = laser_off1 + self.laser_time + self.singlet_decay
-            iq_off_end = (pihalf_y - self.awg_trig_time) + self.MW_buffer_time + read_time + laser_off3
-
-            '''
-            CONSTRUCT PULSE SEQUENCE
-            '''
             # create sequence objects for MW on and off blocks
-            seq_init = self.Pulser.createSequence()
+            seq_rf = self.Pulser.createSequence()
             seq = self.Pulser.createSequence()
 
-            # define sequence structure for laser
-            laser_seq = [(laser_off1, 0), (self.laser_time, 1), (laser_off2, 0), (read_time, 1), (laser_off3, 0)]
-            
-            # define sequence structure for digitizer trigger
-            dig_clock_seq = [(clock_off1, 0), (self.clock_time, 1), (clock_off2, 0)]
-            
-            # sequence structure for I & Q MW channels 
-            mw_iq_seq = [(iq_off_start, 0), (self.awg_trig_time, 1), (pihalf_x - self.awg_trig_time, 0)] + PiPulsesN('xy', tau, n) + [(self.awg_trig_time, 1), (iq_off_end, 0)]
+            # total time for CASR DD subsequence
+            casr_time = pihalf_x + (tau/2 + 4*pi_x + 4*pi_y + 7*tau + tau/2)*n + pihalf_y
+
+            # laser       
+            laser_off1 = singlet_decay + casr_time + mw_buffer_time
+            laser_off2 = wait_time
+            laser_seq = [(laser_time, 1), (laser_off1, 0), (read_time, 1), (laser_off2, 0)] # define sequence structure for laser
+
+            # digitizer 
+            clock_off1 = laser_time + laser_off1
+            clock_off2 = - self.clock_time + read_time + laser_off2
+            dig_clock_seq = [(clock_off1, 0), (self.clock_time, 1), (clock_off2, 0)] # define sequence structure for digitizer trigger
+
+            # mw I & Q off windows 
+            iq_off_start = laser_time + self.singlet_decay
+            iq_off_end = (pihalf_y - self.awg_trig_time) + mw_buffer_time + read_time + laser_off2
+            mw_iq_seq = [(iq_off_start, 0), (self.awg_trig_time, 1), (pihalf_x - self.awg_trig_time, 0)] + PiPulsesN(tau, n) + [(self.awg_trig_time, 1), (iq_off_end, 0)] # sequence structure for I & Q MW channels 
 
             # nuclear spin pi/2 initial pulse
-            nuclear_spin_seq = [(self.awg_trig_time, 1)]
+            nuclear_spin_off = - self.awg_trig_time + nuclear_pihalf
+            nuclear_spin_seq = [(self.awg_trig_time, 1), (nuclear_spin_off, 0)]
 
             # assign initial nuclear spin pi/2 pulse to seq_init
-            seq_init.setDigital(5, nuclear_spin_seq)
-
+            seq_rf.setDigital(7, nuclear_spin_seq)
+ 
             # assign sequences to respective channels for seq
             seq.setDigital(3, laser_seq) # laser
             seq.setDigital(1, dig_clock_seq) # digitizer trigger
             seq.setDigital(2, mw_iq_seq) # MW IQ
 
-            return seq_init + seq*n_sr
+            return seq_rf + seq*n_R + seq_rf + seq*n_R
         
-        # concatenate single correlation spectroscopy sequence "runs" number of times
         seqs = SingleCASR()
 
         return seqs
