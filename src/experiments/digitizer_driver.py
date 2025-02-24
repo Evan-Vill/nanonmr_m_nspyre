@@ -222,14 +222,14 @@ class SpectrumDigitizer():
     def acquire(self):
         try:
             # data_block = self.multiple_recording.__next__()
-            acquire_start_time = time.time()
+            # acquire_start_time = time.time()
             data_block=next(self.multiple_recording)
             # print(data_block)
             # print(np.shape(data_block))
             
             # self.card.set_i(spcm.SPC_M2CMD, spcm.M2CMD_DATA_WAITDMA)
             self.raw_data = np.copy(data_block)
-            print("Dig acquire time before return ", time.time() - acquire_start_time)
+            # print("Dig acquire time before return ", time.time() - acquire_start_time)
             # self.card.stop(spcm.M2CMD_DATA_STOPDMA)
             self.max_value = self.card.max_sample_value()
             # self.get_i(SPC_MIINST_MAXADCVALUE)
