@@ -37,7 +37,7 @@ from nspyre import InstrumentManager
 
 from gui_test import Communicate 
 
-import nv_experiments_current
+import nv_experiments_all
 import nv_experiments_daq
 
 class ExpWidget(QWidget):
@@ -88,7 +88,7 @@ class ExpWidget(QWidget):
         self.odmr_params_defaults = [120, 10, 50]
         self.odmr_mw_params_defaults = [2.87e9, 100e6, 1e-9, 25e-6]
 
-        self.rabi_params_defaults = [120, 10, 0, 500e-9, 100]   
+        self.rabi_params_defaults = [120, 10, 0, 500e-9, 50]   
         self.rabi_mw_params_defaults = [2.87e9, 1e-9, self.rabi_axis_opts]
 
         self.pulsed_odmr_params_defaults = [120, 10, 50]
@@ -97,19 +97,19 @@ class ExpWidget(QWidget):
         self.pulsed_odmr_rf_params_defaults = [120, 10, 50]
         self.pulsed_odmr_rf_mw_params_defaults = [2.87e9, 100e6, 1e-9, 100e-9, 500e3, 0.3, 0]
 
-        self.opt_t1_params_defaults = [120, 10, 50e-9, 100e-6, 100, self.opt_t1_array_opts]
-        self.opt_t1_mw_params_defaults = [12, 10, 50e-9, 100e-6, 100, self.opt_t1_array_opts] # not needed - hidden in GUI
+        self.opt_t1_params_defaults = [120, 10, 50e-9, 100e-6, 50, self.opt_t1_array_opts]
+        self.opt_t1_mw_params_defaults = [12, 10, 50e-9, 100e-6, 50, self.opt_t1_array_opts] # not needed - hidden in GUI
 
-        self.mw_t1_params_defaults = [120, 10, 50e-9, 100e-6, 100, self.mw_t1_array_opts]
+        self.mw_t1_params_defaults = [120, 10, 50e-9, 100e-6, 50, self.mw_t1_array_opts]
         self.mw_t1_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 'y']
 
-        self.t2_params_defaults = [120, 10, 50e-9, 20e-6, 100, self.t2_array_opts]
+        self.t2_params_defaults = [120, 10, 50e-9, 20e-6, 50, self.t2_array_opts]
         self.t2_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 'y', self.t2_seq_opts, 1]
 
-        self.t2_rf_params_defaults = [120, 10, 50e-9, 20e-6, 100, self.t2_rf_array_opts]
+        self.t2_rf_params_defaults = [120, 10, 50e-9, 20e-6, 50, self.t2_rf_array_opts]
         self.t2_rf_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 'y', 1e6, 0.1, 0, 1]
 
-        self.dq_params_defaults = [120, 10, 50e-9, 100e-6, 100, self.dq_array_opts]
+        self.dq_params_defaults = [120, 10, 50e-9, 100e-6, 50, self.dq_array_opts]
         self.dq_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 2.87e9, 1e-9, 20e-9, 'y']
 
         self.deer_params_defaults = [120, 10, 350e6, 750e6, 100, 800e-9]      
@@ -136,8 +136,8 @@ class ExpWidget(QWidget):
         self.nmr_params_defaults = [120, 10, 50e-9, 100e-6, 100, 1e-6]
         self.nmr_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 'y', 1]
 
-        self.casr_params_defaults = [120, 10, 10, 1e-6]
-        self.casr_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 1]
+        self.casr_params_defaults = [120, 10, 10, 1e6]
+        self.casr_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 1e6, 0.1, 1e-6, 0, 1]
 
         self.fit_none_default = [0]
         self.fit_odmr_defaults = [0.01, 2, 6e-3, 1] # defaults = 1% contrast, 2 GHz central freq, 6 MHz linewidth, 1 vertical offset
@@ -168,7 +168,7 @@ class ExpWidget(QWidget):
                     "DEER T1": ["DEER_T1_scan", self.deer_corr_t1_params_defaults, self.deer_corr_t1_mw_params_defaults, 'deer t1', self.laser_params_defaults, self.digitizer_defaults],
                     "DEER T2": ["DEER_T2_scan", self.deer_t2_params_defaults, self.deer_t2_mw_params_defaults, 'deer t2', self.laser_params_defaults, self.digitizer_defaults],
                     "NMR: Correlation Spectroscopy": ["Corr_Spec_scan", self.nmr_params_defaults, self.nmr_mw_params_defaults, 'nmr', self.laser_params_defaults, self.digitizer_defaults],
-                    "NMR: CASR": ["CASR_scan", self.casr_params_defaults, self.casr_mw_params_defaults, 'nmr', self.laser_params_defaults, self.digitizer_defaults]}
+                    "NMR: CASR": ["CASR_scan", self.casr_params_defaults, self.casr_mw_params_defaults, 'casr', self.laser_params_defaults, self.digitizer_defaults]}
         
         self.experiments = QComboBox()
         self.experiments.setFixedHeight(30)
@@ -718,12 +718,10 @@ class ExpWidget(QWidget):
                         'widget': SpinBox(value = defaults[0], int = True, bounds=(1, None))},
                 'iters': {'display_text': '# Experiment Iterations: ',
                         'widget': SpinBox(value = defaults[1], int = True, bounds=(1, None))},
-                'num_pts': {'display_text': 'n_sr (# synch. readout pts.): ',
+                'num_pts': {'display_text': 'n_R (# synch. readout pts.): ',
                         'widget': SpinBox(value = defaults[2], int = True, bounds=(1, None), dec = True)},
                 'central_freq': {'display_text': 'f_0 Central Frequency: ',
-                        'widget': SpinBox(value = defaults[3], suffix = 'Hz', siPrefix = True, bounds = (1e3, 6e9), dec = True)},
-                'tau': {'display_text': 'Free Precession Interval (\u03C4): ',
-                        'widget': SpinBox(value = defaults[4], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)}}
+                        'widget': SpinBox(value = defaults[3], suffix = 'Hz', siPrefix = True, bounds = (1e3, 6e9), dec = True)}}
 
             case 'Fit None':
                 params = {
@@ -1063,10 +1061,18 @@ class ExpWidget(QWidget):
                                 'widget': SpinBox(value = defaults[0], suffix = 'Hz', siPrefix = True, bounds = (100e3, 6e9), dec = True)},
                         'rf_power': {'display_text': 'NV MW Power: ',
                                 'widget': SpinBox(value = defaults[1], suffix = 'W', siPrefix = True)},
-                        'pi': {'display_text': '\u03C0 Pulse: ',
+                        'pi': {'display_text': 'NV \u03C0 Pulse: ',
                                 'widget': SpinBox(value = defaults[2], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
-                        'n': {'display_text': 'XY8-N (# \u03C0 pulses): ',
-                                'widget': SpinBox(value = defaults[3], int = True, bounds=(1, None))}}
+                        'rf_pulse_freq': {'display_text': 'RF Frequency: ',
+                                'widget': SpinBox(value = defaults[3], suffix = 'Hz', siPrefix = True, bounds = (100e3, 100e6), dec = True)},
+                        'rf_pulse_power': {'display_text': 'RF Power: ',
+                                'widget': SpinBox(value = defaults[4], suffix = 'V', siPrefix = True)},
+                        'rf_pi_half': {'display_text': 'RF \u03C0/2 Pulse: ',
+                                'widget': SpinBox(value = defaults[5], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},        
+                        'rf_pulse_phase': {'display_text': 'RF Phase (deg.): ',
+                                'widget': SpinBox(value = defaults[6], int = True, bounds=(0, 360))},
+                        'n': {'display_text': 'n (# XY8-n repetitions): ',
+                                'widget': SpinBox(value = defaults[7], int = True, bounds=(1, None))}}
 
         return params
 
@@ -1572,11 +1578,11 @@ class ExpWidget(QWidget):
 
         # reload the module at runtime in case any changes were made to the code
         if self.daq_b1.isChecked(): # digitizer settings
-            reload(nv_experiments_current)
+            reload(nv_experiments_all)
             # call the function in a new process
             self.run_proc.run(
             run_experiment,
-            exp_cls = nv_experiments_current.SpinMeasurements,
+            exp_cls = nv_experiments_all.SpinMeasurements,
             fun_name = self.exp_dict[self.experiments.currentText()][0],
             constructor_args = list(),
             constructor_kwargs = dict(),
