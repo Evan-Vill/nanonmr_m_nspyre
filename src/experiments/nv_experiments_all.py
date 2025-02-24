@@ -15,6 +15,7 @@ from pulsestreamer import PulseStreamer
 from spcm import units
 from digitizer_driver import SpectrumDigitizer
 
+import math
 import numpy as np
 import warnings
 from scipy.optimize import curve_fit, OptimizeWarning
@@ -94,6 +95,18 @@ class SpinMeasurements:
             cd_ms0_array = np.mean(cd_bg.reshape(runs, pts), axis=0).magnitude
 
             return [dark_ms1_array, dark_ms0_array, echo_ms1_array, echo_ms0_array, cd_ms1_array, cd_ms0_array]
+        
+        elif exp_type == 'CASR':
+            sliced_arrays = array.reshape(-1, pts)
+            sig, bg = sliced_arrays[::2, :], sliced_arrays[1::2, :]
+
+            runs = len(sig) # Number of rows in sig = runs
+
+            # Reshape arrays to have `runs` rows and `pts` columns, then compute mean along axis 0
+            ms1_array = np.mean(sig, axis=0).magnitude
+            ms0_array = np.mean(bg, axis=0).magnitude
+
+            return [ms1_array, ms0_array]
         
         else:
             sliced_arrays = array.reshape(-1, 2)
@@ -378,7 +391,6 @@ class SpinMeasurements:
                                     'sideband_freqs': mod_freqs, 
                                     'iq_phases': iq_phases,
                                     'num_pts': kwargs['num_pts']})
-
             except Exception as e:
                 print(e)
             
@@ -2078,7 +2090,7 @@ class SpinMeasurements:
             sequence = ps.DQ(tau_times, kwargs['pulse_axis'], pi_pulse_minus, pi_pulse_plus, kwargs['laser_readout']*1e9)
 
             # configure digitizer
-            dig_config = self.digitizer_configure(num_pts_in_exp = kwargs['num_pts'], iters = kwargs['iters'], 
+            dig_config = self.digitizer_configure(num_pts_in_exp = 2*kwargs['num_pts'], iters = kwargs['iters'], 
                                                   segment_size = kwargs['segment_size'], sampling_freq = kwargs['dig_sampling_freq'], dig_amplitude = kwargs['dig_amplitude'], 
                                                   read_channel = kwargs['read_channel'], coupling = kwargs['dig_coupling'], termination = kwargs['dig_termination'], 
                                                   pretrig_size = kwargs['pretrig_size'], dig_timeout = kwargs['dig_timeout'], runs = kwargs['runs'])
@@ -2159,7 +2171,7 @@ class SpinMeasurements:
                         # average all data over each trigger/segment 
                         dq_result=np.mean(dq_result_raw,axis=1)
 
-                        # partition buffer into signal and background datasets
+                        # partition buffer into signal and background datasets FIXME: maybe need to use DEER option for 4 pts in analog math
                         try:
                             s00, s0m, smm, smp = volt_factor*self.analog_math(dq_result, 'DQ', kwargs['num_pts']) # data for S0,0, S0,-1, S-1,-1, and S-1,+1 sequence
                         except ValueError:
@@ -2264,7 +2276,7 @@ class SpinMeasurements:
                 dark_pulse = dark_pi
 
             # configure digitizer
-            dig_config = self.digitizer_configure(num_pts_in_exp = kwargs['num_pts'], iters = kwargs['iters'], 
+            dig_config = self.digitizer_configure(num_pts_in_exp = 2*kwargs['num_pts'], iters = kwargs['iters'], 
                                                   segment_size = kwargs['segment_size'], sampling_freq = kwargs['dig_sampling_freq'], dig_amplitude = kwargs['dig_amplitude'], 
                                                   read_channel = kwargs['read_channel'], coupling = kwargs['dig_coupling'], termination = kwargs['dig_termination'], 
                                                   pretrig_size = kwargs['pretrig_size'], dig_timeout = kwargs['dig_timeout'], runs = kwargs['runs'])
@@ -2488,7 +2500,7 @@ class SpinMeasurements:
                                 kwargs['tau']*1e9, kwargs['num_pts'], kwargs['laser_readout']*1e9)
 
             # configure digitizer
-            dig_config = self.digitizer_configure(num_pts_in_exp = kwargs['num_pts'], iters = kwargs['iters'], 
+            dig_config = self.digitizer_configure(num_pts_in_exp = 2*kwargs['num_pts'], iters = kwargs['iters'], 
                                                   segment_size = kwargs['segment_size'], sampling_freq = kwargs['dig_sampling_freq'], dig_amplitude = kwargs['dig_amplitude'], 
                                                   read_channel = kwargs['read_channel'], coupling = kwargs['dig_coupling'], termination = kwargs['dig_termination'], 
                                                   pretrig_size = kwargs['pretrig_size'], dig_timeout = kwargs['dig_timeout'], runs = kwargs['runs'])
@@ -2692,7 +2704,7 @@ class SpinMeasurements:
                                 pi[0], pi[1], kwargs['n'], kwargs['laser_readout']*1e9)
             
             # configure digitizer
-            dig_config = self.digitizer_configure(num_pts_in_exp = kwargs['num_pts'], iters = kwargs['iters'], 
+            dig_config = self.digitizer_configure(num_pts_in_exp = 2*kwargs['num_pts'], iters = kwargs['iters'], 
                                                   segment_size = kwargs['segment_size'], sampling_freq = kwargs['dig_sampling_freq'], dig_amplitude = kwargs['dig_amplitude'], 
                                                   read_channel = kwargs['read_channel'], coupling = kwargs['dig_coupling'], termination = kwargs['dig_termination'], 
                                                   pretrig_size = kwargs['pretrig_size'], dig_timeout = kwargs['dig_timeout'], runs = kwargs['runs'])
@@ -2873,7 +2885,7 @@ class SpinMeasurements:
             # dark_pulses = kwargs['pi']/2 + tau_times/1e9 + (kwargs['pi'] + 2*tau_times/1e9)*(kwargs['n']-1) + kwargs['pi'] + tau_times/1e9 + kwargs['pi']/2 
             
             # configure digitizer
-            dig_config = self.digitizer_configure(num_pts_in_exp = kwargs['num_pts'], iters = kwargs['iters'], 
+            dig_config = self.digitizer_configure(num_pts_in_exp = 3*kwargs['num_pts'], iters = kwargs['iters'], 
                                                   segment_size = kwargs['segment_size'], sampling_freq = kwargs['dig_sampling_freq'], dig_amplitude = kwargs['dig_amplitude'], 
                                                   read_channel = kwargs['read_channel'], coupling = kwargs['dig_coupling'], termination = kwargs['dig_termination'], 
                                                   pretrig_size = kwargs['pretrig_size'], dig_timeout = kwargs['dig_timeout'], runs = kwargs['runs'])
@@ -3237,7 +3249,7 @@ class SpinMeasurements:
                                 pi[0], pi[1], dark_pi*1e9, kwargs['laser_readout']*1e9) # send to PS in [ns] units
             
             # configure digitizer
-            dig_config = self.digitizer_configure(num_pts_in_exp = kwargs['num_pts'], iters = kwargs['iters'], 
+            dig_config = self.digitizer_configure(num_pts_in_exp = 2*kwargs['num_pts'], iters = kwargs['iters'], 
                                                   segment_size = kwargs['segment_size'], sampling_freq = kwargs['dig_sampling_freq'], dig_amplitude = kwargs['dig_amplitude'], 
                                                   read_channel = kwargs['read_channel'], coupling = kwargs['dig_coupling'], termination = kwargs['dig_termination'], 
                                                   pretrig_size = kwargs['pretrig_size'], dig_timeout = kwargs['dig_timeout'], runs = kwargs['runs'])
@@ -3716,8 +3728,8 @@ class SpinMeasurements:
 
     def CASR_scan(self, **kwargs):
         """
-        Run a coherent averaged synchronized readout (CASR) NMR experiment.
-
+        Run a Coherently Averaged Synchronized Readout NMR sweep over a range of frequencies.
+        
         Keyword args:
             dataset: name of the dataset to push data to
             start (float): start frequency
@@ -3735,43 +3747,62 @@ class SpinMeasurements:
             sig_gen = mgr.sg
             ps = mgr.ps
             hdawg = mgr.awg
+            
+            period = (1/kwargs['central_freq'])*1e9 # reference for ensuring sequence is a multiple of this central period [ns]
 
-            t_corr_times = np.linspace(kwargs['start'], kwargs['stop'], kwargs['num_pts']) * 1e9
+            # intervals in pulse sequence used to define time points on x-axis in seconds
+            laser_init_time = kwargs['laser_init']*1e9
+            singlet_decay = 500 
+            pi = [kwargs['pi'], kwargs['pi']]*1e9
+            pi_half = pi/2
+            tau = (1/(2*kwargs['central_freq']))*1e9 # half period of central frequency [ns] - used in DD blocks
 
-            # Generate Rabi data buffer
-            casr_buffer = self.generate_buffer('NMR', kwargs['runs'], kwargs['num_pts'])
+            dd_time = pi_half[0] + (4*pi[0] + 4*pi[1] + 8*tau)*kwargs['n'] + pi_half[1]
 
+            mw_buffer_time = 100 # buffer time between DD block and readout pulse [ns]
+            laser_read_time = kwargs['laser_readout']*1e9 # laser readout pulse [ns]
+            wait_time = 100 # dead time at end of sequence before next subsequence [ns]
+
+            t_seq = laser_init_time + singlet_decay + dd_time + mw_buffer_time + laser_read_time + wait_time
+
+            if t_seq % period != 0:
+                nearest_integer = round(t_seq/period)
+                new_t_seq = nearest_integer * period
+                wait_time = new_t_seq - (t_seq - wait_time)
+                t_seq = new_t_seq
+
+            assert math.isclose(t_seq % period, period, rel_tol=1e-9), "Adjusted 't_seq' still not an integer multiple of 1/f0"
+            
+            # x-axis time values array for experiment [s]
+            times = np.linspace(t_seq - wait_time - laser_read_time/2, kwargs['num_pts']*t_seq, kwargs['num_pts']) * 1e-9
+
+            # define NV drive frequency & sideband
+            sig_gen_freq, iq_phases = self.choose_sideband(kwargs['sideband'], kwargs['freq'], kwargs['sideband_freq']) # iq_phases for x pulse by default
+
+            # define pulse sequence
+            sequence = ps.CASR(kwargs['rf_pi_half']*1e9, laser_init_time, singlet_decay, 
+                               pi_half[0], pi_half[1], pi[0], pi[1], 
+                               tau, kwargs['n'], mw_buffer_time, kwargs['laser_readout'], wait_time, kwargs['num_pts'])
+            
             # configure digitizer
             dig_config = self.digitizer_configure(num_pts_in_exp = kwargs['num_pts'], iters = kwargs['iters'], 
                                                   segment_size = kwargs['segment_size'], sampling_freq = kwargs['dig_sampling_freq'], dig_amplitude = kwargs['dig_amplitude'], 
                                                   read_channel = kwargs['read_channel'], coupling = kwargs['dig_coupling'], termination = kwargs['dig_termination'], 
                                                   pretrig_size = kwargs['pretrig_size'], dig_timeout = kwargs['dig_timeout'], runs = kwargs['runs'])
             
-            sig_gen_freq, iq_phases = self.choose_sideband(kwargs['sideband'], kwargs['freq'], kwargs['sideband_freq']) # iq_phases for x pulse by default
-
-            # configure devices used in scan
-            sig_gen.set_frequency(sig_gen_freq)
-            sig_gen.set_rf_amplitude(kwargs['rf_power'])
-            sig_gen.set_mod_type('QAM')
-            sig_gen.set_mod_function('external')
-            sig_gen.set_mod_toggle(1)
+            # configure signal generator for NV drive
+            sig_gen.set_frequency(sig_gen_freq) # set carrier frequency
+            sig_gen.set_rf_amplitude(kwargs['rf_power']) # set MW power
+            sig_gen.set_mod_type(7) # quadrature amplitude modulation
+            sig_gen.set_mod_subtype(1) # no constellation mapping
+            sig_gen.set_mod_function('IQ', 5) # external modulation
+            sig_gen.set_mod_toggle(1) # turn on modulation mode
 
             volt_factor = self.volt_factor(kwargs['detector'])
 
-            pi: List[float] = []
-            pi_half: List[float] = []
-
-            for i in range(2):
-                pi_half.append(kwargs['pi']*1e9/2)
-                pi.append(kwargs['pi']*1e9)
-
-            sequence = ps.Corr_Spectroscopy(t_corr_times, kwargs['tau']*1e9, 
-                                     pi_half[0], pi_half[1], 
-                                     pi[0], pi[1], kwargs['n'], kwargs['laser_readout']*1e9)
-
+            # upload AWG sequence first
             try:
-                hdawg.set_sequence(**{'seq': 'NMR',
-                                    'seq_nmr': 'Correlation Spectroscopy',
+                hdawg.set_sequence(**{'seq': 'CASR',
                                     'i_offset': kwargs['i_offset'],
                                     'q_offset': kwargs['q_offset'],
                                     'sideband_power': kwargs['sideband_power'],
@@ -3781,81 +3812,86 @@ class SpinMeasurements:
                                     'pihalf_y': pi_half[1]/1e9,
                                     'pi_x': pi[0]/1e9, 
                                     'pi_y': pi[1]/1e9,
+                                    'n_R': kwargs['num_pts'],
                                     'n': kwargs['n'],
-                                    'num_pts': kwargs['num_pts'],
-                                    'runs': kwargs['runs'], 
-                                    'iters': kwargs['iters']})
+                                    'rf_freq': kwargs['rf_pulse_freq'],
+                                    'rf_power': kwargs['rf_pulse_power'],
+                                    'rf_phase': kwargs['rf_pulse_phase'],
+                                    'rf_pihalf': kwargs['rf_pi_half']})
             except Exception as e:
                 print(e)
-            else:  
-                daq.open_ai_task(kwargs['detector'], len(casr_buffer[0]))
-
-                self.dig.assign_param(dig_config)
-
-                # for storing the experiment data
-                # list of numpy arrays of shape (2, num_points)
+            
+            # if successfully uploaded, run the experiment
+            else:
+                # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
                 signal_sweeps = StreamingList()
                 background_sweeps = StreamingList()
 
+                # open laser shutter
+                laser_shutter.open_shutter()
+                if kwargs['detector'] == 'BPD':
+                    pickoff_shutter.open_shutter()
+
+                # upload digitizer parameters
+                self.dig.assign_param(dig_config)
+
+                # emit MW for NV drive
                 sig_gen.set_rf_toggle(1) # turn on NV signal generator
 
+                # configure laser settings and turn on
                 laser.set_modulation_state('pulsed')
                 laser.set_analog_control_mode('current')
                 laser.set_diode_current_realtime(kwargs['laser_power'])
                 laser.laser_on()
 
-                with tqdm(total = kwargs['iters']) as pbar:
+                # set pulsestreamer to start on software trigger & run infinitely
+                ps.set_soft_trigger()
+                ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY) #kwargs['runs']*kwargs['iters']) # execute chosen sequence on Pulse Streamer
+                
+                # start digitizer --> waits for trigger from pulse sequence
+                try:
+                    self.dig.config()
+                except Exception as e:
+                    print(f"Digitizer exception: {e}")
+                    exception_type = type(e).__name__
+                    self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                else:
+                    self.dig.start_buffer()
+                
+                    # start pulse sequence
+                    ps.start_now()
 
+                    # start experiment loop
                     for i in range(kwargs['iters']):
-
-                        self.dig.config()
-                        self.dig.start_buffer()
-                        ps.stream(sequence, kwargs['runs']) # execute chosen sequence on Pulse Streamer
-
-                        nmr_result_raw = self.dig.acquire()
                         
+                        casr_result_raw = self.dig.acquire() # acquire data from digitizer
+
                         # average all data over each trigger/segment 
-                        nmr_result=np.mean(nmr_result_raw,axis=1)
-                        segments=(np.shape(nmr_result))[0]
+                        casr_result=np.mean(casr_result_raw,axis=1)
 
                         # partition buffer into signal and background datasets
                         try:
-                            sig, bg = self.analog_math(nmr_result, 'NMR', kwargs['num_pts'])
+                            sig, bg = volt_factor*self.analog_math(casr_result, 'CASR', kwargs['num_pts'])
                         except ValueError:
                             continue
-                        
-                        # sig = np.abs(sig)
-                        # bg = np.abs(bg)
 
-                        # read the analog voltage levels received by the APD.
                         # notify the streaminglist that this entry has updated so it will be pushed to the data server
-                        
-                        signal_sweeps.append(np.stack([t_corr_times/1e3, sig]))
+                        signal_sweeps.append(np.stack([times*1e3, sig]))
                         signal_sweeps.updated_item(-1) 
-                        background_sweeps.append(np.stack([t_corr_times/1e3, bg]))
+                        background_sweeps.append(np.stack([times*1e3, bg]))
                         background_sweeps.updated_item(-1)
 
-                        # save the current data to the data server.
+                        # save the current data to the data server
                         casr_data.push({'params': {'kwargs': kwargs},
-                                        'title': 'NMR Time Domain Data',
-                                        'xlabel': 'Free Precession Interval (\u03BCs) or Frequency (MHz)',
+                                        'title': 'CASR Time Domain Data',
+                                        'xlabel': 'Free Precession Interval (ms) or Frequency (kHz)',
                                         'ylabel': 'Signal',
                                         'datasets': {'signal' : signal_sweeps,
                                                     'background': background_sweeps}
                         })
 
-                        if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
-                            # the GUI has asked us nicely to exit
-                            if kwargs['save'] == True:
-                                flexSave(kwargs['dataset'], kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
-                            
-                            self.equipment_off(kwargs['detector'])
-
-                            return
-                        
-                        pbar.update(segments/total_segments)
+                        # update GUI progress bar                        
                         percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                        time_per_iter = (pbar.last_print_t - pbar.start_t)/pbar.n
                         self.queue_from_exp.put_nowait([percent_completed, 'in progress', None])
 
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
@@ -3866,13 +3902,15 @@ class SpinMeasurements:
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                             return
-                        
-                if kwargs['save'] == True:
-                    self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
+                            
+                    # save data if requested upon completion of experiment
+                    if kwargs['save'] == True:
+                        self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
 
-                self.queue_from_exp.put_nowait([percent_completed, 'complete', None])
+                    self.queue_from_exp.put_nowait([percent_completed, 'complete', None])
 
-                self.equipment_off(kwargs['detector'])
+            finally:
+                self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed 
 
     
 
