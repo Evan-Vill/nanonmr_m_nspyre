@@ -1,0 +1,1834 @@
+2025-03-10 13:06:20.727 [    INFO] (           server.py: 288) Starting InstrumentServer RPyC server...
+2025-03-10 13:06:20.730 [    INFO] (           server.py: 251) server started on [127.0.0.1]:42068
+2025-03-10 13:06:20.859 [   DEBUG] (        highlevel.py:  47) SerialSession was correctly imported.
+2025-03-10 13:06:20.883 [   DEBUG] (        highlevel.py:  54) USBSession and USBRawSession were correctly imported.
+2025-03-10 13:06:20.894 [   DEBUG] (        highlevel.py:  61) TCPIPSession was correctly imported.
+2025-03-10 13:06:20.895 [   DEBUG] (        highlevel.py:  70) GPIBSession was not imported No module named 'gpib'.
+2025-03-10 13:06:20.897 [   DEBUG] (        highlevel.py: 201) Created library wrapper for py
+2025-03-10 13:06:20.897 [   DEBUG] (        highlevel.py:3019) Created ResourceManager with session 3080136
+2025-03-10 13:06:20.897 [   DEBUG] (         resource.py: 278) TCPIP0::10.135.70.65::inst0::INSTR - opening ...
+2025-03-10 13:06:20.897 [   DEBUG] (              rpc.py: 481) RawTCPClient: connecting to socket at (10.135.70.65, 111)
+2025-03-10 13:06:20.898 [   DEBUG] (              rpc.py: 227) Make call <PortMapperVersion.get_port: 3>, (395183, 1, 6, 0), <bound method PortMapperPacker.pack_mapping of <pyvisa_py.protocols.rpc.PortMapperPacker object at 0x00000259E101DE90>>, <bound method Unpacker.unpack_uint of <pyvisa_py.protocols.rpc.PortMapperUnpacker object at 0x00000259E1101010>>
+2025-03-10 13:06:20.898 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=460, family=2, type=1, proto=0, laddr=('10.135.70.59', 61834), raddr=('10.135.70.65', 111)>: b'\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x02\x00\x01\x86\xa0\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\x06\x00\x00\x00\x00'
+2025-03-10 13:06:20.898 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 3
+2025-03-10 13:06:20.898 [   DEBUG] (              rpc.py: 332) Start receiving at least 1 packages
+2025-03-10 13:06:20.898 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00\x1c'
+2025-03-10 13:06:20.898 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x03\xe8'
+2025-03-10 13:06:20.899 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=460, family=2, type=1, proto=0, laddr=('10.135.70.59', 61834), raddr=('10.135.70.65', 111)>: bytearray(b'\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x03\xe8')
+2025-03-10 13:06:20.899 [   DEBUG] (              rpc.py: 489) RawTCPClient: closing socket
+2025-03-10 13:06:20.899 [   DEBUG] (              rpc.py: 481) RawTCPClient: connecting to socket at (10.135.70.65, 1000)
+2025-03-10 13:06:20.899 [   DEBUG] (              rpc.py: 227) Make call 10, (1349197114, 0, 10000, 'inst0'), <bound method Vxi11Packer.pack_create_link_parms of <pyvisa_py.protocols.vxi11.Vxi11Packer object at 0x00000259E1100C90>>, <bound method Vxi11Unpacker.unpack_create_link_resp of <pyvisa_py.protocols.vxi11.Vxi11Unpacker object at 0x00000259E1100C50>>
+2025-03-10 13:06:20.899 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=460, family=2, type=1, proto=0, laddr=('10.135.70.59', 61835), raddr=('10.135.70.65', 1000)>: b"\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x02\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\n\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00Pk\x1d:\x00\x00\x00\x00\x00\x00'\x10\x00\x00\x00\x05inst0\x00\x00\x00"
+2025-03-10 13:06:20.899 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 10
+2025-03-10 13:06:20.900 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00('
+2025-03-10 13:06:20.900 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x03\xea\x00\x00\x01\x90'
+2025-03-10 13:06:20.900 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=460, family=2, type=1, proto=0, laddr=('10.135.70.59', 61835), raddr=('10.135.70.65', 1000)>: bytearray(b'\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x03\xea\x00\x00\x01\x90')
+2025-03-10 13:06:20.900 [   DEBUG] (         resource.py: 303) TCPIP0::10.135.70.65::inst0::INSTR - is open with session 2403588
+2025-03-10 13:06:20.900 [    INFO] (sg396_driver_current.py:  62) Connected to SG396 [TCPIP::10.135.70.65::inst0::INSTR].
+2025-03-10 13:06:20.900 [    INFO] (           server.py: 212) Added device [sg] with args: ['TCPIP::10.135.70.65::inst0::INSTR'] kwargs: {}.
+2025-03-10 13:06:21.062 [    INFO] (            utils.py: 148) Note: NumExpr detected 32 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 16.
+2025-03-10 13:06:21.063 [    INFO] (            utils.py: 161) NumExpr defaulting to 16 threads.
+2025-03-10 13:06:21.812 [   DEBUG] (         byteflow.py:  90) bytecode dump:
+>          0	NOP(arg=None, lineno=22)
+           2	RESUME(arg=0, lineno=22)
+           4	LOAD_FAST(arg=0, lineno=25)
+           6	LOAD_FAST(arg=1, lineno=25)
+           8	BINARY_SUBSCR(arg=None, lineno=25)
+          18	RETURN_VALUE(arg=None, lineno=25)
+2025-03-10 13:06:21.813 [   DEBUG] (         byteflow.py: 116) pending: deque([State(pc_initial=0 nstack_initial=0)])
+2025-03-10 13:06:21.813 [   DEBUG] (         byteflow.py: 119) stack: []
+2025-03-10 13:06:21.813 [   DEBUG] (         byteflow.py: 120) state.pc_initial: State(pc_initial=0 nstack_initial=0)
+2025-03-10 13:06:21.813 [   DEBUG] (         byteflow.py: 350) dispatch pc=0, inst=NOP(arg=None, lineno=22)
+2025-03-10 13:06:21.813 [   DEBUG] (         byteflow.py: 351) stack []
+2025-03-10 13:06:21.813 [   DEBUG] (         byteflow.py: 350) dispatch pc=2, inst=RESUME(arg=0, lineno=22)
+2025-03-10 13:06:21.813 [   DEBUG] (         byteflow.py: 351) stack []
+2025-03-10 13:06:21.813 [   DEBUG] (         byteflow.py: 350) dispatch pc=4, inst=LOAD_FAST(arg=0, lineno=25)
+2025-03-10 13:06:21.814 [   DEBUG] (         byteflow.py: 351) stack []
+2025-03-10 13:06:21.814 [   DEBUG] (         byteflow.py: 350) dispatch pc=6, inst=LOAD_FAST(arg=1, lineno=25)
+2025-03-10 13:06:21.814 [   DEBUG] (         byteflow.py: 351) stack ['$x4.0']
+2025-03-10 13:06:21.814 [   DEBUG] (         byteflow.py: 350) dispatch pc=8, inst=BINARY_SUBSCR(arg=None, lineno=25)
+2025-03-10 13:06:21.814 [   DEBUG] (         byteflow.py: 351) stack ['$x4.0', '$off6.1']
+2025-03-10 13:06:21.814 [   DEBUG] (         byteflow.py: 350) dispatch pc=18, inst=RETURN_VALUE(arg=None, lineno=25)
+2025-03-10 13:06:21.814 [   DEBUG] (         byteflow.py: 351) stack ['$8binary_subscr.2']
+2025-03-10 13:06:21.814 [   DEBUG] (         byteflow.py: 138) end state. edges=[]
+2025-03-10 13:06:21.814 [   DEBUG] (         byteflow.py: 219) -------------------------Prune PHIs-------------------------
+2025-03-10 13:06:21.815 [   DEBUG] (         byteflow.py: 288) Used_phis: defaultdict(<class 'set'>, {State(pc_initial=0 nstack_initial=0): set()})
+2025-03-10 13:06:21.815 [   DEBUG] (         byteflow.py: 245) defmap: {}
+2025-03-10 13:06:21.815 [   DEBUG] (         byteflow.py: 246) phismap: defaultdict(<class 'set'>, {})
+2025-03-10 13:06:21.815 [   DEBUG] (         byteflow.py: 267) changing phismap: defaultdict(<class 'set'>, {})
+2025-03-10 13:06:21.815 [   DEBUG] (         byteflow.py: 276) keep phismap: {}
+2025-03-10 13:06:21.815 [   DEBUG] (         byteflow.py: 282) new_out: defaultdict(<class 'dict'>, {})
+2025-03-10 13:06:21.815 [   DEBUG] (         byteflow.py: 292) ----------------------DONE Prune PHIs-----------------------
+2025-03-10 13:06:21.815 [   DEBUG] (         byteflow.py: 150) block_infos State(pc_initial=0 nstack_initial=0):
+AdaptBlockInfo(insts=((0, {}), (2, {}), (4, {'res': '$x4.0'}), (6, {'res': '$off6.1'}), (8, {'index': '$off6.1', 'target': '$x4.0', 'res': '$8binary_subscr.2'}), (10, {}), (12, {}), (14, {}), (16, {}), (18, {'retval': '$8binary_subscr.2', 'castval': '$18return_value.3'})), outgoing_phis={}, blockstack=(), active_try_block=None, outgoing_edgepushed={})
+2025-03-10 13:06:21.815 [   DEBUG] (      interpreter.py:1416) label 0:
+    x = arg(0, name=x)                       ['x']
+    off = arg(1, name=off)                   ['off']
+    $8binary_subscr.2 = getitem(value=x, index=off, fn=<built-in function getitem>) ['$8binary_subscr.2', 'off', 'x']
+    $18return_value.3 = cast(value=$8binary_subscr.2) ['$18return_value.3', '$8binary_subscr.2']
+    return $18return_value.3                 ['$18return_value.3']
+
+2025-03-10 13:06:21.820 [   DEBUG] (              ssa.py: 178) ==== SSA block analysis pass on 0
+2025-03-10 13:06:21.820 [   DEBUG] (              ssa.py: 208) Running <numba.core.ssa._GatherDefsHandler object at 0x00000259E714B910>
+2025-03-10 13:06:21.820 [   DEBUG] (              ssa.py: 210) on stmt: x = arg(0, name=x)
+2025-03-10 13:06:21.821 [   DEBUG] (              ssa.py: 210) on stmt: off = arg(1, name=off)
+2025-03-10 13:06:21.821 [   DEBUG] (              ssa.py: 210) on stmt: $8binary_subscr.2 = getitem(value=x, index=off, fn=<built-in function getitem>)
+2025-03-10 13:06:21.821 [   DEBUG] (              ssa.py: 210) on stmt: $18return_value.3 = cast(value=$8binary_subscr.2)
+2025-03-10 13:06:21.821 [   DEBUG] (              ssa.py: 210) on stmt: return $18return_value.3
+2025-03-10 13:06:21.821 [   DEBUG] (              ssa.py: 157) defs defaultdict(<class 'list'>,
+            {'$18return_value.3': [(<numba.core.ir.Assign object at 0x00000259E7149E50>,
+                                    0)],
+             '$8binary_subscr.2': [(<numba.core.ir.Assign object at 0x00000259E7149B10>,
+                                    0)],
+             'off': [(<numba.core.ir.Assign object at 0x00000259E7149610>, 0)],
+             'x': [(<numba.core.ir.Assign object at 0x00000259E7149510>, 0)]})
+2025-03-10 13:06:21.821 [   DEBUG] (              ssa.py: 172) SSA violators <numba.core.utils.OrderedSet object at 0x00000259E714B910>
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py:  90) bytecode dump:
+>          0	NOP(arg=None, lineno=26)
+           2	RESUME(arg=0, lineno=26)
+           4	LOAD_GLOBAL(arg=1, lineno=29)
+          16	LOAD_ATTR(arg=1, lineno=29)
+          26	LOAD_FAST(arg=0, lineno=29)
+          28	LOAD_FAST(arg=1, lineno=29)
+          30	LOAD_CONST(arg=1, lineno=29)
+          32	BINARY_OP(arg=0, lineno=29)
+          36	BINARY_SUBSCR(arg=None, lineno=29)
+          46	LOAD_CONST(arg=2, lineno=29)
+          48	BINARY_OP(arg=3, lineno=29)
+          52	LOAD_FAST(arg=0, lineno=29)
+          54	LOAD_FAST(arg=1, lineno=29)
+          56	LOAD_CONST(arg=3, lineno=29)
+          58	BINARY_OP(arg=0, lineno=29)
+          62	BINARY_SUBSCR(arg=None, lineno=29)
+          72	BINARY_OP(arg=0, lineno=29)
+          76	PRECALL(arg=1, lineno=29)
+          80	CALL(arg=1, lineno=29)
+          90	RETURN_VALUE(arg=None, lineno=29)
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 116) pending: deque([State(pc_initial=0 nstack_initial=0)])
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 119) stack: []
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 120) state.pc_initial: State(pc_initial=0 nstack_initial=0)
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 350) dispatch pc=0, inst=NOP(arg=None, lineno=26)
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 351) stack []
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 350) dispatch pc=2, inst=RESUME(arg=0, lineno=26)
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 351) stack []
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 350) dispatch pc=4, inst=LOAD_GLOBAL(arg=1, lineno=29)
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 351) stack []
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 350) dispatch pc=16, inst=LOAD_ATTR(arg=1, lineno=29)
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$4load_global.0']
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 350) dispatch pc=26, inst=LOAD_FAST(arg=0, lineno=29)
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2']
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 350) dispatch pc=28, inst=LOAD_FAST(arg=1, lineno=29)
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$x26.3']
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 350) dispatch pc=30, inst=LOAD_CONST(arg=1, lineno=29)
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$x26.3', '$off28.4']
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 350) dispatch pc=32, inst=BINARY_OP(arg=0, lineno=29)
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$x26.3', '$off28.4', '$const30.5']
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 350) dispatch pc=36, inst=BINARY_SUBSCR(arg=None, lineno=29)
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$x26.3', '$binop_add32.6']
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 350) dispatch pc=46, inst=LOAD_CONST(arg=2, lineno=29)
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$36binary_subscr.7']
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 350) dispatch pc=48, inst=BINARY_OP(arg=3, lineno=29)
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$36binary_subscr.7', '$const46.8']
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 350) dispatch pc=52, inst=LOAD_FAST(arg=0, lineno=29)
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9']
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 350) dispatch pc=54, inst=LOAD_FAST(arg=1, lineno=29)
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$x52.10']
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 350) dispatch pc=56, inst=LOAD_CONST(arg=3, lineno=29)
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$x52.10', '$off54.11']
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 350) dispatch pc=58, inst=BINARY_OP(arg=0, lineno=29)
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$x52.10', '$off54.11', '$const56.12']
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 350) dispatch pc=62, inst=BINARY_SUBSCR(arg=None, lineno=29)
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$x52.10', '$binop_add58.13']
+2025-03-10 13:06:21.844 [   DEBUG] (         byteflow.py: 350) dispatch pc=72, inst=BINARY_OP(arg=0, lineno=29)
+2025-03-10 13:06:21.855 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$62binary_subscr.14']
+2025-03-10 13:06:21.855 [   DEBUG] (         byteflow.py: 350) dispatch pc=76, inst=PRECALL(arg=1, lineno=29)
+2025-03-10 13:06:21.855 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add72.15']
+2025-03-10 13:06:21.856 [   DEBUG] (         byteflow.py: 350) dispatch pc=80, inst=CALL(arg=1, lineno=29)
+2025-03-10 13:06:21.856 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add72.15']
+2025-03-10 13:06:21.856 [   DEBUG] (         byteflow.py: 350) dispatch pc=90, inst=RETURN_VALUE(arg=None, lineno=29)
+2025-03-10 13:06:21.857 [   DEBUG] (         byteflow.py: 351) stack ['$80call.16']
+2025-03-10 13:06:21.857 [   DEBUG] (         byteflow.py: 138) end state. edges=[]
+2025-03-10 13:06:21.857 [   DEBUG] (         byteflow.py: 219) -------------------------Prune PHIs-------------------------
+2025-03-10 13:06:21.857 [   DEBUG] (         byteflow.py: 288) Used_phis: defaultdict(<class 'set'>, {State(pc_initial=0 nstack_initial=0): set()})
+2025-03-10 13:06:21.857 [   DEBUG] (         byteflow.py: 245) defmap: {}
+2025-03-10 13:06:21.857 [   DEBUG] (         byteflow.py: 246) phismap: defaultdict(<class 'set'>, {})
+2025-03-10 13:06:21.857 [   DEBUG] (         byteflow.py: 267) changing phismap: defaultdict(<class 'set'>, {})
+2025-03-10 13:06:21.857 [   DEBUG] (         byteflow.py: 276) keep phismap: {}
+2025-03-10 13:06:21.857 [   DEBUG] (         byteflow.py: 282) new_out: defaultdict(<class 'dict'>, {})
+2025-03-10 13:06:21.858 [   DEBUG] (         byteflow.py: 292) ----------------------DONE Prune PHIs-----------------------
+2025-03-10 13:06:21.858 [   DEBUG] (         byteflow.py: 150) block_infos State(pc_initial=0 nstack_initial=0):
+AdaptBlockInfo(insts=((0, {}), (2, {}), (4, {'idx': 0, 'res': '$4load_global.0'}), (6, {}), (8, {}), (10, {}), (12, {}), (14, {}), (16, {'item': '$4load_global.0', 'res': '$16load_attr.2'}), (18, {}), (20, {}), (22, {}), (24, {}), (26, {'res': '$x26.3'}), (28, {'res': '$off28.4'}), (30, {'res': '$const30.5'}), (32, {'op': '+', 'lhs': '$off28.4', 'rhs': '$const30.5', 'res': '$binop_add32.6'}), (34, {}), (36, {'index': '$binop_add32.6', 'target': '$x26.3', 'res': '$36binary_subscr.7'}), (38, {}), (40, {}), (42, {}), (44, {}), (46, {'res': '$const46.8'}), (48, {'op': '<<', 'lhs': '$36binary_subscr.7', 'rhs': '$const46.8', 'res': '$binop_lshift48.9'}), (50, {}), (52, {'res': '$x52.10'}), (54, {'res': '$off54.11'}), (56, {'res': '$const56.12'}), (58, {'op': '+', 'lhs': '$off54.11', 'rhs': '$const56.12', 'res': '$binop_add58.13'}), (60, {}), (62, {'index': '$binop_add58.13', 'target': '$x52.10', 'res': '$62binary_subscr.14'}), (64, {}), (66, {}), (68, {}), (70, {}), (72, {'op': '+', 'lhs': '$binop_lshift48.9', 'rhs': '$62binary_subscr.14', 'res': '$binop_add72.15'}), (74, {}), (76, {}), (78, {}), (80, {'func': '$16load_attr.2', 'args': ['$binop_add72.15'], 'kw_names': None, 'res': '$80call.16'}), (82, {}), (84, {}), (86, {}), (88, {}), (90, {'retval': '$80call.16', 'castval': '$90return_value.17'})), outgoing_phis={}, blockstack=(), active_try_block=None, outgoing_edgepushed={})
+2025-03-10 13:06:21.858 [   DEBUG] (      interpreter.py:1416) label 0:
+    x = arg(0, name=x)                       ['x']
+    off = arg(1, name=off)                   ['off']
+    $4load_global.0 = global(nb: <module 'numba' from 'C:\\Users\\ejvil\\miniconda3\\envs\\nspyre\\Lib\\site-packages\\numba\\__init__.py'>) ['$4load_global.0']
+    $16load_attr.2 = getattr(value=$4load_global.0, attr=u2) ['$16load_attr.2', '$4load_global.0']
+    $const30.5 = const(int, 1)               ['$const30.5']
+    $binop_add32.6 = off + $const30.5        ['$binop_add32.6', '$const30.5', 'off']
+    $36binary_subscr.7 = getitem(value=x, index=$binop_add32.6, fn=<built-in function getitem>) ['$36binary_subscr.7', '$binop_add32.6', 'x']
+    $const46.8 = const(int, 8)               ['$const46.8']
+    $binop_lshift48.9 = $36binary_subscr.7 << $const46.8 ['$36binary_subscr.7', '$binop_lshift48.9', '$const46.8']
+    $const56.12 = const(int, 0)              ['$const56.12']
+    $binop_add58.13 = off + $const56.12      ['$binop_add58.13', '$const56.12', 'off']
+    $62binary_subscr.14 = getitem(value=x, index=$binop_add58.13, fn=<built-in function getitem>) ['$62binary_subscr.14', '$binop_add58.13', 'x']
+    $binop_add72.15 = $binop_lshift48.9 + $62binary_subscr.14 ['$62binary_subscr.14', '$binop_add72.15', '$binop_lshift48.9']
+    $80call.16 = call $16load_attr.2($binop_add72.15, func=$16load_attr.2, args=[Var($binop_add72.15, nbtools.py:29)], kws=(), vararg=None, varkwarg=None, target=None) ['$16load_attr.2', '$80call.16', '$binop_add72.15']
+    $90return_value.17 = cast(value=$80call.16) ['$80call.16', '$90return_value.17']
+    return $90return_value.17                ['$90return_value.17']
+
+2025-03-10 13:06:21.864 [   DEBUG] (              ssa.py: 178) ==== SSA block analysis pass on 0
+2025-03-10 13:06:21.864 [   DEBUG] (              ssa.py: 208) Running <numba.core.ssa._GatherDefsHandler object at 0x00000259E820DFD0>
+2025-03-10 13:06:21.864 [   DEBUG] (              ssa.py: 210) on stmt: x = arg(0, name=x)
+2025-03-10 13:06:21.864 [   DEBUG] (              ssa.py: 210) on stmt: off = arg(1, name=off)
+2025-03-10 13:06:21.864 [   DEBUG] (              ssa.py: 210) on stmt: $4load_global.0 = global(nb: <module 'numba' from 'C:\\Users\\ejvil\\miniconda3\\envs\\nspyre\\Lib\\site-packages\\numba\\__init__.py'>)
+2025-03-10 13:06:21.864 [   DEBUG] (              ssa.py: 210) on stmt: $16load_attr.2 = getattr(value=$4load_global.0, attr=u2)
+2025-03-10 13:06:21.864 [   DEBUG] (              ssa.py: 210) on stmt: $const30.5 = const(int, 1)
+2025-03-10 13:06:21.864 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add32.6 = off + $const30.5
+2025-03-10 13:06:21.864 [   DEBUG] (              ssa.py: 210) on stmt: $36binary_subscr.7 = getitem(value=x, index=$binop_add32.6, fn=<built-in function getitem>)
+2025-03-10 13:06:21.864 [   DEBUG] (              ssa.py: 210) on stmt: $const46.8 = const(int, 8)
+2025-03-10 13:06:21.864 [   DEBUG] (              ssa.py: 210) on stmt: $binop_lshift48.9 = $36binary_subscr.7 << $const46.8
+2025-03-10 13:06:21.864 [   DEBUG] (              ssa.py: 210) on stmt: $const56.12 = const(int, 0)
+2025-03-10 13:06:21.864 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add58.13 = off + $const56.12
+2025-03-10 13:06:21.864 [   DEBUG] (              ssa.py: 210) on stmt: $62binary_subscr.14 = getitem(value=x, index=$binop_add58.13, fn=<built-in function getitem>)
+2025-03-10 13:06:21.864 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add72.15 = $binop_lshift48.9 + $62binary_subscr.14
+2025-03-10 13:06:21.864 [   DEBUG] (              ssa.py: 210) on stmt: $80call.16 = call $16load_attr.2($binop_add72.15, func=$16load_attr.2, args=[Var($binop_add72.15, nbtools.py:29)], kws=(), vararg=None, varkwarg=None, target=None)
+2025-03-10 13:06:21.864 [   DEBUG] (              ssa.py: 210) on stmt: $90return_value.17 = cast(value=$80call.16)
+2025-03-10 13:06:21.864 [   DEBUG] (              ssa.py: 210) on stmt: return $90return_value.17
+2025-03-10 13:06:21.864 [   DEBUG] (              ssa.py: 157) defs defaultdict(<class 'list'>,
+            {'$16load_attr.2': [(<numba.core.ir.Assign object at 0x00000259E721D510>,
+                                 0)],
+             '$36binary_subscr.7': [(<numba.core.ir.Assign object at 0x00000259E721DED0>,
+                                     0)],
+             '$4load_global.0': [(<numba.core.ir.Assign object at 0x00000259E721D250>,
+                                  0)],
+             '$62binary_subscr.14': [(<numba.core.ir.Assign object at 0x00000259E721ECD0>,
+                                      0)],
+             '$80call.16': [(<numba.core.ir.Assign object at 0x00000259E721F350>,
+                             0)],
+             '$90return_value.17': [(<numba.core.ir.Assign object at 0x00000259E721F6D0>,
+                                     0)],
+             '$binop_add32.6': [(<numba.core.ir.Assign object at 0x00000259E721DC90>,
+                                 0)],
+             '$binop_add58.13': [(<numba.core.ir.Assign object at 0x00000259E721EA90>,
+                                  0)],
+             '$binop_add72.15': [(<numba.core.ir.Assign object at 0x00000259E721F010>,
+                                  0)],
+             '$binop_lshift48.9': [(<numba.core.ir.Assign object at 0x00000259E721E350>,
+                                    0)],
+             '$const30.5': [(<numba.core.ir.Assign object at 0x00000259E721DAD0>,
+                             0)],
+             '$const46.8': [(<numba.core.ir.Assign object at 0x00000259E721E110>,
+                             0)],
+             '$const56.12': [(<numba.core.ir.Assign object at 0x00000259E721E850>,
+                              0)],
+             'off': [(<numba.core.ir.Assign object at 0x00000259E721CFD0>, 0)],
+             'x': [(<numba.core.ir.Assign object at 0x00000259E721CDD0>, 0)]})
+2025-03-10 13:06:21.864 [   DEBUG] (              ssa.py: 172) SSA violators <numba.core.utils.OrderedSet object at 0x00000259E820DFD0>
+2025-03-10 13:06:21.903 [   DEBUG] (         byteflow.py:  90) bytecode dump:
+>          0	NOP(arg=None, lineno=30)
+           2	RESUME(arg=0, lineno=30)
+           4	LOAD_GLOBAL(arg=1, lineno=33)
+          16	LOAD_ATTR(arg=1, lineno=33)
+          26	LOAD_FAST(arg=0, lineno=33)
+          28	LOAD_FAST(arg=1, lineno=33)
+          30	LOAD_CONST(arg=1, lineno=33)
+          32	BINARY_OP(arg=0, lineno=33)
+          36	BINARY_SUBSCR(arg=None, lineno=33)
+          46	LOAD_CONST(arg=2, lineno=33)
+          48	BINARY_OP(arg=3, lineno=33)
+          52	LOAD_FAST(arg=0, lineno=33)
+          54	LOAD_FAST(arg=1, lineno=33)
+          56	LOAD_CONST(arg=3, lineno=33)
+          58	BINARY_OP(arg=0, lineno=33)
+          62	BINARY_SUBSCR(arg=None, lineno=33)
+          72	LOAD_CONST(arg=4, lineno=33)
+          74	BINARY_OP(arg=3, lineno=33)
+          78	BINARY_OP(arg=0, lineno=33)
+          82	LOAD_FAST(arg=0, lineno=33)
+          84	LOAD_FAST(arg=1, lineno=33)
+          86	LOAD_CONST(arg=5, lineno=33)
+          88	BINARY_OP(arg=0, lineno=33)
+          92	BINARY_SUBSCR(arg=None, lineno=33)
+         102	LOAD_CONST(arg=6, lineno=33)
+         104	BINARY_OP(arg=3, lineno=33)
+         108	BINARY_OP(arg=0, lineno=33)
+         112	LOAD_FAST(arg=0, lineno=33)
+         114	LOAD_FAST(arg=1, lineno=33)
+         116	LOAD_CONST(arg=7, lineno=33)
+         118	BINARY_OP(arg=0, lineno=33)
+         122	BINARY_SUBSCR(arg=None, lineno=33)
+         132	BINARY_OP(arg=0, lineno=33)
+         136	PRECALL(arg=1, lineno=33)
+         140	CALL(arg=1, lineno=33)
+         150	RETURN_VALUE(arg=None, lineno=33)
+2025-03-10 13:06:21.903 [   DEBUG] (         byteflow.py: 116) pending: deque([State(pc_initial=0 nstack_initial=0)])
+2025-03-10 13:06:21.904 [   DEBUG] (         byteflow.py: 119) stack: []
+2025-03-10 13:06:21.904 [   DEBUG] (         byteflow.py: 120) state.pc_initial: State(pc_initial=0 nstack_initial=0)
+2025-03-10 13:06:21.904 [   DEBUG] (         byteflow.py: 350) dispatch pc=0, inst=NOP(arg=None, lineno=30)
+2025-03-10 13:06:21.904 [   DEBUG] (         byteflow.py: 351) stack []
+2025-03-10 13:06:21.904 [   DEBUG] (         byteflow.py: 350) dispatch pc=2, inst=RESUME(arg=0, lineno=30)
+2025-03-10 13:06:21.904 [   DEBUG] (         byteflow.py: 351) stack []
+2025-03-10 13:06:21.904 [   DEBUG] (         byteflow.py: 350) dispatch pc=4, inst=LOAD_GLOBAL(arg=1, lineno=33)
+2025-03-10 13:06:21.904 [   DEBUG] (         byteflow.py: 351) stack []
+2025-03-10 13:06:21.904 [   DEBUG] (         byteflow.py: 350) dispatch pc=16, inst=LOAD_ATTR(arg=1, lineno=33)
+2025-03-10 13:06:21.904 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$4load_global.0']
+2025-03-10 13:06:21.904 [   DEBUG] (         byteflow.py: 350) dispatch pc=26, inst=LOAD_FAST(arg=0, lineno=33)
+2025-03-10 13:06:21.905 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2']
+2025-03-10 13:06:21.905 [   DEBUG] (         byteflow.py: 350) dispatch pc=28, inst=LOAD_FAST(arg=1, lineno=33)
+2025-03-10 13:06:21.905 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$x26.3']
+2025-03-10 13:06:21.905 [   DEBUG] (         byteflow.py: 350) dispatch pc=30, inst=LOAD_CONST(arg=1, lineno=33)
+2025-03-10 13:06:21.905 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$x26.3', '$off28.4']
+2025-03-10 13:06:21.906 [   DEBUG] (         byteflow.py: 350) dispatch pc=32, inst=BINARY_OP(arg=0, lineno=33)
+2025-03-10 13:06:21.906 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$x26.3', '$off28.4', '$const30.5']
+2025-03-10 13:06:21.906 [   DEBUG] (         byteflow.py: 350) dispatch pc=36, inst=BINARY_SUBSCR(arg=None, lineno=33)
+2025-03-10 13:06:21.906 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$x26.3', '$binop_add32.6']
+2025-03-10 13:06:21.906 [   DEBUG] (         byteflow.py: 350) dispatch pc=46, inst=LOAD_CONST(arg=2, lineno=33)
+2025-03-10 13:06:21.906 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$36binary_subscr.7']
+2025-03-10 13:06:21.906 [   DEBUG] (         byteflow.py: 350) dispatch pc=48, inst=BINARY_OP(arg=3, lineno=33)
+2025-03-10 13:06:21.906 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$36binary_subscr.7', '$const46.8']
+2025-03-10 13:06:21.906 [   DEBUG] (         byteflow.py: 350) dispatch pc=52, inst=LOAD_FAST(arg=0, lineno=33)
+2025-03-10 13:06:21.906 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9']
+2025-03-10 13:06:21.906 [   DEBUG] (         byteflow.py: 350) dispatch pc=54, inst=LOAD_FAST(arg=1, lineno=33)
+2025-03-10 13:06:21.906 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$x52.10']
+2025-03-10 13:06:21.906 [   DEBUG] (         byteflow.py: 350) dispatch pc=56, inst=LOAD_CONST(arg=3, lineno=33)
+2025-03-10 13:06:21.906 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$x52.10', '$off54.11']
+2025-03-10 13:06:21.906 [   DEBUG] (         byteflow.py: 350) dispatch pc=58, inst=BINARY_OP(arg=0, lineno=33)
+2025-03-10 13:06:21.906 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$x52.10', '$off54.11', '$const56.12']
+2025-03-10 13:06:21.906 [   DEBUG] (         byteflow.py: 350) dispatch pc=62, inst=BINARY_SUBSCR(arg=None, lineno=33)
+2025-03-10 13:06:21.906 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$x52.10', '$binop_add58.13']
+2025-03-10 13:06:21.907 [   DEBUG] (         byteflow.py: 350) dispatch pc=72, inst=LOAD_CONST(arg=4, lineno=33)
+2025-03-10 13:06:21.907 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$62binary_subscr.14']
+2025-03-10 13:06:21.907 [   DEBUG] (         byteflow.py: 350) dispatch pc=74, inst=BINARY_OP(arg=3, lineno=33)
+2025-03-10 13:06:21.907 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$62binary_subscr.14', '$const72.15']
+2025-03-10 13:06:21.907 [   DEBUG] (         byteflow.py: 350) dispatch pc=78, inst=BINARY_OP(arg=0, lineno=33)
+2025-03-10 13:06:21.907 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$binop_lshift74.16']
+2025-03-10 13:06:21.907 [   DEBUG] (         byteflow.py: 350) dispatch pc=82, inst=LOAD_FAST(arg=0, lineno=33)
+2025-03-10 13:06:21.907 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17']
+2025-03-10 13:06:21.908 [   DEBUG] (         byteflow.py: 350) dispatch pc=84, inst=LOAD_FAST(arg=1, lineno=33)
+2025-03-10 13:06:21.908 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$x82.18']
+2025-03-10 13:06:21.908 [   DEBUG] (         byteflow.py: 350) dispatch pc=86, inst=LOAD_CONST(arg=5, lineno=33)
+2025-03-10 13:06:21.908 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$x82.18', '$off84.19']
+2025-03-10 13:06:21.908 [   DEBUG] (         byteflow.py: 350) dispatch pc=88, inst=BINARY_OP(arg=0, lineno=33)
+2025-03-10 13:06:21.908 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$x82.18', '$off84.19', '$const86.20']
+2025-03-10 13:06:21.908 [   DEBUG] (         byteflow.py: 350) dispatch pc=92, inst=BINARY_SUBSCR(arg=None, lineno=33)
+2025-03-10 13:06:21.908 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$x82.18', '$binop_add88.21']
+2025-03-10 13:06:21.908 [   DEBUG] (         byteflow.py: 350) dispatch pc=102, inst=LOAD_CONST(arg=6, lineno=33)
+2025-03-10 13:06:21.908 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$92binary_subscr.22']
+2025-03-10 13:06:21.908 [   DEBUG] (         byteflow.py: 350) dispatch pc=104, inst=BINARY_OP(arg=3, lineno=33)
+2025-03-10 13:06:21.909 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$92binary_subscr.22', '$const102.23']
+2025-03-10 13:06:21.909 [   DEBUG] (         byteflow.py: 350) dispatch pc=108, inst=BINARY_OP(arg=0, lineno=33)
+2025-03-10 13:06:21.909 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$binop_lshift104.24']
+2025-03-10 13:06:21.909 [   DEBUG] (         byteflow.py: 350) dispatch pc=112, inst=LOAD_FAST(arg=0, lineno=33)
+2025-03-10 13:06:21.909 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25']
+2025-03-10 13:06:21.909 [   DEBUG] (         byteflow.py: 350) dispatch pc=114, inst=LOAD_FAST(arg=1, lineno=33)
+2025-03-10 13:06:21.909 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25', '$x112.26']
+2025-03-10 13:06:21.909 [   DEBUG] (         byteflow.py: 350) dispatch pc=116, inst=LOAD_CONST(arg=7, lineno=33)
+2025-03-10 13:06:21.909 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25', '$x112.26', '$off114.27']
+2025-03-10 13:06:21.909 [   DEBUG] (         byteflow.py: 350) dispatch pc=118, inst=BINARY_OP(arg=0, lineno=33)
+2025-03-10 13:06:21.909 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25', '$x112.26', '$off114.27', '$const116.28']
+2025-03-10 13:06:21.910 [   DEBUG] (         byteflow.py: 350) dispatch pc=122, inst=BINARY_SUBSCR(arg=None, lineno=33)
+2025-03-10 13:06:21.910 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25', '$x112.26', '$binop_add118.29']
+2025-03-10 13:06:21.910 [   DEBUG] (         byteflow.py: 350) dispatch pc=132, inst=BINARY_OP(arg=0, lineno=33)
+2025-03-10 13:06:21.910 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25', '$122binary_subscr.30']
+2025-03-10 13:06:21.910 [   DEBUG] (         byteflow.py: 350) dispatch pc=136, inst=PRECALL(arg=1, lineno=33)
+2025-03-10 13:06:21.910 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add132.31']
+2025-03-10 13:06:21.910 [   DEBUG] (         byteflow.py: 350) dispatch pc=140, inst=CALL(arg=1, lineno=33)
+2025-03-10 13:06:21.910 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add132.31']
+2025-03-10 13:06:21.910 [   DEBUG] (         byteflow.py: 350) dispatch pc=150, inst=RETURN_VALUE(arg=None, lineno=33)
+2025-03-10 13:06:21.910 [   DEBUG] (         byteflow.py: 351) stack ['$140call.32']
+2025-03-10 13:06:21.911 [   DEBUG] (         byteflow.py: 138) end state. edges=[]
+2025-03-10 13:06:21.911 [   DEBUG] (         byteflow.py: 219) -------------------------Prune PHIs-------------------------
+2025-03-10 13:06:21.911 [   DEBUG] (         byteflow.py: 288) Used_phis: defaultdict(<class 'set'>, {State(pc_initial=0 nstack_initial=0): set()})
+2025-03-10 13:06:21.911 [   DEBUG] (         byteflow.py: 245) defmap: {}
+2025-03-10 13:06:21.911 [   DEBUG] (         byteflow.py: 246) phismap: defaultdict(<class 'set'>, {})
+2025-03-10 13:06:21.911 [   DEBUG] (         byteflow.py: 267) changing phismap: defaultdict(<class 'set'>, {})
+2025-03-10 13:06:21.911 [   DEBUG] (         byteflow.py: 276) keep phismap: {}
+2025-03-10 13:06:21.911 [   DEBUG] (         byteflow.py: 282) new_out: defaultdict(<class 'dict'>, {})
+2025-03-10 13:06:21.911 [   DEBUG] (         byteflow.py: 292) ----------------------DONE Prune PHIs-----------------------
+2025-03-10 13:06:21.911 [   DEBUG] (         byteflow.py: 150) block_infos State(pc_initial=0 nstack_initial=0):
+AdaptBlockInfo(insts=((0, {}), (2, {}), (4, {'idx': 0, 'res': '$4load_global.0'}), (6, {}), (8, {}), (10, {}), (12, {}), (14, {}), (16, {'item': '$4load_global.0', 'res': '$16load_attr.2'}), (18, {}), (20, {}), (22, {}), (24, {}), (26, {'res': '$x26.3'}), (28, {'res': '$off28.4'}), (30, {'res': '$const30.5'}), (32, {'op': '+', 'lhs': '$off28.4', 'rhs': '$const30.5', 'res': '$binop_add32.6'}), (34, {}), (36, {'index': '$binop_add32.6', 'target': '$x26.3', 'res': '$36binary_subscr.7'}), (38, {}), (40, {}), (42, {}), (44, {}), (46, {'res': '$const46.8'}), (48, {'op': '<<', 'lhs': '$36binary_subscr.7', 'rhs': '$const46.8', 'res': '$binop_lshift48.9'}), (50, {}), (52, {'res': '$x52.10'}), (54, {'res': '$off54.11'}), (56, {'res': '$const56.12'}), (58, {'op': '+', 'lhs': '$off54.11', 'rhs': '$const56.12', 'res': '$binop_add58.13'}), (60, {}), (62, {'index': '$binop_add58.13', 'target': '$x52.10', 'res': '$62binary_subscr.14'}), (64, {}), (66, {}), (68, {}), (70, {}), (72, {'res': '$const72.15'}), (74, {'op': '<<', 'lhs': '$62binary_subscr.14', 'rhs': '$const72.15', 'res': '$binop_lshift74.16'}), (76, {}), (78, {'op': '+', 'lhs': '$binop_lshift48.9', 'rhs': '$binop_lshift74.16', 'res': '$binop_add78.17'}), (80, {}), (82, {'res': '$x82.18'}), (84, {'res': '$off84.19'}), (86, {'res': '$const86.20'}), (88, {'op': '+', 'lhs': '$off84.19', 'rhs': '$const86.20', 'res': '$binop_add88.21'}), (90, {}), (92, {'index': '$binop_add88.21', 'target': '$x82.18', 'res': '$92binary_subscr.22'}), (94, {}), (96, {}), (98, {}), (100, {}), (102, {'res': '$const102.23'}), (104, {'op': '<<', 'lhs': '$92binary_subscr.22', 'rhs': '$const102.23', 'res': '$binop_lshift104.24'}), (106, {}), (108, {'op': '+', 'lhs': '$binop_add78.17', 'rhs': '$binop_lshift104.24', 'res': '$binop_add108.25'}), (110, {}), (112, {'res': '$x112.26'}), (114, {'res': '$off114.27'}), (116, {'res': '$const116.28'}), (118, {'op': '+', 'lhs': '$off114.27', 'rhs': '$const116.28', 'res': '$binop_add118.29'}), (120, {}), (122, {'index': '$binop_add118.29', 'target': '$x112.26', 'res': '$122binary_subscr.30'}), (124, {}), (126, {}), (128, {}), (130, {}), (132, {'op': '+', 'lhs': '$binop_add108.25', 'rhs': '$122binary_subscr.30', 'res': '$binop_add132.31'}), (134, {}), (136, {}), (138, {}), (140, {'func': '$16load_attr.2', 'args': ['$binop_add132.31'], 'kw_names': None, 'res': '$140call.32'}), (142, {}), (144, {}), (146, {}), (148, {}), (150, {'retval': '$140call.32', 'castval': '$150return_value.33'})), outgoing_phis={}, blockstack=(), active_try_block=None, outgoing_edgepushed={})
+2025-03-10 13:06:21.912 [   DEBUG] (      interpreter.py:1416) label 0:
+    x = arg(0, name=x)                       ['x']
+    off = arg(1, name=off)                   ['off']
+    $4load_global.0 = global(nb: <module 'numba' from 'C:\\Users\\ejvil\\miniconda3\\envs\\nspyre\\Lib\\site-packages\\numba\\__init__.py'>) ['$4load_global.0']
+    $16load_attr.2 = getattr(value=$4load_global.0, attr=u4) ['$16load_attr.2', '$4load_global.0']
+    $const30.5 = const(int, 3)               ['$const30.5']
+    $binop_add32.6 = off + $const30.5        ['$binop_add32.6', '$const30.5', 'off']
+    $36binary_subscr.7 = getitem(value=x, index=$binop_add32.6, fn=<built-in function getitem>) ['$36binary_subscr.7', '$binop_add32.6', 'x']
+    $const46.8 = const(int, 24)              ['$const46.8']
+    $binop_lshift48.9 = $36binary_subscr.7 << $const46.8 ['$36binary_subscr.7', '$binop_lshift48.9', '$const46.8']
+    $const56.12 = const(int, 2)              ['$const56.12']
+    $binop_add58.13 = off + $const56.12      ['$binop_add58.13', '$const56.12', 'off']
+    $62binary_subscr.14 = getitem(value=x, index=$binop_add58.13, fn=<built-in function getitem>) ['$62binary_subscr.14', '$binop_add58.13', 'x']
+    $const72.15 = const(int, 16)             ['$const72.15']
+    $binop_lshift74.16 = $62binary_subscr.14 << $const72.15 ['$62binary_subscr.14', '$binop_lshift74.16', '$const72.15']
+    $binop_add78.17 = $binop_lshift48.9 + $binop_lshift74.16 ['$binop_add78.17', '$binop_lshift48.9', '$binop_lshift74.16']
+    $const86.20 = const(int, 1)              ['$const86.20']
+    $binop_add88.21 = off + $const86.20      ['$binop_add88.21', '$const86.20', 'off']
+    $92binary_subscr.22 = getitem(value=x, index=$binop_add88.21, fn=<built-in function getitem>) ['$92binary_subscr.22', '$binop_add88.21', 'x']
+    $const102.23 = const(int, 8)             ['$const102.23']
+    $binop_lshift104.24 = $92binary_subscr.22 << $const102.23 ['$92binary_subscr.22', '$binop_lshift104.24', '$const102.23']
+    $binop_add108.25 = $binop_add78.17 + $binop_lshift104.24 ['$binop_add108.25', '$binop_add78.17', '$binop_lshift104.24']
+    $const116.28 = const(int, 0)             ['$const116.28']
+    $binop_add118.29 = off + $const116.28    ['$binop_add118.29', '$const116.28', 'off']
+    $122binary_subscr.30 = getitem(value=x, index=$binop_add118.29, fn=<built-in function getitem>) ['$122binary_subscr.30', '$binop_add118.29', 'x']
+    $binop_add132.31 = $binop_add108.25 + $122binary_subscr.30 ['$122binary_subscr.30', '$binop_add108.25', '$binop_add132.31']
+    $140call.32 = call $16load_attr.2($binop_add132.31, func=$16load_attr.2, args=[Var($binop_add132.31, nbtools.py:33)], kws=(), vararg=None, varkwarg=None, target=None) ['$140call.32', '$16load_attr.2', '$binop_add132.31']
+    $150return_value.33 = cast(value=$140call.32) ['$140call.32', '$150return_value.33']
+    return $150return_value.33               ['$150return_value.33']
+
+2025-03-10 13:06:21.920 [   DEBUG] (              ssa.py: 178) ==== SSA block analysis pass on 0
+2025-03-10 13:06:21.920 [   DEBUG] (              ssa.py: 208) Running <numba.core.ssa._GatherDefsHandler object at 0x00000259E822E110>
+2025-03-10 13:06:21.920 [   DEBUG] (              ssa.py: 210) on stmt: x = arg(0, name=x)
+2025-03-10 13:06:21.921 [   DEBUG] (              ssa.py: 210) on stmt: off = arg(1, name=off)
+2025-03-10 13:06:21.921 [   DEBUG] (              ssa.py: 210) on stmt: $4load_global.0 = global(nb: <module 'numba' from 'C:\\Users\\ejvil\\miniconda3\\envs\\nspyre\\Lib\\site-packages\\numba\\__init__.py'>)
+2025-03-10 13:06:21.921 [   DEBUG] (              ssa.py: 210) on stmt: $16load_attr.2 = getattr(value=$4load_global.0, attr=u4)
+2025-03-10 13:06:21.921 [   DEBUG] (              ssa.py: 210) on stmt: $const30.5 = const(int, 3)
+2025-03-10 13:06:21.922 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add32.6 = off + $const30.5
+2025-03-10 13:06:21.922 [   DEBUG] (              ssa.py: 210) on stmt: $36binary_subscr.7 = getitem(value=x, index=$binop_add32.6, fn=<built-in function getitem>)
+2025-03-10 13:06:21.922 [   DEBUG] (              ssa.py: 210) on stmt: $const46.8 = const(int, 24)
+2025-03-10 13:06:21.922 [   DEBUG] (              ssa.py: 210) on stmt: $binop_lshift48.9 = $36binary_subscr.7 << $const46.8
+2025-03-10 13:06:21.922 [   DEBUG] (              ssa.py: 210) on stmt: $const56.12 = const(int, 2)
+2025-03-10 13:06:21.922 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add58.13 = off + $const56.12
+2025-03-10 13:06:21.922 [   DEBUG] (              ssa.py: 210) on stmt: $62binary_subscr.14 = getitem(value=x, index=$binop_add58.13, fn=<built-in function getitem>)
+2025-03-10 13:06:21.922 [   DEBUG] (              ssa.py: 210) on stmt: $const72.15 = const(int, 16)
+2025-03-10 13:06:21.922 [   DEBUG] (              ssa.py: 210) on stmt: $binop_lshift74.16 = $62binary_subscr.14 << $const72.15
+2025-03-10 13:06:21.922 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add78.17 = $binop_lshift48.9 + $binop_lshift74.16
+2025-03-10 13:06:21.922 [   DEBUG] (              ssa.py: 210) on stmt: $const86.20 = const(int, 1)
+2025-03-10 13:06:21.923 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add88.21 = off + $const86.20
+2025-03-10 13:06:21.923 [   DEBUG] (              ssa.py: 210) on stmt: $92binary_subscr.22 = getitem(value=x, index=$binop_add88.21, fn=<built-in function getitem>)
+2025-03-10 13:06:21.923 [   DEBUG] (              ssa.py: 210) on stmt: $const102.23 = const(int, 8)
+2025-03-10 13:06:21.923 [   DEBUG] (              ssa.py: 210) on stmt: $binop_lshift104.24 = $92binary_subscr.22 << $const102.23
+2025-03-10 13:06:21.923 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add108.25 = $binop_add78.17 + $binop_lshift104.24
+2025-03-10 13:06:21.923 [   DEBUG] (              ssa.py: 210) on stmt: $const116.28 = const(int, 0)
+2025-03-10 13:06:21.923 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add118.29 = off + $const116.28
+2025-03-10 13:06:21.923 [   DEBUG] (              ssa.py: 210) on stmt: $122binary_subscr.30 = getitem(value=x, index=$binop_add118.29, fn=<built-in function getitem>)
+2025-03-10 13:06:21.923 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add132.31 = $binop_add108.25 + $122binary_subscr.30
+2025-03-10 13:06:21.923 [   DEBUG] (              ssa.py: 210) on stmt: $140call.32 = call $16load_attr.2($binop_add132.31, func=$16load_attr.2, args=[Var($binop_add132.31, nbtools.py:33)], kws=(), vararg=None, varkwarg=None, target=None)
+2025-03-10 13:06:21.923 [   DEBUG] (              ssa.py: 210) on stmt: $150return_value.33 = cast(value=$140call.32)
+2025-03-10 13:06:21.923 [   DEBUG] (              ssa.py: 210) on stmt: return $150return_value.33
+2025-03-10 13:06:21.924 [   DEBUG] (              ssa.py: 157) defs defaultdict(<class 'list'>,
+            {'$122binary_subscr.30': [(<numba.core.ir.Assign object at 0x00000259E8234F90>,
+                                       0)],
+             '$140call.32': [(<numba.core.ir.Assign object at 0x00000259E8235450>,
+                              0)],
+             '$150return_value.33': [(<numba.core.ir.Assign object at 0x00000259E8235710>,
+                                      0)],
+             '$16load_attr.2': [(<numba.core.ir.Assign object at 0x00000259E8231550>,
+                                 0)],
+             '$36binary_subscr.7': [(<numba.core.ir.Assign object at 0x00000259E8231F50>,
+                                     0)],
+             '$4load_global.0': [(<numba.core.ir.Assign object at 0x00000259E8231250>,
+                                  0)],
+             '$62binary_subscr.14': [(<numba.core.ir.Assign object at 0x00000259E8232D10>,
+                                      0)],
+             '$92binary_subscr.22': [(<numba.core.ir.Assign object at 0x00000259E8233E10>,
+                                      0)],
+             '$binop_add108.25': [(<numba.core.ir.Assign object at 0x00000259E82345D0>,
+                                   0)],
+             '$binop_add118.29': [(<numba.core.ir.Assign object at 0x00000259E8234D50>,
+                                   0)],
+             '$binop_add132.31': [(<numba.core.ir.Assign object at 0x00000259E8235250>,
+                                   0)],
+             '$binop_add32.6': [(<numba.core.ir.Assign object at 0x00000259E8231D10>,
+                                 0)],
+             '$binop_add58.13': [(<numba.core.ir.Assign object at 0x00000259E8232AD0>,
+                                  0)],
+             '$binop_add78.17': [(<numba.core.ir.Assign object at 0x00000259E8233490>,
+                                  0)],
+             '$binop_add88.21': [(<numba.core.ir.Assign object at 0x00000259E8233BD0>,
+                                  0)],
+             '$binop_lshift104.24': [(<numba.core.ir.Assign object at 0x00000259E8234350>,
+                                      0)],
+             '$binop_lshift48.9': [(<numba.core.ir.Assign object at 0x00000259E8232390>,
+                                    0)],
+             '$binop_lshift74.16': [(<numba.core.ir.Assign object at 0x00000259E8233210>,
+                                     0)],
+             '$const102.23': [(<numba.core.ir.Assign object at 0x00000259E8234110>,
+                               0)],
+             '$const116.28': [(<numba.core.ir.Assign object at 0x00000259E8234AD0>,
+                               0)],
+             '$const30.5': [(<numba.core.ir.Assign object at 0x00000259E8231B10>,
+                             0)],
+             '$const46.8': [(<numba.core.ir.Assign object at 0x00000259E8232150>,
+                             0)],
+             '$const56.12': [(<numba.core.ir.Assign object at 0x00000259E8232890>,
+                              0)],
+             '$const72.15': [(<numba.core.ir.Assign object at 0x00000259E8232FD0>,
+                              0)],
+             '$const86.20': [(<numba.core.ir.Assign object at 0x00000259E8233990>,
+                              0)],
+             'off': [(<numba.core.ir.Assign object at 0x00000259E8231010>, 0)],
+             'x': [(<numba.core.ir.Assign object at 0x00000259E8230DD0>, 0)]})
+2025-03-10 13:06:21.924 [   DEBUG] (              ssa.py: 172) SSA violators <numba.core.utils.OrderedSet object at 0x00000259E822E110>
+2025-03-10 13:06:21.973 [   DEBUG] (         byteflow.py:  90) bytecode dump:
+>          0	NOP(arg=None, lineno=34)
+           2	RESUME(arg=0, lineno=34)
+           4	LOAD_GLOBAL(arg=1, lineno=37)
+          16	LOAD_ATTR(arg=1, lineno=37)
+          26	LOAD_FAST(arg=0, lineno=37)
+          28	LOAD_FAST(arg=1, lineno=37)
+          30	LOAD_CONST(arg=1, lineno=37)
+          32	BINARY_OP(arg=0, lineno=37)
+          36	BINARY_SUBSCR(arg=None, lineno=37)
+          46	LOAD_CONST(arg=2, lineno=37)
+          48	BINARY_OP(arg=3, lineno=37)
+          52	LOAD_FAST(arg=0, lineno=37)
+          54	LOAD_FAST(arg=1, lineno=37)
+          56	LOAD_CONST(arg=3, lineno=37)
+          58	BINARY_OP(arg=0, lineno=37)
+          62	BINARY_SUBSCR(arg=None, lineno=37)
+          72	LOAD_CONST(arg=4, lineno=37)
+          74	BINARY_OP(arg=3, lineno=37)
+          78	BINARY_OP(arg=0, lineno=37)
+          82	LOAD_FAST(arg=0, lineno=37)
+          84	LOAD_FAST(arg=1, lineno=37)
+          86	LOAD_CONST(arg=5, lineno=37)
+          88	BINARY_OP(arg=0, lineno=37)
+          92	BINARY_SUBSCR(arg=None, lineno=37)
+         102	LOAD_CONST(arg=6, lineno=37)
+         104	BINARY_OP(arg=3, lineno=37)
+         108	BINARY_OP(arg=0, lineno=37)
+         112	LOAD_FAST(arg=0, lineno=37)
+         114	LOAD_FAST(arg=1, lineno=37)
+         116	LOAD_CONST(arg=7, lineno=37)
+         118	BINARY_OP(arg=0, lineno=37)
+         122	BINARY_SUBSCR(arg=None, lineno=37)
+         132	LOAD_CONST(arg=8, lineno=37)
+         134	BINARY_OP(arg=3, lineno=37)
+         138	BINARY_OP(arg=0, lineno=37)
+         142	LOAD_FAST(arg=0, lineno=37)
+         144	LOAD_FAST(arg=1, lineno=37)
+         146	LOAD_CONST(arg=9, lineno=37)
+         148	BINARY_OP(arg=0, lineno=37)
+         152	BINARY_SUBSCR(arg=None, lineno=37)
+         162	LOAD_CONST(arg=10, lineno=37)
+         164	BINARY_OP(arg=3, lineno=37)
+         168	BINARY_OP(arg=0, lineno=37)
+         172	LOAD_FAST(arg=0, lineno=37)
+         174	LOAD_FAST(arg=1, lineno=37)
+         176	LOAD_CONST(arg=11, lineno=37)
+         178	BINARY_OP(arg=0, lineno=37)
+         182	BINARY_SUBSCR(arg=None, lineno=37)
+         192	LOAD_CONST(arg=12, lineno=37)
+         194	BINARY_OP(arg=3, lineno=37)
+         198	BINARY_OP(arg=0, lineno=37)
+         202	LOAD_FAST(arg=0, lineno=37)
+         204	LOAD_FAST(arg=1, lineno=37)
+         206	LOAD_CONST(arg=13, lineno=37)
+         208	BINARY_OP(arg=0, lineno=37)
+         212	BINARY_SUBSCR(arg=None, lineno=37)
+         222	LOAD_CONST(arg=14, lineno=37)
+         224	BINARY_OP(arg=3, lineno=37)
+         228	BINARY_OP(arg=0, lineno=37)
+         232	LOAD_FAST(arg=0, lineno=37)
+         234	LOAD_FAST(arg=1, lineno=37)
+         236	LOAD_CONST(arg=15, lineno=37)
+         238	BINARY_OP(arg=0, lineno=37)
+         242	BINARY_SUBSCR(arg=None, lineno=37)
+         252	BINARY_OP(arg=0, lineno=37)
+         256	PRECALL(arg=1, lineno=37)
+         260	CALL(arg=1, lineno=37)
+         270	RETURN_VALUE(arg=None, lineno=37)
+2025-03-10 13:06:21.974 [   DEBUG] (         byteflow.py: 116) pending: deque([State(pc_initial=0 nstack_initial=0)])
+2025-03-10 13:06:21.974 [   DEBUG] (         byteflow.py: 119) stack: []
+2025-03-10 13:06:21.974 [   DEBUG] (         byteflow.py: 120) state.pc_initial: State(pc_initial=0 nstack_initial=0)
+2025-03-10 13:06:21.974 [   DEBUG] (         byteflow.py: 350) dispatch pc=0, inst=NOP(arg=None, lineno=34)
+2025-03-10 13:06:21.974 [   DEBUG] (         byteflow.py: 351) stack []
+2025-03-10 13:06:21.975 [   DEBUG] (         byteflow.py: 350) dispatch pc=2, inst=RESUME(arg=0, lineno=34)
+2025-03-10 13:06:21.975 [   DEBUG] (         byteflow.py: 351) stack []
+2025-03-10 13:06:21.975 [   DEBUG] (         byteflow.py: 350) dispatch pc=4, inst=LOAD_GLOBAL(arg=1, lineno=37)
+2025-03-10 13:06:21.975 [   DEBUG] (         byteflow.py: 351) stack []
+2025-03-10 13:06:21.975 [   DEBUG] (         byteflow.py: 350) dispatch pc=16, inst=LOAD_ATTR(arg=1, lineno=37)
+2025-03-10 13:06:21.975 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$4load_global.0']
+2025-03-10 13:06:21.975 [   DEBUG] (         byteflow.py: 350) dispatch pc=26, inst=LOAD_FAST(arg=0, lineno=37)
+2025-03-10 13:06:21.975 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2']
+2025-03-10 13:06:21.975 [   DEBUG] (         byteflow.py: 350) dispatch pc=28, inst=LOAD_FAST(arg=1, lineno=37)
+2025-03-10 13:06:21.975 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$x26.3']
+2025-03-10 13:06:21.976 [   DEBUG] (         byteflow.py: 350) dispatch pc=30, inst=LOAD_CONST(arg=1, lineno=37)
+2025-03-10 13:06:21.976 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$x26.3', '$off28.4']
+2025-03-10 13:06:21.976 [   DEBUG] (         byteflow.py: 350) dispatch pc=32, inst=BINARY_OP(arg=0, lineno=37)
+2025-03-10 13:06:21.976 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$x26.3', '$off28.4', '$const30.5']
+2025-03-10 13:06:21.976 [   DEBUG] (         byteflow.py: 350) dispatch pc=36, inst=BINARY_SUBSCR(arg=None, lineno=37)
+2025-03-10 13:06:21.976 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$x26.3', '$binop_add32.6']
+2025-03-10 13:06:21.976 [   DEBUG] (         byteflow.py: 350) dispatch pc=46, inst=LOAD_CONST(arg=2, lineno=37)
+2025-03-10 13:06:21.976 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$36binary_subscr.7']
+2025-03-10 13:06:21.976 [   DEBUG] (         byteflow.py: 350) dispatch pc=48, inst=BINARY_OP(arg=3, lineno=37)
+2025-03-10 13:06:21.976 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$36binary_subscr.7', '$const46.8']
+2025-03-10 13:06:21.977 [   DEBUG] (         byteflow.py: 350) dispatch pc=52, inst=LOAD_FAST(arg=0, lineno=37)
+2025-03-10 13:06:21.977 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9']
+2025-03-10 13:06:21.977 [   DEBUG] (         byteflow.py: 350) dispatch pc=54, inst=LOAD_FAST(arg=1, lineno=37)
+2025-03-10 13:06:21.977 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$x52.10']
+2025-03-10 13:06:21.977 [   DEBUG] (         byteflow.py: 350) dispatch pc=56, inst=LOAD_CONST(arg=3, lineno=37)
+2025-03-10 13:06:21.977 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$x52.10', '$off54.11']
+2025-03-10 13:06:21.977 [   DEBUG] (         byteflow.py: 350) dispatch pc=58, inst=BINARY_OP(arg=0, lineno=37)
+2025-03-10 13:06:21.977 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$x52.10', '$off54.11', '$const56.12']
+2025-03-10 13:06:21.977 [   DEBUG] (         byteflow.py: 350) dispatch pc=62, inst=BINARY_SUBSCR(arg=None, lineno=37)
+2025-03-10 13:06:21.978 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$x52.10', '$binop_add58.13']
+2025-03-10 13:06:21.978 [   DEBUG] (         byteflow.py: 350) dispatch pc=72, inst=LOAD_CONST(arg=4, lineno=37)
+2025-03-10 13:06:21.978 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$62binary_subscr.14']
+2025-03-10 13:06:21.978 [   DEBUG] (         byteflow.py: 350) dispatch pc=74, inst=BINARY_OP(arg=3, lineno=37)
+2025-03-10 13:06:21.978 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$62binary_subscr.14', '$const72.15']
+2025-03-10 13:06:21.978 [   DEBUG] (         byteflow.py: 350) dispatch pc=78, inst=BINARY_OP(arg=0, lineno=37)
+2025-03-10 13:06:21.978 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$binop_lshift74.16']
+2025-03-10 13:06:21.978 [   DEBUG] (         byteflow.py: 350) dispatch pc=82, inst=LOAD_FAST(arg=0, lineno=37)
+2025-03-10 13:06:21.978 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17']
+2025-03-10 13:06:21.978 [   DEBUG] (         byteflow.py: 350) dispatch pc=84, inst=LOAD_FAST(arg=1, lineno=37)
+2025-03-10 13:06:21.978 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$x82.18']
+2025-03-10 13:06:21.978 [   DEBUG] (         byteflow.py: 350) dispatch pc=86, inst=LOAD_CONST(arg=5, lineno=37)
+2025-03-10 13:06:21.979 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$x82.18', '$off84.19']
+2025-03-10 13:06:21.979 [   DEBUG] (         byteflow.py: 350) dispatch pc=88, inst=BINARY_OP(arg=0, lineno=37)
+2025-03-10 13:06:21.979 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$x82.18', '$off84.19', '$const86.20']
+2025-03-10 13:06:21.979 [   DEBUG] (         byteflow.py: 350) dispatch pc=92, inst=BINARY_SUBSCR(arg=None, lineno=37)
+2025-03-10 13:06:21.979 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$x82.18', '$binop_add88.21']
+2025-03-10 13:06:21.979 [   DEBUG] (         byteflow.py: 350) dispatch pc=102, inst=LOAD_CONST(arg=6, lineno=37)
+2025-03-10 13:06:21.979 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$92binary_subscr.22']
+2025-03-10 13:06:21.979 [   DEBUG] (         byteflow.py: 350) dispatch pc=104, inst=BINARY_OP(arg=3, lineno=37)
+2025-03-10 13:06:21.979 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$92binary_subscr.22', '$const102.23']
+2025-03-10 13:06:21.979 [   DEBUG] (         byteflow.py: 350) dispatch pc=108, inst=BINARY_OP(arg=0, lineno=37)
+2025-03-10 13:06:21.979 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$binop_lshift104.24']
+2025-03-10 13:06:21.980 [   DEBUG] (         byteflow.py: 350) dispatch pc=112, inst=LOAD_FAST(arg=0, lineno=37)
+2025-03-10 13:06:21.980 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25']
+2025-03-10 13:06:21.980 [   DEBUG] (         byteflow.py: 350) dispatch pc=114, inst=LOAD_FAST(arg=1, lineno=37)
+2025-03-10 13:06:21.980 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25', '$x112.26']
+2025-03-10 13:06:21.980 [   DEBUG] (         byteflow.py: 350) dispatch pc=116, inst=LOAD_CONST(arg=7, lineno=37)
+2025-03-10 13:06:21.980 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25', '$x112.26', '$off114.27']
+2025-03-10 13:06:21.980 [   DEBUG] (         byteflow.py: 350) dispatch pc=118, inst=BINARY_OP(arg=0, lineno=37)
+2025-03-10 13:06:21.980 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25', '$x112.26', '$off114.27', '$const116.28']
+2025-03-10 13:06:21.980 [   DEBUG] (         byteflow.py: 350) dispatch pc=122, inst=BINARY_SUBSCR(arg=None, lineno=37)
+2025-03-10 13:06:21.980 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25', '$x112.26', '$binop_add118.29']
+2025-03-10 13:06:21.980 [   DEBUG] (         byteflow.py: 350) dispatch pc=132, inst=LOAD_CONST(arg=8, lineno=37)
+2025-03-10 13:06:21.980 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25', '$122binary_subscr.30']
+2025-03-10 13:06:21.981 [   DEBUG] (         byteflow.py: 350) dispatch pc=134, inst=BINARY_OP(arg=3, lineno=37)
+2025-03-10 13:06:21.981 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25', '$122binary_subscr.30', '$const132.31']
+2025-03-10 13:06:21.981 [   DEBUG] (         byteflow.py: 350) dispatch pc=138, inst=BINARY_OP(arg=0, lineno=37)
+2025-03-10 13:06:21.981 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25', '$binop_lshift134.32']
+2025-03-10 13:06:21.981 [   DEBUG] (         byteflow.py: 350) dispatch pc=142, inst=LOAD_FAST(arg=0, lineno=37)
+2025-03-10 13:06:21.981 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add138.33']
+2025-03-10 13:06:21.981 [   DEBUG] (         byteflow.py: 350) dispatch pc=144, inst=LOAD_FAST(arg=1, lineno=37)
+2025-03-10 13:06:21.981 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add138.33', '$x142.34']
+2025-03-10 13:06:21.981 [   DEBUG] (         byteflow.py: 350) dispatch pc=146, inst=LOAD_CONST(arg=9, lineno=37)
+2025-03-10 13:06:21.982 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add138.33', '$x142.34', '$off144.35']
+2025-03-10 13:06:21.982 [   DEBUG] (         byteflow.py: 350) dispatch pc=148, inst=BINARY_OP(arg=0, lineno=37)
+2025-03-10 13:06:21.982 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add138.33', '$x142.34', '$off144.35', '$const146.36']
+2025-03-10 13:06:21.982 [   DEBUG] (         byteflow.py: 350) dispatch pc=152, inst=BINARY_SUBSCR(arg=None, lineno=37)
+2025-03-10 13:06:21.982 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add138.33', '$x142.34', '$binop_add148.37']
+2025-03-10 13:06:21.982 [   DEBUG] (         byteflow.py: 350) dispatch pc=162, inst=LOAD_CONST(arg=10, lineno=37)
+2025-03-10 13:06:21.982 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add138.33', '$152binary_subscr.38']
+2025-03-10 13:06:21.982 [   DEBUG] (         byteflow.py: 350) dispatch pc=164, inst=BINARY_OP(arg=3, lineno=37)
+2025-03-10 13:06:21.982 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add138.33', '$152binary_subscr.38', '$const162.39']
+2025-03-10 13:06:21.982 [   DEBUG] (         byteflow.py: 350) dispatch pc=168, inst=BINARY_OP(arg=0, lineno=37)
+2025-03-10 13:06:21.982 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add138.33', '$binop_lshift164.40']
+2025-03-10 13:06:21.982 [   DEBUG] (         byteflow.py: 350) dispatch pc=172, inst=LOAD_FAST(arg=0, lineno=37)
+2025-03-10 13:06:21.982 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add168.41']
+2025-03-10 13:06:21.982 [   DEBUG] (         byteflow.py: 350) dispatch pc=174, inst=LOAD_FAST(arg=1, lineno=37)
+2025-03-10 13:06:21.982 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add168.41', '$x172.42']
+2025-03-10 13:06:21.983 [   DEBUG] (         byteflow.py: 350) dispatch pc=176, inst=LOAD_CONST(arg=11, lineno=37)
+2025-03-10 13:06:21.983 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add168.41', '$x172.42', '$off174.43']
+2025-03-10 13:06:21.983 [   DEBUG] (         byteflow.py: 350) dispatch pc=178, inst=BINARY_OP(arg=0, lineno=37)
+2025-03-10 13:06:21.983 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add168.41', '$x172.42', '$off174.43', '$const176.44']
+2025-03-10 13:06:21.983 [   DEBUG] (         byteflow.py: 350) dispatch pc=182, inst=BINARY_SUBSCR(arg=None, lineno=37)
+2025-03-10 13:06:21.983 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add168.41', '$x172.42', '$binop_add178.45']
+2025-03-10 13:06:21.983 [   DEBUG] (         byteflow.py: 350) dispatch pc=192, inst=LOAD_CONST(arg=12, lineno=37)
+2025-03-10 13:06:21.983 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add168.41', '$182binary_subscr.46']
+2025-03-10 13:06:21.983 [   DEBUG] (         byteflow.py: 350) dispatch pc=194, inst=BINARY_OP(arg=3, lineno=37)
+2025-03-10 13:06:21.983 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add168.41', '$182binary_subscr.46', '$const192.47']
+2025-03-10 13:06:21.983 [   DEBUG] (         byteflow.py: 350) dispatch pc=198, inst=BINARY_OP(arg=0, lineno=37)
+2025-03-10 13:06:21.983 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add168.41', '$binop_lshift194.48']
+2025-03-10 13:06:21.983 [   DEBUG] (         byteflow.py: 350) dispatch pc=202, inst=LOAD_FAST(arg=0, lineno=37)
+2025-03-10 13:06:21.983 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add198.49']
+2025-03-10 13:06:21.983 [   DEBUG] (         byteflow.py: 350) dispatch pc=204, inst=LOAD_FAST(arg=1, lineno=37)
+2025-03-10 13:06:21.983 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add198.49', '$x202.50']
+2025-03-10 13:06:21.985 [   DEBUG] (         byteflow.py: 350) dispatch pc=206, inst=LOAD_CONST(arg=13, lineno=37)
+2025-03-10 13:06:21.985 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add198.49', '$x202.50', '$off204.51']
+2025-03-10 13:06:21.985 [   DEBUG] (         byteflow.py: 350) dispatch pc=208, inst=BINARY_OP(arg=0, lineno=37)
+2025-03-10 13:06:21.985 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add198.49', '$x202.50', '$off204.51', '$const206.52']
+2025-03-10 13:06:21.985 [   DEBUG] (         byteflow.py: 350) dispatch pc=212, inst=BINARY_SUBSCR(arg=None, lineno=37)
+2025-03-10 13:06:21.985 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add198.49', '$x202.50', '$binop_add208.53']
+2025-03-10 13:06:21.985 [   DEBUG] (         byteflow.py: 350) dispatch pc=222, inst=LOAD_CONST(arg=14, lineno=37)
+2025-03-10 13:06:21.985 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add198.49', '$212binary_subscr.54']
+2025-03-10 13:06:21.985 [   DEBUG] (         byteflow.py: 350) dispatch pc=224, inst=BINARY_OP(arg=3, lineno=37)
+2025-03-10 13:06:21.985 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add198.49', '$212binary_subscr.54', '$const222.55']
+2025-03-10 13:06:21.985 [   DEBUG] (         byteflow.py: 350) dispatch pc=228, inst=BINARY_OP(arg=0, lineno=37)
+2025-03-10 13:06:21.985 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add198.49', '$binop_lshift224.56']
+2025-03-10 13:06:21.986 [   DEBUG] (         byteflow.py: 350) dispatch pc=232, inst=LOAD_FAST(arg=0, lineno=37)
+2025-03-10 13:06:21.986 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add228.57']
+2025-03-10 13:06:21.986 [   DEBUG] (         byteflow.py: 350) dispatch pc=234, inst=LOAD_FAST(arg=1, lineno=37)
+2025-03-10 13:06:21.986 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add228.57', '$x232.58']
+2025-03-10 13:06:21.986 [   DEBUG] (         byteflow.py: 350) dispatch pc=236, inst=LOAD_CONST(arg=15, lineno=37)
+2025-03-10 13:06:21.986 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add228.57', '$x232.58', '$off234.59']
+2025-03-10 13:06:21.986 [   DEBUG] (         byteflow.py: 350) dispatch pc=238, inst=BINARY_OP(arg=0, lineno=37)
+2025-03-10 13:06:21.986 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add228.57', '$x232.58', '$off234.59', '$const236.60']
+2025-03-10 13:06:21.986 [   DEBUG] (         byteflow.py: 350) dispatch pc=242, inst=BINARY_SUBSCR(arg=None, lineno=37)
+2025-03-10 13:06:21.986 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add228.57', '$x232.58', '$binop_add238.61']
+2025-03-10 13:06:21.987 [   DEBUG] (         byteflow.py: 350) dispatch pc=252, inst=BINARY_OP(arg=0, lineno=37)
+2025-03-10 13:06:21.987 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add228.57', '$242binary_subscr.62']
+2025-03-10 13:06:21.987 [   DEBUG] (         byteflow.py: 350) dispatch pc=256, inst=PRECALL(arg=1, lineno=37)
+2025-03-10 13:06:21.987 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add252.63']
+2025-03-10 13:06:21.987 [   DEBUG] (         byteflow.py: 350) dispatch pc=260, inst=CALL(arg=1, lineno=37)
+2025-03-10 13:06:21.987 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add252.63']
+2025-03-10 13:06:21.987 [   DEBUG] (         byteflow.py: 350) dispatch pc=270, inst=RETURN_VALUE(arg=None, lineno=37)
+2025-03-10 13:06:21.987 [   DEBUG] (         byteflow.py: 351) stack ['$260call.64']
+2025-03-10 13:06:21.987 [   DEBUG] (         byteflow.py: 138) end state. edges=[]
+2025-03-10 13:06:21.987 [   DEBUG] (         byteflow.py: 219) -------------------------Prune PHIs-------------------------
+2025-03-10 13:06:21.987 [   DEBUG] (         byteflow.py: 288) Used_phis: defaultdict(<class 'set'>, {State(pc_initial=0 nstack_initial=0): set()})
+2025-03-10 13:06:21.988 [   DEBUG] (         byteflow.py: 245) defmap: {}
+2025-03-10 13:06:21.988 [   DEBUG] (         byteflow.py: 246) phismap: defaultdict(<class 'set'>, {})
+2025-03-10 13:06:21.988 [   DEBUG] (         byteflow.py: 267) changing phismap: defaultdict(<class 'set'>, {})
+2025-03-10 13:06:21.988 [   DEBUG] (         byteflow.py: 276) keep phismap: {}
+2025-03-10 13:06:21.988 [   DEBUG] (         byteflow.py: 282) new_out: defaultdict(<class 'dict'>, {})
+2025-03-10 13:06:21.989 [   DEBUG] (         byteflow.py: 292) ----------------------DONE Prune PHIs-----------------------
+2025-03-10 13:06:21.989 [   DEBUG] (         byteflow.py: 150) block_infos State(pc_initial=0 nstack_initial=0):
+AdaptBlockInfo(insts=((0, {}), (2, {}), (4, {'idx': 0, 'res': '$4load_global.0'}), (6, {}), (8, {}), (10, {}), (12, {}), (14, {}), (16, {'item': '$4load_global.0', 'res': '$16load_attr.2'}), (18, {}), (20, {}), (22, {}), (24, {}), (26, {'res': '$x26.3'}), (28, {'res': '$off28.4'}), (30, {'res': '$const30.5'}), (32, {'op': '+', 'lhs': '$off28.4', 'rhs': '$const30.5', 'res': '$binop_add32.6'}), (34, {}), (36, {'index': '$binop_add32.6', 'target': '$x26.3', 'res': '$36binary_subscr.7'}), (38, {}), (40, {}), (42, {}), (44, {}), (46, {'res': '$const46.8'}), (48, {'op': '<<', 'lhs': '$36binary_subscr.7', 'rhs': '$const46.8', 'res': '$binop_lshift48.9'}), (50, {}), (52, {'res': '$x52.10'}), (54, {'res': '$off54.11'}), (56, {'res': '$const56.12'}), (58, {'op': '+', 'lhs': '$off54.11', 'rhs': '$const56.12', 'res': '$binop_add58.13'}), (60, {}), (62, {'index': '$binop_add58.13', 'target': '$x52.10', 'res': '$62binary_subscr.14'}), (64, {}), (66, {}), (68, {}), (70, {}), (72, {'res': '$const72.15'}), (74, {'op': '<<', 'lhs': '$62binary_subscr.14', 'rhs': '$const72.15', 'res': '$binop_lshift74.16'}), (76, {}), (78, {'op': '+', 'lhs': '$binop_lshift48.9', 'rhs': '$binop_lshift74.16', 'res': '$binop_add78.17'}), (80, {}), (82, {'res': '$x82.18'}), (84, {'res': '$off84.19'}), (86, {'res': '$const86.20'}), (88, {'op': '+', 'lhs': '$off84.19', 'rhs': '$const86.20', 'res': '$binop_add88.21'}), (90, {}), (92, {'index': '$binop_add88.21', 'target': '$x82.18', 'res': '$92binary_subscr.22'}), (94, {}), (96, {}), (98, {}), (100, {}), (102, {'res': '$const102.23'}), (104, {'op': '<<', 'lhs': '$92binary_subscr.22', 'rhs': '$const102.23', 'res': '$binop_lshift104.24'}), (106, {}), (108, {'op': '+', 'lhs': '$binop_add78.17', 'rhs': '$binop_lshift104.24', 'res': '$binop_add108.25'}), (110, {}), (112, {'res': '$x112.26'}), (114, {'res': '$off114.27'}), (116, {'res': '$const116.28'}), (118, {'op': '+', 'lhs': '$off114.27', 'rhs': '$const116.28', 'res': '$binop_add118.29'}), (120, {}), (122, {'index': '$binop_add118.29', 'target': '$x112.26', 'res': '$122binary_subscr.30'}), (124, {}), (126, {}), (128, {}), (130, {}), (132, {'res': '$const132.31'}), (134, {'op': '<<', 'lhs': '$122binary_subscr.30', 'rhs': '$const132.31', 'res': '$binop_lshift134.32'}), (136, {}), (138, {'op': '+', 'lhs': '$binop_add108.25', 'rhs': '$binop_lshift134.32', 'res': '$binop_add138.33'}), (140, {}), (142, {'res': '$x142.34'}), (144, {'res': '$off144.35'}), (146, {'res': '$const146.36'}), (148, {'op': '+', 'lhs': '$off144.35', 'rhs': '$const146.36', 'res': '$binop_add148.37'}), (150, {}), (152, {'index': '$binop_add148.37', 'target': '$x142.34', 'res': '$152binary_subscr.38'}), (154, {}), (156, {}), (158, {}), (160, {}), (162, {'res': '$const162.39'}), (164, {'op': '<<', 'lhs': '$152binary_subscr.38', 'rhs': '$const162.39', 'res': '$binop_lshift164.40'}), (166, {}), (168, {'op': '+', 'lhs': '$binop_add138.33', 'rhs': '$binop_lshift164.40', 'res': '$binop_add168.41'}), (170, {}), (172, {'res': '$x172.42'}), (174, {'res': '$off174.43'}), (176, {'res': '$const176.44'}), (178, {'op': '+', 'lhs': '$off174.43', 'rhs': '$const176.44', 'res': '$binop_add178.45'}), (180, {}), (182, {'index': '$binop_add178.45', 'target': '$x172.42', 'res': '$182binary_subscr.46'}), (184, {}), (186, {}), (188, {}), (190, {}), (192, {'res': '$const192.47'}), (194, {'op': '<<', 'lhs': '$182binary_subscr.46', 'rhs': '$const192.47', 'res': '$binop_lshift194.48'}), (196, {}), (198, {'op': '+', 'lhs': '$binop_add168.41', 'rhs': '$binop_lshift194.48', 'res': '$binop_add198.49'}), (200, {}), (202, {'res': '$x202.50'}), (204, {'res': '$off204.51'}), (206, {'res': '$const206.52'}), (208, {'op': '+', 'lhs': '$off204.51', 'rhs': '$const206.52', 'res': '$binop_add208.53'}), (210, {}), (212, {'index': '$binop_add208.53', 'target': '$x202.50', 'res': '$212binary_subscr.54'}), (214, {}), (216, {}), (218, {}), (220, {}), (222, {'res': '$const222.55'}), (224, {'op': '<<', 'lhs': '$212binary_subscr.54', 'rhs': '$const222.55', 'res': '$binop_lshift224.56'}), (226, {}), (228, {'op': '+', 'lhs': '$binop_add198.49', 'rhs': '$binop_lshift224.56', 'res': '$binop_add228.57'}), (230, {}), (232, {'res': '$x232.58'}), (234, {'res': '$off234.59'}), (236, {'res': '$const236.60'}), (238, {'op': '+', 'lhs': '$off234.59', 'rhs': '$const236.60', 'res': '$binop_add238.61'}), (240, {}), (242, {'index': '$binop_add238.61', 'target': '$x232.58', 'res': '$242binary_subscr.62'}), (244, {}), (246, {}), (248, {}), (250, {}), (252, {'op': '+', 'lhs': '$binop_add228.57', 'rhs': '$242binary_subscr.62', 'res': '$binop_add252.63'}), (254, {}), (256, {}), (258, {}), (260, {'func': '$16load_attr.2', 'args': ['$binop_add252.63'], 'kw_names': None, 'res': '$260call.64'}), (262, {}), (264, {}), (266, {}), (268, {}), (270, {'retval': '$260call.64', 'castval': '$270return_value.65'})), outgoing_phis={}, blockstack=(), active_try_block=None, outgoing_edgepushed={})
+2025-03-10 13:06:21.991 [   DEBUG] (      interpreter.py:1416) label 0:
+    x = arg(0, name=x)                       ['x']
+    off = arg(1, name=off)                   ['off']
+    $4load_global.0 = global(nb: <module 'numba' from 'C:\\Users\\ejvil\\miniconda3\\envs\\nspyre\\Lib\\site-packages\\numba\\__init__.py'>) ['$4load_global.0']
+    $16load_attr.2 = getattr(value=$4load_global.0, attr=u8) ['$16load_attr.2', '$4load_global.0']
+    $const30.5 = const(int, 7)               ['$const30.5']
+    $binop_add32.6 = off + $const30.5        ['$binop_add32.6', '$const30.5', 'off']
+    $36binary_subscr.7 = getitem(value=x, index=$binop_add32.6, fn=<built-in function getitem>) ['$36binary_subscr.7', '$binop_add32.6', 'x']
+    $const46.8 = const(int, 56)              ['$const46.8']
+    $binop_lshift48.9 = $36binary_subscr.7 << $const46.8 ['$36binary_subscr.7', '$binop_lshift48.9', '$const46.8']
+    $const56.12 = const(int, 6)              ['$const56.12']
+    $binop_add58.13 = off + $const56.12      ['$binop_add58.13', '$const56.12', 'off']
+    $62binary_subscr.14 = getitem(value=x, index=$binop_add58.13, fn=<built-in function getitem>) ['$62binary_subscr.14', '$binop_add58.13', 'x']
+    $const72.15 = const(int, 48)             ['$const72.15']
+    $binop_lshift74.16 = $62binary_subscr.14 << $const72.15 ['$62binary_subscr.14', '$binop_lshift74.16', '$const72.15']
+    $binop_add78.17 = $binop_lshift48.9 + $binop_lshift74.16 ['$binop_add78.17', '$binop_lshift48.9', '$binop_lshift74.16']
+    $const86.20 = const(int, 5)              ['$const86.20']
+    $binop_add88.21 = off + $const86.20      ['$binop_add88.21', '$const86.20', 'off']
+    $92binary_subscr.22 = getitem(value=x, index=$binop_add88.21, fn=<built-in function getitem>) ['$92binary_subscr.22', '$binop_add88.21', 'x']
+    $const102.23 = const(int, 40)            ['$const102.23']
+    $binop_lshift104.24 = $92binary_subscr.22 << $const102.23 ['$92binary_subscr.22', '$binop_lshift104.24', '$const102.23']
+    $binop_add108.25 = $binop_add78.17 + $binop_lshift104.24 ['$binop_add108.25', '$binop_add78.17', '$binop_lshift104.24']
+    $const116.28 = const(int, 4)             ['$const116.28']
+    $binop_add118.29 = off + $const116.28    ['$binop_add118.29', '$const116.28', 'off']
+    $122binary_subscr.30 = getitem(value=x, index=$binop_add118.29, fn=<built-in function getitem>) ['$122binary_subscr.30', '$binop_add118.29', 'x']
+    $const132.31 = const(int, 32)            ['$const132.31']
+    $binop_lshift134.32 = $122binary_subscr.30 << $const132.31 ['$122binary_subscr.30', '$binop_lshift134.32', '$const132.31']
+    $binop_add138.33 = $binop_add108.25 + $binop_lshift134.32 ['$binop_add108.25', '$binop_add138.33', '$binop_lshift134.32']
+    $const146.36 = const(int, 3)             ['$const146.36']
+    $binop_add148.37 = off + $const146.36    ['$binop_add148.37', '$const146.36', 'off']
+    $152binary_subscr.38 = getitem(value=x, index=$binop_add148.37, fn=<built-in function getitem>) ['$152binary_subscr.38', '$binop_add148.37', 'x']
+    $const162.39 = const(int, 24)            ['$const162.39']
+    $binop_lshift164.40 = $152binary_subscr.38 << $const162.39 ['$152binary_subscr.38', '$binop_lshift164.40', '$const162.39']
+    $binop_add168.41 = $binop_add138.33 + $binop_lshift164.40 ['$binop_add138.33', '$binop_add168.41', '$binop_lshift164.40']
+    $const176.44 = const(int, 2)             ['$const176.44']
+    $binop_add178.45 = off + $const176.44    ['$binop_add178.45', '$const176.44', 'off']
+    $182binary_subscr.46 = getitem(value=x, index=$binop_add178.45, fn=<built-in function getitem>) ['$182binary_subscr.46', '$binop_add178.45', 'x']
+    $const192.47 = const(int, 16)            ['$const192.47']
+    $binop_lshift194.48 = $182binary_subscr.46 << $const192.47 ['$182binary_subscr.46', '$binop_lshift194.48', '$const192.47']
+    $binop_add198.49 = $binop_add168.41 + $binop_lshift194.48 ['$binop_add168.41', '$binop_add198.49', '$binop_lshift194.48']
+    $const206.52 = const(int, 1)             ['$const206.52']
+    $binop_add208.53 = off + $const206.52    ['$binop_add208.53', '$const206.52', 'off']
+    $212binary_subscr.54 = getitem(value=x, index=$binop_add208.53, fn=<built-in function getitem>) ['$212binary_subscr.54', '$binop_add208.53', 'x']
+    $const222.55 = const(int, 8)             ['$const222.55']
+    $binop_lshift224.56 = $212binary_subscr.54 << $const222.55 ['$212binary_subscr.54', '$binop_lshift224.56', '$const222.55']
+    $binop_add228.57 = $binop_add198.49 + $binop_lshift224.56 ['$binop_add198.49', '$binop_add228.57', '$binop_lshift224.56']
+    $const236.60 = const(int, 0)             ['$const236.60']
+    $binop_add238.61 = off + $const236.60    ['$binop_add238.61', '$const236.60', 'off']
+    $242binary_subscr.62 = getitem(value=x, index=$binop_add238.61, fn=<built-in function getitem>) ['$242binary_subscr.62', '$binop_add238.61', 'x']
+    $binop_add252.63 = $binop_add228.57 + $242binary_subscr.62 ['$242binary_subscr.62', '$binop_add228.57', '$binop_add252.63']
+    $260call.64 = call $16load_attr.2($binop_add252.63, func=$16load_attr.2, args=[Var($binop_add252.63, nbtools.py:37)], kws=(), vararg=None, varkwarg=None, target=None) ['$16load_attr.2', '$260call.64', '$binop_add252.63']
+    $270return_value.65 = cast(value=$260call.64) ['$260call.64', '$270return_value.65']
+    return $270return_value.65               ['$270return_value.65']
+
+2025-03-10 13:06:22.002 [   DEBUG] (              ssa.py: 178) ==== SSA block analysis pass on 0
+2025-03-10 13:06:22.002 [   DEBUG] (              ssa.py: 208) Running <numba.core.ssa._GatherDefsHandler object at 0x00000259E8280D50>
+2025-03-10 13:06:22.003 [   DEBUG] (              ssa.py: 210) on stmt: x = arg(0, name=x)
+2025-03-10 13:06:22.003 [   DEBUG] (              ssa.py: 210) on stmt: off = arg(1, name=off)
+2025-03-10 13:06:22.003 [   DEBUG] (              ssa.py: 210) on stmt: $4load_global.0 = global(nb: <module 'numba' from 'C:\\Users\\ejvil\\miniconda3\\envs\\nspyre\\Lib\\site-packages\\numba\\__init__.py'>)
+2025-03-10 13:06:22.003 [   DEBUG] (              ssa.py: 210) on stmt: $16load_attr.2 = getattr(value=$4load_global.0, attr=u8)
+2025-03-10 13:06:22.003 [   DEBUG] (              ssa.py: 210) on stmt: $const30.5 = const(int, 7)
+2025-03-10 13:06:22.003 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add32.6 = off + $const30.5
+2025-03-10 13:06:22.003 [   DEBUG] (              ssa.py: 210) on stmt: $36binary_subscr.7 = getitem(value=x, index=$binop_add32.6, fn=<built-in function getitem>)
+2025-03-10 13:06:22.003 [   DEBUG] (              ssa.py: 210) on stmt: $const46.8 = const(int, 56)
+2025-03-10 13:06:22.003 [   DEBUG] (              ssa.py: 210) on stmt: $binop_lshift48.9 = $36binary_subscr.7 << $const46.8
+2025-03-10 13:06:22.004 [   DEBUG] (              ssa.py: 210) on stmt: $const56.12 = const(int, 6)
+2025-03-10 13:06:22.004 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add58.13 = off + $const56.12
+2025-03-10 13:06:22.004 [   DEBUG] (              ssa.py: 210) on stmt: $62binary_subscr.14 = getitem(value=x, index=$binop_add58.13, fn=<built-in function getitem>)
+2025-03-10 13:06:22.004 [   DEBUG] (              ssa.py: 210) on stmt: $const72.15 = const(int, 48)
+2025-03-10 13:06:22.004 [   DEBUG] (              ssa.py: 210) on stmt: $binop_lshift74.16 = $62binary_subscr.14 << $const72.15
+2025-03-10 13:06:22.004 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add78.17 = $binop_lshift48.9 + $binop_lshift74.16
+2025-03-10 13:06:22.004 [   DEBUG] (              ssa.py: 210) on stmt: $const86.20 = const(int, 5)
+2025-03-10 13:06:22.004 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add88.21 = off + $const86.20
+2025-03-10 13:06:22.004 [   DEBUG] (              ssa.py: 210) on stmt: $92binary_subscr.22 = getitem(value=x, index=$binop_add88.21, fn=<built-in function getitem>)
+2025-03-10 13:06:22.004 [   DEBUG] (              ssa.py: 210) on stmt: $const102.23 = const(int, 40)
+2025-03-10 13:06:22.004 [   DEBUG] (              ssa.py: 210) on stmt: $binop_lshift104.24 = $92binary_subscr.22 << $const102.23
+2025-03-10 13:06:22.005 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add108.25 = $binop_add78.17 + $binop_lshift104.24
+2025-03-10 13:06:22.005 [   DEBUG] (              ssa.py: 210) on stmt: $const116.28 = const(int, 4)
+2025-03-10 13:06:22.005 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add118.29 = off + $const116.28
+2025-03-10 13:06:22.005 [   DEBUG] (              ssa.py: 210) on stmt: $122binary_subscr.30 = getitem(value=x, index=$binop_add118.29, fn=<built-in function getitem>)
+2025-03-10 13:06:22.006 [   DEBUG] (              ssa.py: 210) on stmt: $const132.31 = const(int, 32)
+2025-03-10 13:06:22.006 [   DEBUG] (              ssa.py: 210) on stmt: $binop_lshift134.32 = $122binary_subscr.30 << $const132.31
+2025-03-10 13:06:22.006 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add138.33 = $binop_add108.25 + $binop_lshift134.32
+2025-03-10 13:06:22.006 [   DEBUG] (              ssa.py: 210) on stmt: $const146.36 = const(int, 3)
+2025-03-10 13:06:22.006 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add148.37 = off + $const146.36
+2025-03-10 13:06:22.006 [   DEBUG] (              ssa.py: 210) on stmt: $152binary_subscr.38 = getitem(value=x, index=$binop_add148.37, fn=<built-in function getitem>)
+2025-03-10 13:06:22.006 [   DEBUG] (              ssa.py: 210) on stmt: $const162.39 = const(int, 24)
+2025-03-10 13:06:22.006 [   DEBUG] (              ssa.py: 210) on stmt: $binop_lshift164.40 = $152binary_subscr.38 << $const162.39
+2025-03-10 13:06:22.006 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add168.41 = $binop_add138.33 + $binop_lshift164.40
+2025-03-10 13:06:22.006 [   DEBUG] (              ssa.py: 210) on stmt: $const176.44 = const(int, 2)
+2025-03-10 13:06:22.006 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add178.45 = off + $const176.44
+2025-03-10 13:06:22.006 [   DEBUG] (              ssa.py: 210) on stmt: $182binary_subscr.46 = getitem(value=x, index=$binop_add178.45, fn=<built-in function getitem>)
+2025-03-10 13:06:22.006 [   DEBUG] (              ssa.py: 210) on stmt: $const192.47 = const(int, 16)
+2025-03-10 13:06:22.006 [   DEBUG] (              ssa.py: 210) on stmt: $binop_lshift194.48 = $182binary_subscr.46 << $const192.47
+2025-03-10 13:06:22.006 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add198.49 = $binop_add168.41 + $binop_lshift194.48
+2025-03-10 13:06:22.006 [   DEBUG] (              ssa.py: 210) on stmt: $const206.52 = const(int, 1)
+2025-03-10 13:06:22.006 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add208.53 = off + $const206.52
+2025-03-10 13:06:22.006 [   DEBUG] (              ssa.py: 210) on stmt: $212binary_subscr.54 = getitem(value=x, index=$binop_add208.53, fn=<built-in function getitem>)
+2025-03-10 13:06:22.008 [   DEBUG] (              ssa.py: 210) on stmt: $const222.55 = const(int, 8)
+2025-03-10 13:06:22.008 [   DEBUG] (              ssa.py: 210) on stmt: $binop_lshift224.56 = $212binary_subscr.54 << $const222.55
+2025-03-10 13:06:22.008 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add228.57 = $binop_add198.49 + $binop_lshift224.56
+2025-03-10 13:06:22.008 [   DEBUG] (              ssa.py: 210) on stmt: $const236.60 = const(int, 0)
+2025-03-10 13:06:22.008 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add238.61 = off + $const236.60
+2025-03-10 13:06:22.008 [   DEBUG] (              ssa.py: 210) on stmt: $242binary_subscr.62 = getitem(value=x, index=$binop_add238.61, fn=<built-in function getitem>)
+2025-03-10 13:06:22.008 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add252.63 = $binop_add228.57 + $242binary_subscr.62
+2025-03-10 13:06:22.008 [   DEBUG] (              ssa.py: 210) on stmt: $260call.64 = call $16load_attr.2($binop_add252.63, func=$16load_attr.2, args=[Var($binop_add252.63, nbtools.py:37)], kws=(), vararg=None, varkwarg=None, target=None)
+2025-03-10 13:06:22.008 [   DEBUG] (              ssa.py: 210) on stmt: $270return_value.65 = cast(value=$260call.64)
+2025-03-10 13:06:22.009 [   DEBUG] (              ssa.py: 210) on stmt: return $270return_value.65
+2025-03-10 13:06:22.009 [   DEBUG] (              ssa.py: 157) defs defaultdict(<class 'list'>,
+            {'$122binary_subscr.30': [(<numba.core.ir.Assign object at 0x00000259E8270690>,
+                                       0)],
+             '$152binary_subscr.38': [(<numba.core.ir.Assign object at 0x00000259E82708D0>,
+                                       0)],
+             '$16load_attr.2': [(<numba.core.ir.Assign object at 0x00000259E82927D0>,
+                                 0)],
+             '$182binary_subscr.46': [(<numba.core.ir.Assign object at 0x00000259E82839D0>,
+                                       0)],
+             '$212binary_subscr.54': [(<numba.core.ir.Assign object at 0x00000259E8282D50>,
+                                       0)],
+             '$242binary_subscr.62': [(<numba.core.ir.Assign object at 0x00000259E8280150>,
+                                       0)],
+             '$260call.64': [(<numba.core.ir.Assign object at 0x00000259E8280C10>,
+                              0)],
+             '$270return_value.65': [(<numba.core.ir.Assign object at 0x00000259E8280F90>,
+                                      0)],
+             '$36binary_subscr.7': [(<numba.core.ir.Assign object at 0x00000259E8270D50>,
+                                     0)],
+             '$4load_global.0': [(<numba.core.ir.Assign object at 0x00000259E8293290>,
+                                  0)],
+             '$62binary_subscr.14': [(<numba.core.ir.Assign object at 0x00000259E82739D0>,
+                                      0)],
+             '$92binary_subscr.22': [(<numba.core.ir.Assign object at 0x00000259E8272290>,
+                                      0)],
+             '$binop_add108.25': [(<numba.core.ir.Assign object at 0x00000259E82717D0>,
+                                   0)],
+             '$binop_add118.29': [(<numba.core.ir.Assign object at 0x00000259E8271010>,
+                                   0)],
+             '$binop_add138.33': [(<numba.core.ir.Assign object at 0x00000259E8271A50>,
+                                   0)],
+             '$binop_add148.37': [(<numba.core.ir.Assign object at 0x00000259E82713D0>,
+                                   0)],
+             '$binop_add168.41': [(<numba.core.ir.Assign object at 0x00000259E8283150>,
+                                   0)],
+             '$binop_add178.45': [(<numba.core.ir.Assign object at 0x00000259E8283B90>,
+                                   0)],
+             '$binop_add198.49': [(<numba.core.ir.Assign object at 0x00000259E82820D0>,
+                                   0)],
+             '$binop_add208.53': [(<numba.core.ir.Assign object at 0x00000259E8281710>,
+                                   0)],
+             '$binop_add228.57': [(<numba.core.ir.Assign object at 0x00000259E8281C10>,
+                                   0)],
+             '$binop_add238.61': [(<numba.core.ir.Assign object at 0x00000259E8280650>,
+                                   0)],
+             '$binop_add252.63': [(<numba.core.ir.Assign object at 0x00000259E8280410>,
+                                   0)],
+             '$binop_add32.6': [(<numba.core.ir.Assign object at 0x00000259E8291F10>,
+                                 0)],
+             '$binop_add58.13': [(<numba.core.ir.Assign object at 0x00000259E8273910>,
+                                  0)],
+             '$binop_add78.17': [(<numba.core.ir.Assign object at 0x00000259E8273090>,
+                                  0)],
+             '$binop_add88.21': [(<numba.core.ir.Assign object at 0x00000259E8272B90>,
+                                  0)],
+             '$binop_lshift104.24': [(<numba.core.ir.Assign object at 0x00000259E8271C50>,
+                                      0)],
+             '$binop_lshift134.32': [(<numba.core.ir.Assign object at 0x00000259E8270FD0>,
+                                      0)],
+             '$binop_lshift164.40': [(<numba.core.ir.Assign object at 0x00000259E8283ED0>,
+                                      0)],
+             '$binop_lshift194.48': [(<numba.core.ir.Assign object at 0x00000259E8282610>,
+                                      0)],
+             '$binop_lshift224.56': [(<numba.core.ir.Assign object at 0x00000259E8281ED0>,
+                                      0)],
+             '$binop_lshift48.9': [(<numba.core.ir.Assign object at 0x00000259E82730D0>,
+                                    0)],
+             '$binop_lshift74.16': [(<numba.core.ir.Assign object at 0x00000259E8272D10>,
+                                     0)],
+             '$const102.23': [(<numba.core.ir.Assign object at 0x00000259E8271750>,
+                               0)],
+             '$const116.28': [(<numba.core.ir.Assign object at 0x00000259E82715D0>,
+                               0)],
+             '$const132.31': [(<numba.core.ir.Assign object at 0x00000259E82703D0>,
+                               0)],
+             '$const146.36': [(<numba.core.ir.Assign object at 0x00000259E82700D0>,
+                               0)],
+             '$const162.39': [(<numba.core.ir.Assign object at 0x00000259E8281A90>,
+                               0)],
+             '$const176.44': [(<numba.core.ir.Assign object at 0x00000259E8283910>,
+                               0)],
+             '$const192.47': [(<numba.core.ir.Assign object at 0x00000259E8282750>,
+                               0)],
+             '$const206.52': [(<numba.core.ir.Assign object at 0x00000259E82829D0>,
+                               0)],
+             '$const222.55': [(<numba.core.ir.Assign object at 0x00000259E8282950>,
+                               0)],
+             '$const236.60': [(<numba.core.ir.Assign object at 0x00000259E8280890>,
+                               0)],
+             '$const30.5': [(<numba.core.ir.Assign object at 0x00000259E8292810>,
+                             0)],
+             '$const46.8': [(<numba.core.ir.Assign object at 0x00000259E8270F10>,
+                             0)],
+             '$const56.12': [(<numba.core.ir.Assign object at 0x00000259E8273650>,
+                              0)],
+             '$const72.15': [(<numba.core.ir.Assign object at 0x00000259E8273E10>,
+                              0)],
+             '$const86.20': [(<numba.core.ir.Assign object at 0x00000259E8272250>,
+                              0)],
+             'off': [(<numba.core.ir.Assign object at 0x00000259E8293410>, 0)],
+             'x': [(<numba.core.ir.Assign object at 0x00000259E8292B50>, 0)]})
+2025-03-10 13:06:22.009 [   DEBUG] (              ssa.py: 172) SSA violators <numba.core.utils.OrderedSet object at 0x00000259E822C910>
+2025-03-10 13:06:22.083 [   DEBUG] (         byteflow.py:  90) bytecode dump:
+>          0	NOP(arg=None, lineno=39)
+           2	RESUME(arg=0, lineno=39)
+           4	LOAD_GLOBAL(arg=1, lineno=42)
+          16	LOAD_ATTR(arg=1, lineno=42)
+          26	LOAD_FAST(arg=0, lineno=42)
+          28	LOAD_FAST(arg=1, lineno=42)
+          30	BINARY_SUBSCR(arg=None, lineno=42)
+          40	PRECALL(arg=1, lineno=42)
+          44	CALL(arg=1, lineno=42)
+          54	RETURN_VALUE(arg=None, lineno=42)
+2025-03-10 13:06:22.083 [   DEBUG] (         byteflow.py: 116) pending: deque([State(pc_initial=0 nstack_initial=0)])
+2025-03-10 13:06:22.083 [   DEBUG] (         byteflow.py: 119) stack: []
+2025-03-10 13:06:22.084 [   DEBUG] (         byteflow.py: 120) state.pc_initial: State(pc_initial=0 nstack_initial=0)
+2025-03-10 13:06:22.084 [   DEBUG] (         byteflow.py: 350) dispatch pc=0, inst=NOP(arg=None, lineno=39)
+2025-03-10 13:06:22.084 [   DEBUG] (         byteflow.py: 351) stack []
+2025-03-10 13:06:22.084 [   DEBUG] (         byteflow.py: 350) dispatch pc=2, inst=RESUME(arg=0, lineno=39)
+2025-03-10 13:06:22.084 [   DEBUG] (         byteflow.py: 351) stack []
+2025-03-10 13:06:22.084 [   DEBUG] (         byteflow.py: 350) dispatch pc=4, inst=LOAD_GLOBAL(arg=1, lineno=42)
+2025-03-10 13:06:22.084 [   DEBUG] (         byteflow.py: 351) stack []
+2025-03-10 13:06:22.084 [   DEBUG] (         byteflow.py: 350) dispatch pc=16, inst=LOAD_ATTR(arg=1, lineno=42)
+2025-03-10 13:06:22.084 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$4load_global.0']
+2025-03-10 13:06:22.084 [   DEBUG] (         byteflow.py: 350) dispatch pc=26, inst=LOAD_FAST(arg=0, lineno=42)
+2025-03-10 13:06:22.085 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2']
+2025-03-10 13:06:22.085 [   DEBUG] (         byteflow.py: 350) dispatch pc=28, inst=LOAD_FAST(arg=1, lineno=42)
+2025-03-10 13:06:22.085 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$x26.3']
+2025-03-10 13:06:22.085 [   DEBUG] (         byteflow.py: 350) dispatch pc=30, inst=BINARY_SUBSCR(arg=None, lineno=42)
+2025-03-10 13:06:22.085 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$x26.3', '$off28.4']
+2025-03-10 13:06:22.085 [   DEBUG] (         byteflow.py: 350) dispatch pc=40, inst=PRECALL(arg=1, lineno=42)
+2025-03-10 13:06:22.085 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$30binary_subscr.5']
+2025-03-10 13:06:22.085 [   DEBUG] (         byteflow.py: 350) dispatch pc=44, inst=CALL(arg=1, lineno=42)
+2025-03-10 13:06:22.085 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$30binary_subscr.5']
+2025-03-10 13:06:22.085 [   DEBUG] (         byteflow.py: 350) dispatch pc=54, inst=RETURN_VALUE(arg=None, lineno=42)
+2025-03-10 13:06:22.086 [   DEBUG] (         byteflow.py: 351) stack ['$44call.6']
+2025-03-10 13:06:22.086 [   DEBUG] (         byteflow.py: 138) end state. edges=[]
+2025-03-10 13:06:22.086 [   DEBUG] (         byteflow.py: 219) -------------------------Prune PHIs-------------------------
+2025-03-10 13:06:22.086 [   DEBUG] (         byteflow.py: 288) Used_phis: defaultdict(<class 'set'>, {State(pc_initial=0 nstack_initial=0): set()})
+2025-03-10 13:06:22.086 [   DEBUG] (         byteflow.py: 245) defmap: {}
+2025-03-10 13:06:22.086 [   DEBUG] (         byteflow.py: 246) phismap: defaultdict(<class 'set'>, {})
+2025-03-10 13:06:22.086 [   DEBUG] (         byteflow.py: 267) changing phismap: defaultdict(<class 'set'>, {})
+2025-03-10 13:06:22.086 [   DEBUG] (         byteflow.py: 276) keep phismap: {}
+2025-03-10 13:06:22.087 [   DEBUG] (         byteflow.py: 282) new_out: defaultdict(<class 'dict'>, {})
+2025-03-10 13:06:22.087 [   DEBUG] (         byteflow.py: 292) ----------------------DONE Prune PHIs-----------------------
+2025-03-10 13:06:22.087 [   DEBUG] (         byteflow.py: 150) block_infos State(pc_initial=0 nstack_initial=0):
+AdaptBlockInfo(insts=((0, {}), (2, {}), (4, {'idx': 0, 'res': '$4load_global.0'}), (6, {}), (8, {}), (10, {}), (12, {}), (14, {}), (16, {'item': '$4load_global.0', 'res': '$16load_attr.2'}), (18, {}), (20, {}), (22, {}), (24, {}), (26, {'res': '$x26.3'}), (28, {'res': '$off28.4'}), (30, {'index': '$off28.4', 'target': '$x26.3', 'res': '$30binary_subscr.5'}), (32, {}), (34, {}), (36, {}), (38, {}), (40, {}), (42, {}), (44, {'func': '$16load_attr.2', 'args': ['$30binary_subscr.5'], 'kw_names': None, 'res': '$44call.6'}), (46, {}), (48, {}), (50, {}), (52, {}), (54, {'retval': '$44call.6', 'castval': '$54return_value.7'})), outgoing_phis={}, blockstack=(), active_try_block=None, outgoing_edgepushed={})
+2025-03-10 13:06:22.087 [   DEBUG] (      interpreter.py:1416) label 0:
+    x = arg(0, name=x)                       ['x']
+    off = arg(1, name=off)                   ['off']
+    $4load_global.0 = global(nb: <module 'numba' from 'C:\\Users\\ejvil\\miniconda3\\envs\\nspyre\\Lib\\site-packages\\numba\\__init__.py'>) ['$4load_global.0']
+    $16load_attr.2 = getattr(value=$4load_global.0, attr=i1) ['$16load_attr.2', '$4load_global.0']
+    $30binary_subscr.5 = getitem(value=x, index=off, fn=<built-in function getitem>) ['$30binary_subscr.5', 'off', 'x']
+    $44call.6 = call $16load_attr.2($30binary_subscr.5, func=$16load_attr.2, args=[Var($30binary_subscr.5, nbtools.py:42)], kws=(), vararg=None, varkwarg=None, target=None) ['$16load_attr.2', '$30binary_subscr.5', '$44call.6']
+    $54return_value.7 = cast(value=$44call.6) ['$44call.6', '$54return_value.7']
+    return $54return_value.7                 ['$54return_value.7']
+
+2025-03-10 13:06:22.092 [   DEBUG] (              ssa.py: 178) ==== SSA block analysis pass on 0
+2025-03-10 13:06:22.092 [   DEBUG] (              ssa.py: 208) Running <numba.core.ssa._GatherDefsHandler object at 0x00000259E82DCFD0>
+2025-03-10 13:06:22.092 [   DEBUG] (              ssa.py: 210) on stmt: x = arg(0, name=x)
+2025-03-10 13:06:22.092 [   DEBUG] (              ssa.py: 210) on stmt: off = arg(1, name=off)
+2025-03-10 13:06:22.092 [   DEBUG] (              ssa.py: 210) on stmt: $4load_global.0 = global(nb: <module 'numba' from 'C:\\Users\\ejvil\\miniconda3\\envs\\nspyre\\Lib\\site-packages\\numba\\__init__.py'>)
+2025-03-10 13:06:22.092 [   DEBUG] (              ssa.py: 210) on stmt: $16load_attr.2 = getattr(value=$4load_global.0, attr=i1)
+2025-03-10 13:06:22.093 [   DEBUG] (              ssa.py: 210) on stmt: $30binary_subscr.5 = getitem(value=x, index=off, fn=<built-in function getitem>)
+2025-03-10 13:06:22.093 [   DEBUG] (              ssa.py: 210) on stmt: $44call.6 = call $16load_attr.2($30binary_subscr.5, func=$16load_attr.2, args=[Var($30binary_subscr.5, nbtools.py:42)], kws=(), vararg=None, varkwarg=None, target=None)
+2025-03-10 13:06:22.093 [   DEBUG] (              ssa.py: 210) on stmt: $54return_value.7 = cast(value=$44call.6)
+2025-03-10 13:06:22.093 [   DEBUG] (              ssa.py: 210) on stmt: return $54return_value.7
+2025-03-10 13:06:22.093 [   DEBUG] (              ssa.py: 157) defs defaultdict(<class 'list'>,
+            {'$16load_attr.2': [(<numba.core.ir.Assign object at 0x00000259E82CE650>,
+                                 0)],
+             '$30binary_subscr.5': [(<numba.core.ir.Assign object at 0x00000259E82CEC50>,
+                                     0)],
+             '$44call.6': [(<numba.core.ir.Assign object at 0x00000259E82CEFD0>,
+                            0)],
+             '$4load_global.0': [(<numba.core.ir.Assign object at 0x00000259E82CE350>,
+                                  0)],
+             '$54return_value.7': [(<numba.core.ir.Assign object at 0x00000259E82CF1D0>,
+                                    0)],
+             'off': [(<numba.core.ir.Assign object at 0x00000259E82CE0D0>, 0)],
+             'x': [(<numba.core.ir.Assign object at 0x00000259E82CDFD0>, 0)]})
+2025-03-10 13:06:22.093 [   DEBUG] (              ssa.py: 172) SSA violators <numba.core.utils.OrderedSet object at 0x00000259E82DCFD0>
+2025-03-10 13:06:22.121 [   DEBUG] (         byteflow.py:  90) bytecode dump:
+>          0	NOP(arg=None, lineno=43)
+           2	RESUME(arg=0, lineno=43)
+           4	LOAD_GLOBAL(arg=1, lineno=46)
+          16	LOAD_ATTR(arg=1, lineno=46)
+          26	LOAD_FAST(arg=0, lineno=46)
+          28	LOAD_FAST(arg=1, lineno=46)
+          30	LOAD_CONST(arg=1, lineno=46)
+          32	BINARY_OP(arg=0, lineno=46)
+          36	BINARY_SUBSCR(arg=None, lineno=46)
+          46	LOAD_CONST(arg=2, lineno=46)
+          48	BINARY_OP(arg=3, lineno=46)
+          52	LOAD_FAST(arg=0, lineno=46)
+          54	LOAD_FAST(arg=1, lineno=46)
+          56	LOAD_CONST(arg=3, lineno=46)
+          58	BINARY_OP(arg=0, lineno=46)
+          62	BINARY_SUBSCR(arg=None, lineno=46)
+          72	BINARY_OP(arg=0, lineno=46)
+          76	PRECALL(arg=1, lineno=46)
+          80	CALL(arg=1, lineno=46)
+          90	RETURN_VALUE(arg=None, lineno=46)
+2025-03-10 13:06:22.121 [   DEBUG] (         byteflow.py: 116) pending: deque([State(pc_initial=0 nstack_initial=0)])
+2025-03-10 13:06:22.121 [   DEBUG] (         byteflow.py: 119) stack: []
+2025-03-10 13:06:22.121 [   DEBUG] (         byteflow.py: 120) state.pc_initial: State(pc_initial=0 nstack_initial=0)
+2025-03-10 13:06:22.121 [   DEBUG] (         byteflow.py: 350) dispatch pc=0, inst=NOP(arg=None, lineno=43)
+2025-03-10 13:06:22.121 [   DEBUG] (         byteflow.py: 351) stack []
+2025-03-10 13:06:22.121 [   DEBUG] (         byteflow.py: 350) dispatch pc=2, inst=RESUME(arg=0, lineno=43)
+2025-03-10 13:06:22.121 [   DEBUG] (         byteflow.py: 351) stack []
+2025-03-10 13:06:22.121 [   DEBUG] (         byteflow.py: 350) dispatch pc=4, inst=LOAD_GLOBAL(arg=1, lineno=46)
+2025-03-10 13:06:22.122 [   DEBUG] (         byteflow.py: 351) stack []
+2025-03-10 13:06:22.122 [   DEBUG] (         byteflow.py: 350) dispatch pc=16, inst=LOAD_ATTR(arg=1, lineno=46)
+2025-03-10 13:06:22.122 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$4load_global.0']
+2025-03-10 13:06:22.122 [   DEBUG] (         byteflow.py: 350) dispatch pc=26, inst=LOAD_FAST(arg=0, lineno=46)
+2025-03-10 13:06:22.122 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2']
+2025-03-10 13:06:22.122 [   DEBUG] (         byteflow.py: 350) dispatch pc=28, inst=LOAD_FAST(arg=1, lineno=46)
+2025-03-10 13:06:22.122 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$x26.3']
+2025-03-10 13:06:22.122 [   DEBUG] (         byteflow.py: 350) dispatch pc=30, inst=LOAD_CONST(arg=1, lineno=46)
+2025-03-10 13:06:22.122 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$x26.3', '$off28.4']
+2025-03-10 13:06:22.122 [   DEBUG] (         byteflow.py: 350) dispatch pc=32, inst=BINARY_OP(arg=0, lineno=46)
+2025-03-10 13:06:22.122 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$x26.3', '$off28.4', '$const30.5']
+2025-03-10 13:06:22.123 [   DEBUG] (         byteflow.py: 350) dispatch pc=36, inst=BINARY_SUBSCR(arg=None, lineno=46)
+2025-03-10 13:06:22.123 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$x26.3', '$binop_add32.6']
+2025-03-10 13:06:22.123 [   DEBUG] (         byteflow.py: 350) dispatch pc=46, inst=LOAD_CONST(arg=2, lineno=46)
+2025-03-10 13:06:22.123 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$36binary_subscr.7']
+2025-03-10 13:06:22.124 [   DEBUG] (         byteflow.py: 350) dispatch pc=48, inst=BINARY_OP(arg=3, lineno=46)
+2025-03-10 13:06:22.124 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$36binary_subscr.7', '$const46.8']
+2025-03-10 13:06:22.124 [   DEBUG] (         byteflow.py: 350) dispatch pc=52, inst=LOAD_FAST(arg=0, lineno=46)
+2025-03-10 13:06:22.124 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9']
+2025-03-10 13:06:22.124 [   DEBUG] (         byteflow.py: 350) dispatch pc=54, inst=LOAD_FAST(arg=1, lineno=46)
+2025-03-10 13:06:22.124 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$x52.10']
+2025-03-10 13:06:22.124 [   DEBUG] (         byteflow.py: 350) dispatch pc=56, inst=LOAD_CONST(arg=3, lineno=46)
+2025-03-10 13:06:22.125 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$x52.10', '$off54.11']
+2025-03-10 13:06:22.125 [   DEBUG] (         byteflow.py: 350) dispatch pc=58, inst=BINARY_OP(arg=0, lineno=46)
+2025-03-10 13:06:22.125 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$x52.10', '$off54.11', '$const56.12']
+2025-03-10 13:06:22.125 [   DEBUG] (         byteflow.py: 350) dispatch pc=62, inst=BINARY_SUBSCR(arg=None, lineno=46)
+2025-03-10 13:06:22.125 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$x52.10', '$binop_add58.13']
+2025-03-10 13:06:22.125 [   DEBUG] (         byteflow.py: 350) dispatch pc=72, inst=BINARY_OP(arg=0, lineno=46)
+2025-03-10 13:06:22.125 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$62binary_subscr.14']
+2025-03-10 13:06:22.125 [   DEBUG] (         byteflow.py: 350) dispatch pc=76, inst=PRECALL(arg=1, lineno=46)
+2025-03-10 13:06:22.125 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add72.15']
+2025-03-10 13:06:22.125 [   DEBUG] (         byteflow.py: 350) dispatch pc=80, inst=CALL(arg=1, lineno=46)
+2025-03-10 13:06:22.125 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add72.15']
+2025-03-10 13:06:22.125 [   DEBUG] (         byteflow.py: 350) dispatch pc=90, inst=RETURN_VALUE(arg=None, lineno=46)
+2025-03-10 13:06:22.126 [   DEBUG] (         byteflow.py: 351) stack ['$80call.16']
+2025-03-10 13:06:22.126 [   DEBUG] (         byteflow.py: 138) end state. edges=[]
+2025-03-10 13:06:22.126 [   DEBUG] (         byteflow.py: 219) -------------------------Prune PHIs-------------------------
+2025-03-10 13:06:22.126 [   DEBUG] (         byteflow.py: 288) Used_phis: defaultdict(<class 'set'>, {State(pc_initial=0 nstack_initial=0): set()})
+2025-03-10 13:06:22.126 [   DEBUG] (         byteflow.py: 245) defmap: {}
+2025-03-10 13:06:22.126 [   DEBUG] (         byteflow.py: 246) phismap: defaultdict(<class 'set'>, {})
+2025-03-10 13:06:22.126 [   DEBUG] (         byteflow.py: 267) changing phismap: defaultdict(<class 'set'>, {})
+2025-03-10 13:06:22.126 [   DEBUG] (         byteflow.py: 276) keep phismap: {}
+2025-03-10 13:06:22.126 [   DEBUG] (         byteflow.py: 282) new_out: defaultdict(<class 'dict'>, {})
+2025-03-10 13:06:22.126 [   DEBUG] (         byteflow.py: 292) ----------------------DONE Prune PHIs-----------------------
+2025-03-10 13:06:22.127 [   DEBUG] (         byteflow.py: 150) block_infos State(pc_initial=0 nstack_initial=0):
+AdaptBlockInfo(insts=((0, {}), (2, {}), (4, {'idx': 0, 'res': '$4load_global.0'}), (6, {}), (8, {}), (10, {}), (12, {}), (14, {}), (16, {'item': '$4load_global.0', 'res': '$16load_attr.2'}), (18, {}), (20, {}), (22, {}), (24, {}), (26, {'res': '$x26.3'}), (28, {'res': '$off28.4'}), (30, {'res': '$const30.5'}), (32, {'op': '+', 'lhs': '$off28.4', 'rhs': '$const30.5', 'res': '$binop_add32.6'}), (34, {}), (36, {'index': '$binop_add32.6', 'target': '$x26.3', 'res': '$36binary_subscr.7'}), (38, {}), (40, {}), (42, {}), (44, {}), (46, {'res': '$const46.8'}), (48, {'op': '<<', 'lhs': '$36binary_subscr.7', 'rhs': '$const46.8', 'res': '$binop_lshift48.9'}), (50, {}), (52, {'res': '$x52.10'}), (54, {'res': '$off54.11'}), (56, {'res': '$const56.12'}), (58, {'op': '+', 'lhs': '$off54.11', 'rhs': '$const56.12', 'res': '$binop_add58.13'}), (60, {}), (62, {'index': '$binop_add58.13', 'target': '$x52.10', 'res': '$62binary_subscr.14'}), (64, {}), (66, {}), (68, {}), (70, {}), (72, {'op': '+', 'lhs': '$binop_lshift48.9', 'rhs': '$62binary_subscr.14', 'res': '$binop_add72.15'}), (74, {}), (76, {}), (78, {}), (80, {'func': '$16load_attr.2', 'args': ['$binop_add72.15'], 'kw_names': None, 'res': '$80call.16'}), (82, {}), (84, {}), (86, {}), (88, {}), (90, {'retval': '$80call.16', 'castval': '$90return_value.17'})), outgoing_phis={}, blockstack=(), active_try_block=None, outgoing_edgepushed={})
+2025-03-10 13:06:22.127 [   DEBUG] (      interpreter.py:1416) label 0:
+    x = arg(0, name=x)                       ['x']
+    off = arg(1, name=off)                   ['off']
+    $4load_global.0 = global(nb: <module 'numba' from 'C:\\Users\\ejvil\\miniconda3\\envs\\nspyre\\Lib\\site-packages\\numba\\__init__.py'>) ['$4load_global.0']
+    $16load_attr.2 = getattr(value=$4load_global.0, attr=i2) ['$16load_attr.2', '$4load_global.0']
+    $const30.5 = const(int, 1)               ['$const30.5']
+    $binop_add32.6 = off + $const30.5        ['$binop_add32.6', '$const30.5', 'off']
+    $36binary_subscr.7 = getitem(value=x, index=$binop_add32.6, fn=<built-in function getitem>) ['$36binary_subscr.7', '$binop_add32.6', 'x']
+    $const46.8 = const(int, 8)               ['$const46.8']
+    $binop_lshift48.9 = $36binary_subscr.7 << $const46.8 ['$36binary_subscr.7', '$binop_lshift48.9', '$const46.8']
+    $const56.12 = const(int, 0)              ['$const56.12']
+    $binop_add58.13 = off + $const56.12      ['$binop_add58.13', '$const56.12', 'off']
+    $62binary_subscr.14 = getitem(value=x, index=$binop_add58.13, fn=<built-in function getitem>) ['$62binary_subscr.14', '$binop_add58.13', 'x']
+    $binop_add72.15 = $binop_lshift48.9 + $62binary_subscr.14 ['$62binary_subscr.14', '$binop_add72.15', '$binop_lshift48.9']
+    $80call.16 = call $16load_attr.2($binop_add72.15, func=$16load_attr.2, args=[Var($binop_add72.15, nbtools.py:46)], kws=(), vararg=None, varkwarg=None, target=None) ['$16load_attr.2', '$80call.16', '$binop_add72.15']
+    $90return_value.17 = cast(value=$80call.16) ['$80call.16', '$90return_value.17']
+    return $90return_value.17                ['$90return_value.17']
+
+2025-03-10 13:06:22.132 [   DEBUG] (              ssa.py: 178) ==== SSA block analysis pass on 0
+2025-03-10 13:06:22.132 [   DEBUG] (              ssa.py: 208) Running <numba.core.ssa._GatherDefsHandler object at 0x00000259E71DBD50>
+2025-03-10 13:06:22.132 [   DEBUG] (              ssa.py: 210) on stmt: x = arg(0, name=x)
+2025-03-10 13:06:22.132 [   DEBUG] (              ssa.py: 210) on stmt: off = arg(1, name=off)
+2025-03-10 13:06:22.132 [   DEBUG] (              ssa.py: 210) on stmt: $4load_global.0 = global(nb: <module 'numba' from 'C:\\Users\\ejvil\\miniconda3\\envs\\nspyre\\Lib\\site-packages\\numba\\__init__.py'>)
+2025-03-10 13:06:22.133 [   DEBUG] (              ssa.py: 210) on stmt: $16load_attr.2 = getattr(value=$4load_global.0, attr=i2)
+2025-03-10 13:06:22.133 [   DEBUG] (              ssa.py: 210) on stmt: $const30.5 = const(int, 1)
+2025-03-10 13:06:22.133 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add32.6 = off + $const30.5
+2025-03-10 13:06:22.133 [   DEBUG] (              ssa.py: 210) on stmt: $36binary_subscr.7 = getitem(value=x, index=$binop_add32.6, fn=<built-in function getitem>)
+2025-03-10 13:06:22.133 [   DEBUG] (              ssa.py: 210) on stmt: $const46.8 = const(int, 8)
+2025-03-10 13:06:22.133 [   DEBUG] (              ssa.py: 210) on stmt: $binop_lshift48.9 = $36binary_subscr.7 << $const46.8
+2025-03-10 13:06:22.133 [   DEBUG] (              ssa.py: 210) on stmt: $const56.12 = const(int, 0)
+2025-03-10 13:06:22.133 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add58.13 = off + $const56.12
+2025-03-10 13:06:22.133 [   DEBUG] (              ssa.py: 210) on stmt: $62binary_subscr.14 = getitem(value=x, index=$binop_add58.13, fn=<built-in function getitem>)
+2025-03-10 13:06:22.133 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add72.15 = $binop_lshift48.9 + $62binary_subscr.14
+2025-03-10 13:06:22.133 [   DEBUG] (              ssa.py: 210) on stmt: $80call.16 = call $16load_attr.2($binop_add72.15, func=$16load_attr.2, args=[Var($binop_add72.15, nbtools.py:46)], kws=(), vararg=None, varkwarg=None, target=None)
+2025-03-10 13:06:22.134 [   DEBUG] (              ssa.py: 210) on stmt: $90return_value.17 = cast(value=$80call.16)
+2025-03-10 13:06:22.134 [   DEBUG] (              ssa.py: 210) on stmt: return $90return_value.17
+2025-03-10 13:06:22.134 [   DEBUG] (              ssa.py: 157) defs defaultdict(<class 'list'>,
+            {'$16load_attr.2': [(<numba.core.ir.Assign object at 0x00000259E71F9810>,
+                                 0)],
+             '$36binary_subscr.7': [(<numba.core.ir.Assign object at 0x00000259E7165490>,
+                                     0)],
+             '$4load_global.0': [(<numba.core.ir.Assign object at 0x00000259E71FB490>,
+                                  0)],
+             '$62binary_subscr.14': [(<numba.core.ir.Assign object at 0x00000259E7164FD0>,
+                                      0)],
+             '$80call.16': [(<numba.core.ir.Assign object at 0x00000259E7165AD0>,
+                             0)],
+             '$90return_value.17': [(<numba.core.ir.Assign object at 0x00000259E7167110>,
+                                     0)],
+             '$binop_add32.6': [(<numba.core.ir.Assign object at 0x00000259E7164390>,
+                                 0)],
+             '$binop_add58.13': [(<numba.core.ir.Assign object at 0x00000259E7164150>,
+                                  0)],
+             '$binop_add72.15': [(<numba.core.ir.Assign object at 0x00000259E7165BD0>,
+                                  0)],
+             '$binop_lshift48.9': [(<numba.core.ir.Assign object at 0x00000259E7167F10>,
+                                    0)],
+             '$const30.5': [(<numba.core.ir.Assign object at 0x00000259E7166E50>,
+                             0)],
+             '$const46.8': [(<numba.core.ir.Assign object at 0x00000259E7167E50>,
+                             0)],
+             '$const56.12': [(<numba.core.ir.Assign object at 0x00000259E7164F50>,
+                              0)],
+             'off': [(<numba.core.ir.Assign object at 0x00000259E71FBB50>, 0)],
+             'x': [(<numba.core.ir.Assign object at 0x00000259E71FAE90>, 0)]})
+2025-03-10 13:06:22.134 [   DEBUG] (              ssa.py: 172) SSA violators <numba.core.utils.OrderedSet object at 0x00000259E7167AD0>
+2025-03-10 13:06:22.169 [   DEBUG] (         byteflow.py:  90) bytecode dump:
+>          0	NOP(arg=None, lineno=47)
+           2	RESUME(arg=0, lineno=47)
+           4	LOAD_GLOBAL(arg=1, lineno=50)
+          16	LOAD_ATTR(arg=1, lineno=50)
+          26	LOAD_FAST(arg=0, lineno=50)
+          28	LOAD_FAST(arg=1, lineno=50)
+          30	LOAD_CONST(arg=1, lineno=50)
+          32	BINARY_OP(arg=0, lineno=50)
+          36	BINARY_SUBSCR(arg=None, lineno=50)
+          46	LOAD_CONST(arg=2, lineno=50)
+          48	BINARY_OP(arg=3, lineno=50)
+          52	LOAD_FAST(arg=0, lineno=50)
+          54	LOAD_FAST(arg=1, lineno=50)
+          56	LOAD_CONST(arg=3, lineno=50)
+          58	BINARY_OP(arg=0, lineno=50)
+          62	BINARY_SUBSCR(arg=None, lineno=50)
+          72	LOAD_CONST(arg=4, lineno=50)
+          74	BINARY_OP(arg=3, lineno=50)
+          78	BINARY_OP(arg=0, lineno=50)
+          82	LOAD_FAST(arg=0, lineno=50)
+          84	LOAD_FAST(arg=1, lineno=50)
+          86	LOAD_CONST(arg=5, lineno=50)
+          88	BINARY_OP(arg=0, lineno=50)
+          92	BINARY_SUBSCR(arg=None, lineno=50)
+         102	LOAD_CONST(arg=6, lineno=50)
+         104	BINARY_OP(arg=3, lineno=50)
+         108	BINARY_OP(arg=0, lineno=50)
+         112	LOAD_FAST(arg=0, lineno=50)
+         114	LOAD_FAST(arg=1, lineno=50)
+         116	LOAD_CONST(arg=7, lineno=50)
+         118	BINARY_OP(arg=0, lineno=50)
+         122	BINARY_SUBSCR(arg=None, lineno=50)
+         132	BINARY_OP(arg=0, lineno=50)
+         136	PRECALL(arg=1, lineno=50)
+         140	CALL(arg=1, lineno=50)
+         150	RETURN_VALUE(arg=None, lineno=50)
+2025-03-10 13:06:22.169 [   DEBUG] (         byteflow.py: 116) pending: deque([State(pc_initial=0 nstack_initial=0)])
+2025-03-10 13:06:22.169 [   DEBUG] (         byteflow.py: 119) stack: []
+2025-03-10 13:06:22.169 [   DEBUG] (         byteflow.py: 120) state.pc_initial: State(pc_initial=0 nstack_initial=0)
+2025-03-10 13:06:22.170 [   DEBUG] (         byteflow.py: 350) dispatch pc=0, inst=NOP(arg=None, lineno=47)
+2025-03-10 13:06:22.170 [   DEBUG] (         byteflow.py: 351) stack []
+2025-03-10 13:06:22.170 [   DEBUG] (         byteflow.py: 350) dispatch pc=2, inst=RESUME(arg=0, lineno=47)
+2025-03-10 13:06:22.170 [   DEBUG] (         byteflow.py: 351) stack []
+2025-03-10 13:06:22.170 [   DEBUG] (         byteflow.py: 350) dispatch pc=4, inst=LOAD_GLOBAL(arg=1, lineno=50)
+2025-03-10 13:06:22.170 [   DEBUG] (         byteflow.py: 351) stack []
+2025-03-10 13:06:22.171 [   DEBUG] (         byteflow.py: 350) dispatch pc=16, inst=LOAD_ATTR(arg=1, lineno=50)
+2025-03-10 13:06:22.171 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$4load_global.0']
+2025-03-10 13:06:22.171 [   DEBUG] (         byteflow.py: 350) dispatch pc=26, inst=LOAD_FAST(arg=0, lineno=50)
+2025-03-10 13:06:22.171 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2']
+2025-03-10 13:06:22.171 [   DEBUG] (         byteflow.py: 350) dispatch pc=28, inst=LOAD_FAST(arg=1, lineno=50)
+2025-03-10 13:06:22.171 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$x26.3']
+2025-03-10 13:06:22.171 [   DEBUG] (         byteflow.py: 350) dispatch pc=30, inst=LOAD_CONST(arg=1, lineno=50)
+2025-03-10 13:06:22.171 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$x26.3', '$off28.4']
+2025-03-10 13:06:22.172 [   DEBUG] (         byteflow.py: 350) dispatch pc=32, inst=BINARY_OP(arg=0, lineno=50)
+2025-03-10 13:06:22.172 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$x26.3', '$off28.4', '$const30.5']
+2025-03-10 13:06:22.172 [   DEBUG] (         byteflow.py: 350) dispatch pc=36, inst=BINARY_SUBSCR(arg=None, lineno=50)
+2025-03-10 13:06:22.172 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$x26.3', '$binop_add32.6']
+2025-03-10 13:06:22.173 [   DEBUG] (         byteflow.py: 350) dispatch pc=46, inst=LOAD_CONST(arg=2, lineno=50)
+2025-03-10 13:06:22.173 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$36binary_subscr.7']
+2025-03-10 13:06:22.173 [   DEBUG] (         byteflow.py: 350) dispatch pc=48, inst=BINARY_OP(arg=3, lineno=50)
+2025-03-10 13:06:22.173 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$36binary_subscr.7', '$const46.8']
+2025-03-10 13:06:22.173 [   DEBUG] (         byteflow.py: 350) dispatch pc=52, inst=LOAD_FAST(arg=0, lineno=50)
+2025-03-10 13:06:22.173 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9']
+2025-03-10 13:06:22.173 [   DEBUG] (         byteflow.py: 350) dispatch pc=54, inst=LOAD_FAST(arg=1, lineno=50)
+2025-03-10 13:06:22.173 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$x52.10']
+2025-03-10 13:06:22.173 [   DEBUG] (         byteflow.py: 350) dispatch pc=56, inst=LOAD_CONST(arg=3, lineno=50)
+2025-03-10 13:06:22.173 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$x52.10', '$off54.11']
+2025-03-10 13:06:22.173 [   DEBUG] (         byteflow.py: 350) dispatch pc=58, inst=BINARY_OP(arg=0, lineno=50)
+2025-03-10 13:06:22.173 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$x52.10', '$off54.11', '$const56.12']
+2025-03-10 13:06:22.174 [   DEBUG] (         byteflow.py: 350) dispatch pc=62, inst=BINARY_SUBSCR(arg=None, lineno=50)
+2025-03-10 13:06:22.174 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$x52.10', '$binop_add58.13']
+2025-03-10 13:06:22.174 [   DEBUG] (         byteflow.py: 350) dispatch pc=72, inst=LOAD_CONST(arg=4, lineno=50)
+2025-03-10 13:06:22.174 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$62binary_subscr.14']
+2025-03-10 13:06:22.174 [   DEBUG] (         byteflow.py: 350) dispatch pc=74, inst=BINARY_OP(arg=3, lineno=50)
+2025-03-10 13:06:22.174 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$62binary_subscr.14', '$const72.15']
+2025-03-10 13:06:22.174 [   DEBUG] (         byteflow.py: 350) dispatch pc=78, inst=BINARY_OP(arg=0, lineno=50)
+2025-03-10 13:06:22.174 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$binop_lshift74.16']
+2025-03-10 13:06:22.175 [   DEBUG] (         byteflow.py: 350) dispatch pc=82, inst=LOAD_FAST(arg=0, lineno=50)
+2025-03-10 13:06:22.175 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17']
+2025-03-10 13:06:22.175 [   DEBUG] (         byteflow.py: 350) dispatch pc=84, inst=LOAD_FAST(arg=1, lineno=50)
+2025-03-10 13:06:22.175 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$x82.18']
+2025-03-10 13:06:22.175 [   DEBUG] (         byteflow.py: 350) dispatch pc=86, inst=LOAD_CONST(arg=5, lineno=50)
+2025-03-10 13:06:22.175 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$x82.18', '$off84.19']
+2025-03-10 13:06:22.175 [   DEBUG] (         byteflow.py: 350) dispatch pc=88, inst=BINARY_OP(arg=0, lineno=50)
+2025-03-10 13:06:22.175 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$x82.18', '$off84.19', '$const86.20']
+2025-03-10 13:06:22.175 [   DEBUG] (         byteflow.py: 350) dispatch pc=92, inst=BINARY_SUBSCR(arg=None, lineno=50)
+2025-03-10 13:06:22.175 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$x82.18', '$binop_add88.21']
+2025-03-10 13:06:22.176 [   DEBUG] (         byteflow.py: 350) dispatch pc=102, inst=LOAD_CONST(arg=6, lineno=50)
+2025-03-10 13:06:22.176 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$92binary_subscr.22']
+2025-03-10 13:06:22.176 [   DEBUG] (         byteflow.py: 350) dispatch pc=104, inst=BINARY_OP(arg=3, lineno=50)
+2025-03-10 13:06:22.176 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$92binary_subscr.22', '$const102.23']
+2025-03-10 13:06:22.176 [   DEBUG] (         byteflow.py: 350) dispatch pc=108, inst=BINARY_OP(arg=0, lineno=50)
+2025-03-10 13:06:22.176 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$binop_lshift104.24']
+2025-03-10 13:06:22.176 [   DEBUG] (         byteflow.py: 350) dispatch pc=112, inst=LOAD_FAST(arg=0, lineno=50)
+2025-03-10 13:06:22.176 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25']
+2025-03-10 13:06:22.176 [   DEBUG] (         byteflow.py: 350) dispatch pc=114, inst=LOAD_FAST(arg=1, lineno=50)
+2025-03-10 13:06:22.176 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25', '$x112.26']
+2025-03-10 13:06:22.176 [   DEBUG] (         byteflow.py: 350) dispatch pc=116, inst=LOAD_CONST(arg=7, lineno=50)
+2025-03-10 13:06:22.177 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25', '$x112.26', '$off114.27']
+2025-03-10 13:06:22.177 [   DEBUG] (         byteflow.py: 350) dispatch pc=118, inst=BINARY_OP(arg=0, lineno=50)
+2025-03-10 13:06:22.177 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25', '$x112.26', '$off114.27', '$const116.28']
+2025-03-10 13:06:22.177 [   DEBUG] (         byteflow.py: 350) dispatch pc=122, inst=BINARY_SUBSCR(arg=None, lineno=50)
+2025-03-10 13:06:22.177 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25', '$x112.26', '$binop_add118.29']
+2025-03-10 13:06:22.177 [   DEBUG] (         byteflow.py: 350) dispatch pc=132, inst=BINARY_OP(arg=0, lineno=50)
+2025-03-10 13:06:22.177 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25', '$122binary_subscr.30']
+2025-03-10 13:06:22.177 [   DEBUG] (         byteflow.py: 350) dispatch pc=136, inst=PRECALL(arg=1, lineno=50)
+2025-03-10 13:06:22.177 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add132.31']
+2025-03-10 13:06:22.177 [   DEBUG] (         byteflow.py: 350) dispatch pc=140, inst=CALL(arg=1, lineno=50)
+2025-03-10 13:06:22.178 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add132.31']
+2025-03-10 13:06:22.178 [   DEBUG] (         byteflow.py: 350) dispatch pc=150, inst=RETURN_VALUE(arg=None, lineno=50)
+2025-03-10 13:06:22.178 [   DEBUG] (         byteflow.py: 351) stack ['$140call.32']
+2025-03-10 13:06:22.178 [   DEBUG] (         byteflow.py: 138) end state. edges=[]
+2025-03-10 13:06:22.178 [   DEBUG] (         byteflow.py: 219) -------------------------Prune PHIs-------------------------
+2025-03-10 13:06:22.178 [   DEBUG] (         byteflow.py: 288) Used_phis: defaultdict(<class 'set'>, {State(pc_initial=0 nstack_initial=0): set()})
+2025-03-10 13:06:22.178 [   DEBUG] (         byteflow.py: 245) defmap: {}
+2025-03-10 13:06:22.178 [   DEBUG] (         byteflow.py: 246) phismap: defaultdict(<class 'set'>, {})
+2025-03-10 13:06:22.178 [   DEBUG] (         byteflow.py: 267) changing phismap: defaultdict(<class 'set'>, {})
+2025-03-10 13:06:22.178 [   DEBUG] (         byteflow.py: 276) keep phismap: {}
+2025-03-10 13:06:22.178 [   DEBUG] (         byteflow.py: 282) new_out: defaultdict(<class 'dict'>, {})
+2025-03-10 13:06:22.179 [   DEBUG] (         byteflow.py: 292) ----------------------DONE Prune PHIs-----------------------
+2025-03-10 13:06:22.179 [   DEBUG] (         byteflow.py: 150) block_infos State(pc_initial=0 nstack_initial=0):
+AdaptBlockInfo(insts=((0, {}), (2, {}), (4, {'idx': 0, 'res': '$4load_global.0'}), (6, {}), (8, {}), (10, {}), (12, {}), (14, {}), (16, {'item': '$4load_global.0', 'res': '$16load_attr.2'}), (18, {}), (20, {}), (22, {}), (24, {}), (26, {'res': '$x26.3'}), (28, {'res': '$off28.4'}), (30, {'res': '$const30.5'}), (32, {'op': '+', 'lhs': '$off28.4', 'rhs': '$const30.5', 'res': '$binop_add32.6'}), (34, {}), (36, {'index': '$binop_add32.6', 'target': '$x26.3', 'res': '$36binary_subscr.7'}), (38, {}), (40, {}), (42, {}), (44, {}), (46, {'res': '$const46.8'}), (48, {'op': '<<', 'lhs': '$36binary_subscr.7', 'rhs': '$const46.8', 'res': '$binop_lshift48.9'}), (50, {}), (52, {'res': '$x52.10'}), (54, {'res': '$off54.11'}), (56, {'res': '$const56.12'}), (58, {'op': '+', 'lhs': '$off54.11', 'rhs': '$const56.12', 'res': '$binop_add58.13'}), (60, {}), (62, {'index': '$binop_add58.13', 'target': '$x52.10', 'res': '$62binary_subscr.14'}), (64, {}), (66, {}), (68, {}), (70, {}), (72, {'res': '$const72.15'}), (74, {'op': '<<', 'lhs': '$62binary_subscr.14', 'rhs': '$const72.15', 'res': '$binop_lshift74.16'}), (76, {}), (78, {'op': '+', 'lhs': '$binop_lshift48.9', 'rhs': '$binop_lshift74.16', 'res': '$binop_add78.17'}), (80, {}), (82, {'res': '$x82.18'}), (84, {'res': '$off84.19'}), (86, {'res': '$const86.20'}), (88, {'op': '+', 'lhs': '$off84.19', 'rhs': '$const86.20', 'res': '$binop_add88.21'}), (90, {}), (92, {'index': '$binop_add88.21', 'target': '$x82.18', 'res': '$92binary_subscr.22'}), (94, {}), (96, {}), (98, {}), (100, {}), (102, {'res': '$const102.23'}), (104, {'op': '<<', 'lhs': '$92binary_subscr.22', 'rhs': '$const102.23', 'res': '$binop_lshift104.24'}), (106, {}), (108, {'op': '+', 'lhs': '$binop_add78.17', 'rhs': '$binop_lshift104.24', 'res': '$binop_add108.25'}), (110, {}), (112, {'res': '$x112.26'}), (114, {'res': '$off114.27'}), (116, {'res': '$const116.28'}), (118, {'op': '+', 'lhs': '$off114.27', 'rhs': '$const116.28', 'res': '$binop_add118.29'}), (120, {}), (122, {'index': '$binop_add118.29', 'target': '$x112.26', 'res': '$122binary_subscr.30'}), (124, {}), (126, {}), (128, {}), (130, {}), (132, {'op': '+', 'lhs': '$binop_add108.25', 'rhs': '$122binary_subscr.30', 'res': '$binop_add132.31'}), (134, {}), (136, {}), (138, {}), (140, {'func': '$16load_attr.2', 'args': ['$binop_add132.31'], 'kw_names': None, 'res': '$140call.32'}), (142, {}), (144, {}), (146, {}), (148, {}), (150, {'retval': '$140call.32', 'castval': '$150return_value.33'})), outgoing_phis={}, blockstack=(), active_try_block=None, outgoing_edgepushed={})
+2025-03-10 13:06:22.179 [   DEBUG] (      interpreter.py:1416) label 0:
+    x = arg(0, name=x)                       ['x']
+    off = arg(1, name=off)                   ['off']
+    $4load_global.0 = global(nb: <module 'numba' from 'C:\\Users\\ejvil\\miniconda3\\envs\\nspyre\\Lib\\site-packages\\numba\\__init__.py'>) ['$4load_global.0']
+    $16load_attr.2 = getattr(value=$4load_global.0, attr=i4) ['$16load_attr.2', '$4load_global.0']
+    $const30.5 = const(int, 3)               ['$const30.5']
+    $binop_add32.6 = off + $const30.5        ['$binop_add32.6', '$const30.5', 'off']
+    $36binary_subscr.7 = getitem(value=x, index=$binop_add32.6, fn=<built-in function getitem>) ['$36binary_subscr.7', '$binop_add32.6', 'x']
+    $const46.8 = const(int, 24)              ['$const46.8']
+    $binop_lshift48.9 = $36binary_subscr.7 << $const46.8 ['$36binary_subscr.7', '$binop_lshift48.9', '$const46.8']
+    $const56.12 = const(int, 2)              ['$const56.12']
+    $binop_add58.13 = off + $const56.12      ['$binop_add58.13', '$const56.12', 'off']
+    $62binary_subscr.14 = getitem(value=x, index=$binop_add58.13, fn=<built-in function getitem>) ['$62binary_subscr.14', '$binop_add58.13', 'x']
+    $const72.15 = const(int, 16)             ['$const72.15']
+    $binop_lshift74.16 = $62binary_subscr.14 << $const72.15 ['$62binary_subscr.14', '$binop_lshift74.16', '$const72.15']
+    $binop_add78.17 = $binop_lshift48.9 + $binop_lshift74.16 ['$binop_add78.17', '$binop_lshift48.9', '$binop_lshift74.16']
+    $const86.20 = const(int, 1)              ['$const86.20']
+    $binop_add88.21 = off + $const86.20      ['$binop_add88.21', '$const86.20', 'off']
+    $92binary_subscr.22 = getitem(value=x, index=$binop_add88.21, fn=<built-in function getitem>) ['$92binary_subscr.22', '$binop_add88.21', 'x']
+    $const102.23 = const(int, 8)             ['$const102.23']
+    $binop_lshift104.24 = $92binary_subscr.22 << $const102.23 ['$92binary_subscr.22', '$binop_lshift104.24', '$const102.23']
+    $binop_add108.25 = $binop_add78.17 + $binop_lshift104.24 ['$binop_add108.25', '$binop_add78.17', '$binop_lshift104.24']
+    $const116.28 = const(int, 0)             ['$const116.28']
+    $binop_add118.29 = off + $const116.28    ['$binop_add118.29', '$const116.28', 'off']
+    $122binary_subscr.30 = getitem(value=x, index=$binop_add118.29, fn=<built-in function getitem>) ['$122binary_subscr.30', '$binop_add118.29', 'x']
+    $binop_add132.31 = $binop_add108.25 + $122binary_subscr.30 ['$122binary_subscr.30', '$binop_add108.25', '$binop_add132.31']
+    $140call.32 = call $16load_attr.2($binop_add132.31, func=$16load_attr.2, args=[Var($binop_add132.31, nbtools.py:50)], kws=(), vararg=None, varkwarg=None, target=None) ['$140call.32', '$16load_attr.2', '$binop_add132.31']
+    $150return_value.33 = cast(value=$140call.32) ['$140call.32', '$150return_value.33']
+    return $150return_value.33               ['$150return_value.33']
+
+2025-03-10 13:06:22.186 [   DEBUG] (              ssa.py: 178) ==== SSA block analysis pass on 0
+2025-03-10 13:06:22.186 [   DEBUG] (              ssa.py: 208) Running <numba.core.ssa._GatherDefsHandler object at 0x00000259E8332650>
+2025-03-10 13:06:22.187 [   DEBUG] (              ssa.py: 210) on stmt: x = arg(0, name=x)
+2025-03-10 13:06:22.187 [   DEBUG] (              ssa.py: 210) on stmt: off = arg(1, name=off)
+2025-03-10 13:06:22.187 [   DEBUG] (              ssa.py: 210) on stmt: $4load_global.0 = global(nb: <module 'numba' from 'C:\\Users\\ejvil\\miniconda3\\envs\\nspyre\\Lib\\site-packages\\numba\\__init__.py'>)
+2025-03-10 13:06:22.187 [   DEBUG] (              ssa.py: 210) on stmt: $16load_attr.2 = getattr(value=$4load_global.0, attr=i4)
+2025-03-10 13:06:22.187 [   DEBUG] (              ssa.py: 210) on stmt: $const30.5 = const(int, 3)
+2025-03-10 13:06:22.187 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add32.6 = off + $const30.5
+2025-03-10 13:06:22.187 [   DEBUG] (              ssa.py: 210) on stmt: $36binary_subscr.7 = getitem(value=x, index=$binop_add32.6, fn=<built-in function getitem>)
+2025-03-10 13:06:22.187 [   DEBUG] (              ssa.py: 210) on stmt: $const46.8 = const(int, 24)
+2025-03-10 13:06:22.187 [   DEBUG] (              ssa.py: 210) on stmt: $binop_lshift48.9 = $36binary_subscr.7 << $const46.8
+2025-03-10 13:06:22.187 [   DEBUG] (              ssa.py: 210) on stmt: $const56.12 = const(int, 2)
+2025-03-10 13:06:22.188 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add58.13 = off + $const56.12
+2025-03-10 13:06:22.188 [   DEBUG] (              ssa.py: 210) on stmt: $62binary_subscr.14 = getitem(value=x, index=$binop_add58.13, fn=<built-in function getitem>)
+2025-03-10 13:06:22.188 [   DEBUG] (              ssa.py: 210) on stmt: $const72.15 = const(int, 16)
+2025-03-10 13:06:22.188 [   DEBUG] (              ssa.py: 210) on stmt: $binop_lshift74.16 = $62binary_subscr.14 << $const72.15
+2025-03-10 13:06:22.188 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add78.17 = $binop_lshift48.9 + $binop_lshift74.16
+2025-03-10 13:06:22.188 [   DEBUG] (              ssa.py: 210) on stmt: $const86.20 = const(int, 1)
+2025-03-10 13:06:22.188 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add88.21 = off + $const86.20
+2025-03-10 13:06:22.188 [   DEBUG] (              ssa.py: 210) on stmt: $92binary_subscr.22 = getitem(value=x, index=$binop_add88.21, fn=<built-in function getitem>)
+2025-03-10 13:06:22.188 [   DEBUG] (              ssa.py: 210) on stmt: $const102.23 = const(int, 8)
+2025-03-10 13:06:22.189 [   DEBUG] (              ssa.py: 210) on stmt: $binop_lshift104.24 = $92binary_subscr.22 << $const102.23
+2025-03-10 13:06:22.189 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add108.25 = $binop_add78.17 + $binop_lshift104.24
+2025-03-10 13:06:22.189 [   DEBUG] (              ssa.py: 210) on stmt: $const116.28 = const(int, 0)
+2025-03-10 13:06:22.189 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add118.29 = off + $const116.28
+2025-03-10 13:06:22.189 [   DEBUG] (              ssa.py: 210) on stmt: $122binary_subscr.30 = getitem(value=x, index=$binop_add118.29, fn=<built-in function getitem>)
+2025-03-10 13:06:22.189 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add132.31 = $binop_add108.25 + $122binary_subscr.30
+2025-03-10 13:06:22.189 [   DEBUG] (              ssa.py: 210) on stmt: $140call.32 = call $16load_attr.2($binop_add132.31, func=$16load_attr.2, args=[Var($binop_add132.31, nbtools.py:50)], kws=(), vararg=None, varkwarg=None, target=None)
+2025-03-10 13:06:22.189 [   DEBUG] (              ssa.py: 210) on stmt: $150return_value.33 = cast(value=$140call.32)
+2025-03-10 13:06:22.190 [   DEBUG] (              ssa.py: 210) on stmt: return $150return_value.33
+2025-03-10 13:06:22.190 [   DEBUG] (              ssa.py: 157) defs defaultdict(<class 'list'>,
+            {'$122binary_subscr.30': [(<numba.core.ir.Assign object at 0x00000259E8323AD0>,
+                                       0)],
+             '$140call.32': [(<numba.core.ir.Assign object at 0x00000259E833E190>,
+                              0)],
+             '$150return_value.33': [(<numba.core.ir.Assign object at 0x00000259E833E490>,
+                                      0)],
+             '$16load_attr.2': [(<numba.core.ir.Assign object at 0x00000259E8332590>,
+                                 0)],
+             '$36binary_subscr.7': [(<numba.core.ir.Assign object at 0x00000259E8332FD0>,
+                                     0)],
+             '$4load_global.0': [(<numba.core.ir.Assign object at 0x00000259E8332290>,
+                                  0)],
+             '$62binary_subscr.14': [(<numba.core.ir.Assign object at 0x00000259E8333D10>,
+                                      0)],
+             '$92binary_subscr.22': [(<numba.core.ir.Assign object at 0x00000259E833CDD0>,
+                                      0)],
+             '$binop_add108.25': [(<numba.core.ir.Assign object at 0x00000259E833D550>,
+                                   0)],
+             '$binop_add118.29': [(<numba.core.ir.Assign object at 0x00000259E833DC50>,
+                                   0)],
+             '$binop_add132.31': [(<numba.core.ir.Assign object at 0x00000259E833DE90>,
+                                   0)],
+             '$binop_add32.6': [(<numba.core.ir.Assign object at 0x00000259E8332D90>,
+                                 0)],
+             '$binop_add58.13': [(<numba.core.ir.Assign object at 0x00000259E8333AD0>,
+                                  0)],
+             '$binop_add78.17': [(<numba.core.ir.Assign object at 0x00000259E833C4D0>,
+                                  0)],
+             '$binop_add88.21': [(<numba.core.ir.Assign object at 0x00000259E833CB90>,
+                                  0)],
+             '$binop_lshift104.24': [(<numba.core.ir.Assign object at 0x00000259E833D2D0>,
+                                      0)],
+             '$binop_lshift48.9': [(<numba.core.ir.Assign object at 0x00000259E83333D0>,
+                                    0)],
+             '$binop_lshift74.16': [(<numba.core.ir.Assign object at 0x00000259E833C250>,
+                                     0)],
+             '$const102.23': [(<numba.core.ir.Assign object at 0x00000259E833D090>,
+                               0)],
+             '$const116.28': [(<numba.core.ir.Assign object at 0x00000259E833DA50>,
+                               0)],
+             '$const30.5': [(<numba.core.ir.Assign object at 0x00000259E8332B90>,
+                             0)],
+             '$const46.8': [(<numba.core.ir.Assign object at 0x00000259E83331D0>,
+                             0)],
+             '$const56.12': [(<numba.core.ir.Assign object at 0x00000259E8333890>,
+                              0)],
+             '$const72.15': [(<numba.core.ir.Assign object at 0x00000259E8333FD0>,
+                              0)],
+             '$const86.20': [(<numba.core.ir.Assign object at 0x00000259E833C950>,
+                              0)],
+             'off': [(<numba.core.ir.Assign object at 0x00000259E8332010>, 0)],
+             'x': [(<numba.core.ir.Assign object at 0x00000259E8331F10>, 0)]})
+2025-03-10 13:06:22.190 [   DEBUG] (              ssa.py: 172) SSA violators <numba.core.utils.OrderedSet object at 0x00000259E8332650>
+2025-03-10 13:06:22.238 [   DEBUG] (         byteflow.py:  90) bytecode dump:
+>          0	NOP(arg=None, lineno=51)
+           2	RESUME(arg=0, lineno=51)
+           4	LOAD_GLOBAL(arg=1, lineno=54)
+          16	LOAD_ATTR(arg=1, lineno=54)
+          26	LOAD_FAST(arg=0, lineno=54)
+          28	LOAD_FAST(arg=1, lineno=54)
+          30	LOAD_CONST(arg=1, lineno=54)
+          32	BINARY_OP(arg=0, lineno=54)
+          36	BINARY_SUBSCR(arg=None, lineno=54)
+          46	LOAD_CONST(arg=2, lineno=54)
+          48	BINARY_OP(arg=3, lineno=54)
+          52	LOAD_FAST(arg=0, lineno=54)
+          54	LOAD_FAST(arg=1, lineno=54)
+          56	LOAD_CONST(arg=3, lineno=54)
+          58	BINARY_OP(arg=0, lineno=54)
+          62	BINARY_SUBSCR(arg=None, lineno=54)
+          72	LOAD_CONST(arg=4, lineno=54)
+          74	BINARY_OP(arg=3, lineno=54)
+          78	BINARY_OP(arg=0, lineno=54)
+          82	LOAD_FAST(arg=0, lineno=54)
+          84	LOAD_FAST(arg=1, lineno=54)
+          86	LOAD_CONST(arg=5, lineno=54)
+          88	BINARY_OP(arg=0, lineno=54)
+          92	BINARY_SUBSCR(arg=None, lineno=54)
+         102	LOAD_CONST(arg=6, lineno=54)
+         104	BINARY_OP(arg=3, lineno=54)
+         108	BINARY_OP(arg=0, lineno=54)
+         112	LOAD_FAST(arg=0, lineno=54)
+         114	LOAD_FAST(arg=1, lineno=54)
+         116	LOAD_CONST(arg=7, lineno=54)
+         118	BINARY_OP(arg=0, lineno=54)
+         122	BINARY_SUBSCR(arg=None, lineno=54)
+         132	LOAD_CONST(arg=8, lineno=54)
+         134	BINARY_OP(arg=3, lineno=54)
+         138	BINARY_OP(arg=0, lineno=54)
+         142	LOAD_FAST(arg=0, lineno=54)
+         144	LOAD_FAST(arg=1, lineno=54)
+         146	LOAD_CONST(arg=9, lineno=54)
+         148	BINARY_OP(arg=0, lineno=54)
+         152	BINARY_SUBSCR(arg=None, lineno=54)
+         162	LOAD_CONST(arg=10, lineno=54)
+         164	BINARY_OP(arg=3, lineno=54)
+         168	BINARY_OP(arg=0, lineno=54)
+         172	LOAD_FAST(arg=0, lineno=54)
+         174	LOAD_FAST(arg=1, lineno=54)
+         176	LOAD_CONST(arg=11, lineno=54)
+         178	BINARY_OP(arg=0, lineno=54)
+         182	BINARY_SUBSCR(arg=None, lineno=54)
+         192	LOAD_CONST(arg=12, lineno=54)
+         194	BINARY_OP(arg=3, lineno=54)
+         198	BINARY_OP(arg=0, lineno=54)
+         202	LOAD_FAST(arg=0, lineno=54)
+         204	LOAD_FAST(arg=1, lineno=54)
+         206	LOAD_CONST(arg=13, lineno=54)
+         208	BINARY_OP(arg=0, lineno=54)
+         212	BINARY_SUBSCR(arg=None, lineno=54)
+         222	LOAD_CONST(arg=14, lineno=54)
+         224	BINARY_OP(arg=3, lineno=54)
+         228	BINARY_OP(arg=0, lineno=54)
+         232	LOAD_FAST(arg=0, lineno=54)
+         234	LOAD_FAST(arg=1, lineno=54)
+         236	LOAD_CONST(arg=15, lineno=54)
+         238	BINARY_OP(arg=0, lineno=54)
+         242	BINARY_SUBSCR(arg=None, lineno=54)
+         252	BINARY_OP(arg=0, lineno=54)
+         256	PRECALL(arg=1, lineno=54)
+         260	CALL(arg=1, lineno=54)
+         270	RETURN_VALUE(arg=None, lineno=54)
+2025-03-10 13:06:22.238 [   DEBUG] (         byteflow.py: 116) pending: deque([State(pc_initial=0 nstack_initial=0)])
+2025-03-10 13:06:22.238 [   DEBUG] (         byteflow.py: 119) stack: []
+2025-03-10 13:06:22.239 [   DEBUG] (         byteflow.py: 120) state.pc_initial: State(pc_initial=0 nstack_initial=0)
+2025-03-10 13:06:22.239 [   DEBUG] (         byteflow.py: 350) dispatch pc=0, inst=NOP(arg=None, lineno=51)
+2025-03-10 13:06:22.239 [   DEBUG] (         byteflow.py: 351) stack []
+2025-03-10 13:06:22.239 [   DEBUG] (         byteflow.py: 350) dispatch pc=2, inst=RESUME(arg=0, lineno=51)
+2025-03-10 13:06:22.239 [   DEBUG] (         byteflow.py: 351) stack []
+2025-03-10 13:06:22.239 [   DEBUG] (         byteflow.py: 350) dispatch pc=4, inst=LOAD_GLOBAL(arg=1, lineno=54)
+2025-03-10 13:06:22.239 [   DEBUG] (         byteflow.py: 351) stack []
+2025-03-10 13:06:22.239 [   DEBUG] (         byteflow.py: 350) dispatch pc=16, inst=LOAD_ATTR(arg=1, lineno=54)
+2025-03-10 13:06:22.240 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$4load_global.0']
+2025-03-10 13:06:22.240 [   DEBUG] (         byteflow.py: 350) dispatch pc=26, inst=LOAD_FAST(arg=0, lineno=54)
+2025-03-10 13:06:22.240 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2']
+2025-03-10 13:06:22.240 [   DEBUG] (         byteflow.py: 350) dispatch pc=28, inst=LOAD_FAST(arg=1, lineno=54)
+2025-03-10 13:06:22.240 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$x26.3']
+2025-03-10 13:06:22.240 [   DEBUG] (         byteflow.py: 350) dispatch pc=30, inst=LOAD_CONST(arg=1, lineno=54)
+2025-03-10 13:06:22.240 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$x26.3', '$off28.4']
+2025-03-10 13:06:22.240 [   DEBUG] (         byteflow.py: 350) dispatch pc=32, inst=BINARY_OP(arg=0, lineno=54)
+2025-03-10 13:06:22.240 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$x26.3', '$off28.4', '$const30.5']
+2025-03-10 13:06:22.241 [   DEBUG] (         byteflow.py: 350) dispatch pc=36, inst=BINARY_SUBSCR(arg=None, lineno=54)
+2025-03-10 13:06:22.241 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$x26.3', '$binop_add32.6']
+2025-03-10 13:06:22.241 [   DEBUG] (         byteflow.py: 350) dispatch pc=46, inst=LOAD_CONST(arg=2, lineno=54)
+2025-03-10 13:06:22.241 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$36binary_subscr.7']
+2025-03-10 13:06:22.241 [   DEBUG] (         byteflow.py: 350) dispatch pc=48, inst=BINARY_OP(arg=3, lineno=54)
+2025-03-10 13:06:22.241 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$36binary_subscr.7', '$const46.8']
+2025-03-10 13:06:22.241 [   DEBUG] (         byteflow.py: 350) dispatch pc=52, inst=LOAD_FAST(arg=0, lineno=54)
+2025-03-10 13:06:22.241 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9']
+2025-03-10 13:06:22.241 [   DEBUG] (         byteflow.py: 350) dispatch pc=54, inst=LOAD_FAST(arg=1, lineno=54)
+2025-03-10 13:06:22.241 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$x52.10']
+2025-03-10 13:06:22.242 [   DEBUG] (         byteflow.py: 350) dispatch pc=56, inst=LOAD_CONST(arg=3, lineno=54)
+2025-03-10 13:06:22.242 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$x52.10', '$off54.11']
+2025-03-10 13:06:22.242 [   DEBUG] (         byteflow.py: 350) dispatch pc=58, inst=BINARY_OP(arg=0, lineno=54)
+2025-03-10 13:06:22.242 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$x52.10', '$off54.11', '$const56.12']
+2025-03-10 13:06:22.242 [   DEBUG] (         byteflow.py: 350) dispatch pc=62, inst=BINARY_SUBSCR(arg=None, lineno=54)
+2025-03-10 13:06:22.242 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$x52.10', '$binop_add58.13']
+2025-03-10 13:06:22.242 [   DEBUG] (         byteflow.py: 350) dispatch pc=72, inst=LOAD_CONST(arg=4, lineno=54)
+2025-03-10 13:06:22.242 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$62binary_subscr.14']
+2025-03-10 13:06:22.242 [   DEBUG] (         byteflow.py: 350) dispatch pc=74, inst=BINARY_OP(arg=3, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$62binary_subscr.14', '$const72.15']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=78, inst=BINARY_OP(arg=0, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_lshift48.9', '$binop_lshift74.16']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=82, inst=LOAD_FAST(arg=0, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=84, inst=LOAD_FAST(arg=1, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$x82.18']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=86, inst=LOAD_CONST(arg=5, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$x82.18', '$off84.19']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=88, inst=BINARY_OP(arg=0, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$x82.18', '$off84.19', '$const86.20']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=92, inst=BINARY_SUBSCR(arg=None, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$x82.18', '$binop_add88.21']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=102, inst=LOAD_CONST(arg=6, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$92binary_subscr.22']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=104, inst=BINARY_OP(arg=3, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$92binary_subscr.22', '$const102.23']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=108, inst=BINARY_OP(arg=0, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add78.17', '$binop_lshift104.24']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=112, inst=LOAD_FAST(arg=0, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=114, inst=LOAD_FAST(arg=1, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25', '$x112.26']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=116, inst=LOAD_CONST(arg=7, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25', '$x112.26', '$off114.27']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=118, inst=BINARY_OP(arg=0, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25', '$x112.26', '$off114.27', '$const116.28']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=122, inst=BINARY_SUBSCR(arg=None, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25', '$x112.26', '$binop_add118.29']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=132, inst=LOAD_CONST(arg=8, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25', '$122binary_subscr.30']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=134, inst=BINARY_OP(arg=3, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25', '$122binary_subscr.30', '$const132.31']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=138, inst=BINARY_OP(arg=0, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add108.25', '$binop_lshift134.32']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=142, inst=LOAD_FAST(arg=0, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add138.33']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=144, inst=LOAD_FAST(arg=1, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add138.33', '$x142.34']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=146, inst=LOAD_CONST(arg=9, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add138.33', '$x142.34', '$off144.35']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=148, inst=BINARY_OP(arg=0, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add138.33', '$x142.34', '$off144.35', '$const146.36']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=152, inst=BINARY_SUBSCR(arg=None, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add138.33', '$x142.34', '$binop_add148.37']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=162, inst=LOAD_CONST(arg=10, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add138.33', '$152binary_subscr.38']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=164, inst=BINARY_OP(arg=3, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add138.33', '$152binary_subscr.38', '$const162.39']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=168, inst=BINARY_OP(arg=0, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add138.33', '$binop_lshift164.40']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=172, inst=LOAD_FAST(arg=0, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add168.41']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=174, inst=LOAD_FAST(arg=1, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add168.41', '$x172.42']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=176, inst=LOAD_CONST(arg=11, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add168.41', '$x172.42', '$off174.43']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=178, inst=BINARY_OP(arg=0, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add168.41', '$x172.42', '$off174.43', '$const176.44']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=182, inst=BINARY_SUBSCR(arg=None, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add168.41', '$x172.42', '$binop_add178.45']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=192, inst=LOAD_CONST(arg=12, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add168.41', '$182binary_subscr.46']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=194, inst=BINARY_OP(arg=3, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add168.41', '$182binary_subscr.46', '$const192.47']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=198, inst=BINARY_OP(arg=0, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add168.41', '$binop_lshift194.48']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=202, inst=LOAD_FAST(arg=0, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add198.49']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=204, inst=LOAD_FAST(arg=1, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add198.49', '$x202.50']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=206, inst=LOAD_CONST(arg=13, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add198.49', '$x202.50', '$off204.51']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=208, inst=BINARY_OP(arg=0, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add198.49', '$x202.50', '$off204.51', '$const206.52']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=212, inst=BINARY_SUBSCR(arg=None, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add198.49', '$x202.50', '$binop_add208.53']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=222, inst=LOAD_CONST(arg=14, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add198.49', '$212binary_subscr.54']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=224, inst=BINARY_OP(arg=3, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add198.49', '$212binary_subscr.54', '$const222.55']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=228, inst=BINARY_OP(arg=0, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add198.49', '$binop_lshift224.56']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=232, inst=LOAD_FAST(arg=0, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add228.57']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=234, inst=LOAD_FAST(arg=1, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add228.57', '$x232.58']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=236, inst=LOAD_CONST(arg=15, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add228.57', '$x232.58', '$off234.59']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=238, inst=BINARY_OP(arg=0, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add228.57', '$x232.58', '$off234.59', '$const236.60']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=242, inst=BINARY_SUBSCR(arg=None, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add228.57', '$x232.58', '$binop_add238.61']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=252, inst=BINARY_OP(arg=0, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add228.57', '$242binary_subscr.62']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=256, inst=PRECALL(arg=1, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add252.63']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=260, inst=CALL(arg=1, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$null$4.1', '$16load_attr.2', '$binop_add252.63']
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 350) dispatch pc=270, inst=RETURN_VALUE(arg=None, lineno=54)
+2025-03-10 13:06:22.243 [   DEBUG] (         byteflow.py: 351) stack ['$260call.64']
+2025-03-10 13:06:22.253 [   DEBUG] (         byteflow.py: 138) end state. edges=[]
+2025-03-10 13:06:22.253 [   DEBUG] (         byteflow.py: 219) -------------------------Prune PHIs-------------------------
+2025-03-10 13:06:22.253 [   DEBUG] (         byteflow.py: 288) Used_phis: defaultdict(<class 'set'>, {State(pc_initial=0 nstack_initial=0): set()})
+2025-03-10 13:06:22.253 [   DEBUG] (         byteflow.py: 245) defmap: {}
+2025-03-10 13:06:22.254 [   DEBUG] (         byteflow.py: 246) phismap: defaultdict(<class 'set'>, {})
+2025-03-10 13:06:22.255 [   DEBUG] (         byteflow.py: 267) changing phismap: defaultdict(<class 'set'>, {})
+2025-03-10 13:06:22.255 [   DEBUG] (         byteflow.py: 276) keep phismap: {}
+2025-03-10 13:06:22.256 [   DEBUG] (         byteflow.py: 282) new_out: defaultdict(<class 'dict'>, {})
+2025-03-10 13:06:22.256 [   DEBUG] (         byteflow.py: 292) ----------------------DONE Prune PHIs-----------------------
+2025-03-10 13:06:22.258 [   DEBUG] (         byteflow.py: 150) block_infos State(pc_initial=0 nstack_initial=0):
+AdaptBlockInfo(insts=((0, {}), (2, {}), (4, {'idx': 0, 'res': '$4load_global.0'}), (6, {}), (8, {}), (10, {}), (12, {}), (14, {}), (16, {'item': '$4load_global.0', 'res': '$16load_attr.2'}), (18, {}), (20, {}), (22, {}), (24, {}), (26, {'res': '$x26.3'}), (28, {'res': '$off28.4'}), (30, {'res': '$const30.5'}), (32, {'op': '+', 'lhs': '$off28.4', 'rhs': '$const30.5', 'res': '$binop_add32.6'}), (34, {}), (36, {'index': '$binop_add32.6', 'target': '$x26.3', 'res': '$36binary_subscr.7'}), (38, {}), (40, {}), (42, {}), (44, {}), (46, {'res': '$const46.8'}), (48, {'op': '<<', 'lhs': '$36binary_subscr.7', 'rhs': '$const46.8', 'res': '$binop_lshift48.9'}), (50, {}), (52, {'res': '$x52.10'}), (54, {'res': '$off54.11'}), (56, {'res': '$const56.12'}), (58, {'op': '+', 'lhs': '$off54.11', 'rhs': '$const56.12', 'res': '$binop_add58.13'}), (60, {}), (62, {'index': '$binop_add58.13', 'target': '$x52.10', 'res': '$62binary_subscr.14'}), (64, {}), (66, {}), (68, {}), (70, {}), (72, {'res': '$const72.15'}), (74, {'op': '<<', 'lhs': '$62binary_subscr.14', 'rhs': '$const72.15', 'res': '$binop_lshift74.16'}), (76, {}), (78, {'op': '+', 'lhs': '$binop_lshift48.9', 'rhs': '$binop_lshift74.16', 'res': '$binop_add78.17'}), (80, {}), (82, {'res': '$x82.18'}), (84, {'res': '$off84.19'}), (86, {'res': '$const86.20'}), (88, {'op': '+', 'lhs': '$off84.19', 'rhs': '$const86.20', 'res': '$binop_add88.21'}), (90, {}), (92, {'index': '$binop_add88.21', 'target': '$x82.18', 'res': '$92binary_subscr.22'}), (94, {}), (96, {}), (98, {}), (100, {}), (102, {'res': '$const102.23'}), (104, {'op': '<<', 'lhs': '$92binary_subscr.22', 'rhs': '$const102.23', 'res': '$binop_lshift104.24'}), (106, {}), (108, {'op': '+', 'lhs': '$binop_add78.17', 'rhs': '$binop_lshift104.24', 'res': '$binop_add108.25'}), (110, {}), (112, {'res': '$x112.26'}), (114, {'res': '$off114.27'}), (116, {'res': '$const116.28'}), (118, {'op': '+', 'lhs': '$off114.27', 'rhs': '$const116.28', 'res': '$binop_add118.29'}), (120, {}), (122, {'index': '$binop_add118.29', 'target': '$x112.26', 'res': '$122binary_subscr.30'}), (124, {}), (126, {}), (128, {}), (130, {}), (132, {'res': '$const132.31'}), (134, {'op': '<<', 'lhs': '$122binary_subscr.30', 'rhs': '$const132.31', 'res': '$binop_lshift134.32'}), (136, {}), (138, {'op': '+', 'lhs': '$binop_add108.25', 'rhs': '$binop_lshift134.32', 'res': '$binop_add138.33'}), (140, {}), (142, {'res': '$x142.34'}), (144, {'res': '$off144.35'}), (146, {'res': '$const146.36'}), (148, {'op': '+', 'lhs': '$off144.35', 'rhs': '$const146.36', 'res': '$binop_add148.37'}), (150, {}), (152, {'index': '$binop_add148.37', 'target': '$x142.34', 'res': '$152binary_subscr.38'}), (154, {}), (156, {}), (158, {}), (160, {}), (162, {'res': '$const162.39'}), (164, {'op': '<<', 'lhs': '$152binary_subscr.38', 'rhs': '$const162.39', 'res': '$binop_lshift164.40'}), (166, {}), (168, {'op': '+', 'lhs': '$binop_add138.33', 'rhs': '$binop_lshift164.40', 'res': '$binop_add168.41'}), (170, {}), (172, {'res': '$x172.42'}), (174, {'res': '$off174.43'}), (176, {'res': '$const176.44'}), (178, {'op': '+', 'lhs': '$off174.43', 'rhs': '$const176.44', 'res': '$binop_add178.45'}), (180, {}), (182, {'index': '$binop_add178.45', 'target': '$x172.42', 'res': '$182binary_subscr.46'}), (184, {}), (186, {}), (188, {}), (190, {}), (192, {'res': '$const192.47'}), (194, {'op': '<<', 'lhs': '$182binary_subscr.46', 'rhs': '$const192.47', 'res': '$binop_lshift194.48'}), (196, {}), (198, {'op': '+', 'lhs': '$binop_add168.41', 'rhs': '$binop_lshift194.48', 'res': '$binop_add198.49'}), (200, {}), (202, {'res': '$x202.50'}), (204, {'res': '$off204.51'}), (206, {'res': '$const206.52'}), (208, {'op': '+', 'lhs': '$off204.51', 'rhs': '$const206.52', 'res': '$binop_add208.53'}), (210, {}), (212, {'index': '$binop_add208.53', 'target': '$x202.50', 'res': '$212binary_subscr.54'}), (214, {}), (216, {}), (218, {}), (220, {}), (222, {'res': '$const222.55'}), (224, {'op': '<<', 'lhs': '$212binary_subscr.54', 'rhs': '$const222.55', 'res': '$binop_lshift224.56'}), (226, {}), (228, {'op': '+', 'lhs': '$binop_add198.49', 'rhs': '$binop_lshift224.56', 'res': '$binop_add228.57'}), (230, {}), (232, {'res': '$x232.58'}), (234, {'res': '$off234.59'}), (236, {'res': '$const236.60'}), (238, {'op': '+', 'lhs': '$off234.59', 'rhs': '$const236.60', 'res': '$binop_add238.61'}), (240, {}), (242, {'index': '$binop_add238.61', 'target': '$x232.58', 'res': '$242binary_subscr.62'}), (244, {}), (246, {}), (248, {}), (250, {}), (252, {'op': '+', 'lhs': '$binop_add228.57', 'rhs': '$242binary_subscr.62', 'res': '$binop_add252.63'}), (254, {}), (256, {}), (258, {}), (260, {'func': '$16load_attr.2', 'args': ['$binop_add252.63'], 'kw_names': None, 'res': '$260call.64'}), (262, {}), (264, {}), (266, {}), (268, {}), (270, {'retval': '$260call.64', 'castval': '$270return_value.65'})), outgoing_phis={}, blockstack=(), active_try_block=None, outgoing_edgepushed={})
+2025-03-10 13:06:22.259 [   DEBUG] (      interpreter.py:1416) label 0:
+    x = arg(0, name=x)                       ['x']
+    off = arg(1, name=off)                   ['off']
+    $4load_global.0 = global(nb: <module 'numba' from 'C:\\Users\\ejvil\\miniconda3\\envs\\nspyre\\Lib\\site-packages\\numba\\__init__.py'>) ['$4load_global.0']
+    $16load_attr.2 = getattr(value=$4load_global.0, attr=i8) ['$16load_attr.2', '$4load_global.0']
+    $const30.5 = const(int, 7)               ['$const30.5']
+    $binop_add32.6 = off + $const30.5        ['$binop_add32.6', '$const30.5', 'off']
+    $36binary_subscr.7 = getitem(value=x, index=$binop_add32.6, fn=<built-in function getitem>) ['$36binary_subscr.7', '$binop_add32.6', 'x']
+    $const46.8 = const(int, 56)              ['$const46.8']
+    $binop_lshift48.9 = $36binary_subscr.7 << $const46.8 ['$36binary_subscr.7', '$binop_lshift48.9', '$const46.8']
+    $const56.12 = const(int, 6)              ['$const56.12']
+    $binop_add58.13 = off + $const56.12      ['$binop_add58.13', '$const56.12', 'off']
+    $62binary_subscr.14 = getitem(value=x, index=$binop_add58.13, fn=<built-in function getitem>) ['$62binary_subscr.14', '$binop_add58.13', 'x']
+    $const72.15 = const(int, 48)             ['$const72.15']
+    $binop_lshift74.16 = $62binary_subscr.14 << $const72.15 ['$62binary_subscr.14', '$binop_lshift74.16', '$const72.15']
+    $binop_add78.17 = $binop_lshift48.9 + $binop_lshift74.16 ['$binop_add78.17', '$binop_lshift48.9', '$binop_lshift74.16']
+    $const86.20 = const(int, 5)              ['$const86.20']
+    $binop_add88.21 = off + $const86.20      ['$binop_add88.21', '$const86.20', 'off']
+    $92binary_subscr.22 = getitem(value=x, index=$binop_add88.21, fn=<built-in function getitem>) ['$92binary_subscr.22', '$binop_add88.21', 'x']
+    $const102.23 = const(int, 40)            ['$const102.23']
+    $binop_lshift104.24 = $92binary_subscr.22 << $const102.23 ['$92binary_subscr.22', '$binop_lshift104.24', '$const102.23']
+    $binop_add108.25 = $binop_add78.17 + $binop_lshift104.24 ['$binop_add108.25', '$binop_add78.17', '$binop_lshift104.24']
+    $const116.28 = const(int, 4)             ['$const116.28']
+    $binop_add118.29 = off + $const116.28    ['$binop_add118.29', '$const116.28', 'off']
+    $122binary_subscr.30 = getitem(value=x, index=$binop_add118.29, fn=<built-in function getitem>) ['$122binary_subscr.30', '$binop_add118.29', 'x']
+    $const132.31 = const(int, 32)            ['$const132.31']
+    $binop_lshift134.32 = $122binary_subscr.30 << $const132.31 ['$122binary_subscr.30', '$binop_lshift134.32', '$const132.31']
+    $binop_add138.33 = $binop_add108.25 + $binop_lshift134.32 ['$binop_add108.25', '$binop_add138.33', '$binop_lshift134.32']
+    $const146.36 = const(int, 3)             ['$const146.36']
+    $binop_add148.37 = off + $const146.36    ['$binop_add148.37', '$const146.36', 'off']
+    $152binary_subscr.38 = getitem(value=x, index=$binop_add148.37, fn=<built-in function getitem>) ['$152binary_subscr.38', '$binop_add148.37', 'x']
+    $const162.39 = const(int, 24)            ['$const162.39']
+    $binop_lshift164.40 = $152binary_subscr.38 << $const162.39 ['$152binary_subscr.38', '$binop_lshift164.40', '$const162.39']
+    $binop_add168.41 = $binop_add138.33 + $binop_lshift164.40 ['$binop_add138.33', '$binop_add168.41', '$binop_lshift164.40']
+    $const176.44 = const(int, 2)             ['$const176.44']
+    $binop_add178.45 = off + $const176.44    ['$binop_add178.45', '$const176.44', 'off']
+    $182binary_subscr.46 = getitem(value=x, index=$binop_add178.45, fn=<built-in function getitem>) ['$182binary_subscr.46', '$binop_add178.45', 'x']
+    $const192.47 = const(int, 16)            ['$const192.47']
+    $binop_lshift194.48 = $182binary_subscr.46 << $const192.47 ['$182binary_subscr.46', '$binop_lshift194.48', '$const192.47']
+    $binop_add198.49 = $binop_add168.41 + $binop_lshift194.48 ['$binop_add168.41', '$binop_add198.49', '$binop_lshift194.48']
+    $const206.52 = const(int, 1)             ['$const206.52']
+    $binop_add208.53 = off + $const206.52    ['$binop_add208.53', '$const206.52', 'off']
+    $212binary_subscr.54 = getitem(value=x, index=$binop_add208.53, fn=<built-in function getitem>) ['$212binary_subscr.54', '$binop_add208.53', 'x']
+    $const222.55 = const(int, 8)             ['$const222.55']
+    $binop_lshift224.56 = $212binary_subscr.54 << $const222.55 ['$212binary_subscr.54', '$binop_lshift224.56', '$const222.55']
+    $binop_add228.57 = $binop_add198.49 + $binop_lshift224.56 ['$binop_add198.49', '$binop_add228.57', '$binop_lshift224.56']
+    $const236.60 = const(int, 0)             ['$const236.60']
+    $binop_add238.61 = off + $const236.60    ['$binop_add238.61', '$const236.60', 'off']
+    $242binary_subscr.62 = getitem(value=x, index=$binop_add238.61, fn=<built-in function getitem>) ['$242binary_subscr.62', '$binop_add238.61', 'x']
+    $binop_add252.63 = $binop_add228.57 + $242binary_subscr.62 ['$242binary_subscr.62', '$binop_add228.57', '$binop_add252.63']
+    $260call.64 = call $16load_attr.2($binop_add252.63, func=$16load_attr.2, args=[Var($binop_add252.63, nbtools.py:54)], kws=(), vararg=None, varkwarg=None, target=None) ['$16load_attr.2', '$260call.64', '$binop_add252.63']
+    $270return_value.65 = cast(value=$260call.64) ['$260call.64', '$270return_value.65']
+    return $270return_value.65               ['$270return_value.65']
+
+2025-03-10 13:06:22.272 [   DEBUG] (              ssa.py: 178) ==== SSA block analysis pass on 0
+2025-03-10 13:06:22.273 [   DEBUG] (              ssa.py: 208) Running <numba.core.ssa._GatherDefsHandler object at 0x00000259E71B9210>
+2025-03-10 13:06:22.273 [   DEBUG] (              ssa.py: 210) on stmt: x = arg(0, name=x)
+2025-03-10 13:06:22.273 [   DEBUG] (              ssa.py: 210) on stmt: off = arg(1, name=off)
+2025-03-10 13:06:22.273 [   DEBUG] (              ssa.py: 210) on stmt: $4load_global.0 = global(nb: <module 'numba' from 'C:\\Users\\ejvil\\miniconda3\\envs\\nspyre\\Lib\\site-packages\\numba\\__init__.py'>)
+2025-03-10 13:06:22.273 [   DEBUG] (              ssa.py: 210) on stmt: $16load_attr.2 = getattr(value=$4load_global.0, attr=i8)
+2025-03-10 13:06:22.273 [   DEBUG] (              ssa.py: 210) on stmt: $const30.5 = const(int, 7)
+2025-03-10 13:06:22.273 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add32.6 = off + $const30.5
+2025-03-10 13:06:22.274 [   DEBUG] (              ssa.py: 210) on stmt: $36binary_subscr.7 = getitem(value=x, index=$binop_add32.6, fn=<built-in function getitem>)
+2025-03-10 13:06:22.274 [   DEBUG] (              ssa.py: 210) on stmt: $const46.8 = const(int, 56)
+2025-03-10 13:06:22.274 [   DEBUG] (              ssa.py: 210) on stmt: $binop_lshift48.9 = $36binary_subscr.7 << $const46.8
+2025-03-10 13:06:22.274 [   DEBUG] (              ssa.py: 210) on stmt: $const56.12 = const(int, 6)
+2025-03-10 13:06:22.274 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add58.13 = off + $const56.12
+2025-03-10 13:06:22.274 [   DEBUG] (              ssa.py: 210) on stmt: $62binary_subscr.14 = getitem(value=x, index=$binop_add58.13, fn=<built-in function getitem>)
+2025-03-10 13:06:22.274 [   DEBUG] (              ssa.py: 210) on stmt: $const72.15 = const(int, 48)
+2025-03-10 13:06:22.274 [   DEBUG] (              ssa.py: 210) on stmt: $binop_lshift74.16 = $62binary_subscr.14 << $const72.15
+2025-03-10 13:06:22.275 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add78.17 = $binop_lshift48.9 + $binop_lshift74.16
+2025-03-10 13:06:22.275 [   DEBUG] (              ssa.py: 210) on stmt: $const86.20 = const(int, 5)
+2025-03-10 13:06:22.275 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add88.21 = off + $const86.20
+2025-03-10 13:06:22.275 [   DEBUG] (              ssa.py: 210) on stmt: $92binary_subscr.22 = getitem(value=x, index=$binop_add88.21, fn=<built-in function getitem>)
+2025-03-10 13:06:22.275 [   DEBUG] (              ssa.py: 210) on stmt: $const102.23 = const(int, 40)
+2025-03-10 13:06:22.275 [   DEBUG] (              ssa.py: 210) on stmt: $binop_lshift104.24 = $92binary_subscr.22 << $const102.23
+2025-03-10 13:06:22.275 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add108.25 = $binop_add78.17 + $binop_lshift104.24
+2025-03-10 13:06:22.275 [   DEBUG] (              ssa.py: 210) on stmt: $const116.28 = const(int, 4)
+2025-03-10 13:06:22.276 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add118.29 = off + $const116.28
+2025-03-10 13:06:22.276 [   DEBUG] (              ssa.py: 210) on stmt: $122binary_subscr.30 = getitem(value=x, index=$binop_add118.29, fn=<built-in function getitem>)
+2025-03-10 13:06:22.276 [   DEBUG] (              ssa.py: 210) on stmt: $const132.31 = const(int, 32)
+2025-03-10 13:06:22.276 [   DEBUG] (              ssa.py: 210) on stmt: $binop_lshift134.32 = $122binary_subscr.30 << $const132.31
+2025-03-10 13:06:22.276 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add138.33 = $binop_add108.25 + $binop_lshift134.32
+2025-03-10 13:06:22.276 [   DEBUG] (              ssa.py: 210) on stmt: $const146.36 = const(int, 3)
+2025-03-10 13:06:22.276 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add148.37 = off + $const146.36
+2025-03-10 13:06:22.276 [   DEBUG] (              ssa.py: 210) on stmt: $152binary_subscr.38 = getitem(value=x, index=$binop_add148.37, fn=<built-in function getitem>)
+2025-03-10 13:06:22.276 [   DEBUG] (              ssa.py: 210) on stmt: $const162.39 = const(int, 24)
+2025-03-10 13:06:22.276 [   DEBUG] (              ssa.py: 210) on stmt: $binop_lshift164.40 = $152binary_subscr.38 << $const162.39
+2025-03-10 13:06:22.276 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add168.41 = $binop_add138.33 + $binop_lshift164.40
+2025-03-10 13:06:22.276 [   DEBUG] (              ssa.py: 210) on stmt: $const176.44 = const(int, 2)
+2025-03-10 13:06:22.276 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add178.45 = off + $const176.44
+2025-03-10 13:06:22.276 [   DEBUG] (              ssa.py: 210) on stmt: $182binary_subscr.46 = getitem(value=x, index=$binop_add178.45, fn=<built-in function getitem>)
+2025-03-10 13:06:22.276 [   DEBUG] (              ssa.py: 210) on stmt: $const192.47 = const(int, 16)
+2025-03-10 13:06:22.278 [   DEBUG] (              ssa.py: 210) on stmt: $binop_lshift194.48 = $182binary_subscr.46 << $const192.47
+2025-03-10 13:06:22.278 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add198.49 = $binop_add168.41 + $binop_lshift194.48
+2025-03-10 13:06:22.278 [   DEBUG] (              ssa.py: 210) on stmt: $const206.52 = const(int, 1)
+2025-03-10 13:06:22.278 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add208.53 = off + $const206.52
+2025-03-10 13:06:22.278 [   DEBUG] (              ssa.py: 210) on stmt: $212binary_subscr.54 = getitem(value=x, index=$binop_add208.53, fn=<built-in function getitem>)
+2025-03-10 13:06:22.278 [   DEBUG] (              ssa.py: 210) on stmt: $const222.55 = const(int, 8)
+2025-03-10 13:06:22.278 [   DEBUG] (              ssa.py: 210) on stmt: $binop_lshift224.56 = $212binary_subscr.54 << $const222.55
+2025-03-10 13:06:22.278 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add228.57 = $binop_add198.49 + $binop_lshift224.56
+2025-03-10 13:06:22.278 [   DEBUG] (              ssa.py: 210) on stmt: $const236.60 = const(int, 0)
+2025-03-10 13:06:22.279 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add238.61 = off + $const236.60
+2025-03-10 13:06:22.279 [   DEBUG] (              ssa.py: 210) on stmt: $242binary_subscr.62 = getitem(value=x, index=$binop_add238.61, fn=<built-in function getitem>)
+2025-03-10 13:06:22.279 [   DEBUG] (              ssa.py: 210) on stmt: $binop_add252.63 = $binop_add228.57 + $242binary_subscr.62
+2025-03-10 13:06:22.279 [   DEBUG] (              ssa.py: 210) on stmt: $260call.64 = call $16load_attr.2($binop_add252.63, func=$16load_attr.2, args=[Var($binop_add252.63, nbtools.py:54)], kws=(), vararg=None, varkwarg=None, target=None)
+2025-03-10 13:06:22.279 [   DEBUG] (              ssa.py: 210) on stmt: $270return_value.65 = cast(value=$260call.64)
+2025-03-10 13:06:22.279 [   DEBUG] (              ssa.py: 210) on stmt: return $270return_value.65
+2025-03-10 13:06:22.280 [   DEBUG] (              ssa.py: 157) defs defaultdict(<class 'list'>,
+            {'$122binary_subscr.30': [(<numba.core.ir.Assign object at 0x00000259E71AF250>,
+                                       0)],
+             '$152binary_subscr.38': [(<numba.core.ir.Assign object at 0x00000259E8265450>,
+                                       0)],
+             '$16load_attr.2': [(<numba.core.ir.Assign object at 0x00000259E820EC50>,
+                                 0)],
+             '$182binary_subscr.46': [(<numba.core.ir.Assign object at 0x00000259E717DA50>,
+                                       0)],
+             '$212binary_subscr.54': [(<numba.core.ir.Assign object at 0x00000259E71BF010>,
+                                       0)],
+             '$242binary_subscr.62': [(<numba.core.ir.Assign object at 0x00000259E71BE550>,
+                                       0)],
+             '$260call.64': [(<numba.core.ir.Assign object at 0x00000259E71BCED0>,
+                              0)],
+             '$270return_value.65': [(<numba.core.ir.Assign object at 0x00000259E71BD9D0>,
+                                      0)],
+             '$36binary_subscr.7': [(<numba.core.ir.Assign object at 0x00000259E820DDD0>,
+                                     0)],
+             '$4load_global.0': [(<numba.core.ir.Assign object at 0x00000259E820C310>,
+                                  0)],
+             '$62binary_subscr.14': [(<numba.core.ir.Assign object at 0x00000259E71AFC90>,
+                                      0)],
+             '$92binary_subscr.22': [(<numba.core.ir.Assign object at 0x00000259E71AFED0>,
+                                      0)],
+             '$binop_add108.25': [(<numba.core.ir.Assign object at 0x00000259E71AE450>,
+                                   0)],
+             '$binop_add118.29': [(<numba.core.ir.Assign object at 0x00000259E71AF7D0>,
+                                   0)],
+             '$binop_add138.33': [(<numba.core.ir.Assign object at 0x00000259E8273610>,
+                                   0)],
+             '$binop_add148.37': [(<numba.core.ir.Assign object at 0x00000259E82671D0>,
+                                   0)],
+             '$binop_add168.41': [(<numba.core.ir.Assign object at 0x00000259E6979490>,
+                                   0)],
+             '$binop_add178.45': [(<numba.core.ir.Assign object at 0x00000259E717EB90>,
+                                   0)],
+             '$binop_add198.49': [(<numba.core.ir.Assign object at 0x00000259E717CDD0>,
+                                   0)],
+             '$binop_add208.53': [(<numba.core.ir.Assign object at 0x00000259E71BC190>,
+                                   0)],
+             '$binop_add228.57': [(<numba.core.ir.Assign object at 0x00000259E71BDD10>,
+                                   0)],
+             '$binop_add238.61': [(<numba.core.ir.Assign object at 0x00000259E71BE9D0>,
+                                   0)],
+             '$binop_add252.63': [(<numba.core.ir.Assign object at 0x00000259E71BE710>,
+                                   0)],
+             '$binop_add32.6': [(<numba.core.ir.Assign object at 0x00000259E820DF90>,
+                                 0)],
+             '$binop_add58.13': [(<numba.core.ir.Assign object at 0x00000259E71AEE10>,
+                                  0)],
+             '$binop_add78.17': [(<numba.core.ir.Assign object at 0x00000259E71ADA10>,
+                                  0)],
+             '$binop_add88.21': [(<numba.core.ir.Assign object at 0x00000259E71AF6D0>,
+                                  0)],
+             '$binop_lshift104.24': [(<numba.core.ir.Assign object at 0x00000259E71ADFD0>,
+                                      0)],
+             '$binop_lshift134.32': [(<numba.core.ir.Assign object at 0x00000259E8232710>,
+                                      0)],
+             '$binop_lshift164.40': [(<numba.core.ir.Assign object at 0x00000259E8266150>,
+                                      0)],
+             '$binop_lshift194.48': [(<numba.core.ir.Assign object at 0x00000259E717DA10>,
+                                      0)],
+             '$binop_lshift224.56': [(<numba.core.ir.Assign object at 0x00000259E71BD990>,
+                                      0)],
+             '$binop_lshift48.9': [(<numba.core.ir.Assign object at 0x00000259E820DF10>,
+                                    0)],
+             '$binop_lshift74.16': [(<numba.core.ir.Assign object at 0x00000259E71AFF10>,
+                                     0)],
+             '$const102.23': [(<numba.core.ir.Assign object at 0x00000259E71AF110>,
+                               0)],
+             '$const116.28': [(<numba.core.ir.Assign object at 0x00000259E71AE8D0>,
+                               0)],
+             '$const132.31': [(<numba.core.ir.Assign object at 0x00000259E71AFBD0>,
+                               0)],
+             '$const146.36': [(<numba.core.ir.Assign object at 0x00000259E825E550>,
+                               0)],
+             '$const162.39': [(<numba.core.ir.Assign object at 0x00000259E8265FD0>,
+                               0)],
+             '$const176.44': [(<numba.core.ir.Assign object at 0x00000259E717D6D0>,
+                               0)],
+             '$const192.47': [(<numba.core.ir.Assign object at 0x00000259E717F010>,
+                               0)],
+             '$const206.52': [(<numba.core.ir.Assign object at 0x00000259E717DD90>,
+                               0)],
+             '$const222.55': [(<numba.core.ir.Assign object at 0x00000259E71BC790>,
+                               0)],
+             '$const236.60': [(<numba.core.ir.Assign object at 0x00000259E71BCF90>,
+                               0)],
+             '$const30.5': [(<numba.core.ir.Assign object at 0x00000259E820D310>,
+                             0)],
+             '$const46.8': [(<numba.core.ir.Assign object at 0x00000259E820E790>,
+                             0)],
+             '$const56.12': [(<numba.core.ir.Assign object at 0x00000259E820FBD0>,
+                              0)],
+             '$const72.15': [(<numba.core.ir.Assign object at 0x00000259E71AE210>,
+                              0)],
+             '$const86.20': [(<numba.core.ir.Assign object at 0x00000259E71AFCD0>,
+                              0)],
+             'off': [(<numba.core.ir.Assign object at 0x00000259E820D610>, 0)],
+             'x': [(<numba.core.ir.Assign object at 0x00000259E820FD90>, 0)]})
+2025-03-10 13:06:22.280 [   DEBUG] (              ssa.py: 172) SSA violators <numba.core.utils.OrderedSet object at 0x00000259E715E650>
+2025-03-10 13:06:22.369 [    INFO] (           server.py: 316) Removing devices...
+2025-03-10 13:06:22.369 [    INFO] (           server.py: 234) Deleted device [sg].
+2025-03-10 13:06:22.370 [   DEBUG] (         resource.py: 317) TCPIP0::10.135.70.65::inst0::INSTR - closing
+2025-03-10 13:06:22.370 [   DEBUG] (              rpc.py: 227) Make call 23, 1, <bound method Vxi11Packer.pack_device_link of <pyvisa_py.protocols.vxi11.Vxi11Packer object at 0x00000259E1100C90>>, <bound method Vxi11Unpacker.unpack_device_error of <pyvisa_py.protocols.vxi11.Vxi11Unpacker object at 0x00000259E1100C50>>
+2025-03-10 13:06:22.370 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=460, family=2, type=1, proto=0, laddr=('10.135.70.59', 61835), raddr=('10.135.70.65', 1000)>: b'\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x02\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\x17\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01'
+2025-03-10 13:06:22.370 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 23
+2025-03-10 13:06:22.371 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00\x1c'
+2025-03-10 13:06:22.371 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\x02\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+2025-03-10 13:06:22.371 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=460, family=2, type=1, proto=0, laddr=('10.135.70.59', 61835), raddr=('10.135.70.65', 1000)>: bytearray(b'\x00\x00\x00\x02\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+2025-03-10 13:06:22.371 [   DEBUG] (              rpc.py: 489) RawTCPClient: closing socket
+2025-03-10 13:06:22.371 [   DEBUG] (         resource.py: 320) TCPIP0::10.135.70.65::inst0::INSTR - is closed
+2025-03-10 13:06:22.371 [    INFO] (           server.py: 320) Stopping RPyC server...
+2025-03-10 13:06:22.373 [    INFO] (           server.py: 271) server has terminated
+2025-03-10 13:06:22.373 [    INFO] (           server.py: 123) listener closed
+2025-03-10 13:06:22.373 [    INFO] (           server.py: 123) listener closed
+2025-03-10 13:06:22.373 [    INFO] (           server.py: 302) RPyC server stopped.
+2025-03-10 13:06:22.373 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-10 13:06:22.373 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\pylablib\core\devio\comm_backend.py", line 574, in __init__
+2025-03-10 13:06:22.374 [CRITICAL] (          logging.py:  32)     self.instr.open()
+2025-03-10 13:06:22.374 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\serial\serialwin32.py", line 64, in open
+2025-03-10 13:06:22.375 [CRITICAL] (          logging.py:  32)     raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+2025-03-10 13:06:22.375 [CRITICAL] (          logging.py:  32) serial.serialutil.SerialException: could not open port 'COM4': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2025-03-10 13:06:22.376 [CRITICAL] (          logging.py:  32) 
+2025-03-10 13:06:22.376 [CRITICAL] (          logging.py:  32) The above exception was the direct cause of the following exception:
+2025-03-10 13:06:22.376 [CRITICAL] (          logging.py:  32) 
+2025-03-10 13:06:22.376 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-10 13:06:22.376 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\instrument\server.py", line 189, in add
+2025-03-10 13:06:22.376 [CRITICAL] (          logging.py:  32)     instance = dev_class(*args, **kwargs)
+2025-03-10 13:06:22.377 [CRITICAL] (          logging.py:  32)                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-03-10 13:06:22.377 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\nanonmr_m_nspyre\nnmr_nspyre\src\experiments\drivers\fw102c_driver_current.py", line 5, in __init__
+2025-03-10 13:06:22.383 [CRITICAL] (          logging.py:  32)     self.wheel = Thorlabs.FWv1("COM4")
+2025-03-10 13:06:22.383 [CRITICAL] (          logging.py:  32)                  ^^^^^^^^^^^^^^^^^^^^^
+2025-03-10 13:06:22.383 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\pylablib\devices\Thorlabs\serial.py", line 154, in __init__
+2025-03-10 13:06:22.384 [CRITICAL] (          logging.py:  32)     super().__init__(conn)
+2025-03-10 13:06:22.385 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\pylablib\devices\Thorlabs\serial.py", line 21, in __init__
+2025-03-10 13:06:22.385 [CRITICAL] (          logging.py:  32)     super().__init__(conn,backend="serial",term_read=["\r","\n"],term_write="\r",timeout=5.,backend_defaults={"serial":("COM1",115200)})
+2025-03-10 13:06:22.385 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\pylablib\core\devio\SCPI.py", line 67, in __init__
+2025-03-10 13:06:22.386 [CRITICAL] (          logging.py:  32)     instr=comm_backend.new_backend(conn,backend=backend,term_write=term_write,term_read=term_read,
+2025-03-10 13:06:22.386 [CRITICAL] (          logging.py:  32)           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-03-10 13:06:22.387 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\pylablib\core\devio\comm_backend.py", line 1776, in new_backend
+2025-03-10 13:06:22.387 [CRITICAL] (          logging.py:  32)     return backend(conn,**kwargs)
+2025-03-10 13:06:22.387 [CRITICAL] (          logging.py:  32)            ^^^^^^^^^^^^^^^^^^^^^^
+2025-03-10 13:06:22.387 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\pylablib\core\devio\comm_backend.py", line 581, in __init__
+2025-03-10 13:06:22.388 [CRITICAL] (          logging.py:  32)     raise self.Error(e) from e
+2025-03-10 13:06:22.389 [CRITICAL] (          logging.py:  32) pylablib.devices.Thorlabs.base.ThorlabsBackendError: backend exception: SerialException("could not open port 'COM4': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)") ('could not open port 'COM4': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)')
+2025-03-10 13:06:22.389 [CRITICAL] (          logging.py:  32) 
+2025-03-10 13:06:22.389 [CRITICAL] (          logging.py:  32) The above exception was the direct cause of the following exception:
+2025-03-10 13:06:22.389 [CRITICAL] (          logging.py:  32) 
+2025-03-10 13:06:22.389 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-10 13:06:22.389 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\nanonmr_m_nspyre\nnmr_nspyre\src\experiments\drivers\my_inserv.py", line 34, in <module>
+2025-03-10 13:06:22.389 [CRITICAL] (          logging.py:  32)     local_inserv.add(name = 'filter_wheel', 
+2025-03-10 13:06:22.389 [CRITICAL] (          logging.py:  32)     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-03-10 13:06:22.389 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\instrument\server.py", line 191, in add
+2025-03-10 13:06:22.390 [CRITICAL] (          logging.py:  32)     raise InstrumentServerError(
+2025-03-10 13:06:22.390 [CRITICAL] (          logging.py:  32) nspyre.instrument.server.InstrumentServerError: Failed to create an instance of device [filter_wheel] of class [<class 'fw102c_driver_current.FilterWheel'>].
+2025-03-10 13:06:22.390 [   DEBUG] (        highlevel.py:3070) Closing ResourceManager (session: 3080136)

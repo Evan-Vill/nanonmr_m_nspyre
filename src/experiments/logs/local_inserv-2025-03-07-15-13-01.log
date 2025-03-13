@@ -1,0 +1,622 @@
+2025-03-07 15:13:01.896 [    INFO] (           server.py: 288) Starting InstrumentServer RPyC server...
+2025-03-07 15:13:01.906 [    INFO] (           server.py: 251) server started on [127.0.0.1]:42068
+2025-03-07 15:13:02.036 [   DEBUG] (        highlevel.py:  47) SerialSession was correctly imported.
+2025-03-07 15:13:02.064 [   DEBUG] (        highlevel.py:  54) USBSession and USBRawSession were correctly imported.
+2025-03-07 15:13:02.069 [   DEBUG] (        highlevel.py:  61) TCPIPSession was correctly imported.
+2025-03-07 15:13:02.069 [   DEBUG] (        highlevel.py:  70) GPIBSession was not imported No module named 'gpib'.
+2025-03-07 15:13:02.069 [   DEBUG] (        highlevel.py: 201) Created library wrapper for py
+2025-03-07 15:13:02.069 [   DEBUG] (        highlevel.py:3019) Created ResourceManager with session 4131305
+2025-03-07 15:13:02.069 [   DEBUG] (         resource.py: 278) TCPIP0::10.135.70.65::inst0::INSTR - opening ...
+2025-03-07 15:13:02.069 [   DEBUG] (              rpc.py: 481) RawTCPClient: connecting to socket at (10.135.70.65, 111)
+2025-03-07 15:13:02.069 [   DEBUG] (              rpc.py: 227) Make call <PortMapperVersion.get_port: 3>, (395183, 1, 6, 0), <bound method PortMapperPacker.pack_mapping of <pyvisa_py.protocols.rpc.PortMapperPacker object at 0x0000019C3B020ED0>>, <bound method Unpacker.unpack_uint of <pyvisa_py.protocols.rpc.PortMapperUnpacker object at 0x0000019C3B021150>>
+2025-03-07 15:13:02.069 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62826), raddr=('10.135.70.65', 111)>: b'\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x02\x00\x01\x86\xa0\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\x06\x00\x00\x00\x00'
+2025-03-07 15:13:02.069 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 3
+2025-03-07 15:13:02.069 [   DEBUG] (              rpc.py: 332) Start receiving at least 1 packages
+2025-03-07 15:13:02.069 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00\x1c'
+2025-03-07 15:13:02.069 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x03\xe8'
+2025-03-07 15:13:02.080 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62826), raddr=('10.135.70.65', 111)>: bytearray(b'\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x03\xe8')
+2025-03-07 15:13:02.080 [   DEBUG] (              rpc.py: 489) RawTCPClient: closing socket
+2025-03-07 15:13:02.080 [   DEBUG] (              rpc.py: 481) RawTCPClient: connecting to socket at (10.135.70.65, 1000)
+2025-03-07 15:13:02.080 [   DEBUG] (              rpc.py: 227) Make call 10, (1411287175, 0, 10000, 'inst0'), <bound method Vxi11Packer.pack_create_link_parms of <pyvisa_py.protocols.vxi11.Vxi11Packer object at 0x0000019C3B020CD0>>, <bound method Vxi11Unpacker.unpack_create_link_resp of <pyvisa_py.protocols.vxi11.Vxi11Unpacker object at 0x0000019C3B020DD0>>
+2025-03-07 15:13:02.080 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: b"\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x02\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\n\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00T\x1e\x88\x87\x00\x00\x00\x00\x00\x00'\x10\x00\x00\x00\x05inst0\x00\x00\x00"
+2025-03-07 15:13:02.080 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 10
+2025-03-07 15:13:02.080 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00('
+2025-03-07 15:13:02.080 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x03\xea\x00\x00\x01\x90'
+2025-03-07 15:13:02.080 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: bytearray(b'\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x03\xea\x00\x00\x01\x90')
+2025-03-07 15:13:02.080 [   DEBUG] (         resource.py: 303) TCPIP0::10.135.70.65::inst0::INSTR - is open with session 6677525
+2025-03-07 15:13:02.080 [    INFO] (sg396_driver_current.py:  62) Connected to SG396 [TCPIP::10.135.70.65::inst0::INSTR].
+2025-03-07 15:13:02.082 [    INFO] (           server.py: 212) Added device [sg] with args: ['TCPIP::10.135.70.65::inst0::INSTR'] kwargs: {}.
+2025-03-07 15:13:02.511 [    INFO] (           server.py: 212) Added device [laser] with args: ['LAS-08166'] kwargs: {}.
+2025-03-07 15:13:05.870 [    INFO] (           server.py: 212) Added device [laser_shutter] with args: ['68800950'] kwargs: {}.
+2025-03-07 15:13:08.564 [    INFO] (           server.py: 212) Added device [pickoff_shutter] with args: ['68801142'] kwargs: {}.
+2025-03-07 15:13:10.868 [    INFO] (           server.py: 212) Added device [awg] with args: ['dev8181', '127.0.0.1', 8004] kwargs: {}.
+2025-03-07 15:13:10.969 [    INFO] (            utils.py: 148) Note: NumExpr detected 32 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 16.
+2025-03-07 15:13:10.969 [    INFO] (            utils.py: 161) NumExpr defaulting to 16 threads.
+2025-03-07 15:13:11.346 [    INFO] (           server.py: 212) Added device [ps] with args: [] kwargs: {}.
+2025-03-07 15:13:11.675 [    INFO] (           server.py: 212) Added device [daq] with args: [] kwargs: {}.
+2025-03-07 15:13:13.009 [   DEBUG] (            zaber.py:  29) Found [1] Zaber device(s).
+2025-03-07 15:13:13.009 [   DEBUG] (            zaber.py:  37) Found Zaber stage [Axis 1 (LRT0100AL-CT3A) -> Device 1 SN: 103616 (X-MCC2 (rev 2/3)) -> Connection 1 (ASCII Serial port: COM3)] with axis number [1] & peripheral ID [70030].
+2025-03-07 15:13:13.009 [   DEBUG] (            zaber.py:  40) Associated Zaber stage [left] with axis number [1].
+2025-03-07 15:13:13.009 [   DEBUG] (            zaber.py:  37) Found Zaber stage [Axis 2 (LRT0100AL-CT3A) -> Device 1 SN: 103616 (X-MCC2 (rev 2/3)) -> Connection 1 (ASCII Serial port: COM3)] with axis number [2] & peripheral ID [70030].
+2025-03-07 15:13:13.009 [   DEBUG] (            zaber.py:  40) Associated Zaber stage [right] with axis number [2].
+2025-03-07 15:13:13.011 [    INFO] (nnmr_stagecontrol_zaber_current.py:  40) Zaber stage updated positions = 100.0 mm & 100.0 mm.
+2025-03-07 15:13:13.011 [    INFO] (           server.py: 212) Added device [zaber] with args: [] kwargs: {}.
+2025-03-07 15:13:13.509 [   DEBUG] (         thorlabs.py:  31) Found 6 Thorlabs stages.
+2025-03-07 15:13:14.765 [   DEBUG] (         thorlabs.py:  37) Found Thorlabs stage azi with serial no. 40179174.
+2025-03-07 15:13:14.765 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = -1.33e-05 deg.
+2025-03-07 15:13:14.765 [    INFO] (           server.py: 212) Added device [thor_azi] with args: ['40179174'] kwargs: {}.
+2025-03-07 15:13:15.152 [   DEBUG] (         thorlabs.py:  31) Found 6 Thorlabs stages.
+2025-03-07 15:13:16.418 [   DEBUG] (         thorlabs.py:  37) Found Thorlabs stage polar with serial no. 40251814.
+2025-03-07 15:13:16.418 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40251814 updated position = -1.33e-05 deg.
+2025-03-07 15:13:16.418 [    INFO] (           server.py: 212) Added device [thor_polar] with args: ['40251814'] kwargs: {}.
+2025-03-07 15:13:49.874 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62845) with fd 1220
+2025-03-07 15:13:49.874 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62845)
+2025-03-07 15:13:49.874 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn1' object at 0x0000019C7FD9B210> connected.
+2025-03-07 15:13:55.347 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62847) with fd 4916
+2025-03-07 15:13:55.353 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62847)
+2025-03-07 15:13:55.353 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn2' object at 0x0000019C7FDB0B10> connected.
+2025-03-07 15:13:55.353 [    INFO] (nnmr_stagecontrol_zaber_current.py:  67) Parking Zaber stages...
+2025-03-07 15:13:55.960 [    INFO] (nnmr_stagecontrol_zaber_current.py:  72) Zaber stages parked (inactive).
+2025-03-07 15:13:55.961 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn2' object at 0x0000019C7FDB0B10> disconnected.
+2025-03-07 15:13:55.961 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62847)
+2025-03-07 15:13:57.640 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62850) with fd 5040
+2025-03-07 15:13:57.640 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62850)
+2025-03-07 15:13:57.640 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn3' object at 0x0000019C7FDB0350> connected.
+2025-03-07 15:13:57.644 [    INFO] (nnmr_stagecontrol_zaber_current.py:  75) Unparking Zaber stages...
+2025-03-07 15:13:58.251 [    INFO] (nnmr_stagecontrol_zaber_current.py:  80) Zaber stages unparked (active).
+2025-03-07 15:13:58.251 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn3' object at 0x0000019C7FDB0350> disconnected.
+2025-03-07 15:13:58.251 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62850)
+2025-03-07 15:14:07.381 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62852) with fd 5044
+2025-03-07 15:14:07.381 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62852)
+2025-03-07 15:14:07.381 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn4' object at 0x0000019C7FDB3A50> connected.
+2025-03-07 15:14:07.381 [    INFO] (nnmr_stagecontrol_thorlabs_current.py: 213) Checking if move requested for stage 40179174 is safe...
+2025-03-07 15:14:07.381 [    INFO] (nnmr_stagecontrol_thorlabs_current.py: 189) Moving Thorlabs stage 40179174 to 100.0 deg...
+2025-03-07 15:14:07.381 [    INFO] (nnmr_stagecontrol_thorlabs_current.py: 191) Thorlabs stage 40179174 set to 100.0 deg.
+2025-03-07 15:14:07.388 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 114.9999928 deg.
+2025-03-07 15:14:08.191 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 114.2673756 deg.
+2025-03-07 15:14:08.992 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 111.5445331 deg.
+2025-03-07 15:14:09.795 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 106.8230863 deg.
+2025-03-07 15:14:10.597 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 102.2309421 deg.
+2025-03-07 15:14:11.400 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 99.632029 deg.
+2025-03-07 15:14:12.202 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 99.0402455 deg.
+2025-03-07 15:14:13.004 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 99.9536895 deg.
+2025-03-07 15:14:13.107 [    INFO] (nnmr_stagecontrol_zaber_current.py:  40) Zaber stage updated positions = 100.0 mm & 100.0 mm.
+2025-03-07 15:14:13.110 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40251814 updated position = 0.0 deg.
+2025-03-07 15:14:13.111 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 99.9536895 deg.
+2025-03-07 15:14:13.314 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn4' object at 0x0000019C7FDB3A50> disconnected.
+2025-03-07 15:14:13.314 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62852)
+2025-03-07 15:14:18.164 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62857) with fd 5064
+2025-03-07 15:14:18.164 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62857)
+2025-03-07 15:14:18.165 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn5' object at 0x0000019C7FDBCB90> connected.
+2025-03-07 15:14:18.165 [    INFO] (nnmr_stagecontrol_thorlabs_current.py: 213) Checking if move requested for stage 40179174 is safe...
+2025-03-07 15:14:18.165 [    INFO] (nnmr_stagecontrol_thorlabs_current.py: 189) Moving Thorlabs stage 40179174 to 51.0 deg...
+2025-03-07 15:14:18.165 [    INFO] (nnmr_stagecontrol_thorlabs_current.py: 191) Thorlabs stage 40179174 set to 51.0 deg.
+2025-03-07 15:14:18.165 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 99.9999868 deg.
+2025-03-07 15:14:18.973 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 99.1812255 deg.
+2025-03-07 15:14:19.775 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 96.3482856 deg.
+2025-03-07 15:14:20.577 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 91.5177788 deg.
+2025-03-07 15:14:21.380 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 85.7974488 deg.
+2025-03-07 15:14:22.185 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 80.7922465 deg.
+2025-03-07 15:14:22.988 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 75.0789522 deg.
+2025-03-07 15:14:23.791 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 69.3760186 deg.
+2025-03-07 15:14:24.593 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 63.6743485 deg.
+2025-03-07 15:14:25.396 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 57.9621315 deg.
+2025-03-07 15:14:26.198 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 53.319035 deg.
+2025-03-07 15:14:27.001 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 50.8955755 deg.
+2025-03-07 15:14:27.804 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 50.003451399999996 deg.
+2025-03-07 15:14:28.607 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 50.865451 deg.
+2025-03-07 15:14:29.409 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 50.9999938 deg.
+2025-03-07 15:14:29.514 [    INFO] (nnmr_stagecontrol_zaber_current.py:  40) Zaber stage updated positions = 100.0 mm & 100.0 mm.
+2025-03-07 15:14:29.516 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40251814 updated position = 0.0 deg.
+2025-03-07 15:14:29.516 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 50.9999938 deg.
+2025-03-07 15:14:29.719 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn5' object at 0x0000019C7FDBCB90> disconnected.
+2025-03-07 15:14:29.720 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62857)
+2025-03-07 15:14:36.423 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62862) with fd 4920
+2025-03-07 15:14:36.426 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62862)
+2025-03-07 15:14:36.426 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn6' object at 0x0000019C7FDBE790> connected.
+2025-03-07 15:14:36.426 [    INFO] (nnmr_stagecontrol_thorlabs_current.py: 213) Checking if move requested for stage 40179174 is safe...
+2025-03-07 15:14:36.426 [    INFO] (nnmr_stagecontrol_thorlabs_current.py: 189) Moving Thorlabs stage 40179174 to 53.0 deg...
+2025-03-07 15:14:36.432 [    INFO] (nnmr_stagecontrol_thorlabs_current.py: 191) Thorlabs stage 40179174 set to 53.0 deg.
+2025-03-07 15:14:36.432 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 50.9999938 deg.
+2025-03-07 15:14:37.234 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 51.8761313 deg.
+2025-03-07 15:14:38.037 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 52.995738599999996 deg.
+2025-03-07 15:14:38.141 [    INFO] (nnmr_stagecontrol_zaber_current.py:  40) Zaber stage updated positions = 100.0 mm & 100.0 mm.
+2025-03-07 15:14:38.143 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40251814 updated position = 0.0 deg.
+2025-03-07 15:14:38.144 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 52.9999946 deg.
+2025-03-07 15:14:38.348 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn6' object at 0x0000019C7FDBE790> disconnected.
+2025-03-07 15:14:38.348 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62862)
+2025-03-07 15:14:47.549 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62864) with fd 5020
+2025-03-07 15:14:47.549 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62864)
+2025-03-07 15:14:47.549 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn7' object at 0x0000019C7FDC3650> connected.
+2025-03-07 15:14:47.549 [    INFO] (nnmr_stagecontrol_thorlabs_current.py: 213) Checking if move requested for stage 40179174 is safe...
+2025-03-07 15:14:47.549 [    INFO] (nnmr_stagecontrol_thorlabs_current.py: 189) Moving Thorlabs stage 40179174 to 54.0 deg...
+2025-03-07 15:14:47.549 [    INFO] (nnmr_stagecontrol_thorlabs_current.py: 191) Thorlabs stage 40179174 set to 54.0 deg.
+2025-03-07 15:14:47.549 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 52.9999946 deg.
+2025-03-07 15:14:48.359 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 53.784934 deg.
+2025-03-07 15:14:49.161 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 53.999995 deg.
+2025-03-07 15:14:49.265 [    INFO] (nnmr_stagecontrol_zaber_current.py:  40) Zaber stage updated positions = 100.0 mm & 100.0 mm.
+2025-03-07 15:14:49.266 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40251814 updated position = 0.0 deg.
+2025-03-07 15:14:49.267 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 53.999995 deg.
+2025-03-07 15:14:49.469 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn7' object at 0x0000019C7FDC3650> disconnected.
+2025-03-07 15:14:49.470 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62864)
+2025-03-07 15:15:01.978 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62870) with fd 4924
+2025-03-07 15:15:01.978 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62870)
+2025-03-07 15:15:01.978 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn8' object at 0x0000019C7FDC95D0> connected.
+2025-03-07 15:15:01.978 [    INFO] (nnmr_stagecontrol_thorlabs_current.py: 213) Checking if move requested for stage 40251814 is safe...
+2025-03-07 15:15:01.988 [    INFO] (nnmr_stagecontrol_thorlabs_current.py: 189) Moving Thorlabs stage 40251814 to 36.0 deg...
+2025-03-07 15:15:01.988 [    INFO] (nnmr_stagecontrol_thorlabs_current.py: 191) Thorlabs stage 40251814 set to 36.0 deg.
+2025-03-07 15:15:01.988 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40251814 updated position = 0.0 deg.
+2025-03-07 15:15:02.790 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40251814 updated position = 0.8984416 deg.
+2025-03-07 15:15:03.593 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40251814 updated position = 3.8042921 deg.
+2025-03-07 15:15:04.396 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40251814 updated position = 7.9972767 deg.
+2025-03-07 15:15:05.198 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40251814 updated position = 13.7033624 deg.
+2025-03-07 15:15:06.001 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40251814 updated position = 19.401694199999998 deg.
+2025-03-07 15:15:06.804 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40251814 updated position = 25.110094099999998 deg.
+2025-03-07 15:15:07.607 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40251814 updated position = 30.5523211 deg.
+2025-03-07 15:15:08.411 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40251814 updated position = 34.2228019 deg.
+2025-03-07 15:15:09.213 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40251814 updated position = 35.7927605 deg.
+2025-03-07 15:15:10.015 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40251814 updated position = 35.9999878 deg.
+2025-03-07 15:15:10.120 [    INFO] (nnmr_stagecontrol_zaber_current.py:  40) Zaber stage updated positions = 100.0 mm & 100.0 mm.
+2025-03-07 15:15:10.122 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40251814 updated position = 35.9999878 deg.
+2025-03-07 15:15:10.122 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 53.999995 deg.
+2025-03-07 15:15:10.325 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn8' object at 0x0000019C7FDC95D0> disconnected.
+2025-03-07 15:15:10.325 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62870)
+2025-03-07 15:15:13.463 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62873) with fd 4872
+2025-03-07 15:15:13.463 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62873)
+2025-03-07 15:15:13.463 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn9' object at 0x0000019C7FDBB710> connected.
+2025-03-07 15:15:21.858 [    INFO] (nnmr_stagecontrol_zaber_current.py:  40) Zaber stage updated positions = 53.0 mm & 53.0 mm.
+2025-03-07 15:15:21.859 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40251814 updated position = 35.9999878 deg.
+2025-03-07 15:15:21.860 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 53.999995 deg.
+2025-03-07 15:15:22.064 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn9' object at 0x0000019C7FDBB710> disconnected.
+2025-03-07 15:15:22.064 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62873)
+2025-03-07 15:15:24.711 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62876) with fd 5052
+2025-03-07 15:15:24.711 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62876)
+2025-03-07 15:15:24.711 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn10' object at 0x0000019C7FDCC8D0> connected.
+2025-03-07 15:15:25.046 [    INFO] (nnmr_stagecontrol_zaber_current.py:  40) Zaber stage updated positions = 52.7 mm & 52.7 mm.
+2025-03-07 15:15:25.048 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40251814 updated position = 35.9999878 deg.
+2025-03-07 15:15:25.048 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 53.999995 deg.
+2025-03-07 15:15:25.252 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn10' object at 0x0000019C7FDCC8D0> disconnected.
+2025-03-07 15:15:25.252 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62876)
+2025-03-07 15:15:37.599 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62881) with fd 5016
+2025-03-07 15:15:37.599 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62881)
+2025-03-07 15:15:37.599 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn11' object at 0x0000019C7FDBFB90> connected.
+2025-03-07 15:15:50.255 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62892) with fd 4380
+2025-03-07 15:15:50.255 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62892)
+2025-03-07 15:15:50.262 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn12' object at 0x0000019C7FDB8AD0> connected.
+2025-03-07 15:15:50.265 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '1%'
+2025-03-07 15:15:50.269 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=1'
+2025-03-07 15:15:50.269 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=1.00'
+2025-03-07 15:15:50.269 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn12' object at 0x0000019C7FDB8AD0> disconnected.
+2025-03-07 15:15:50.269 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62892)
+2025-03-07 15:15:50.275 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62893) with fd 4984
+2025-03-07 15:15:50.275 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62893)
+2025-03-07 15:15:50.275 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn13' object at 0x0000019C7FDB9490> connected.
+2025-03-07 15:15:50.285 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '3%'
+2025-03-07 15:15:50.285 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=3'
+2025-03-07 15:15:50.285 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=3.00'
+2025-03-07 15:15:50.289 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn13' object at 0x0000019C7FDB9490> disconnected.
+2025-03-07 15:15:50.289 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62893)
+2025-03-07 15:15:50.289 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62894) with fd 4380
+2025-03-07 15:15:50.289 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62894)
+2025-03-07 15:15:50.289 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn14' object at 0x0000019C7FDDAC50> connected.
+2025-03-07 15:15:50.306 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '5%'
+2025-03-07 15:15:50.306 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=5'
+2025-03-07 15:15:50.306 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=5.00'
+2025-03-07 15:15:50.306 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn14' object at 0x0000019C7FDDAC50> disconnected.
+2025-03-07 15:15:50.306 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62894)
+2025-03-07 15:15:50.306 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62895) with fd 5168
+2025-03-07 15:15:50.306 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62895)
+2025-03-07 15:15:50.306 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn15' object at 0x0000019C7FDDB890> connected.
+2025-03-07 15:15:50.316 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '7%'
+2025-03-07 15:15:50.316 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=7'
+2025-03-07 15:15:50.316 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=7.00'
+2025-03-07 15:15:50.316 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn15' object at 0x0000019C7FDDB890> disconnected.
+2025-03-07 15:15:50.316 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62895)
+2025-03-07 15:15:50.316 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62896) with fd 5168
+2025-03-07 15:15:50.316 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62896)
+2025-03-07 15:15:50.316 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn16' object at 0x0000019C7FDB9810> connected.
+2025-03-07 15:15:50.316 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '9%'
+2025-03-07 15:15:50.316 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=9'
+2025-03-07 15:15:50.316 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=9.00'
+2025-03-07 15:15:50.316 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn16' object at 0x0000019C7FDB9810> disconnected.
+2025-03-07 15:15:50.325 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62896)
+2025-03-07 15:15:50.325 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62897) with fd 5164
+2025-03-07 15:15:50.326 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62897)
+2025-03-07 15:15:50.326 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn17' object at 0x0000019C7FDD9F90> connected.
+2025-03-07 15:15:50.337 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '11%'
+2025-03-07 15:15:50.337 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=11'
+2025-03-07 15:15:50.337 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=11.00'
+2025-03-07 15:15:50.337 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn17' object at 0x0000019C7FDD9F90> disconnected.
+2025-03-07 15:15:50.337 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62897)
+2025-03-07 15:15:50.337 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62898) with fd 5144
+2025-03-07 15:15:50.337 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62898)
+2025-03-07 15:15:50.337 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn18' object at 0x0000019C7FDD8310> connected.
+2025-03-07 15:15:50.347 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '15%'
+2025-03-07 15:15:50.347 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=15'
+2025-03-07 15:15:50.347 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=15.00'
+2025-03-07 15:15:50.347 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn18' object at 0x0000019C7FDD8310> disconnected.
+2025-03-07 15:15:50.347 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62898)
+2025-03-07 15:15:50.347 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62899) with fd 5144
+2025-03-07 15:15:50.347 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62899)
+2025-03-07 15:15:50.347 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn19' object at 0x0000019C7FDBF490> connected.
+2025-03-07 15:15:50.357 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '18%'
+2025-03-07 15:15:50.357 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=18'
+2025-03-07 15:15:50.357 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=18.00'
+2025-03-07 15:15:50.357 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn19' object at 0x0000019C7FDBF490> disconnected.
+2025-03-07 15:15:50.357 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62899)
+2025-03-07 15:15:50.367 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62900) with fd 5212
+2025-03-07 15:15:50.367 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62900)
+2025-03-07 15:15:50.367 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn20' object at 0x0000019C7FDEC650> connected.
+2025-03-07 15:15:50.367 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '26%'
+2025-03-07 15:15:50.367 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=26'
+2025-03-07 15:15:50.367 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=26.00'
+2025-03-07 15:15:50.367 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn20' object at 0x0000019C7FDEC650> disconnected.
+2025-03-07 15:15:50.367 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62900)
+2025-03-07 15:15:50.377 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62901) with fd 5212
+2025-03-07 15:15:50.377 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62901)
+2025-03-07 15:15:50.377 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn21' object at 0x0000019C7FDED190> connected.
+2025-03-07 15:15:50.389 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '30%'
+2025-03-07 15:15:50.389 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=30'
+2025-03-07 15:15:50.389 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=30.00'
+2025-03-07 15:15:50.389 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn21' object at 0x0000019C7FDED190> disconnected.
+2025-03-07 15:15:50.389 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62901)
+2025-03-07 15:15:50.389 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62902) with fd 5240
+2025-03-07 15:15:50.389 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62902)
+2025-03-07 15:15:50.389 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn22' object at 0x0000019C7FDEDE50> connected.
+2025-03-07 15:15:50.408 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '40%'
+2025-03-07 15:15:50.412 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=40'
+2025-03-07 15:15:50.412 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=40.00'
+2025-03-07 15:15:50.412 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn22' object at 0x0000019C7FDEDE50> disconnected.
+2025-03-07 15:15:50.412 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62902)
+2025-03-07 15:15:50.412 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62903) with fd 5304
+2025-03-07 15:15:50.414 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62903)
+2025-03-07 15:15:50.414 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn23' object at 0x0000019C7FDEEB50> connected.
+2025-03-07 15:15:50.428 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '57%'
+2025-03-07 15:15:50.428 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=57'
+2025-03-07 15:15:50.428 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=57.00'
+2025-03-07 15:15:50.428 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn23' object at 0x0000019C7FDEEB50> disconnected.
+2025-03-07 15:15:50.428 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62903)
+2025-03-07 15:15:50.428 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62904) with fd 5272
+2025-03-07 15:15:50.428 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62904)
+2025-03-07 15:15:50.428 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn24' object at 0x0000019C7FDBC8D0> connected.
+2025-03-07 15:15:50.438 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '68%'
+2025-03-07 15:15:50.438 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=68'
+2025-03-07 15:15:50.438 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=68.00'
+2025-03-07 15:15:50.438 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn24' object at 0x0000019C7FDBC8D0> disconnected.
+2025-03-07 15:15:50.438 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62904)
+2025-03-07 15:15:50.438 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62905) with fd 5292
+2025-03-07 15:15:50.438 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62905)
+2025-03-07 15:15:50.438 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn25' object at 0x0000019C7FDD8150> connected.
+2025-03-07 15:15:50.449 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '72%'
+2025-03-07 15:15:50.449 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=72'
+2025-03-07 15:15:50.449 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=72.00'
+2025-03-07 15:15:50.449 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn25' object at 0x0000019C7FDD8150> disconnected.
+2025-03-07 15:15:50.449 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62905)
+2025-03-07 15:15:50.449 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62906) with fd 5260
+2025-03-07 15:15:50.449 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62906)
+2025-03-07 15:15:50.449 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn26' object at 0x0000019C7FDDBD10> connected.
+2025-03-07 15:15:50.459 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '74%'
+2025-03-07 15:15:50.459 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=74'
+2025-03-07 15:15:50.459 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=74.00'
+2025-03-07 15:15:50.459 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn26' object at 0x0000019C7FDDBD10> disconnected.
+2025-03-07 15:15:50.459 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62906)
+2025-03-07 15:15:50.459 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62907) with fd 5144
+2025-03-07 15:15:50.459 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62907)
+2025-03-07 15:15:50.459 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn27' object at 0x0000019C7FDEDC50> connected.
+2025-03-07 15:15:50.469 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '79%'
+2025-03-07 15:15:50.469 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=79'
+2025-03-07 15:15:50.469 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=79.00'
+2025-03-07 15:15:50.469 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn27' object at 0x0000019C7FDEDC50> disconnected.
+2025-03-07 15:15:50.469 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62907)
+2025-03-07 15:15:50.469 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62908) with fd 4924
+2025-03-07 15:15:50.469 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62908)
+2025-03-07 15:15:50.469 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn28' object at 0x0000019C7FDEC650> connected.
+2025-03-07 15:15:50.480 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '83%'
+2025-03-07 15:15:50.480 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=83'
+2025-03-07 15:15:50.480 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=83.00'
+2025-03-07 15:15:50.480 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn28' object at 0x0000019C7FDEC650> disconnected.
+2025-03-07 15:15:50.480 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62908)
+2025-03-07 15:15:50.480 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62909) with fd 5168
+2025-03-07 15:15:50.480 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62909)
+2025-03-07 15:15:50.480 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn29' object at 0x0000019C7FDEFC50> connected.
+2025-03-07 15:15:50.500 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '91%'
+2025-03-07 15:15:50.500 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=91'
+2025-03-07 15:15:50.500 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=91.00'
+2025-03-07 15:15:50.500 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn29' object at 0x0000019C7FDEFC50> disconnected.
+2025-03-07 15:15:50.500 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62909)
+2025-03-07 15:15:50.500 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62910) with fd 5212
+2025-03-07 15:15:50.500 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62910)
+2025-03-07 15:15:50.500 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn30' object at 0x0000019C7FE74590> connected.
+2025-03-07 15:15:50.510 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '99%'
+2025-03-07 15:15:50.510 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=99'
+2025-03-07 15:15:50.510 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=99.00'
+2025-03-07 15:15:50.510 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn30' object at 0x0000019C7FE74590> disconnected.
+2025-03-07 15:15:50.510 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62910)
+2025-03-07 15:15:50.510 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62911) with fd 5292
+2025-03-07 15:15:50.510 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62911)
+2025-03-07 15:15:50.510 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn31' object at 0x0000019C7FE74F90> connected.
+2025-03-07 15:15:50.520 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '103%'
+2025-03-07 15:15:50.520 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=103'
+2025-03-07 15:15:50.520 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=103.00'
+2025-03-07 15:15:50.520 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn31' object at 0x0000019C7FE74F90> disconnected.
+2025-03-07 15:15:50.520 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62911)
+2025-03-07 15:15:50.526 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62912) with fd 5364
+2025-03-07 15:15:50.526 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62912)
+2025-03-07 15:15:50.526 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn32' object at 0x0000019C7FE75BD0> connected.
+2025-03-07 15:15:50.541 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '110%'
+2025-03-07 15:15:50.541 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=110'
+2025-03-07 15:15:50.541 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=110.00'
+2025-03-07 15:15:50.541 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn32' object at 0x0000019C7FE75BD0> disconnected.
+2025-03-07 15:15:50.541 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62912)
+2025-03-07 15:15:53.361 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62913) with fd 5352
+2025-03-07 15:15:53.361 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62913)
+2025-03-07 15:15:53.361 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn33' object at 0x0000019C7FDC0410> connected.
+2025-03-07 15:15:53.371 [    INFO] (laser_driver_current.py:  95) Modulation state set to 'continuous'
+2025-03-07 15:15:53.382 [    INFO] (laser_driver_current.py:  55) Analog control mode set to 'current'
+2025-03-07 15:15:53.382 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '110%'
+2025-03-07 15:15:53.382 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=110'
+2025-03-07 15:15:53.382 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=110.00'
+2025-03-07 15:15:53.382 [    INFO] (laser_driver_current.py: 105) Laser emission is ON
+2025-03-07 15:15:53.392 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn33' object at 0x0000019C7FDC0410> disconnected.
+2025-03-07 15:15:53.392 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62914) with fd 4924
+2025-03-07 15:15:53.392 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62913)
+2025-03-07 15:15:53.392 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62914)
+2025-03-07 15:15:53.392 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn34' object at 0x0000019C7FDEC190> connected.
+2025-03-07 15:15:53.412 [    INFO] (laser_driver_current.py:  95) Modulation state set to 'continuous'
+2025-03-07 15:15:53.422 [    INFO] (laser_driver_current.py:  55) Analog control mode set to 'current'
+2025-03-07 15:15:53.422 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '110%'
+2025-03-07 15:15:53.422 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=110'
+2025-03-07 15:15:53.422 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=110.00'
+2025-03-07 15:15:53.422 [    INFO] (laser_driver_current.py: 105) Laser emission is ON
+2025-03-07 15:15:53.432 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn34' object at 0x0000019C7FDEC190> disconnected.
+2025-03-07 15:15:53.432 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62914)
+2025-03-07 15:18:48.908 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62950) with fd 4924
+2025-03-07 15:18:48.918 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62950)
+2025-03-07 15:18:48.918 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn35' object at 0x0000019C7FE74990> connected.
+2025-03-07 15:18:48.918 [    INFO] (laser_driver_current.py:  95) Modulation state set to 'continuous'
+2025-03-07 15:18:48.918 [    INFO] (laser_driver_current.py:  55) Analog control mode set to 'current'
+2025-03-07 15:18:48.918 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'ACC=1'
+2025-03-07 15:18:48.928 [ WARNING] (laser_driver_current.py:  41) Response from Device :'Not authorized'
+2025-03-07 15:18:48.928 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '110%'
+2025-03-07 15:18:48.928 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=110'
+2025-03-07 15:18:48.928 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=110.00'
+2025-03-07 15:18:48.928 [    INFO] (laser_driver_current.py: 108) Laser emission is OFF
+2025-03-07 15:18:48.928 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn35' object at 0x0000019C7FE74990> disconnected.
+2025-03-07 15:18:48.934 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62950)
+2025-03-07 15:18:48.934 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62951) with fd 4924
+2025-03-07 15:18:48.934 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62951)
+2025-03-07 15:18:48.934 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn36' object at 0x0000019C7FE76210> connected.
+2025-03-07 15:18:48.948 [    INFO] (laser_driver_current.py:  95) Modulation state set to 'continuous'
+2025-03-07 15:18:48.948 [    INFO] (laser_driver_current.py:  55) Analog control mode set to 'current'
+2025-03-07 15:18:48.959 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '110%'
+2025-03-07 15:18:48.959 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=110'
+2025-03-07 15:18:48.959 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=110.00'
+2025-03-07 15:18:48.959 [    INFO] (laser_driver_current.py: 108) Laser emission is OFF
+2025-03-07 15:18:48.959 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn36' object at 0x0000019C7FE76210> disconnected.
+2025-03-07 15:18:48.967 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62951)
+2025-03-07 15:18:59.136 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62955) with fd 5088
+2025-03-07 15:18:59.145 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62955)
+2025-03-07 15:18:59.145 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn37' object at 0x0000019C7FE77250> connected.
+2025-03-07 15:18:59.147 [    INFO] (laser_driver_current.py: 108) Laser emission is OFF
+2025-03-07 15:18:59.147 [   DEBUG] (              rpc.py: 227) Make call 11, (1, 2000, 10000, 8, b'ENBR0\r\n'), <bound method Vxi11Packer.pack_device_write_parms of <pyvisa_py.protocols.vxi11.Vxi11Packer object at 0x0000019C3B020CD0>>, <bound method Vxi11Unpacker.unpack_device_write_resp of <pyvisa_py.protocols.vxi11.Vxi11Unpacker object at 0x0000019C3B020DD0>>
+2025-03-07 15:18:59.147 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: b"\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x02\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x07\xd0\x00\x00'\x10\x00\x00\x00\x08\x00\x00\x00\x07ENBR0\r\n\x00"
+2025-03-07 15:18:59.147 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 11
+2025-03-07 15:19:00.784 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00 '
+2025-03-07 15:19:00.784 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\x02\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x07'
+2025-03-07 15:19:00.784 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: bytearray(b'\x00\x00\x00\x02\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x07')
+2025-03-07 15:19:00.786 [   DEBUG] (              rpc.py: 227) Make call 11, (1, 2000, 10000, 8, b'MODL 0\r\n'), <bound method Vxi11Packer.pack_device_write_parms of <pyvisa_py.protocols.vxi11.Vxi11Packer object at 0x0000019C3B020CD0>>, <bound method Vxi11Unpacker.unpack_device_write_resp of <pyvisa_py.protocols.vxi11.Vxi11Unpacker object at 0x0000019C3B020DD0>>
+2025-03-07 15:19:00.786 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: b"\x00\x00\x00\x03\x00\x00\x00\x00\x00\x00\x00\x02\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x07\xd0\x00\x00'\x10\x00\x00\x00\x08\x00\x00\x00\x08MODL 0\r\n"
+2025-03-07 15:19:00.786 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 11
+2025-03-07 15:19:00.786 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00 '
+2025-03-07 15:19:00.786 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\x03\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08'
+2025-03-07 15:19:00.786 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: bytearray(b'\x00\x00\x00\x03\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08')
+2025-03-07 15:19:00.823 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn37' object at 0x0000019C7FE77250> disconnected.
+2025-03-07 15:19:00.823 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62955)
+2025-03-07 15:19:00.823 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn11' object at 0x0000019C7FDBFB90> disconnected.
+2025-03-07 15:19:00.823 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62881)
+2025-03-07 15:19:27.396 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62961) with fd 4924
+2025-03-07 15:19:27.396 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62961)
+2025-03-07 15:19:27.401 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn38' object at 0x0000019C7FDBAB10> connected.
+2025-03-07 15:19:29.467 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62966) with fd 4980
+2025-03-07 15:19:29.467 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62966)
+2025-03-07 15:19:29.467 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn39' object at 0x0000019C7FDD8410> connected.
+2025-03-07 15:19:29.477 [   DEBUG] (              rpc.py: 227) Make call 11, (1, 2000, 10000, 8, b'FREQ2020000000.0\r\n'), <bound method Vxi11Packer.pack_device_write_parms of <pyvisa_py.protocols.vxi11.Vxi11Packer object at 0x0000019C3B020CD0>>, <bound method Vxi11Unpacker.unpack_device_write_resp of <pyvisa_py.protocols.vxi11.Vxi11Unpacker object at 0x0000019C3B020DD0>>
+2025-03-07 15:19:29.477 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: b"\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00\x02\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x07\xd0\x00\x00'\x10\x00\x00\x00\x08\x00\x00\x00\x12FREQ2020000000.0\r\n\x00\x00"
+2025-03-07 15:19:29.477 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 11
+2025-03-07 15:19:29.477 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00 '
+2025-03-07 15:19:29.477 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\x04\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x12'
+2025-03-07 15:19:29.477 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: bytearray(b'\x00\x00\x00\x04\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x12')
+2025-03-07 15:19:29.477 [    INFO] (sg396_driver_current.py: 234) Set frequency to 2020000000.0 Hz
+2025-03-07 15:19:29.477 [   DEBUG] (              rpc.py: 227) Make call 11, (1, 2000, 10000, 8, b'AMPR-10.0\r\n'), <bound method Vxi11Packer.pack_device_write_parms of <pyvisa_py.protocols.vxi11.Vxi11Packer object at 0x0000019C3B020CD0>>, <bound method Vxi11Unpacker.unpack_device_write_resp of <pyvisa_py.protocols.vxi11.Vxi11Unpacker object at 0x0000019C3B020DD0>>
+2025-03-07 15:19:29.477 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: b"\x00\x00\x00\x05\x00\x00\x00\x00\x00\x00\x00\x02\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x07\xd0\x00\x00'\x10\x00\x00\x00\x08\x00\x00\x00\x0bAMPR-10.0\r\n\x00"
+2025-03-07 15:19:29.477 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 11
+2025-03-07 15:19:29.477 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00 '
+2025-03-07 15:19:29.477 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\x05\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0b'
+2025-03-07 15:19:29.477 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: bytearray(b'\x00\x00\x00\x05\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0b')
+2025-03-07 15:19:29.477 [   DEBUG] (              rpc.py: 227) Make call 11, (1, 2000, 10000, 8, b'TYPE 7\r\n'), <bound method Vxi11Packer.pack_device_write_parms of <pyvisa_py.protocols.vxi11.Vxi11Packer object at 0x0000019C3B020CD0>>, <bound method Vxi11Unpacker.unpack_device_write_resp of <pyvisa_py.protocols.vxi11.Vxi11Unpacker object at 0x0000019C3B020DD0>>
+2025-03-07 15:19:29.477 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: b"\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x00\x02\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x07\xd0\x00\x00'\x10\x00\x00\x00\x08\x00\x00\x00\x08TYPE 7\r\n"
+2025-03-07 15:19:29.477 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 11
+2025-03-07 15:19:29.487 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00 '
+2025-03-07 15:19:29.487 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\x06\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08'
+2025-03-07 15:19:29.487 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: bytearray(b'\x00\x00\x00\x06\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08')
+2025-03-07 15:19:29.487 [   DEBUG] (              rpc.py: 227) Make call 11, (1, 2000, 10000, 8, b'STYP 1\r\n'), <bound method Vxi11Packer.pack_device_write_parms of <pyvisa_py.protocols.vxi11.Vxi11Packer object at 0x0000019C3B020CD0>>, <bound method Vxi11Unpacker.unpack_device_write_resp of <pyvisa_py.protocols.vxi11.Vxi11Unpacker object at 0x0000019C3B020DD0>>
+2025-03-07 15:19:29.487 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: b"\x00\x00\x00\x07\x00\x00\x00\x00\x00\x00\x00\x02\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x07\xd0\x00\x00'\x10\x00\x00\x00\x08\x00\x00\x00\x08STYP 1\r\n"
+2025-03-07 15:19:29.487 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 11
+2025-03-07 15:19:29.487 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00 '
+2025-03-07 15:19:29.487 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\x07\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08'
+2025-03-07 15:19:29.487 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: bytearray(b'\x00\x00\x00\x07\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08')
+2025-03-07 15:19:29.487 [   DEBUG] (              rpc.py: 227) Make call 11, (1, 2000, 10000, 8, b'QFNC 5\r\n'), <bound method Vxi11Packer.pack_device_write_parms of <pyvisa_py.protocols.vxi11.Vxi11Packer object at 0x0000019C3B020CD0>>, <bound method Vxi11Unpacker.unpack_device_write_resp of <pyvisa_py.protocols.vxi11.Vxi11Unpacker object at 0x0000019C3B020DD0>>
+2025-03-07 15:19:29.487 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: b"\x00\x00\x00\x08\x00\x00\x00\x00\x00\x00\x00\x02\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x07\xd0\x00\x00'\x10\x00\x00\x00\x08\x00\x00\x00\x08QFNC 5\r\n"
+2025-03-07 15:19:29.487 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 11
+2025-03-07 15:19:29.487 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00 '
+2025-03-07 15:19:29.487 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\x08\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08'
+2025-03-07 15:19:29.487 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: bytearray(b'\x00\x00\x00\x08\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08')
+2025-03-07 15:19:29.487 [   DEBUG] (              rpc.py: 227) Make call 11, (1, 2000, 10000, 8, b'MODL 1\r\n'), <bound method Vxi11Packer.pack_device_write_parms of <pyvisa_py.protocols.vxi11.Vxi11Packer object at 0x0000019C3B020CD0>>, <bound method Vxi11Unpacker.unpack_device_write_resp of <pyvisa_py.protocols.vxi11.Vxi11Unpacker object at 0x0000019C3B020DD0>>
+2025-03-07 15:19:29.487 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: b"\x00\x00\x00\t\x00\x00\x00\x00\x00\x00\x00\x02\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x07\xd0\x00\x00'\x10\x00\x00\x00\x08\x00\x00\x00\x08MODL 1\r\n"
+2025-03-07 15:19:29.487 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 11
+2025-03-07 15:19:29.497 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00 '
+2025-03-07 15:19:29.497 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\t\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08'
+2025-03-07 15:19:29.497 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: bytearray(b'\x00\x00\x00\t\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08')
+2025-03-07 15:19:29.497 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn39' object at 0x0000019C7FDD8410> disconnected.
+2025-03-07 15:19:29.497 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62966)
+2025-03-07 15:19:30.196 [   DEBUG] (              rpc.py: 227) Make call 11, (1, 2000, 10000, 8, b'ENBR1\r\n'), <bound method Vxi11Packer.pack_device_write_parms of <pyvisa_py.protocols.vxi11.Vxi11Packer object at 0x0000019C3B020CD0>>, <bound method Vxi11Unpacker.unpack_device_write_resp of <pyvisa_py.protocols.vxi11.Vxi11Unpacker object at 0x0000019C3B020DD0>>
+2025-03-07 15:19:30.196 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: b"\x00\x00\x00\n\x00\x00\x00\x00\x00\x00\x00\x02\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x07\xd0\x00\x00'\x10\x00\x00\x00\x08\x00\x00\x00\x07ENBR1\r\n\x00"
+2025-03-07 15:19:30.196 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 11
+2025-03-07 15:19:30.196 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00 '
+2025-03-07 15:19:30.196 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\n\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x07'
+2025-03-07 15:19:30.196 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: bytearray(b'\x00\x00\x00\n\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x07')
+2025-03-07 15:19:30.201 [    INFO] (laser_driver_current.py:  95) Modulation state set to 'continuous'
+2025-03-07 15:19:30.202 [    INFO] (laser_driver_current.py:  55) Analog control mode set to 'current'
+2025-03-07 15:19:30.210 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '110%'
+2025-03-07 15:19:30.210 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=110'
+2025-03-07 15:19:30.210 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=110.00'
+2025-03-07 15:19:30.212 [    INFO] (laser_driver_current.py: 105) Laser emission is ON
+2025-03-07 15:19:31.417 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62975) with fd 5240
+2025-03-07 15:19:31.419 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62975)
+2025-03-07 15:19:31.419 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn40' object at 0x0000019C7FDECA90> connected.
+2025-03-07 15:19:31.421 [    INFO] (laser_driver_current.py: 108) Laser emission is OFF
+2025-03-07 15:19:31.425 [   DEBUG] (              rpc.py: 227) Make call 11, (1, 2000, 10000, 8, b'ENBR0\r\n'), <bound method Vxi11Packer.pack_device_write_parms of <pyvisa_py.protocols.vxi11.Vxi11Packer object at 0x0000019C3B020CD0>>, <bound method Vxi11Unpacker.unpack_device_write_resp of <pyvisa_py.protocols.vxi11.Vxi11Unpacker object at 0x0000019C3B020DD0>>
+2025-03-07 15:19:31.425 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: b"\x00\x00\x00\x0b\x00\x00\x00\x00\x00\x00\x00\x02\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x07\xd0\x00\x00'\x10\x00\x00\x00\x08\x00\x00\x00\x07ENBR0\r\n\x00"
+2025-03-07 15:19:31.425 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 11
+2025-03-07 15:19:31.427 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00 '
+2025-03-07 15:19:31.427 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\x0b\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x07'
+2025-03-07 15:19:31.427 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: bytearray(b'\x00\x00\x00\x0b\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x07')
+2025-03-07 15:19:31.427 [   DEBUG] (              rpc.py: 227) Make call 11, (1, 2000, 10000, 8, b'MODL 0\r\n'), <bound method Vxi11Packer.pack_device_write_parms of <pyvisa_py.protocols.vxi11.Vxi11Packer object at 0x0000019C3B020CD0>>, <bound method Vxi11Unpacker.unpack_device_write_resp of <pyvisa_py.protocols.vxi11.Vxi11Unpacker object at 0x0000019C3B020DD0>>
+2025-03-07 15:19:31.427 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: b"\x00\x00\x00\x0c\x00\x00\x00\x00\x00\x00\x00\x02\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x07\xd0\x00\x00'\x10\x00\x00\x00\x08\x00\x00\x00\x08MODL 0\r\n"
+2025-03-07 15:19:31.427 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 11
+2025-03-07 15:19:31.431 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00 '
+2025-03-07 15:19:31.431 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\x0c\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08'
+2025-03-07 15:19:31.431 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: bytearray(b'\x00\x00\x00\x0c\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08')
+2025-03-07 15:19:31.482 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn40' object at 0x0000019C7FDECA90> disconnected.
+2025-03-07 15:19:31.482 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62975)
+2025-03-07 15:19:31.482 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn38' object at 0x0000019C7FDBAB10> disconnected.
+2025-03-07 15:19:31.482 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62961)
+2025-03-07 15:20:37.822 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 62999) with fd 5144
+2025-03-07 15:20:37.822 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 62999)
+2025-03-07 15:20:37.822 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn41' object at 0x0000019C7FE74C90> connected.
+2025-03-07 15:20:40.047 [   DEBUG] (              rpc.py: 227) Make call 11, (1, 2000, 10000, 8, b'FREQ2030000000.0\r\n'), <bound method Vxi11Packer.pack_device_write_parms of <pyvisa_py.protocols.vxi11.Vxi11Packer object at 0x0000019C3B020CD0>>, <bound method Vxi11Unpacker.unpack_device_write_resp of <pyvisa_py.protocols.vxi11.Vxi11Unpacker object at 0x0000019C3B020DD0>>
+2025-03-07 15:20:40.049 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: b"\x00\x00\x00\r\x00\x00\x00\x00\x00\x00\x00\x02\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x07\xd0\x00\x00'\x10\x00\x00\x00\x08\x00\x00\x00\x12FREQ2030000000.0\r\n\x00\x00"
+2025-03-07 15:20:40.049 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 11
+2025-03-07 15:20:40.049 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00 '
+2025-03-07 15:20:40.049 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\r\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x12'
+2025-03-07 15:20:40.049 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: bytearray(b'\x00\x00\x00\r\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x12')
+2025-03-07 15:20:40.051 [    INFO] (sg396_driver_current.py: 234) Set frequency to 2030000000.0 Hz
+2025-03-07 15:20:40.051 [   DEBUG] (              rpc.py: 227) Make call 11, (1, 2000, 10000, 8, b'AMPR-3.010299956639812\r\n'), <bound method Vxi11Packer.pack_device_write_parms of <pyvisa_py.protocols.vxi11.Vxi11Packer object at 0x0000019C3B020CD0>>, <bound method Vxi11Unpacker.unpack_device_write_resp of <pyvisa_py.protocols.vxi11.Vxi11Unpacker object at 0x0000019C3B020DD0>>
+2025-03-07 15:20:40.051 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: b"\x00\x00\x00\x0e\x00\x00\x00\x00\x00\x00\x00\x02\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x07\xd0\x00\x00'\x10\x00\x00\x00\x08\x00\x00\x00\x18AMPR-3.010299956639812\r\n"
+2025-03-07 15:20:40.052 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 11
+2025-03-07 15:20:40.054 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00 '
+2025-03-07 15:20:40.054 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\x0e\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x18'
+2025-03-07 15:20:40.054 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: bytearray(b'\x00\x00\x00\x0e\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x18')
+2025-03-07 15:20:40.054 [   DEBUG] (              rpc.py: 227) Make call 11, (1, 2000, 10000, 8, b'TYPE 7\r\n'), <bound method Vxi11Packer.pack_device_write_parms of <pyvisa_py.protocols.vxi11.Vxi11Packer object at 0x0000019C3B020CD0>>, <bound method Vxi11Unpacker.unpack_device_write_resp of <pyvisa_py.protocols.vxi11.Vxi11Unpacker object at 0x0000019C3B020DD0>>
+2025-03-07 15:20:40.054 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: b"\x00\x00\x00\x0f\x00\x00\x00\x00\x00\x00\x00\x02\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x07\xd0\x00\x00'\x10\x00\x00\x00\x08\x00\x00\x00\x08TYPE 7\r\n"
+2025-03-07 15:20:40.054 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 11
+2025-03-07 15:20:40.054 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00 '
+2025-03-07 15:20:40.054 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\x0f\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08'
+2025-03-07 15:20:40.054 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: bytearray(b'\x00\x00\x00\x0f\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08')
+2025-03-07 15:20:40.054 [   DEBUG] (              rpc.py: 227) Make call 11, (1, 2000, 10000, 8, b'STYP 1\r\n'), <bound method Vxi11Packer.pack_device_write_parms of <pyvisa_py.protocols.vxi11.Vxi11Packer object at 0x0000019C3B020CD0>>, <bound method Vxi11Unpacker.unpack_device_write_resp of <pyvisa_py.protocols.vxi11.Vxi11Unpacker object at 0x0000019C3B020DD0>>
+2025-03-07 15:20:40.054 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: b"\x00\x00\x00\x10\x00\x00\x00\x00\x00\x00\x00\x02\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x07\xd0\x00\x00'\x10\x00\x00\x00\x08\x00\x00\x00\x08STYP 1\r\n"
+2025-03-07 15:20:40.054 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 11
+2025-03-07 15:20:40.054 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00 '
+2025-03-07 15:20:40.054 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\x10\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08'
+2025-03-07 15:20:40.054 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: bytearray(b'\x00\x00\x00\x10\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08')
+2025-03-07 15:20:40.054 [   DEBUG] (              rpc.py: 227) Make call 11, (1, 2000, 10000, 8, b'QFNC 5\r\n'), <bound method Vxi11Packer.pack_device_write_parms of <pyvisa_py.protocols.vxi11.Vxi11Packer object at 0x0000019C3B020CD0>>, <bound method Vxi11Unpacker.unpack_device_write_resp of <pyvisa_py.protocols.vxi11.Vxi11Unpacker object at 0x0000019C3B020DD0>>
+2025-03-07 15:20:40.054 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: b"\x00\x00\x00\x11\x00\x00\x00\x00\x00\x00\x00\x02\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x07\xd0\x00\x00'\x10\x00\x00\x00\x08\x00\x00\x00\x08QFNC 5\r\n"
+2025-03-07 15:20:40.054 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 11
+2025-03-07 15:20:40.061 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00 '
+2025-03-07 15:20:40.061 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\x11\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08'
+2025-03-07 15:20:40.061 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: bytearray(b'\x00\x00\x00\x11\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08')
+2025-03-07 15:20:40.061 [   DEBUG] (              rpc.py: 227) Make call 11, (1, 2000, 10000, 8, b'MODL 1\r\n'), <bound method Vxi11Packer.pack_device_write_parms of <pyvisa_py.protocols.vxi11.Vxi11Packer object at 0x0000019C3B020CD0>>, <bound method Vxi11Unpacker.unpack_device_write_resp of <pyvisa_py.protocols.vxi11.Vxi11Unpacker object at 0x0000019C3B020DD0>>
+2025-03-07 15:20:40.061 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: b"\x00\x00\x00\x12\x00\x00\x00\x00\x00\x00\x00\x02\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x07\xd0\x00\x00'\x10\x00\x00\x00\x08\x00\x00\x00\x08MODL 1\r\n"
+2025-03-07 15:20:40.061 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 11
+2025-03-07 15:20:40.063 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00 '
+2025-03-07 15:20:40.063 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\x12\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08'
+2025-03-07 15:20:40.063 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: bytearray(b'\x00\x00\x00\x12\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08')
+2025-03-07 15:20:40.800 [   DEBUG] (              rpc.py: 227) Make call 11, (1, 2000, 10000, 8, b'ENBR1\r\n'), <bound method Vxi11Packer.pack_device_write_parms of <pyvisa_py.protocols.vxi11.Vxi11Packer object at 0x0000019C3B020CD0>>, <bound method Vxi11Unpacker.unpack_device_write_resp of <pyvisa_py.protocols.vxi11.Vxi11Unpacker object at 0x0000019C3B020DD0>>
+2025-03-07 15:20:40.800 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: b"\x00\x00\x00\x13\x00\x00\x00\x00\x00\x00\x00\x02\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x07\xd0\x00\x00'\x10\x00\x00\x00\x08\x00\x00\x00\x07ENBR1\r\n\x00"
+2025-03-07 15:20:40.800 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 11
+2025-03-07 15:20:40.800 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00 '
+2025-03-07 15:20:40.800 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\x13\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x07'
+2025-03-07 15:20:40.800 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: bytearray(b'\x00\x00\x00\x13\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x07')
+2025-03-07 15:20:40.800 [    INFO] (laser_driver_current.py:  98) Modulation state set to 'modulated'
+2025-03-07 15:20:40.811 [    INFO] (laser_driver_current.py:  55) Analog control mode set to 'current'
+2025-03-07 15:20:40.811 [    INFO] (laser_driver_current.py:  89) Laser diode current set to '110%'
+2025-03-07 15:20:40.811 [ WARNING] (laser_driver_current.py:  40) Failed to set command 'CM=110'
+2025-03-07 15:20:40.811 [ WARNING] (laser_driver_current.py:  41) Response from Device :'CM=110.00'
+2025-03-07 15:20:40.811 [    INFO] (laser_driver_current.py: 105) Laser emission is ON
+2025-03-07 15:20:42.272 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 63009) with fd 4964
+2025-03-07 15:20:42.272 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 63009)
+2025-03-07 15:20:42.282 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn42' object at 0x0000019C7FDC9690> connected.
+2025-03-07 15:20:42.282 [    INFO] (laser_driver_current.py: 108) Laser emission is OFF
+2025-03-07 15:20:42.282 [   DEBUG] (              rpc.py: 227) Make call 11, (1, 2000, 10000, 8, b'ENBR0\r\n'), <bound method Vxi11Packer.pack_device_write_parms of <pyvisa_py.protocols.vxi11.Vxi11Packer object at 0x0000019C3B020CD0>>, <bound method Vxi11Unpacker.unpack_device_write_resp of <pyvisa_py.protocols.vxi11.Vxi11Unpacker object at 0x0000019C3B020DD0>>
+2025-03-07 15:20:42.282 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: b"\x00\x00\x00\x14\x00\x00\x00\x00\x00\x00\x00\x02\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x07\xd0\x00\x00'\x10\x00\x00\x00\x08\x00\x00\x00\x07ENBR0\r\n\x00"
+2025-03-07 15:20:42.282 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 11
+2025-03-07 15:20:42.282 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00 '
+2025-03-07 15:20:42.282 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\x14\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x07'
+2025-03-07 15:20:42.282 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: bytearray(b'\x00\x00\x00\x14\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x07')
+2025-03-07 15:20:42.282 [   DEBUG] (              rpc.py: 227) Make call 11, (1, 2000, 10000, 8, b'MODL 0\r\n'), <bound method Vxi11Packer.pack_device_write_parms of <pyvisa_py.protocols.vxi11.Vxi11Packer object at 0x0000019C3B020CD0>>, <bound method Vxi11Unpacker.unpack_device_write_resp of <pyvisa_py.protocols.vxi11.Vxi11Unpacker object at 0x0000019C3B020DD0>>
+2025-03-07 15:20:42.282 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: b"\x00\x00\x00\x15\x00\x00\x00\x00\x00\x00\x00\x02\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x07\xd0\x00\x00'\x10\x00\x00\x00\x08\x00\x00\x00\x08MODL 0\r\n"
+2025-03-07 15:20:42.282 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 11
+2025-03-07 15:20:42.292 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00 '
+2025-03-07 15:20:42.292 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\x15\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08'
+2025-03-07 15:20:42.292 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: bytearray(b'\x00\x00\x00\x15\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08')
+2025-03-07 15:20:42.343 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn42' object at 0x0000019C7FDC9690> disconnected.
+2025-03-07 15:20:42.343 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 63009)
+2025-03-07 15:20:42.343 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn41' object at 0x0000019C7FE74C90> disconnected.
+2025-03-07 15:20:42.347 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62999)
+2025-03-07 15:25:41.282 [    INFO] (           server.py: 157) accepted ('127.0.0.1', 63085) with fd 5312
+2025-03-07 15:25:41.282 [    INFO] (           server.py: 200) welcome ('127.0.0.1', 63085)
+2025-03-07 15:25:41.282 [    INFO] (           server.py: 352) Client <rpyc.core.protocol.Connection 'conn43' object at 0x0000019C7FD9BD50> connected.
+2025-03-07 15:25:41.295 [    INFO] (nnmr_stagecontrol_zaber_current.py:  91) Moving Zaber stages to standby mode...
+2025-03-07 15:25:49.615 [    INFO] (nnmr_stagecontrol_zaber_current.py:  96) Zaber stages in standby mode.
+2025-03-07 15:25:49.616 [    INFO] (nnmr_stagecontrol_thorlabs_current.py: 134) Moving Thorlabs stage 40251814 to Standby Mode...
+2025-03-07 15:25:49.616 [    INFO] (nnmr_stagecontrol_thorlabs_current.py: 138) Thorlabs stage 40251814 set in Standby Mode.
+2025-03-07 15:25:49.617 [    INFO] (nnmr_stagecontrol_thorlabs_current.py: 134) Moving Thorlabs stage 40179174 to Standby Mode...
+2025-03-07 15:25:49.618 [    INFO] (nnmr_stagecontrol_thorlabs_current.py: 138) Thorlabs stage 40179174 set in Standby Mode.
+2025-03-07 15:25:49.619 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 53.999995 deg.
+2025-03-07 15:25:50.420 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 54.785067399999996 deg.
+2025-03-07 15:25:51.222 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 57.581552 deg.
+2025-03-07 15:25:52.025 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 62.3819875 deg.
+2025-03-07 15:25:52.827 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 68.12363739999999 deg.
+2025-03-07 15:25:53.629 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 73.1542161 deg.
+2025-03-07 15:25:54.431 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 78.8769667 deg.
+2025-03-07 15:25:55.233 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 84.5779053 deg.
+2025-03-07 15:25:56.035 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 90.30168 deg.
+2025-03-07 15:25:56.838 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 96.0433831 deg.
+2025-03-07 15:25:57.641 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 101.76229 deg.
+2025-03-07 15:25:58.443 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 106.76868929999999 deg.
+2025-03-07 15:25:59.245 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 111.5203271 deg.
+2025-03-07 15:26:00.049 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 114.2635585 deg.
+2025-03-07 15:26:00.851 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 114.9999928 deg.
+2025-03-07 15:26:00.955 [    INFO] (nnmr_stagecontrol_zaber_current.py:  40) Zaber stage updated positions = 100.0 mm & 100.0 mm.
+2025-03-07 15:26:00.955 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40251814 updated position = 0.0 deg.
+2025-03-07 15:26:00.957 [    INFO] (nnmr_stagecontrol_thorlabs_current.py:  82) Thorlabs stage 40179174 updated position = 114.9999928 deg.
+2025-03-07 15:26:01.160 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn43' object at 0x0000019C7FD9BD50> disconnected.
+2025-03-07 15:26:01.160 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 63085)
+2025-03-07 15:47:49.715 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn1' object at 0x0000019C7FD9B210> disconnected.
+2025-03-07 15:47:49.715 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 62845)
+2025-03-07 15:47:55.175 [    INFO] (           inserv.py: 123) exiting...
+2025-03-07 15:47:55.176 [    INFO] (           server.py: 316) Removing devices...
+2025-03-07 15:47:55.176 [    INFO] (           server.py: 234) Deleted device [sg].
+2025-03-07 15:47:55.176 [   DEBUG] (         resource.py: 317) TCPIP0::10.135.70.65::inst0::INSTR - closing
+2025-03-07 15:47:55.176 [   DEBUG] (              rpc.py: 227) Make call 23, 1, <bound method Vxi11Packer.pack_device_link of <pyvisa_py.protocols.vxi11.Vxi11Packer object at 0x0000019C3B020CD0>>, <bound method Vxi11Unpacker.unpack_device_error of <pyvisa_py.protocols.vxi11.Vxi11Unpacker object at 0x0000019C3B020DD0>>
+2025-03-07 15:47:55.176 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: b'\x00\x00\x00\x16\x00\x00\x00\x00\x00\x00\x00\x02\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\x17\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01'
+2025-03-07 15:47:55.176 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 23
+2025-03-07 15:47:56.751 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00\x1c'
+2025-03-07 15:47:56.751 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\x16\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+2025-03-07 15:47:56.751 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=372, family=2, type=1, proto=0, laddr=('10.135.70.59', 62827), raddr=('10.135.70.65', 1000)>: bytearray(b'\x00\x00\x00\x16\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+2025-03-07 15:47:56.751 [   DEBUG] (              rpc.py: 489) RawTCPClient: closing socket
+2025-03-07 15:47:56.751 [   DEBUG] (         resource.py: 320) TCPIP0::10.135.70.65::inst0::INSTR - is closed
+2025-03-07 15:47:56.751 [    INFO] (           server.py: 234) Deleted device [laser].
+2025-03-07 15:47:56.751 [    INFO] (           server.py: 234) Deleted device [laser_shutter].
+2025-03-07 15:47:56.751 [    INFO] (           server.py: 234) Deleted device [pickoff_shutter].
+2025-03-07 15:47:56.751 [    INFO] (           server.py: 234) Deleted device [awg].
+2025-03-07 15:47:56.762 [    INFO] (           server.py: 234) Deleted device [ps].
+2025-03-07 15:47:56.762 [    INFO] (           server.py: 234) Deleted device [daq].
+2025-03-07 15:47:56.776 [    INFO] (           server.py: 234) Deleted device [zaber].
+2025-03-07 15:47:57.402 [    INFO] (           server.py: 234) Deleted device [thor_azi].
+2025-03-07 15:47:58.012 [    INFO] (           server.py: 234) Deleted device [thor_polar].
+2025-03-07 15:47:58.012 [    INFO] (           server.py: 320) Stopping RPyC server...
+2025-03-07 15:47:58.012 [    INFO] (           server.py: 123) listener closed
+2025-03-07 15:47:58.012 [    INFO] (           server.py: 271) server has terminated
+2025-03-07 15:47:58.012 [    INFO] (           server.py: 302) RPyC server stopped.
+2025-03-07 15:47:58.071 [   DEBUG] (        highlevel.py:3070) Closing ResourceManager (session: 4131305)

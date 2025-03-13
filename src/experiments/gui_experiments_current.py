@@ -136,7 +136,7 @@ class ExpWidget(QWidget):
         self.nmr_params_defaults = [120, 10, 50e-9, 100e-6, 100, 1e-6]
         self.nmr_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 'y', 1]
 
-        self.casr_params_defaults = [120, 10, 10, 1e6]
+        self.casr_params_defaults = [120, 10, 10, 200e-9]
         self.casr_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 1e6, 0.1, 1e-6, 0, 1]
 
         self.fit_none_default = [0]
@@ -338,11 +338,15 @@ class ExpWidget(QWidget):
 
         # stop button
         stop_button = QPushButton('Stop')
-        stop_button.setStyleSheet("border: 2px solid red")
+        stop_button.setStyleSheet("border: 2px solid white")
         stop_button.clicked.connect(self.stop)
         # use a partial because the stop function may already be destroyed by the time
         # this is called
         self.destroyed.connect(partial(self.stop, log=False))
+
+        kill_button = QPushButton('Kill')
+        kill_button.setStyleSheet("border: 2px solid red")
+        kill_button.clicked.connect(self.kill)
 
         self.gui_layout = QVBoxLayout()
         
@@ -392,10 +396,11 @@ class ExpWidget(QWidget):
         self.bottom_frame.setStyleSheet("background-color: black")
         self.bottom_layout = QGridLayout(self.bottom_frame)
         self.bottom_layout.setSpacing(0)
-        self.bottom_layout.addWidget(self.status,1,1,1,2)
-        self.bottom_layout.addWidget(self.progress_bar,2,1,1,2)
+        self.bottom_layout.addWidget(self.status,1,1,1,3)
+        self.bottom_layout.addWidget(self.progress_bar,2,1,1,3)
         self.bottom_layout.addWidget(run_button,3,1,1,1)
         self.bottom_layout.addWidget(stop_button,3,2,1,1)
+        self.bottom_layout.addWidget(kill_button,3,3,1,1)
 
         self.laser_frame = QFrame(self)
         self.laser_frame.setStyleSheet("background-color: #004b47")
@@ -720,8 +725,8 @@ class ExpWidget(QWidget):
                         'widget': SpinBox(value = defaults[1], int = True, bounds=(1, None))},
                 'num_pts': {'display_text': 'n_R (# synch. readout pts.): ',
                         'widget': SpinBox(value = defaults[2], int = True, bounds=(1, None), dec = True)},
-                'central_freq': {'display_text': 'f_0 Central Frequency: ',
-                        'widget': SpinBox(value = defaults[3], suffix = 'Hz', siPrefix = True, bounds = (1e3, 6e9), dec = True)}}
+                'tau': {'display_text': 'tau = 1/(2f_0): ',
+                        'widget': SpinBox(value = defaults[3], suffix = 's', siPrefix = True, bounds = (0, 1e-3), dec = True)}}
 
             case 'Fit None':
                 params = {
@@ -1113,7 +1118,7 @@ class ExpWidget(QWidget):
                     self.dig_params_widget.setEnabled(True)
                 elif queueText[1] == 'failed':
                     self.status.setStyleSheet("color: black; background-color: red; border: 4px solid black;")
-                    self.status.setText(f"{self.experiments.currentText()} scan failed. Exception type '{queueText[3]}'.")
+                    self.status.setText(f"{self.experiments.currentText()} scan failed. Exception: '{queueText[3]}'.")
                     self.experiments.setEnabled(True)
                     self.params_widget.setEnabled(True)
                     self.save_params.setEnabled(True)
@@ -1557,63 +1562,68 @@ class ExpWidget(QWidget):
         # self.communicator_params = self.communicator.speak.connect(self.retrieve_exp_params)
         
         self.extra_kwarg_params['save'] = self.to_save
-        self.extra_kwarg_params['dataset'] = self.exp_dict[self.experiments.currentText()][3]
-        self.extra_kwarg_params['filename'] = self.filename_lineedit.text()
-        self.extra_kwarg_params['directory'] = self.chosen_dir.text()
-        self.extra_kwarg_params['seq'] = self.experiments.currentText()
-        self.extra_kwarg_params['fit'] = self.to_fit
-        self.extra_kwarg_params['fit_live'] = self.to_fit_live
-        self.extra_kwarg_params['fit_params'] = list(self.fit_params_widget.all_params().values()) # send a list of fit parameters to experiment process 
+        try:
+            self.extra_kwarg_params['dataset'] = self.exp_dict[self.experiments.currentText()][3]
+        except KeyError as e:
+            self.status.setStyleSheet("color: black; background-color: red; border: 4px solid black;")
+            self.status.setText(f"No experiment selected: {e}")
+        else:
+            self.extra_kwarg_params['filename'] = self.filename_lineedit.text()
+            self.extra_kwarg_params['directory'] = self.chosen_dir.text()
+            self.extra_kwarg_params['seq'] = self.experiments.currentText()
+            self.extra_kwarg_params['fit'] = self.to_fit
+            self.extra_kwarg_params['fit_live'] = self.to_fit_live
+            self.extra_kwarg_params['fit_params'] = list(self.fit_params_widget.all_params().values()) # send a list of fit parameters to experiment process 
 
-        # unpack all keyword arg parameters to send to experiment process
-        fun_kwargs = dict(**self.params_widget.all_params(), **self.mw_params_widget.all_params(), 
+            # unpack all keyword arg parameters to send to experiment process
+            fun_kwargs = dict(**self.params_widget.all_params(), **self.mw_params_widget.all_params(), 
                           **self.laser_params_widget.all_params(), **self.dig_params_widget.all_params(), **self.extra_kwarg_params)
 
-        self.queue_to_exp.put('start')
+            self.queue_to_exp.put('start')
 
-        # **Restart the queue if it was invalid**
-        if self.queue_from_exp is None:
-            print("Reinitializing queue for new experiment.")
-            self.queue_from_exp: Queue = Queue() # Recreate the queue
+            # **Restart the queue if it was invalid**
+            if self.queue_from_exp is None:
+                print("Reinitializing queue for new experiment.")
+                self.queue_from_exp: Queue = Queue() # Recreate the queue
 
-        # reload the module at runtime in case any changes were made to the code
-        if self.daq_b1.isChecked(): # digitizer settings
-            reload(nv_experiments_all)
-            # call the function in a new process
-            self.run_proc.run(
-            run_experiment,
-            exp_cls = nv_experiments_all.SpinMeasurements,
-            fun_name = self.exp_dict[self.experiments.currentText()][0],
-            constructor_args = list(),
-            constructor_kwargs = dict(),
-            queue_to_exp = self.queue_to_exp,
-            queue_from_exp = self.queue_from_exp,
-            fun_args = list(),
-            fun_kwargs = fun_kwargs)
+            # reload the module at runtime in case any changes were made to the code
+            if self.daq_b1.isChecked(): # digitizer settings
+                reload(nv_experiments_all)
+                # call the function in a new process
+                self.run_proc.run(
+                run_experiment,
+                exp_cls = nv_experiments_all.SpinMeasurements,
+                fun_name = self.exp_dict[self.experiments.currentText()][0],
+                constructor_args = list(),
+                constructor_kwargs = dict(),
+                queue_to_exp = self.queue_to_exp,
+                queue_from_exp = self.queue_from_exp,
+                fun_args = list(),
+                fun_kwargs = fun_kwargs)
         
-        elif self.daq_b2.isChecked(): # NI DAQ settings
-            reload(nv_experiments_daq)
-            # call the function in a new process
-            self.run_proc.run(
-            run_experiment,
-            exp_cls = nv_experiments_daq.SpinMeasurements,
-            fun_name = self.exp_dict[self.experiments.currentText()][0],
-            constructor_args = list(),
-            constructor_kwargs = dict(),
-            queue_to_exp = self.queue_to_exp,
-            queue_from_exp = self.queue_from_exp,
-            fun_args = list(),
-            fun_kwargs = fun_kwargs)
+            elif self.daq_b2.isChecked(): # NI DAQ settings
+                reload(nv_experiments_daq)
+                # call the function in a new process
+                self.run_proc.run(
+                run_experiment,
+                exp_cls = nv_experiments_daq.SpinMeasurements,
+                fun_name = self.exp_dict[self.experiments.currentText()][0],
+                constructor_args = list(),
+                constructor_kwargs = dict(),
+                queue_to_exp = self.queue_to_exp,
+                queue_from_exp = self.queue_from_exp,
+                fun_args = list(),
+                fun_kwargs = fun_kwargs)
 
-        else:
-            self.status.setStyleSheet("color: black; background-color: red; border: 4px solid black;")
-            self.status.setText(f"{self.experiments.currentText()} scan couldn't start because no acquisition mode selected. Choose either 'Digitizer' or 'NI DAQ'.")
-            raise ValueError(f"{self.experiments.currentText()} scan couldn't start because no data acquisition mode selected. Choose either 'Digitizer' or 'NI DAQ'.") 
+            else:
+                self.status.setStyleSheet("color: black; background-color: red; border: 4px solid black;")
+                self.status.setText(f"{self.experiments.currentText()} scan couldn't start because no acquisition mode selected. Choose either 'Digitizer' or 'NI DAQ'.")
+                raise ValueError(f"{self.experiments.currentText()} scan couldn't start because no data acquisition mode selected. Choose either 'Digitizer' or 'NI DAQ'.") 
         
-        # **Restart the timer if the queue is valid**
-        if self.queue_from_exp is not None:
-            print("Restarting updateTimer to check the queue.")
-            self.updateTimer.start(self.QUEUE_CHECK_TIME)
+            # **Restart the timer if the queue is valid**
+            if self.queue_from_exp is not None:
+                print("Restarting updateTimer to check the queue.")
+                self.updateTimer.start(self.QUEUE_CHECK_TIME)
 
     def stop(self, log: bool = True):
         """Request the experiment subprocess to stop by sending the string :code:`stop`
@@ -1629,6 +1639,25 @@ class ExpWidget(QWidget):
             if log:
                 logging.info(
                     'Not stopping the experiment process because it is not running.'
+                )
+    
+    def kill(self, log: bool = True):
+        """Request the experiment subprocess to stop by sending the string :code:`stop`
+        to :code:`queue_to_exp`.
+
+        Args:
+            log: if True, log when stop is called but the process isn't running.
+        """
+
+        if self.run_proc.running():
+            self.run_proc.kill()
+            logging.info('Processed killed.')
+            self.status.setStyleSheet("color: black; background-color: red; border: 4px solid black;")
+            self.status.setText(f"{self.experiments.currentText()} scan killed.")
+        else:
+            if log:
+                logging.info(
+                    'Not killing the experiment process because it is not running.'
                 )
 
 

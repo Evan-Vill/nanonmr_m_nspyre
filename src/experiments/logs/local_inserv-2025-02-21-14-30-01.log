@@ -2995,3 +2995,32 @@ AdaptBlockInfo(insts=((0, {}), (2, {}), (4, {'idx': 0, 'res': '$4load_global.0'}
 2025-02-21 15:02:36.942 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 54332)
 2025-02-21 15:02:36.942 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn44' object at 0x00000295EEC15CD0> disconnected.
 2025-02-21 15:02:36.942 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 54271)
+2025-02-24 08:47:54.095 [    INFO] (           server.py: 356) Client <rpyc.core.protocol.Connection 'conn1' object at 0x00000295F72B5310> disconnected.
+2025-02-24 08:47:54.095 [    INFO] (           server.py: 207) goodbye ('127.0.0.1', 52483)
+2025-02-24 08:48:02.343 [    INFO] (           inserv.py: 123) exiting...
+2025-02-24 08:48:02.343 [    INFO] (           server.py: 316) Removing devices...
+2025-02-24 08:48:02.343 [    INFO] (           server.py: 234) Deleted device [sg].
+2025-02-24 08:48:02.343 [   DEBUG] (         resource.py: 317) TCPIP0::10.135.70.65::inst0::INSTR - closing
+2025-02-24 08:48:02.343 [   DEBUG] (              rpc.py: 227) Make call 23, 1, <bound method Vxi11Packer.pack_device_link of <pyvisa_py.protocols.vxi11.Vxi11Packer object at 0x00000295E4B40E50>>, <bound method Vxi11Unpacker.unpack_device_error of <pyvisa_py.protocols.vxi11.Vxi11Unpacker object at 0x00000295E4B40ED0>>
+2025-02-24 08:48:02.343 [   DEBUG] (              rpc.py: 298) Sending record through <socket.socket fd=900, family=2, type=1, proto=0, laddr=('10.135.70.59', 52459), raddr=('10.135.70.65', 1000)>: b'\x00\x00\x00\x8f\x00\x00\x00\x00\x00\x00\x00\x02\x00\x06\x07\xaf\x00\x00\x00\x01\x00\x00\x00\x17\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01'
+2025-02-24 08:48:02.343 [   DEBUG] (              rpc.py: 499) RawTCPClient: procedure type 23
+2025-02-24 08:48:04.085 [   DEBUG] (              rpc.py: 357) received b'\x80\x00\x00\x1c'
+2025-02-24 08:48:04.085 [   DEBUG] (              rpc.py: 357) received b'\x00\x00\x00\x8f\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+2025-02-24 08:48:04.085 [   DEBUG] (              rpc.py: 406) Received record through <socket.socket fd=900, family=2, type=1, proto=0, laddr=('10.135.70.59', 52459), raddr=('10.135.70.65', 1000)>: bytearray(b'\x00\x00\x00\x8f\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+2025-02-24 08:48:04.085 [   DEBUG] (              rpc.py: 489) RawTCPClient: closing socket
+2025-02-24 08:48:04.085 [   DEBUG] (         resource.py: 320) TCPIP0::10.135.70.65::inst0::INSTR - is closed
+2025-02-24 08:48:04.085 [    INFO] (           server.py: 234) Deleted device [filter_wheel].
+2025-02-24 08:48:04.085 [    INFO] (           server.py: 234) Deleted device [laser].
+2025-02-24 08:48:04.085 [    INFO] (           server.py: 234) Deleted device [laser_shutter].
+2025-02-24 08:48:04.085 [    INFO] (           server.py: 234) Deleted device [pickoff_shutter].
+2025-02-24 08:48:04.085 [    INFO] (           server.py: 234) Deleted device [awg].
+2025-02-24 08:48:04.094 [    INFO] (           server.py: 234) Deleted device [ps].
+2025-02-24 08:48:04.094 [    INFO] (           server.py: 234) Deleted device [daq].
+2025-02-24 08:48:04.108 [    INFO] (           server.py: 234) Deleted device [zaber].
+2025-02-24 08:48:04.715 [    INFO] (           server.py: 234) Deleted device [thor_azi].
+2025-02-24 08:48:05.364 [    INFO] (           server.py: 234) Deleted device [thor_polar].
+2025-02-24 08:48:05.364 [    INFO] (           server.py: 320) Stopping RPyC server...
+2025-02-24 08:48:05.364 [    INFO] (           server.py: 123) listener closed
+2025-02-24 08:48:05.364 [    INFO] (           server.py: 271) server has terminated
+2025-02-24 08:48:05.364 [    INFO] (           server.py: 302) RPyC server stopped.
+2025-02-24 08:48:05.437 [   DEBUG] (        highlevel.py:3070) Closing ResourceManager (session: 6551471)

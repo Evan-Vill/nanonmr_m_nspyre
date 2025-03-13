@@ -1,0 +1,668 @@
+2025-03-05 10:47:29.046 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:30.397 [    INFO] (             misc.py: 208) Running process function [<bound method NanoNMRMagnetMotion.disable_all of <nnmr_magnet_motion.NanoNMRMagnetMotion object at 0x000001F72D3E1DD0>>] with args: [()] kwargs: [{}].
+2025-03-05 10:47:30.397 [    INFO] (gui_all_instruments_current.py: 652) All magnet stages have been parked upon startup of magnet alignment widget.
+2025-03-05 10:47:34.632 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:34.636 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:35.742 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:35.742 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:35.752 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:35.754 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:35.773 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:35.773 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:35.783 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:35.783 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:35.783 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:35.783 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:35.793 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:35.793 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:35.824 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:35.824 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:35.845 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:35.845 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:35.855 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:35.855 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:35.875 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:35.879 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:35.895 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:35.895 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:35.905 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:35.905 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:35.925 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:35.925 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:35.966 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:35.966 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:36.007 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:36.007 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:36.038 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:36.038 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:36.599 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:36.599 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:36.824 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:36.825 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:38.990 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:39.000 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:39.021 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:39.021 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:39.042 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:39.042 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:39.052 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:39.054 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:39.054 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:39.054 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:39.072 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:39.072 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:39.083 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:39.083 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:39.083 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:39.083 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:39.093 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:39.093 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:39.103 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:39.103 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:39.114 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:39.114 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:39.124 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:39.124 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:39.134 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:39.134 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:39.286 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:39.291 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:39.423 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:39.423 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:39.521 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:39.521 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:39.654 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:39.663 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:40.573 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:40.590 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:47:40.604 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:47:40.624 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:48:35.119 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:48:35.135 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:48:35.145 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:48:35.162 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:48:36.126 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:48:36.126 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:51:54.094 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:51:55.375 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:56:23.592 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:56:23.596 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:56:24.566 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:56:24.576 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:56:24.596 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:56:24.606 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:58:02.394 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:58:02.404 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:58:02.414 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:58:02.427 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 10:58:03.085 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 10:58:03.087 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 13:46:16.022 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 13:46:16.267 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 13:46:16.277 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 13:46:16.487 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 13:46:20.984 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 13:46:21.204 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 13:46:21.224 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 13:46:21.447 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 13:47:50.680 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 13:47:50.896 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 13:47:50.916 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 13:47:51.132 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 13:47:54.701 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 13:47:54.926 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 13:47:54.936 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 13:47:55.149 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:05:57.268 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:05:57.268 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:05:57.286 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:05:57.286 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:05:57.296 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:05:57.296 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:05:57.300 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:05:57.304 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:05:57.326 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:05:57.326 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:05:57.337 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:05:57.337 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:05:57.357 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:05:57.359 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:05:57.376 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:05:57.376 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:05:57.386 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:05:57.389 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:05:57.391 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:05:57.391 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:05:57.416 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:05:57.416 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:05:57.436 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:05:57.436 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:05:57.446 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:05:57.446 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:05:57.546 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:05:57.548 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:05:57.656 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:05:57.656 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:05:57.686 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:05:57.686 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:05:57.756 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:05:57.756 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:05:57.826 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:05:57.830 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:05:57.866 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:05:57.866 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:05:57.916 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:05:57.916 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:05:57.936 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:05:57.939 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:05:58.006 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:05:58.008 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:06:02.876 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:06:02.876 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:06:14.351 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:06:14.355 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:06:14.371 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:06:14.371 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:06:14.391 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:06:14.395 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:06:14.412 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:06:14.412 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:06:14.432 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:06:14.432 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:06:14.453 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:06:14.453 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:06:14.463 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:06:14.466 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:06:14.484 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:06:14.487 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:06:14.504 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:06:14.504 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:06:14.645 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:06:14.650 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:06:14.818 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:06:14.825 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:06:48.946 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:06:48.951 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:06:48.976 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:06:48.980 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:06:48.996 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:06:48.996 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:06:49.006 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:06:49.009 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:06:49.009 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:06:49.013 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:06:49.037 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:06:49.037 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:06:49.057 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:06:49.057 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:06:49.106 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:06:49.108 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:06:49.190 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:06:49.190 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:06:49.220 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:06:49.220 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:06:49.241 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:06:49.244 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:06:50.429 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:06:50.445 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:06:50.463 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:06:50.473 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:07:41.549 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:07:41.559 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:07:41.569 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:07:41.579 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:07:50.047 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:07:50.050 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:33.292 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:33.296 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:36.900 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:36.900 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:36.921 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:36.921 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:36.931 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:36.931 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:36.951 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:36.951 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:36.962 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:36.962 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:36.972 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:36.972 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:36.983 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:36.983 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:36.993 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:36.995 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:37.013 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:37.013 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:37.018 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:37.018 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:37.034 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:37.034 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:37.044 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:37.044 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:37.075 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:37.075 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:37.086 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:37.086 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:37.106 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:37.106 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:37.117 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:37.118 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:37.137 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:37.137 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:37.147 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:37.147 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:37.168 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:37.168 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:37.188 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:37.188 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:37.198 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:37.198 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:37.208 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:37.208 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:37.218 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:37.218 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:37.228 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:37.228 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:37.238 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:37.238 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:37.243 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:37.243 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:37.259 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:37.259 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:37.269 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:37.269 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:39.795 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:39.815 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:39.833 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:39.884 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:41.731 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:41.742 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:41.762 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:41.772 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:42.517 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:42.517 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:43.734 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:43.752 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:08:43.762 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:08:43.784 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:10:15.676 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:10:15.686 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:10:15.696 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:10:15.708 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:10:16.421 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:10:16.425 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:10:34.917 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:10:34.926 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:10:35.650 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:10:35.669 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:10:35.681 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:10:35.691 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:22:40.427 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:22:40.444 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:22:40.458 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:22:40.468 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:22:41.605 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:22:41.605 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:23:15.271 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:23:15.274 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:25:49.360 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:25:49.360 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:25:50.166 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:25:50.166 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:25:51.240 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:25:51.252 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:25:51.270 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:25:51.291 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:27:29.554 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:27:29.564 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:27:29.584 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:27:29.594 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:27:30.318 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:27:30.318 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:27:30.854 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:27:30.860 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:31:36.958 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:31:36.961 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:31:37.458 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:31:37.458 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:31:38.621 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:31:38.648 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:31:38.662 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:31:38.672 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:32:43.570 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:32:43.581 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:32:43.591 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:32:43.601 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:32:44.443 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:32:44.453 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:35:27.111 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:35:27.122 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:35:28.243 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:35:28.253 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:35:28.263 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:35:28.281 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:36:13.936 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:36:13.946 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:36:13.966 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:36:13.976 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:36:14.681 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:36:14.681 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:41:23.064 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:41:23.068 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:41:24.305 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:41:24.315 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:41:24.325 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:41:24.338 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:42:10.590 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:42:10.607 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:42:10.625 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:42:10.640 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:42:11.188 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:42:11.188 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:43:27.589 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:43:27.589 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:43:28.151 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:43:28.161 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:43:28.171 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:43:28.191 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:46:18.259 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:46:18.273 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:46:18.289 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:46:18.300 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:46:18.894 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:46:18.894 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:47:37.082 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:47:37.082 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:47:37.704 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:47:37.714 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:47:37.714 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:47:37.735 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:49:30.888 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:49:30.898 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:49:30.908 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:49:30.919 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:49:31.957 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:49:31.957 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:53:49.379 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:53:49.379 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:53:52.962 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:53:52.972 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:53:52.982 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:53:53.001 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:53:56.896 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:53:56.909 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:53:56.927 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:53:56.943 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 14:53:59.067 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 14:53:59.067 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:01:03.252 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:01:03.252 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:01:05.549 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:01:05.559 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:01:05.580 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:01:05.596 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:01:56.607 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:01:56.623 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:01:56.638 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:01:56.648 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:01:57.212 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:01:57.218 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:02:36.728 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:02:36.734 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:02:37.305 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:02:37.315 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:02:37.325 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:02:37.341 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:02:57.100 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:02:57.100 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:03:49.298 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:03:49.308 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:03:49.318 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:03:49.328 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:03:49.933 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:03:49.933 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:17:06.788 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:17:06.799 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:17:14.375 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:17:14.386 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:17:14.386 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:17:14.406 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:29:17.678 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:29:17.698 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:29:17.718 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:29:17.729 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:29:18.369 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:29:18.369 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:30:35.389 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:30:35.392 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:30:35.969 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:30:35.979 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:30:35.989 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:30:36.000 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:31:12.134 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:31:12.144 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:31:12.154 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:31:12.167 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:31:12.983 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:31:12.985 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:31:26.201 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:31:26.205 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:31:28.290 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:31:28.526 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:31:28.546 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:31:28.770 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:31:30.064 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:31:30.074 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:31:30.094 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:31:30.114 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:32:08.835 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:32:08.847 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:32:08.866 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:32:08.876 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:32:09.867 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:32:09.878 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:32:33.036 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:32:33.036 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:32:33.833 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:32:33.843 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:32:33.853 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:32:33.864 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:33:35.427 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:33:35.437 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:33:35.447 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:33:35.464 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:33:37.124 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:33:37.124 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:43:11.474 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:43:11.711 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 15:43:11.721 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 15:43:11.832 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:19:36.227 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:19:36.346 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:19:36.356 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:19:36.578 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:19:48.036 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:19:48.040 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:19:49.354 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:19:49.374 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:19:49.374 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:19:49.394 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:24:21.489 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:24:21.500 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:24:21.510 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:24:21.520 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:24:22.426 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:24:22.426 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:24:54.963 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:24:54.968 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:24:55.593 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:24:55.613 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:24:55.633 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:24:55.643 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:25:34.334 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:25:34.344 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:25:34.355 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:25:34.367 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:25:36.140 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:25:36.365 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:25:36.366 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:25:36.598 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:25:37.977 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:25:37.987 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:25:37.987 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:25:38.008 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:26:46.973 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:26:47.208 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:26:47.218 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:26:47.453 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:27:16.132 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:27:16.142 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:27:16.152 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:27:16.162 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:27:18.119 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:27:18.119 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:27:23.734 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:27:23.738 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:27:24.531 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:27:24.541 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:27:24.551 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:27:24.561 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:31:20.571 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:31:20.581 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:31:20.600 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:31:20.615 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:31:21.261 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:31:21.261 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:33:28.608 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:33:28.608 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:33:29.236 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:33:29.251 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:33:29.267 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:33:29.277 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:33:45.474 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:33:45.484 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:33:45.494 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:33:45.504 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:33:46.341 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:33:46.341 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:42:51.824 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:42:51.840 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:42:54.680 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:42:54.694 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 16:42:54.710 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 16:42:54.720 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 17:06:38.152 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 17:06:38.167 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 17:06:38.177 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 17:06:38.189 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 17:06:38.839 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 17:06:38.842 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 17:27:16.213 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 17:27:16.219 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 17:27:17.077 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 17:27:17.088 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 17:27:17.098 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 17:27:17.118 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 17:28:18.061 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 17:28:18.075 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 17:28:18.092 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 17:28:18.102 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 17:28:18.918 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 17:28:18.918 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 17:29:58.721 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 17:29:58.721 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 17:29:59.443 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 17:29:59.453 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 17:29:59.463 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 17:29:59.476 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 17:30:57.786 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 17:30:57.796 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 17:30:57.806 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 17:30:57.821 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 17:30:58.428 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 17:30:58.428 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 17:35:31.209 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 17:35:31.209 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 17:35:32.005 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 17:35:32.016 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 17:35:32.036 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 17:35:32.046 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 17:45:51.832 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 17:45:51.842 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 17:45:51.853 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 17:45:51.863 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 17:45:52.659 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 17:45:52.659 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 17:52:53.939 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 17:52:53.939 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 17:52:54.859 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 17:52:54.869 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 17:52:54.880 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 17:52:54.890 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:00:42.602 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:00:42.615 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:00:42.625 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:00:42.635 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:00:43.157 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:00:43.157 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:14:39.545 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:14:39.784 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:14:39.804 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:14:40.050 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:15:37.002 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:15:37.002 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:15:37.502 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:15:37.502 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:15:38.300 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:15:38.310 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:15:38.320 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:15:38.331 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:16:09.551 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:16:09.561 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:16:09.571 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:16:09.581 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:16:10.326 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:16:10.326 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:16:10.744 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:16:10.746 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:17:27.025 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:17:27.025 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:17:27.435 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:17:27.445 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:17:28.335 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:17:28.345 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:17:28.355 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:17:28.366 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:19:52.254 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:19:52.264 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:19:52.264 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:19:52.284 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:19:52.896 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:19:52.900 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:21:15.174 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:21:15.177 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:21:15.847 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:21:15.857 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:21:15.867 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:21:15.877 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:22:11.808 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:22:11.818 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:22:11.828 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:22:11.838 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:22:20.819 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:22:20.839 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:22:20.849 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:22:20.860 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:25:43.485 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:25:43.497 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:25:43.516 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:25:43.526 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:25:44.150 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:25:44.159 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:25:44.670 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:25:44.670 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:39:52.989 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:39:53.112 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:40:18.349 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-05 18:40:18.461 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068
+2025-03-05 18:46:55.243 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068

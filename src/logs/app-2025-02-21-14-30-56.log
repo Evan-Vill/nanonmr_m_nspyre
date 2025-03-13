@@ -108,3 +108,5 @@
 2025-02-22 14:56:33.278 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\nanonmr_m_nspyre\nnmr_nspyre\src\experiments\gui_experiments_current.py", line 726, in create_params_widget
 2025-02-22 14:56:33.278 [CRITICAL] (          logging.py:  32)     'widget': SpinBox(value = defaults[4], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)}}
 2025-02-22 14:56:33.278 [CRITICAL] (          logging.py:  32)                               ~~~~~~~~^^^
+2025-02-22 14:56:33.278 [CRITICAL] (          logging.py:  32) IndexError: list index out of range
+2025-02-24 08:47:54.095 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068

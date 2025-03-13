@@ -1,0 +1,26 @@
+2025-03-03 10:38:58.792 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-03 10:39:01.499 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-03 10:39:01.500 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\main.py", line 203, in _tree_item_double_click
+2025-03-03 10:39:01.501 [CRITICAL] (          logging.py:  32)     self._load_widget(tree_widget_item)
+2025-03-03 10:39:01.501 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\main.py", line 229, in _load_widget
+2025-03-03 10:39:01.501 [CRITICAL] (          logging.py:  32)     widget = widget_class(*widget_args, **widget_kwargs)
+2025-03-03 10:39:01.501 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-03-03 10:39:01.503 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\nanonmr_m_nspyre\nnmr_nspyre\src\experiments\gui_experiments_current.py", line 1669, in __init__
+2025-03-03 10:39:01.512 [CRITICAL] (          logging.py:  32)     super().__init__()
+2025-03-03 10:39:01.512 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 601, in __init__
+2025-03-03 10:39:01.512 [CRITICAL] (          logging.py:  32)     self.downsample_button.clicked.connect(self._downsample_clicked)
+2025-03-03 10:39:01.512 [CRITICAL] (          logging.py:  32)                                            ^^^^^^^^^^^^^^^^^^^^^^^^
+2025-03-03 10:39:01.514 [CRITICAL] (          logging.py:  32) AttributeError: 'FlexLinePlotWidgetAllDefaults' object has no attribute '_downsample_clicked'
+2025-03-03 10:39:24.952 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-03 10:39:24.952 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\main.py", line 203, in _tree_item_double_click
+2025-03-03 10:39:24.953 [CRITICAL] (          logging.py:  32)     self._load_widget(tree_widget_item)
+2025-03-03 10:39:24.954 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\main.py", line 229, in _load_widget
+2025-03-03 10:39:24.954 [CRITICAL] (          logging.py:  32)     widget = widget_class(*widget_args, **widget_kwargs)
+2025-03-03 10:39:24.954 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-03-03 10:39:24.955 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\nanonmr_m_nspyre\nnmr_nspyre\src\experiments\gui_experiments_current.py", line 1669, in __init__
+2025-03-03 10:39:24.955 [CRITICAL] (          logging.py:  32)     super().__init__()
+2025-03-03 10:39:24.955 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 601, in __init__
+2025-03-03 10:39:24.956 [CRITICAL] (          logging.py:  32)     self.fit_button.clicked.connect(self._fit_clicked)
+2025-03-03 10:39:24.956 [CRITICAL] (          logging.py:  32)                                            ^^^^^^^^^^^^
+2025-03-03 10:39:24.956 [CRITICAL] (          logging.py:  32) AttributeError: 'FlexLinePlotWidgetAllDefaults' object has no attribute '_downsample_clicked'
+2025-03-03 10:39:26.664 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068

@@ -45,10 +45,10 @@ with InstrumentServer() as local_inserv:
                      class_name = 'LaserShutter',
                      args = ['68800950'])
 
-    local_inserv.add(name = 'pickoff_shutter', 
-                     class_path = _HERE / 'thorlabs_laser_shutter_driver_current.py', 
-                     class_name = 'LaserShutter',
-                     args = ['68801142'])
+    # local_inserv.add(name = 'pickoff_shutter', 
+    #                  class_path = _HERE / 'thorlabs_laser_shutter_driver_current.py', 
+    #                  class_name = 'LaserShutter',
+    #                  args = ['68801142'])
     
     local_inserv.add(name = 'awg', 
                      class_path = _HERE / 'hdawg_driver_current.py', 

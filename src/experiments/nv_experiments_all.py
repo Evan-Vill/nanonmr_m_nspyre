@@ -188,15 +188,12 @@ class SpinMeasurements:
         with InstrumentManager() as mgr:
             laser = mgr.laser
             laser_shutter = mgr.laser_shutter
-            pickoff_shutter = mgr.pickoff_shutter
             sig_gen = mgr.sg
             ps = mgr.ps
             hdawg = mgr.awg
 
             laser.laser_off()
             laser_shutter.close_shutter()
-            if detector == 'BPD':
-                pickoff_shutter.close_shutter()
 
             sig_gen.set_rf_toggle(0)
             sig_gen.set_mod_toggle(0)

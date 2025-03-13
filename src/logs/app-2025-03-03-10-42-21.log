@@ -1,0 +1,3 @@
+2025-03-03 10:42:21.017 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-03 10:42:29.386 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-03-03 10:42:43.621 [    INFO] (          gateway.py: 173) Gateway disconnected from server at localhost:42068

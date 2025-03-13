@@ -1,0 +1,768 @@
+2025-03-12 10:31:55.592 [    INFO] (          gateway.py: 152) Gateway connected to instrument server at "localhost:42068".
+2025-03-12 10:33:13.317 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001F66A608FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_all.SpinMeasurements'>, 'fun_name': 'DEER_FID_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001F67107B950>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x000001F67108B690>, 'fun_args': [], 'fun_kwargs': {'runs': 120, 'iters': 10000, 'start': 5e-08, 'stop': 2e-05, 'num_pts': 50, 'array_type': 'geomspace', 'freq': 2312000000.0, 'rf_power': 0.00075, 'pi': 1.03e-07, 'pulse_axis': 'y', 'dark_freq': 559000000.0, 'awg_power': 0.25, 'dark_pi': 1.44e-07, 'n': 1, 'laser_power': 110, 'laser_init': 3e-05, 'laser_readout': 2.5e-06, 'sideband_freq': 30000000.0, 'sideband_power': 0.45, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 1024, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 1.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': True, 'dataset': 'fid', 'filename': '', 'directory': '//maurerlabnas/MaurerLab/ejvilla4/pH project/March 2025 Titration Curve/pH 11/', 'seq': 'DEER FID', 'fit': False, 'fit_live': False, 'fit_params': [0.0]}}].
+2025-03-12 10:33:24.987 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-03-12 11:38:24.599 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-03-12 11:38:24.712 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 11:38:24.712 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 11:38:24.712 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 11:38:24.712 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 11:38:24.712 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 11:38:24.712 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 11:38:24.712 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 11:38:24.712 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 11:38:24.712 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 11:38:24.712 [CRITICAL] (          logging.py:  32) KeyError: 'contrast_avg'
+2025-03-12 11:38:24.712 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 11:38:24.712 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 11:38:24.719 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 11:38:24.719 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 11:38:24.721 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 11:38:24.721 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 11:38:24.722 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 11:38:24.722 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 11:38:24.724 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 11:38:24.724 [CRITICAL] (          logging.py:  32) KeyError: 'contrast_latest'
+2025-03-12 11:38:24.724 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 11:38:24.724 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 11:38:24.724 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 11:38:24.724 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 11:38:24.724 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 11:38:24.724 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 11:38:24.724 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 11:38:24.724 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 11:38:24.724 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 11:38:24.724 [CRITICAL] (          logging.py:  32) KeyError: 'dark_sig_avg'
+2025-03-12 11:38:24.724 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 11:38:24.724 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 11:38:24.724 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 11:38:24.724 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 11:38:24.733 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 11:38:24.733 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 11:38:24.733 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 11:38:24.733 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 11:38:24.733 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 11:38:24.733 [CRITICAL] (          logging.py:  32) KeyError: 'dark_sig_latest'
+2025-03-12 11:38:24.733 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 11:38:24.733 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 11:38:24.733 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 11:38:24.733 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 11:38:24.733 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 11:38:24.733 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 11:38:24.743 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 11:38:24.743 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 11:38:24.743 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 11:38:24.743 [CRITICAL] (          logging.py:  32) KeyError: 'dark_bg_avg'
+2025-03-12 11:38:24.743 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 11:38:24.743 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 11:38:24.743 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 11:38:24.743 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 11:38:24.743 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 11:38:24.743 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 11:38:24.743 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 11:38:24.743 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 11:38:24.743 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 11:38:24.751 [CRITICAL] (          logging.py:  32) KeyError: 'dark_bg_latest'
+2025-03-12 11:38:24.751 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 11:38:24.751 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 11:38:24.751 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 11:38:24.751 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 11:38:24.751 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32) KeyError: 'echo_sig_avg'
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32) KeyError: 'echo_sig_latest'
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32) KeyError: 'echo_bg_avg'
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 11:38:24.753 [CRITICAL] (          logging.py:  32) KeyError: 'echo_bg_latest'
+2025-03-12 11:38:41.733 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-03-12 12:08:56.744 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-03-12 12:09:37.323 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001F66A608FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_all.SpinMeasurements'>, 'fun_name': 'rabi_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001F67107B950>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x000001F67108B690>, 'fun_args': [], 'fun_kwargs': {'runs': 120, 'iters': 10, 'start': 0.0, 'stop': 2e-07, 'num_pts': 50, 'freq': 2312000000.0, 'rf_power': 0.00075, 'pulse_axis': 'y', 'laser_power': 110, 'laser_init': 3e-05, 'laser_readout': 2.5e-06, 'sideband_freq': 30000000.0, 'sideband_power': 0.45, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 1024, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 1.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': False, 'dataset': 'rabi', 'filename': 'pH12', 'directory': '//maurerlabnas/MaurerLab/ejvilla4/pH project/March 2025 Titration Curve/pH 12/', 'seq': 'Rabi', 'fit': False, 'fit_live': False, 'fit_params': [0.02, 0.001, 200.0, 0.0, 1.0]}}].
+2025-03-12 12:09:57.485 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001F66A608FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_all.SpinMeasurements'>, 'fun_name': 'rabi_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001F67107B950>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x000001F67108B690>, 'fun_args': [], 'fun_kwargs': {'runs': 120, 'iters': 100, 'start': 0.0, 'stop': 2e-07, 'num_pts': 50, 'freq': 2312000000.0, 'rf_power': 0.00075, 'pulse_axis': 'y', 'laser_power': 110, 'laser_init': 3e-05, 'laser_readout': 2.5e-06, 'sideband_freq': 30000000.0, 'sideband_power': 0.45, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 1024, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 1.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': True, 'dataset': 'rabi', 'filename': 'pH12', 'directory': '//maurerlabnas/MaurerLab/ejvilla4/pH project/March 2025 Titration Curve/pH 12/', 'seq': 'Rabi', 'fit': True, 'fit_live': True, 'fit_params': [0.02, 0.001, 200.0, 0.0, 1.0]}}].
+2025-03-12 12:10:51.624 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-03-12 12:10:56.912 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001F66A608FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_all.SpinMeasurements'>, 'fun_name': 'pulsed_odmr_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001F67107B950>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x000001F67108B690>, 'fun_args': [], 'fun_kwargs': {'runs': 120, 'iters': 100, 'num_pts': 50, 'center_freq': 2312000000.0, 'half_span_sideband_freq': 20000000.0, 'rf_power': 0.00075, 'pi': 1.02e-07, 'laser_power': 110, 'laser_init': 3e-05, 'laser_readout': 2.5e-06, 'sideband_freq': 30000000.0, 'sideband_power': 0.45, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 1024, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 1.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': True, 'dataset': 'odmr', 'filename': 'pH12', 'directory': '//maurerlabnas/MaurerLab/ejvilla4/pH project/March 2025 Titration Curve/pH 12/', 'seq': 'Pulsed ODMR', 'fit': True, 'fit_live': True, 'fit_params': [0.01, 2.0, 0.006, 1.0]}}].
+2025-03-12 12:11:17.723 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001F66A608FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_all.SpinMeasurements'>, 'fun_name': 'pulsed_odmr_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001F67107B950>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x000001F67108B690>, 'fun_args': [], 'fun_kwargs': {'runs': 120, 'iters': 100, 'num_pts': 50, 'center_freq': 2312000000.0, 'half_span_sideband_freq': 20000000.0, 'rf_power': 0.00075, 'pi': 1.02e-07, 'laser_power': 110, 'laser_init': 3e-05, 'laser_readout': 2.5e-06, 'sideband_freq': 30000000.0, 'sideband_power': 0.45, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 1024, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 1.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': True, 'dataset': 'odmr', 'filename': 'pH12', 'directory': '//maurerlabnas/MaurerLab/ejvilla4/pH project/March 2025 Titration Curve/pH 12/', 'seq': 'Pulsed ODMR', 'fit': True, 'fit_live': True, 'fit_params': [0.01, 2.31, 0.006, 1.0]}}].
+2025-03-12 12:12:01.827 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-03-12 12:12:01.959 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 12:12:01.959 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 12:12:01.959 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 12:12:01.959 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 12:12:01.959 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 12:12:01.959 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 12:12:01.959 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 12:12:01.969 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 12:12:01.969 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 12:12:01.969 [CRITICAL] (          logging.py:  32) KeyError: 'div_avg'
+2025-03-12 12:12:01.971 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 12:12:01.971 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 12:12:01.971 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 12:12:01.971 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 12:12:01.971 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 12:12:01.971 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 12:12:01.971 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 12:12:01.971 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 12:12:01.971 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 12:12:01.971 [CRITICAL] (          logging.py:  32) KeyError: 'div_latest'
+2025-03-12 12:12:42.898 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001F66A608FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_all.SpinMeasurements'>, 'fun_name': 'MW_T1_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001F67107B950>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x000001F67108B690>, 'fun_args': [], 'fun_kwargs': {'runs': 120, 'iters': 10000, 'start': 5e-08, 'stop': 0.02, 'num_pts': 50, 'array_type': 'geomspace', 'freq': 2312000000.0, 'rf_power': 0.00075, 'pi': 1.02e-07, 'pulse_axis': 'y', 'laser_power': 110, 'laser_init': 3e-05, 'laser_readout': 2.5e-06, 'sideband_freq': 30000000.0, 'sideband_power': 0.45, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 1024, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 1.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': True, 'dataset': 't1', 'filename': 'pH12', 'directory': '//maurerlabnas/MaurerLab/ejvilla4/pH project/March 2025 Titration Curve/pH 12/', 'seq': 'MW T1', 'fit': True, 'fit_live': True, 'fit_params': [0.01, 1.0, 1.0, 0.0]}}].
+2025-03-12 12:49:18.684 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-03-12 12:49:18.841 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 12:49:18.841 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 12:49:18.845 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 12:49:18.845 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 12:49:18.845 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 12:49:18.845 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 12:49:18.845 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 12:49:18.845 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 12:49:18.845 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 12:49:18.848 [CRITICAL] (          logging.py:  32) KeyError: 'diff_avg'
+2025-03-12 12:49:18.848 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 12:49:18.848 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 12:49:18.848 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 12:49:18.848 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 12:49:18.848 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 12:49:18.848 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 12:49:18.848 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 12:49:18.848 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 12:49:18.848 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 12:49:18.848 [CRITICAL] (          logging.py:  32) KeyError: 'diff_latest'
+2025-03-12 12:49:18.848 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 12:49:18.848 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32) KeyError: 'sig_avg'
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32) KeyError: 'sig_latest'
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32) KeyError: 'sig_first'
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32) KeyError: 'sig_latest_10'
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 12:49:18.858 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 12:49:18.869 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 12:49:18.869 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 12:49:18.869 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 12:49:18.869 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 12:49:18.869 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 12:49:18.869 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 12:49:18.869 [CRITICAL] (          logging.py:  32) KeyError: 'bg_avg'
+2025-03-12 12:49:18.869 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 12:49:18.869 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 12:49:18.869 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 12:49:18.869 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 12:49:18.869 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 12:49:18.869 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 12:49:18.869 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 12:49:18.869 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 12:49:18.869 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 12:49:18.869 [CRITICAL] (          logging.py:  32) KeyError: 'bg_latest'
+2025-03-12 12:49:27.218 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001F66A608FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_all.SpinMeasurements'>, 'fun_name': 'DEER_rabi_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001F67107B950>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x000001F67108B690>, 'fun_args': [], 'fun_kwargs': {'runs': 120, 'iters': 1000, 'start': 3e-09, 'stop': 3e-07, 'num_pts': 100, 'tau': 8e-07, 'freq': 2312000000.0, 'rf_power': 0.00075, 'pi': 1.02e-07, 'pulse_axis': 'y', 'dark_freq': 559000000.0, 'awg_power': 0.25, 'laser_power': 110, 'laser_init': 3e-05, 'laser_readout': 2.5e-06, 'sideband_freq': 30000000.0, 'sideband_power': 0.45, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 1024, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 1.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': True, 'dataset': 'deer rabi', 'filename': 'pH12', 'directory': '//maurerlabnas/MaurerLab/ejvilla4/pH project/March 2025 Titration Curve/pH 12/', 'seq': 'DEER Rabi', 'fit': True, 'fit_live': True, 'fit_params': [0.1, 0.001, 100.0, 0.0, 1.0]}}].
+2025-03-12 12:58:22.921 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001F66A608FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_all.SpinMeasurements'>, 'fun_name': 'DEER_rabi_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001F67107B950>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x000001F67108B690>, 'fun_args': [], 'fun_kwargs': {'runs': 120, 'iters': 10000, 'start': 3e-09, 'stop': 3e-07, 'num_pts': 100, 'tau': 8e-07, 'freq': 2312000000.0, 'rf_power': 0.00075, 'pi': 1.02e-07, 'pulse_axis': 'y', 'dark_freq': 559000000.0, 'awg_power': 0.25, 'laser_power': 110, 'laser_init': 3e-05, 'laser_readout': 2.5e-06, 'sideband_freq': 30000000.0, 'sideband_power': 0.45, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 1024, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 1.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': True, 'dataset': 'deer rabi', 'filename': 'pH12', 'directory': '//maurerlabnas/MaurerLab/ejvilla4/pH project/March 2025 Titration Curve/pH 12/', 'seq': 'DEER Rabi', 'fit': True, 'fit_live': True, 'fit_params': [0.1, 0.001, 100.0, 0.0, 1.0]}}].
+2025-03-12 13:20:59.310 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-03-12 13:21:02.980 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001F66A608FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_all.SpinMeasurements'>, 'fun_name': 'DEER_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001F67107B950>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x000001F67108B690>, 'fun_args': [], 'fun_kwargs': {'runs': 120, 'iters': 7000, 'start': 500000000.0, 'stop': 620000000.0, 'num_pts': 100, 'tau': 8e-07, 'freq': 2312000000.0, 'rf_power': 0.00075, 'pi': 1.02e-07, 'pulse_axis': 'y', 'awg_power': 0.25, 'dark_pi': 1.46e-07, 'drive_type': 'Pulsed', 'laser_power': 110, 'laser_init': 3e-05, 'laser_readout': 2.5e-06, 'sideband_freq': 30000000.0, 'sideband_power': 0.45, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 1024, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 1.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': True, 'dataset': 'deer', 'filename': 'pH12', 'directory': '//maurerlabnas/MaurerLab/ejvilla4/pH project/March 2025 Titration Curve/pH 12/', 'seq': 'DEER', 'fit': True, 'fit_live': True, 'fit_params': [0.1, 560.0, 10.0, 1.0]}}].
+2025-03-12 13:30:11.902 [   ERROR] (      base_events.py:1771) Task exception was never retrieved
+future: <Task finished name='Task-31136' coro=<DataSink._main() done, defined at C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\sink.py:109> exception=RuntimeError('Maximum diff size exceeded. This is a consequence of memory build-up due to the sink not being able to keep up with the data rate. Reduce the data rate or increase the client processing throughput.') created at C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\tasks.py:374>
+source_traceback: Object created at (most recent call last):
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\threading.py", line 995, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\threading.py", line 1038, in _bootstrap_inner
+    self.run()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\threading.py", line 975, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\_asyncio_worker.py", line 86, in _event_loop_thread
+    self._event_loop.run_forever()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\base_events.py", line 607, in run_forever
+    self._run_once()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\base_events.py", line 1914, in _run_once
+    handle._run()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\events.py", line 80, in _run
+    self._context.run(self._callback, *self._args)
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\_asyncio_worker.py", line 93, in _main_helper
+    asyncio.create_task(self._main())
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\tasks.py", line 374, in create_task
+    task = loop.create_task(coro)
+Traceback (most recent call last):
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\sink.py", line 210, in _main
+    self._queue.put_nowait(pickle_diff)
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\queues.py", line 143, in put_nowait
+    raise QueueFull
+asyncio.queues.QueueFull
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\sink.py", line 219, in _main
+    raise RuntimeError(
+RuntimeError: Maximum diff size exceeded. This is a consequence of memory build-up due to the sink not being able to keep up with the data rate. Reduce the data rate or increase the client processing throughput.
+2025-03-12 14:12:51.644 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-03-12 14:13:05.614 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001F66A608FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_all.SpinMeasurements'>, 'fun_name': 'DEER_FID_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001F67107B950>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x000001F67108B690>, 'fun_args': [], 'fun_kwargs': {'runs': 120, 'iters': 10000, 'start': 5e-08, 'stop': 2e-05, 'num_pts': 50, 'array_type': 'geomspace', 'freq': 2312000000.0, 'rf_power': 0.00075, 'pi': 1.02e-07, 'pulse_axis': 'y', 'dark_freq': 559000000.0, 'awg_power': 0.25, 'dark_pi': 1.46e-07, 'n': 1, 'laser_power': 110, 'laser_init': 3e-05, 'laser_readout': 2.5e-06, 'sideband_freq': 30000000.0, 'sideband_power': 0.45, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 1024, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 1.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': True, 'dataset': 'fid', 'filename': 'pH12', 'directory': '//maurerlabnas/MaurerLab/ejvilla4/pH project/March 2025 Titration Curve/pH 12/', 'seq': 'DEER FID', 'fit': False, 'fit_live': False, 'fit_params': [0.0]}}].
+2025-03-12 14:20:19.992 [   ERROR] (      base_events.py:1771) Task exception was never retrieved
+future: <Task finished name='Task-1' coro=<DataSink._main() done, defined at C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\sink.py:109> exception=RuntimeError('Maximum diff size exceeded. This is a consequence of memory build-up due to the sink not being able to keep up with the data rate. Reduce the data rate or increase the client processing throughput.') created at C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\tasks.py:374>
+source_traceback: Object created at (most recent call last):
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\threading.py", line 995, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\threading.py", line 1038, in _bootstrap_inner
+    self.run()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\threading.py", line 975, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\_asyncio_worker.py", line 86, in _event_loop_thread
+    self._event_loop.run_forever()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\base_events.py", line 607, in run_forever
+    self._run_once()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\base_events.py", line 1914, in _run_once
+    handle._run()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\events.py", line 80, in _run
+    self._context.run(self._callback, *self._args)
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\_asyncio_worker.py", line 93, in _main_helper
+    asyncio.create_task(self._main())
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\tasks.py", line 374, in create_task
+    task = loop.create_task(coro)
+Traceback (most recent call last):
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\sink.py", line 210, in _main
+    self._queue.put_nowait(pickle_diff)
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\queues.py", line 143, in put_nowait
+    raise QueueFull
+asyncio.queues.QueueFull
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\sink.py", line 219, in _main
+    raise RuntimeError(
+RuntimeError: Maximum diff size exceeded. This is a consequence of memory build-up due to the sink not being able to keep up with the data rate. Reduce the data rate or increase the client processing throughput.
+2025-03-12 14:47:29.459 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-03-12 14:47:29.538 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 14:47:29.538 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 14:47:29.538 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 14:47:29.538 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 14:47:29.538 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 14:47:29.538 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 14:47:29.538 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 14:47:29.538 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 14:47:29.538 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 14:47:29.538 [CRITICAL] (          logging.py:  32) KeyError: 'echo_avg'
+2025-03-12 14:47:29.548 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 14:47:29.548 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 14:47:29.548 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 14:47:29.548 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 14:47:29.548 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 14:47:29.548 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 14:47:29.548 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 14:47:29.548 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 14:47:29.559 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 14:47:29.559 [CRITICAL] (          logging.py:  32) KeyError: 'dark_sig_avg'
+2025-03-12 14:47:29.559 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 14:47:29.559 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 14:47:29.559 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 14:47:29.559 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 14:47:29.563 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 14:47:29.563 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 14:47:29.563 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 14:47:29.563 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 14:47:29.563 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 14:47:29.563 [CRITICAL] (          logging.py:  32) KeyError: 'dark_sig_latest'
+2025-03-12 14:47:29.563 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 14:47:29.563 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 14:47:29.563 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 14:47:29.563 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 14:47:29.569 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 14:47:29.569 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 14:47:29.569 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 14:47:29.569 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 14:47:29.569 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 14:47:29.569 [CRITICAL] (          logging.py:  32) KeyError: 'dark_bg_avg'
+2025-03-12 14:47:29.569 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 14:47:29.575 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 14:47:29.575 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 14:47:29.575 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 14:47:29.575 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 14:47:29.575 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 14:47:29.575 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32) KeyError: 'dark_bg_latest'
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32) KeyError: 'echo_sig_avg'
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32) KeyError: 'echo_sig_latest'
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32) KeyError: 'echo_bg_avg'
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 14:47:29.579 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 14:47:29.589 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 14:47:29.589 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 14:47:29.589 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 14:47:29.589 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 14:47:29.589 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 14:47:29.589 [CRITICAL] (          logging.py:  32) KeyError: 'echo_bg_latest'
+2025-03-12 14:48:50.001 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-03-12 14:54:35.154 [   ERROR] (      base_events.py:1771) Task exception was never retrieved
+future: <Task finished name='Task-92350' coro=<DataSink._main() done, defined at C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\sink.py:109> exception=RuntimeError('Maximum diff size exceeded. This is a consequence of memory build-up due to the sink not being able to keep up with the data rate. Reduce the data rate or increase the client processing throughput.') created at C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\tasks.py:374>
+source_traceback: Object created at (most recent call last):
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\threading.py", line 995, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\threading.py", line 1038, in _bootstrap_inner
+    self.run()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\threading.py", line 975, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\_asyncio_worker.py", line 86, in _event_loop_thread
+    self._event_loop.run_forever()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\base_events.py", line 607, in run_forever
+    self._run_once()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\base_events.py", line 1914, in _run_once
+    handle._run()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\events.py", line 80, in _run
+    self._context.run(self._callback, *self._args)
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\_asyncio_worker.py", line 93, in _main_helper
+    asyncio.create_task(self._main())
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\tasks.py", line 374, in create_task
+    task = loop.create_task(coro)
+Traceback (most recent call last):
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\sink.py", line 210, in _main
+    self._queue.put_nowait(pickle_diff)
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\queues.py", line 143, in put_nowait
+    raise QueueFull
+asyncio.queues.QueueFull
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\sink.py", line 219, in _main
+    raise RuntimeError(
+RuntimeError: Maximum diff size exceeded. This is a consequence of memory build-up due to the sink not being able to keep up with the data rate. Reduce the data rate or increase the client processing throughput.
+2025-03-12 14:55:24.802 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-03-12 14:55:49.680 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-03-12 14:57:40.561 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-03-12 14:58:37.531 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-03-12 15:02:30.473 [   ERROR] (      base_events.py:1771) Task exception was never retrieved
+future: <Task finished name='Task-116419' coro=<DataSink._main() done, defined at C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\sink.py:109> exception=RuntimeError('Maximum diff size exceeded. This is a consequence of memory build-up due to the sink not being able to keep up with the data rate. Reduce the data rate or increase the client processing throughput.') created at C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\tasks.py:374>
+source_traceback: Object created at (most recent call last):
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\threading.py", line 995, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\threading.py", line 1038, in _bootstrap_inner
+    self.run()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\threading.py", line 975, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\_asyncio_worker.py", line 86, in _event_loop_thread
+    self._event_loop.run_forever()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\base_events.py", line 607, in run_forever
+    self._run_once()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\base_events.py", line 1914, in _run_once
+    handle._run()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\events.py", line 80, in _run
+    self._context.run(self._callback, *self._args)
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\_asyncio_worker.py", line 93, in _main_helper
+    asyncio.create_task(self._main())
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\tasks.py", line 374, in create_task
+    task = loop.create_task(coro)
+Traceback (most recent call last):
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\sink.py", line 210, in _main
+    self._queue.put_nowait(pickle_diff)
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\queues.py", line 143, in put_nowait
+    raise QueueFull
+asyncio.queues.QueueFull
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\sink.py", line 219, in _main
+    raise RuntimeError(
+RuntimeError: Maximum diff size exceeded. This is a consequence of memory build-up due to the sink not being able to keep up with the data rate. Reduce the data rate or increase the client processing throughput.
+2025-03-12 15:04:46.568 [   ERROR] (      base_events.py:1771) Task exception was never retrieved
+future: <Task finished name='Task-121999' coro=<DataSink._main() done, defined at C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\sink.py:109> exception=RuntimeError('Maximum diff size exceeded. This is a consequence of memory build-up due to the sink not being able to keep up with the data rate. Reduce the data rate or increase the client processing throughput.') created at C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\tasks.py:374>
+source_traceback: Object created at (most recent call last):
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\threading.py", line 995, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\threading.py", line 1038, in _bootstrap_inner
+    self.run()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\threading.py", line 975, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\_asyncio_worker.py", line 86, in _event_loop_thread
+    self._event_loop.run_forever()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\base_events.py", line 607, in run_forever
+    self._run_once()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\base_events.py", line 1914, in _run_once
+    handle._run()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\events.py", line 80, in _run
+    self._context.run(self._callback, *self._args)
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\_asyncio_worker.py", line 93, in _main_helper
+    asyncio.create_task(self._main())
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\tasks.py", line 374, in create_task
+    task = loop.create_task(coro)
+Traceback (most recent call last):
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\sink.py", line 210, in _main
+    self._queue.put_nowait(pickle_diff)
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\queues.py", line 143, in put_nowait
+    raise QueueFull
+asyncio.queues.QueueFull
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\sink.py", line 219, in _main
+    raise RuntimeError(
+RuntimeError: Maximum diff size exceeded. This is a consequence of memory build-up due to the sink not being able to keep up with the data rate. Reduce the data rate or increase the client processing throughput.
+2025-03-12 15:45:06.678 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-03-12 15:45:06.759 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 15:45:06.759 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 15:45:06.759 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 15:45:06.759 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 15:45:06.759 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 15:45:06.767 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 15:45:06.767 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 15:45:06.768 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 15:45:06.768 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 15:45:06.769 [CRITICAL] (          logging.py:  32) KeyError: 'contrast_latest'
+2025-03-12 15:45:06.769 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 15:45:06.771 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 15:45:06.771 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 15:45:06.771 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 15:45:06.771 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 15:45:06.771 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 15:45:06.771 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 15:45:06.771 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 15:45:06.771 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 15:45:06.771 [CRITICAL] (          logging.py:  32) KeyError: 'dark_sig_avg'
+2025-03-12 15:45:06.771 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 15:45:06.771 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 15:45:06.771 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 15:45:06.771 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 15:45:06.771 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 15:45:06.779 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 15:45:06.779 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 15:45:06.779 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 15:45:06.779 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 15:45:06.779 [CRITICAL] (          logging.py:  32) KeyError: 'dark_sig_latest'
+2025-03-12 15:45:06.779 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 15:45:06.779 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 15:45:06.779 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 15:45:06.779 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 15:45:06.779 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 15:45:06.779 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 15:45:06.779 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 15:45:06.779 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 15:45:06.779 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 15:45:06.779 [CRITICAL] (          logging.py:  32) KeyError: 'dark_bg_avg'
+2025-03-12 15:45:06.789 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 15:45:06.789 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 15:45:06.789 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 15:45:06.789 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 15:45:06.789 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 15:45:06.789 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 15:45:06.789 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 15:45:06.789 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 15:45:06.789 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 15:45:06.789 [CRITICAL] (          logging.py:  32) KeyError: 'dark_bg_latest'
+2025-03-12 15:45:06.789 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 15:45:06.789 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 15:45:06.789 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 15:45:06.789 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 15:45:06.789 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 15:45:06.789 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32) KeyError: 'echo_sig_avg'
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32) KeyError: 'echo_sig_latest'
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32) KeyError: 'echo_bg_avg'
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 15:45:06.799 [CRITICAL] (          logging.py:  32) KeyError: 'echo_bg_latest'
+2025-03-12 15:45:51.774 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001F66A608FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_all.SpinMeasurements'>, 'fun_name': 'odmr_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001F67107B950>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x000001F67108B690>, 'fun_args': [], 'fun_kwargs': {'runs': 120, 'iters': 10, 'num_pts': 50, 'center_freq': 2310000000.0, 'half_span_sideband_freq': 20000000.0, 'rf_power': 0.0001, 'probe': 2.5e-05, 'laser_power': 110, 'laser_init': 3e-05, 'laser_readout': 2.5e-06, 'sideband_freq': 30000000.0, 'sideband_power': 0.15, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 1024, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 1.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': False, 'dataset': 'odmr', 'filename': 'pH13', 'directory': '//maurerlabnas/MaurerLab/ejvilla4/pH project/March 2025 Titration Curve/pH 13 NaOH/', 'seq': 'CW ODMR', 'fit': True, 'fit_live': True, 'fit_params': [0.01, 2.312, 0.006, 1.0]}}].
+2025-03-12 15:46:00.344 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-03-12 15:46:33.443 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001F66A608FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_all.SpinMeasurements'>, 'fun_name': 'odmr_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001F67107B950>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x000001F67108B690>, 'fun_args': [], 'fun_kwargs': {'runs': 120, 'iters': 100, 'num_pts': 50, 'center_freq': 2310000000.0, 'half_span_sideband_freq': 20000000.0, 'rf_power': 0.0001, 'probe': 2.5e-05, 'laser_power': 110, 'laser_init': 3e-05, 'laser_readout': 2.5e-06, 'sideband_freq': 30000000.0, 'sideband_power': 0.15, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 1024, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 1.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': False, 'dataset': 'odmr', 'filename': 'pH13', 'directory': '//maurerlabnas/MaurerLab/ejvilla4/pH project/March 2025 Titration Curve/pH 13 NaOH/', 'seq': 'CW ODMR', 'fit': True, 'fit_live': True, 'fit_params': [0.01, 2.312, 0.006, 1.0]}}].
+2025-03-12 15:47:14.771 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001F66A608FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_all.SpinMeasurements'>, 'fun_name': 'odmr_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001F67107B950>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x000001F67108B690>, 'fun_args': [], 'fun_kwargs': {'runs': 120, 'iters': 200, 'num_pts': 50, 'center_freq': 2310000000.0, 'half_span_sideband_freq': 20000000.0, 'rf_power': 0.0001, 'probe': 2.5e-05, 'laser_power': 110, 'laser_init': 3e-05, 'laser_readout': 2.5e-06, 'sideband_freq': 30000000.0, 'sideband_power': 0.15, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 1024, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 1.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': False, 'dataset': 'odmr', 'filename': 'pH13', 'directory': '//maurerlabnas/MaurerLab/ejvilla4/pH project/March 2025 Titration Curve/pH 13 NaOH/', 'seq': 'CW ODMR', 'fit': True, 'fit_live': True, 'fit_params': [0.01, 2.312, 0.006, 1.0]}}].
+2025-03-12 15:48:14.659 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-03-12 15:48:20.155 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001F66A608FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_all.SpinMeasurements'>, 'fun_name': 'rabi_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001F67107B950>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x000001F67108B690>, 'fun_args': [], 'fun_kwargs': {'runs': 120, 'iters': 100, 'start': 0.0, 'stop': 2e-07, 'num_pts': 50, 'freq': 2312000000.0, 'rf_power': 0.00075, 'pulse_axis': 'y', 'laser_power': 110, 'laser_init': 3e-05, 'laser_readout': 2.5e-06, 'sideband_freq': 30000000.0, 'sideband_power': 0.45, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 1024, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 1.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': True, 'dataset': 'rabi', 'filename': 'pH13', 'directory': '//maurerlabnas/MaurerLab/ejvilla4/pH project/March 2025 Titration Curve/pH 13 NaOH/', 'seq': 'Rabi', 'fit': True, 'fit_live': False, 'fit_params': [0.02, 0.001, 200.0, 0.0, 1.0]}}].
+2025-03-12 15:48:28.420 [    INFO] ( flex_line_plot_3.py: 445) The plot [fit] is already shown. Ignoring show_plot request.
+2025-03-12 15:48:30.025 [    INFO] ( flex_line_plot_3.py: 445) The plot [fit] is already shown. Ignoring show_plot request.
+2025-03-12 15:48:32.519 [    INFO] ( flex_line_plot_3.py: 445) The plot [fit] is already shown. Ignoring show_plot request.
+2025-03-12 15:49:00.290 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-03-12 15:49:00.484 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 15:49:00.484 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 15:49:00.484 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 15:49:00.484 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 15:49:00.484 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 15:49:00.484 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 15:49:00.484 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 15:49:00.494 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 15:49:00.494 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 15:49:00.494 [CRITICAL] (          logging.py:  32) KeyError: 'div_avg'
+2025-03-12 15:49:00.494 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 15:49:00.495 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 15:49:00.495 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 15:49:00.495 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 15:49:00.495 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 15:49:00.495 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 15:49:00.495 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 15:49:00.495 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 15:49:00.495 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 15:49:00.495 [CRITICAL] (          logging.py:  32) KeyError: 'div_latest'
+2025-03-12 15:49:41.189 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001F66A608FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_all.SpinMeasurements'>, 'fun_name': 'MW_T1_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001F67107B950>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x000001F67108B690>, 'fun_args': [], 'fun_kwargs': {'runs': 120, 'iters': 10000, 'start': 5e-08, 'stop': 0.01, 'num_pts': 50, 'array_type': 'geomspace', 'freq': 2312000000.0, 'rf_power': 0.00075, 'pi': 1.02e-07, 'pulse_axis': 'y', 'laser_power': 0, 'laser_init': 3e-05, 'laser_readout': 2.5e-06, 'sideband_freq': 30000000.0, 'sideband_power': 0.45, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 1024, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 1.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': True, 'dataset': 't1', 'filename': 'pH13', 'directory': '//maurerlabnas/MaurerLab/ejvilla4/pH project/March 2025 Titration Curve/pH 13 NaOH/', 'seq': 'MW T1', 'fit': True, 'fit_live': True, 'fit_params': [0.01, 1.0, 1.0, 0.0]}}].
+2025-03-12 15:50:15.243 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001F66A608FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_all.SpinMeasurements'>, 'fun_name': 'MW_T1_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001F67107B950>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x000001F67108B690>, 'fun_args': [], 'fun_kwargs': {'runs': 120, 'iters': 10000, 'start': 5e-08, 'stop': 0.01, 'num_pts': 50, 'array_type': 'geomspace', 'freq': 2312000000.0, 'rf_power': 0.00075, 'pi': 1.02e-07, 'pulse_axis': 'y', 'laser_power': 110, 'laser_init': 3e-05, 'laser_readout': 2.5e-06, 'sideband_freq': 30000000.0, 'sideband_power': 0.45, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 1024, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 1.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': True, 'dataset': 't1', 'filename': 'pH13', 'directory': '//maurerlabnas/MaurerLab/ejvilla4/pH project/March 2025 Titration Curve/pH 13 NaOH/', 'seq': 'MW T1', 'fit': True, 'fit_live': True, 'fit_params': [0.01, 1.0, 1.0, 0.0]}}].
+2025-03-12 18:00:04.751 [   ERROR] (      base_events.py:1771) Task exception was never retrieved
+future: <Task finished name='Task-115833' coro=<DataSink._main() done, defined at C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\sink.py:109> exception=RuntimeError('Maximum diff size exceeded. This is a consequence of memory build-up due to the sink not being able to keep up with the data rate. Reduce the data rate or increase the client processing throughput.') created at C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\tasks.py:374>
+source_traceback: Object created at (most recent call last):
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\threading.py", line 995, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\threading.py", line 1038, in _bootstrap_inner
+    self.run()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\threading.py", line 975, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\_asyncio_worker.py", line 86, in _event_loop_thread
+    self._event_loop.run_forever()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\base_events.py", line 607, in run_forever
+    self._run_once()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\base_events.py", line 1914, in _run_once
+    handle._run()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\events.py", line 80, in _run
+    self._context.run(self._callback, *self._args)
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\_asyncio_worker.py", line 93, in _main_helper
+    asyncio.create_task(self._main())
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\tasks.py", line 374, in create_task
+    task = loop.create_task(coro)
+Traceback (most recent call last):
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\sink.py", line 210, in _main
+    self._queue.put_nowait(pickle_diff)
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\queues.py", line 143, in put_nowait
+    raise QueueFull
+asyncio.queues.QueueFull
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\sink.py", line 219, in _main
+    raise RuntimeError(
+RuntimeError: Maximum diff size exceeded. This is a consequence of memory build-up due to the sink not being able to keep up with the data rate. Reduce the data rate or increase the client processing throughput.
+2025-03-12 18:00:04.755 [   ERROR] (      base_events.py:1771) Task exception was never retrieved
+future: <Task finished name='Task-38244' coro=<DataSink._main() done, defined at C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\sink.py:109> exception=RuntimeError('Maximum diff size exceeded. This is a consequence of memory build-up due to the sink not being able to keep up with the data rate. Reduce the data rate or increase the client processing throughput.') created at C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\tasks.py:374>
+source_traceback: Object created at (most recent call last):
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\threading.py", line 995, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\threading.py", line 1038, in _bootstrap_inner
+    self.run()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\threading.py", line 975, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\_asyncio_worker.py", line 86, in _event_loop_thread
+    self._event_loop.run_forever()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\base_events.py", line 607, in run_forever
+    self._run_once()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\base_events.py", line 1914, in _run_once
+    handle._run()
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\events.py", line 80, in _run
+    self._context.run(self._callback, *self._args)
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\_asyncio_worker.py", line 93, in _main_helper
+    asyncio.create_task(self._main())
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\tasks.py", line 374, in create_task
+    task = loop.create_task(coro)
+Traceback (most recent call last):
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\sink.py", line 210, in _main
+    self._queue.put_nowait(pickle_diff)
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\asyncio\queues.py", line 143, in put_nowait
+    raise QueueFull
+asyncio.queues.QueueFull
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\data\sink.py", line 219, in _main
+    raise RuntimeError(
+RuntimeError: Maximum diff size exceeded. This is a consequence of memory build-up due to the sink not being able to keep up with the data rate. Reduce the data rate or increase the client processing throughput.
+2025-03-12 18:50:00.977 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-03-12 18:50:04.934 [    INFO] (             save.py:  72) Saved data set [t1] to [//maurerlabnas/MaurerLab/ejvilla4/pH project/March 2025 Titration Curve/pH 13 NaOH/25_03_12/t1/t1_pH13_long.json.json].
+2025-03-12 18:50:04.937 [    INFO] (  _asyncio_worker.py:  89) Source [('localhost', 30101)] closed.
+2025-03-12 18:52:18.973 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-03-12 18:52:19.231 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 18:52:19.231 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 18:52:19.232 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 18:52:19.232 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 18:52:19.233 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 18:52:19.233 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 18:52:19.233 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 18:52:19.236 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 18:52:19.236 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 18:52:19.236 [CRITICAL] (          logging.py:  32) KeyError: 'diff_avg'
+2025-03-12 18:52:19.237 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 18:52:19.237 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 18:52:19.237 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 18:52:19.237 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 18:52:19.238 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 18:52:19.239 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 18:52:19.240 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 18:52:19.241 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 18:52:19.241 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 18:52:19.242 [CRITICAL] (          logging.py:  32) KeyError: 'diff_latest'
+2025-03-12 18:52:19.244 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 18:52:19.244 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 18:52:19.245 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 18:52:19.245 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 18:52:19.245 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 18:52:19.245 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 18:52:19.245 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 18:52:19.246 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 18:52:19.246 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 18:52:19.246 [CRITICAL] (          logging.py:  32) KeyError: 'sig_avg'
+2025-03-12 18:52:19.246 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 18:52:19.246 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 18:52:19.246 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 18:52:19.247 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 18:52:19.247 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 18:52:19.247 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 18:52:19.247 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 18:52:19.248 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 18:52:19.248 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 18:52:19.248 [CRITICAL] (          logging.py:  32) KeyError: 'sig_latest'
+2025-03-12 18:52:19.249 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 18:52:19.249 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 18:52:19.249 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 18:52:19.249 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 18:52:19.250 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 18:52:19.250 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 18:52:19.250 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 18:52:19.250 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 18:52:19.251 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 18:52:19.251 [CRITICAL] (          logging.py:  32) KeyError: 'sig_first'
+2025-03-12 18:52:19.251 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 18:52:19.251 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 18:52:19.251 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 18:52:19.252 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 18:52:19.252 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 18:52:19.252 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 18:52:19.252 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 18:52:19.253 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 18:52:19.253 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 18:52:19.253 [CRITICAL] (          logging.py:  32) KeyError: 'sig_latest_10'
+2025-03-12 18:52:19.253 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 18:52:19.253 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 18:52:19.253 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 18:52:19.254 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 18:52:19.254 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 18:52:19.254 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 18:52:19.254 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 18:52:19.255 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 18:52:19.255 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 18:52:19.255 [CRITICAL] (          logging.py:  32) KeyError: 'bg_avg'
+2025-03-12 18:52:19.255 [CRITICAL] (          logging.py:  32) Traceback (most recent call last):
+2025-03-12 18:52:19.255 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 91, in _handle_error
+2025-03-12 18:52:19.255 [CRITICAL] (          logging.py:  32)     raise err
+2025-03-12 18:52:19.255 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\threadsafe.py", line 171, in _run_safe
+2025-03-12 18:52:19.256 [CRITICAL] (          logging.py:  32)     result = fun(*args, **kwargs)
+2025-03-12 18:52:19.256 [CRITICAL] (          logging.py:  32)              ^^^^^^^^^^^^^^^^^^^^
+2025-03-12 18:52:19.256 [CRITICAL] (          logging.py:  32)   File "C:\Users\ejvil\miniconda3\envs\nspyre\Lib\site-packages\nspyre\gui\widgets\flex_line_plot_3.py", line 373, in get_settings
+2025-03-12 18:52:19.256 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
+2025-03-12 18:52:19.257 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
+2025-03-12 18:52:19.257 [CRITICAL] (          logging.py:  32) KeyError: 'bg_latest'
+2025-03-12 18:52:36.787 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001F66A608FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_all.SpinMeasurements'>, 'fun_name': 'DEER_rabi_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001F677D81750>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x000001F677D83290>, 'fun_args': [], 'fun_kwargs': {'runs': 120, 'iters': 1000, 'start': 3e-09, 'stop': 3e-07, 'num_pts': 100, 'tau': 8e-07, 'freq': 2312000000.0, 'rf_power': 0.00075, 'pi': 1.02e-07, 'pulse_axis': 'y', 'dark_freq': 559000000.0, 'awg_power': 0.25, 'laser_power': 110, 'laser_init': 3e-05, 'laser_readout': 2.5e-06, 'sideband_freq': 30000000.0, 'sideband_power': 0.45, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 1024, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 1.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': True, 'dataset': 'deer rabi', 'filename': 'pH13', 'directory': '//maurerlabnas/MaurerLab/ejvilla4/pH project/March 2025 Titration Curve/pH 13 NaOH/', 'seq': 'DEER Rabi', 'fit': True, 'fit_live': True, 'fit_params': [0.1, 0.001, 100.0, 0.0, 1.0]}}].
+2025-03-12 18:54:12.549 [    INFO] ( flex_line_plot_3.py: 428) The plot [fit] is already hidden. Ignoring hide_plot request.
+2025-03-12 18:58:55.791 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-03-12 18:59:15.105 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001F66A608FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_all.SpinMeasurements'>, 'fun_name': 'DEER_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001F677D81750>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x000001F677D83290>, 'fun_args': [], 'fun_kwargs': {'runs': 120, 'iters': 7000, 'start': 500000000.0, 'stop': 620000000.0, 'num_pts': 100, 'tau': 8e-07, 'freq': 2312000000.0, 'rf_power': 0.00075, 'pi': 1.02e-07, 'pulse_axis': 'y', 'awg_power': 0.25, 'dark_pi': 1.44e-07, 'drive_type': 'Pulsed', 'laser_power': 110, 'laser_init': 3e-05, 'laser_readout': 2.5e-06, 'sideband_freq': 30000000.0, 'sideband_power': 0.45, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 1024, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 1.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': True, 'dataset': 'deer', 'filename': 'pH13', 'directory': '//maurerlabnas/MaurerLab/ejvilla4/pH project/March 2025 Titration Curve/pH 13 NaOH/', 'seq': 'DEER', 'fit': True, 'fit_live': True, 'fit_params': [0.1, 560.0, 10.0, 1.0]}}].
+2025-03-12 19:00:19.912 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-03-12 19:00:30.287 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-03-12 19:03:53.590 [    INFO] (             misc.py: 208) Running process function [<function run_experiment at 0x000001F66A608FE0>] with args: [()] kwargs: [{'exp_cls': <class 'nv_experiments_all.SpinMeasurements'>, 'fun_name': 'DEER_scan', 'constructor_args': [], 'constructor_kwargs': {}, 'queue_to_exp': <multiprocessing.queues.Queue object at 0x000001F677D81750>, 'queue_from_exp': <multiprocessing.queues.Queue object at 0x000001F677D83290>, 'fun_args': [], 'fun_kwargs': {'runs': 120, 'iters': 7500, 'start': 500000000.0, 'stop': 620000000.0, 'num_pts': 100, 'tau': 8e-07, 'freq': 2312000000.0, 'rf_power': 0.00075, 'pi': 1.02e-07, 'pulse_axis': 'y', 'awg_power': 0.25, 'dark_pi': 1.44e-07, 'drive_type': 'Pulsed', 'laser_power': 110, 'laser_init': 3e-05, 'laser_readout': 2.5e-06, 'sideband_freq': 30000000.0, 'sideband_power': 0.45, 'sideband': 'Lower', 'i_offset': -0.002, 'q_offset': -0.004, 'detector': 'APD', 'segment_size': 1024, 'dig_sampling_freq': 500000000.0, 'dig_amplitude': 1.0, 'read_channel': '0', 'dig_coupling': 'DC', 'dig_termination': '1M', 'pretrig_size': 32, 'dig_timeout': 5.0, 'save': True, 'dataset': 'deer', 'filename': 'pH13', 'directory': '//maurerlabnas/MaurerLab/ejvilla4/pH project/March 2025 Titration Curve/pH 13 NaOH/', 'seq': 'DEER', 'fit': True, 'fit_live': True, 'fit_params': [0.1, 560.0, 10.0, 1.0]}}].
