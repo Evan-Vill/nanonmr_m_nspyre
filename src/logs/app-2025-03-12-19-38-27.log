@@ -135,3 +135,5 @@
 2025-03-13 09:48:13.166 [CRITICAL] (          logging.py:  32)     settings = self.series_settings[name]
 2025-03-13 09:48:13.166 [CRITICAL] (          logging.py:  32)                ~~~~~~~~~~~~~~~~~~~~^^^^^^
 2025-03-13 09:48:13.166 [CRITICAL] (          logging.py:  32) KeyError: 'no pi pulse -y latest'
+2025-03-13 10:18:27.341 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
+2025-03-13 10:18:47.214 [    INFO] (             sink.py: 137) Sink connected to data server [('127.0.0.1', 30101)].
