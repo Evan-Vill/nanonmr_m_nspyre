@@ -213,13 +213,6 @@ class SpinMeasurements:
             sig_gen.set_mod_function('IQ', 5) # external modulation
             sig_gen.set_mod_toggle(1) # turn on modulation mode
 
-    def restart_awg(self):
-        with InstrumentServer() as inserv:
-            inserv.restart('awg')
-            _logger.info("HDAWG restarted after getting disconnected.")
-
-
-
     """ Experiment logic """
 
     # def experiment_scan(self, **kwargs):
@@ -1194,8 +1187,8 @@ class SpinMeasurements:
                             with warnings.catch_warnings():
                                 warnings.simplefilter("error", OptimizeWarning)
                                 try:
-                                    fit_value, fit_x, fit_y = self.fit_data('odmr', rf_signal_sweeps, rf_background_sweeps, 0.005, 1.02, 0.006, 1)
-                                    fit_no_rf_value, fit_no_rf_x, fit_no_rf_y = self.fit_data('odmr', no_rf_signal_sweeps, no_rf_background_sweeps, 0.005, 1.02, 0.006, 1)
+                                    fit_value, fit_x, fit_y = self.fit_data('odmr', rf_signal_sweeps, rf_background_sweeps, 0.005, 1, 0.006, 1)
+                                    fit_no_rf_value, fit_no_rf_x, fit_no_rf_y = self.fit_data('odmr', no_rf_signal_sweeps, no_rf_background_sweeps, 0.005, 1, 0.006, 1)
                                 except (RuntimeError, OptimizeWarning) as e:
                                     _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
                                 else:
@@ -1496,6 +1489,8 @@ class SpinMeasurements:
                         background_sweeps.append(np.stack([tau_times[1:]/1e6, bg[1:]]))
                         background_sweeps.updated_item(-1)
 
+                        print(f"signal_sweeps size: {np.shape(signal_sweeps)}")
+
                         if kwargs['fit_live'] == True:
                             with warnings.catch_warnings():
                                 warnings.simplefilter("error", OptimizeWarning)
@@ -1728,7 +1723,7 @@ class SpinMeasurements:
                     for i in range(kwargs['iters']):
                         
                         t2_result_raw = self.dig.acquire() # acquire data from digitizer
-
+                        # t2_result_raw = t2_result_raw[:,50:]
                         # define dummy array to contain experiment data --> size (runs*num_pts) --> (segment_size)
                         t2_result = np.mean(t2_result_raw, axis=1)
 
@@ -3912,12 +3907,12 @@ class SpinMeasurements:
                     sig_gen_freq, iq_phases = self.choose_sideband(kwargs['sideband'], kwargs['freq'], kwargs['sideband_freq']) # iq_phases for x pulse by default
 
                     # define pulse sequence
-                    # sequence = ps.CASR(kwargs['rf_pi_half']*1e9, laser_init_time, singlet_decay, 
-                    #                 pi_half[0], pi_half[1], pi[0], pi[1], 
-                    #                 tau, kwargs['n'], mw_buffer_time, kwargs['laser_readout'], wait_time, kwargs['num_pts'])
-                    sequence = ps.CASR_RF(laser_init_time, singlet_decay, 
+                    sequence = ps.CASR(kwargs['rf_pi_half']*1e9, laser_init_time, singlet_decay, 
                                     pi_half[0], pi_half[1], pi[0], pi[1], 
                                     tau, kwargs['n'], mw_buffer_time, kwargs['laser_readout'], wait_time, kwargs['num_pts'])
+                    # sequence = ps.CASR_RF(laser_init_time, singlet_decay, 
+                    #                 pi_half[0], pi_half[1], pi[0], pi[1], 
+                    #                 tau, kwargs['n'], mw_buffer_time, kwargs['laser_readout'], wait_time, kwargs['num_pts'])
                     
                     # configure digitizer
                     dig_config = self.digitizer_configure(num_pts_in_exp = kwargs['num_pts'], iters = kwargs['iters'], 
@@ -3952,8 +3947,8 @@ class SpinMeasurements:
                                             'rf_freq': kwargs['rf_pulse_freq'],
                                             'rf_power': kwargs['rf_pulse_power'],
                                             'rf_phase': kwargs['rf_pulse_phase'],
-                                            # 'rf_pihalf': kwargs['rf_pi_half']})
-                                            'rf_pihalf': kwargs['num_pts']*t_seq*1e-9})
+                                            'rf_pihalf': kwargs['rf_pi_half']})
+                                            # 'rf_pihalf': kwargs['num_pts']*t_seq*1e-9})
                     except Exception as e:
                         print(e)
                     

@@ -457,7 +457,7 @@ class InstWidget(QWidget):
         self.flipper_b3.toggled.connect(lambda:self.toggle_flipper(self.flipper_b3))
 
     def init_nd_filter_widgets(self):
-        self.nd_filter_label = QLabel("ND Filter")
+        self.nd_filter_label = QLabel("BPD ND Filter")
         self.nd_filter_label.setFixedHeight(20)
         self.nd_filter_label.setStyleSheet("font-weight: bold")
         
