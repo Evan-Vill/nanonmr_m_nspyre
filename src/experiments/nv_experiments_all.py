@@ -439,7 +439,7 @@ class SpinMeasurements:
                             with warnings.catch_warnings():
                                 warnings.simplefilter("error", OptimizeWarning)
                                 try:
-                                    fit_value, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+                                    fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
                                 except (RuntimeError, OptimizeWarning) as e:
                                     _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
@@ -454,7 +454,7 @@ class SpinMeasurements:
                         # update GUI progress bar                        
                         percent_completed = str(int(((i+1)/kwargs['iters'])*100))
                         
-                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', fit_value])
+                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
 
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
@@ -463,11 +463,11 @@ class SpinMeasurements:
                                 with warnings.catch_warnings():
                                     warnings.simplefilter("error", OptimizeWarning)
                                     try:
-                                        fit_value, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+                                        fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
                                     except (RuntimeError, OptimizeWarning) as e:
                                         _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
-                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', fit_value])
+                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
                             
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
@@ -481,11 +481,11 @@ class SpinMeasurements:
                         with warnings.catch_warnings():
                             warnings.simplefilter("error", OptimizeWarning)
                             try:
-                                fit_value, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+                                fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
                             except (RuntimeError, OptimizeWarning) as e:
                                 _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
-                    self.queue_from_exp.put_nowait([percent_completed, 'complete', fit_value])
+                    self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
 
             finally:
                 self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
@@ -803,7 +803,7 @@ class SpinMeasurements:
                             with warnings.catch_warnings():
                                 warnings.simplefilter("error", OptimizeWarning)
                                 try:
-                                    fit_value, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+                                    fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
                                 except (RuntimeError, OptimizeWarning) as e:
                                     _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
@@ -819,7 +819,7 @@ class SpinMeasurements:
 
                         # update GUI progress bar                        
                         percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', fit_value])
+                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
 
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
@@ -828,11 +828,11 @@ class SpinMeasurements:
                                 with warnings.catch_warnings():
                                     warnings.simplefilter("error", OptimizeWarning)
                                     try:
-                                        fit_value, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+                                        fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
                                     except (RuntimeError, OptimizeWarning) as e:
                                         _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
                             
-                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', fit_value])
+                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
                             
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
@@ -846,11 +846,11 @@ class SpinMeasurements:
                         with warnings.catch_warnings():
                             warnings.simplefilter("error", OptimizeWarning)
                             try:
-                                fit_value, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+                                fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
                             except (RuntimeError, OptimizeWarning) as e:
                                 _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
                     
-                    self.queue_from_exp.put_nowait([percent_completed, 'complete', fit_value])
+                    self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
 
             finally:
                 self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
@@ -985,7 +985,7 @@ class SpinMeasurements:
                             with warnings.catch_warnings():
                                 warnings.simplefilter("error", OptimizeWarning)
                                 try:
-                                    fit_value, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+                                    fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
                                 except (RuntimeError, OptimizeWarning) as e:
                                     _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
@@ -999,7 +999,7 @@ class SpinMeasurements:
 
                         # update GUI progress bar                        
                         percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', fit_value])
+                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
 
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
@@ -1011,11 +1011,11 @@ class SpinMeasurements:
                                 with warnings.catch_warnings():
                                     warnings.simplefilter("error", OptimizeWarning)
                                     try:
-                                        fit_value, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+                                        fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
                                     except (RuntimeError, OptimizeWarning) as e:
                                         _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
-                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', fit_value])
+                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                             return
@@ -1028,11 +1028,11 @@ class SpinMeasurements:
                         with warnings.catch_warnings():
                             warnings.simplefilter("error", OptimizeWarning)
                             try:
-                                fit_value, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+                                fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
                             except (RuntimeError, OptimizeWarning) as e:
                                 _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
-                    self.queue_from_exp.put_nowait([percent_completed, 'complete', fit_value])
+                    self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
 
             finally:
                 self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
@@ -1187,8 +1187,8 @@ class SpinMeasurements:
                             with warnings.catch_warnings():
                                 warnings.simplefilter("error", OptimizeWarning)
                                 try:
-                                    fit_value, fit_x, fit_y = self.fit_data('odmr', rf_signal_sweeps, rf_background_sweeps, 0.005, 1, 0.006, 1)
-                                    fit_no_rf_value, fit_no_rf_x, fit_no_rf_y = self.fit_data('odmr', no_rf_signal_sweeps, no_rf_background_sweeps, 0.005, 1, 0.006, 1)
+                                    fit_value, fit_error, fit_x, fit_y = self.fit_data('odmr', rf_signal_sweeps, rf_background_sweeps, 0.005, 1, 0.006, 1)
+                                    fit_no_rf_value, fit_no_rf_error, fit_no_rf_x, fit_no_rf_y = self.fit_data('odmr', no_rf_signal_sweeps, no_rf_background_sweeps, 0.005, 1, 0.006, 1)
                                 except (RuntimeError, OptimizeWarning) as e:
                                     _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
                                 else:
@@ -1205,7 +1205,7 @@ class SpinMeasurements:
 
                         # update GUI progress bar                        
                         percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', fit_value])
+                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
 
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
@@ -1217,11 +1217,11 @@ class SpinMeasurements:
                             #     with warnings.catch_warnings():
                             #         warnings.simplefilter("error", OptimizeWarning)
                             #         try:
-                            #             fit_value, fit_x, fit_y = self.fit_data(kwargs['dataset'], rf_signal_sweeps, rf_background_sweeps, *kwargs['fit_params'])
+                            #             fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], rf_signal_sweeps, rf_background_sweeps, *kwargs['fit_params'])
                             #         except (RuntimeError, OptimizeWarning) as e:
                             #             _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
-                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', fit_value])
+                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                             return
@@ -1234,11 +1234,11 @@ class SpinMeasurements:
                     #     with warnings.catch_warnings():
                     #         warnings.simplefilter("error", OptimizeWarning)
                     #         try:
-                    #             fit_value, fit_x, fit_y = self.fit_data(kwargs['dataset'], rf_signal_sweeps, rf_background_sweeps, *kwargs['fit_params'])
+                    #             fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], rf_signal_sweeps, rf_background_sweeps, *kwargs['fit_params'])
                     #         except (RuntimeError, OptimizeWarning) as e:
                     #             _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
-                    self.queue_from_exp.put_nowait([percent_completed, 'complete', fit_value])
+                    self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
 
             finally:
                 self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
@@ -1495,8 +1495,8 @@ class SpinMeasurements:
                             with warnings.catch_warnings():
                                 warnings.simplefilter("error", OptimizeWarning)
                                 try:
-                                    fit_value, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
-                                    print(f"fitted T1: {fit_value}")
+                                    fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+                                    print(f"Fitted T1: {fit_value} +/- {fit_error}")
                                 except (RuntimeError, OptimizeWarning) as e:
                                     _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
                 
@@ -1510,7 +1510,7 @@ class SpinMeasurements:
 
                         # update GUI progress bar                        
                         percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', fit_value])
+                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
 
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
@@ -1521,11 +1521,11 @@ class SpinMeasurements:
                                 with warnings.catch_warnings():
                                     warnings.simplefilter("error", OptimizeWarning)
                                     try:
-                                        fit_value, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+                                        fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
                                     except (RuntimeError, OptimizeWarning) as e:
                                         _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
                 
-                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', fit_value])
+                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
 
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
@@ -1539,11 +1539,11 @@ class SpinMeasurements:
                         with warnings.catch_warnings():
                             warnings.simplefilter("error", OptimizeWarning)
                             try:
-                                fit_value, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+                                fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
                             except (RuntimeError, OptimizeWarning) as e:
                                 _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
                     
-                    self.queue_from_exp.put_nowait([percent_completed, 'complete', fit_value])
+                    self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
 
             finally:
                 self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
@@ -1743,7 +1743,7 @@ class SpinMeasurements:
                             with warnings.catch_warnings():
                                 warnings.simplefilter("error", OptimizeWarning)
                                 try:
-                                    fit_value, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+                                    fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
                                 except (RuntimeError, OptimizeWarning) as e:
                                     _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
@@ -1757,7 +1757,7 @@ class SpinMeasurements:
 
                         # update GUI progress bar                        
                         percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', fit_value])
+                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
                         
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
@@ -1766,11 +1766,11 @@ class SpinMeasurements:
                                 with warnings.catch_warnings():
                                     warnings.simplefilter("error", OptimizeWarning)
                                     try:
-                                        fit_value, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+                                        fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
                                     except (RuntimeError, OptimizeWarning) as e:
                                         _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
-                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', fit_value])
+                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                             return
@@ -1783,11 +1783,11 @@ class SpinMeasurements:
                         with warnings.catch_warnings():
                             warnings.simplefilter("error", OptimizeWarning)
                             try:
-                                fit_value, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+                                fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
                             except (RuntimeError, OptimizeWarning) as e:
                                 _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
                     
-                    self.queue_from_exp.put_nowait([percent_completed, 'complete', fit_value])
+                    self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
 
             finally:
                 self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
@@ -1956,7 +1956,7 @@ class SpinMeasurements:
                             with warnings.catch_warnings():
                                 warnings.simplefilter("error", OptimizeWarning)
                                 try:
-                                    fit_value, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+                                    fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
                                 except (RuntimeError, OptimizeWarning) as e:
                                     _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
@@ -1973,7 +1973,7 @@ class SpinMeasurements:
 
                         # update GUI progress bar                        
                         percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', fit_value])
+                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
                         
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
@@ -1982,11 +1982,11 @@ class SpinMeasurements:
                                 with warnings.catch_warnings():
                                     warnings.simplefilter("error", OptimizeWarning)
                                     try:
-                                        fit_value, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+                                        fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
                                     except (RuntimeError, OptimizeWarning) as e:
                                         _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
-                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', fit_value])
+                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                             return
@@ -1999,11 +1999,11 @@ class SpinMeasurements:
                         with warnings.catch_warnings():
                             warnings.simplefilter("error", OptimizeWarning)
                             try:
-                                fit_value, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+                                fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
                             except (RuntimeError, OptimizeWarning) as e:
                                 _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
                     
-                    self.queue_from_exp.put_nowait([percent_completed, 'complete', fit_value])
+                    self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
 
             finally:
                 self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
@@ -2361,7 +2361,7 @@ class SpinMeasurements:
                             with warnings.catch_warnings():
                                 warnings.simplefilter("error", OptimizeWarning)
                                 try:
-                                    fit_value, fit_x, fit_y = self.fit_deer_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
+                                    fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
                                 except (RuntimeError, OptimizeWarning) as e:
                                     _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
@@ -2376,7 +2376,7 @@ class SpinMeasurements:
 
                         # update GUI progress bar                        
                         percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', fit_value])
+                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
 
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
@@ -2386,11 +2386,11 @@ class SpinMeasurements:
                                 with warnings.catch_warnings():
                                     warnings.simplefilter("error", OptimizeWarning)
                                     try:
-                                        fit_value, fit_x, fit_y = self.fit_deer_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
+                                        fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
                                     except (RuntimeError, OptimizeWarning) as e:
                                         _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
-                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', fit_value])
+                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                             return
@@ -2404,11 +2404,11 @@ class SpinMeasurements:
                         with warnings.catch_warnings():
                             warnings.simplefilter("error", OptimizeWarning)
                             try:
-                                fit_value, fit_x, fit_y = self.fit_deer_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
+                                fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
                             except (RuntimeError, OptimizeWarning) as e:
                                 _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
                     
-                    self.queue_from_exp.put_nowait([percent_completed, 'complete', fit_value])
+                    self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
 
             finally:
                 self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
@@ -2563,7 +2563,7 @@ class SpinMeasurements:
                             with warnings.catch_warnings():
                                 warnings.simplefilter("error", OptimizeWarning)
                                 try:
-                                    fit_value, fit_x, fit_y = self.fit_deer_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
+                                    fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
                                 except (RuntimeError, OptimizeWarning) as e:
                                     _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
@@ -2578,7 +2578,7 @@ class SpinMeasurements:
 
                         # update GUI progress bar                        
                         percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', fit_value])
+                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
 
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
@@ -2588,11 +2588,11 @@ class SpinMeasurements:
                                 with warnings.catch_warnings():
                                     warnings.simplefilter("error", OptimizeWarning)
                                     try:
-                                        fit_value, fit_x, fit_y = self.fit_deer_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
+                                        fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
                                     except (RuntimeError, OptimizeWarning) as e:
                                         _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
-                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', fit_value])
+                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                             return
@@ -2605,11 +2605,11 @@ class SpinMeasurements:
                         with warnings.catch_warnings():
                             warnings.simplefilter("error", OptimizeWarning)
                             try:
-                                fit_value, fit_x, fit_y = self.fit_deer_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
+                                fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
                             except (RuntimeError, OptimizeWarning) as e:
                                 _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
                     
-                    self.queue_from_exp.put_nowait([percent_completed, 'complete', fit_value])
+                    self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
 
             finally:
                 self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
@@ -3907,12 +3907,12 @@ class SpinMeasurements:
                     sig_gen_freq, iq_phases = self.choose_sideband(kwargs['sideband'], kwargs['freq'], kwargs['sideband_freq']) # iq_phases for x pulse by default
 
                     # define pulse sequence
-                    sequence = ps.CASR(kwargs['rf_pi_half']*1e9, laser_init_time, singlet_decay, 
-                                    pi_half[0], pi_half[1], pi[0], pi[1], 
-                                    tau, kwargs['n'], mw_buffer_time, kwargs['laser_readout'], wait_time, kwargs['num_pts'])
-                    # sequence = ps.CASR_RF(laser_init_time, singlet_decay, 
+                    # sequence = ps.CASR(kwargs['rf_pi_half']*1e9, laser_init_time, singlet_decay, 
                     #                 pi_half[0], pi_half[1], pi[0], pi[1], 
                     #                 tau, kwargs['n'], mw_buffer_time, kwargs['laser_readout'], wait_time, kwargs['num_pts'])
+                    sequence = ps.CASR_RF(laser_init_time, singlet_decay, 
+                                    pi_half[0], pi_half[1], pi[0], pi[1], 
+                                    tau, kwargs['n'], mw_buffer_time, kwargs['laser_readout'], wait_time, kwargs['num_pts'])
                     
                     # configure digitizer
                     dig_config = self.digitizer_configure(num_pts_in_exp = kwargs['num_pts'], iters = kwargs['iters'], 
@@ -3947,8 +3947,8 @@ class SpinMeasurements:
                                             'rf_freq': kwargs['rf_pulse_freq'],
                                             'rf_power': kwargs['rf_pulse_power'],
                                             'rf_phase': kwargs['rf_pulse_phase'],
-                                            'rf_pihalf': kwargs['rf_pi_half']})
-                                            # 'rf_pihalf': kwargs['num_pts']*t_seq*1e-9})
+                                            # 'rf_pihalf': kwargs['rf_pi_half']})
+                                            'rf_pihalf': kwargs['num_pts']*t_seq*1e-9})
                     except Exception as e:
                         print(e)
                     
@@ -4089,25 +4089,35 @@ class SpinMeasurements:
             case 'odmr':
                 params, covariance = curve_fit(self.negative_lorentzian, x_values, y_values, p0=initial_guess)
                 y_fit = self.negative_lorentzian(x_fit, *params)
+                param_errors = np.sqrt(np.diag(covariance))
                 # compute fitted value of interest (resonance for ODMR, pi pulse for Rabi, etc.)
-                fitted_value = round(x_fit[np.argmin(y_fit)],4)
+                # fitted_value = round(x_fit[np.argmin(y_fit)],4)
+                fitted_value = round(params[1], 4)
+                fitted_error = round(param_errors[1], 4)
             case 'rabi':
                 params, covariance = curve_fit(self.decaying_cosine, x_values, y_values, p0=initial_guess)
                 y_fit = self.decaying_cosine(x_fit, *params)
+                param_errors = np.sqrt(np.diag(covariance))
                 # compute fitted value of interest (resonance for ODMR, pi pulse for Rabi, etc.)
-                fitted_value = round(x_fit[np.argmin(y_fit)],2)
+                # fitted_value = round(x_fit[np.argmin(y_fit)],2)
+                fitted_value = round(params[2]/2, 2)
+                fitted_error = round(param_errors[2]/2, 2)
             case 't1':
                 params, covariance = curve_fit(self.stretched_exponential, x_values, y_values, p0=initial_guess)
                 y_fit = self.stretched_exponential(x_fit, *params)
+                param_errors = np.sqrt(np.diag(covariance))
                 # compute fitted value of interest (resonance for ODMR, pi pulse for Rabi, etc.)
-                fitted_value = round(params[1],3)
+                fitted_value = round(params[1], 3)
+                fitted_error = round(param_errors[1], 3)
             case 't2':
                 params, covariance = curve_fit(self.mod_stretched_exponential, x_values, y_values, p0=initial_guess)
                 y_fit = self.mod_stretched_exponential(x_fit, *params)
+                param_errors = np.sqrt(np.diag(covariance))
                 # compute fitted value of interest (resonance for ODMR, pi pulse for Rabi, etc.)
                 fitted_value = round(params[1],3)
+                fitted_error = round(param_errors[1], 3)
 
-        return fitted_value, x_fit, y_fit
+        return fitted_value, fitted_error, x_fit, y_fit
     
     def fit_deer_data(self, exp, dark_sig_data, dark_back_data, echo_sig_data, echo_back_data, *args):
         # Combine all dark signal sweeps into a single 3D array and average
@@ -4145,16 +4155,22 @@ class SpinMeasurements:
             case 'deer':
                 params, covariance = curve_fit(self.negative_lorentzian, x_values, y_values, p0=initial_guess)
                 y_fit = self.negative_lorentzian(x_fit, *params)
-                fitted_value = round(x_fit[np.argmin(y_fit)],3)
+                param_errors = np.sqrt(np.diag(covariance))
+                # fitted_value = round(x_fit[np.argmin(y_fit)],3)
+                fitted_value = round(params[1], 3)
+                fitted_error = round(param_errors[1], 3)
             case 'deer rabi':
                 params, covariance = curve_fit(self.decaying_cosine, x_values, y_values, p0=initial_guess)
                 y_fit = self.decaying_cosine(x_fit, *params)
-                fitted_value = round(x_fit[np.argmin(y_fit)],2)
+                param_errors = np.sqrt(np.diag(covariance))
+                # fitted_value = round(x_fit[np.argmin(y_fit)],2)
+                fitted_value = round(params[2]/2, 2)
+                fitted_error = round(param_errors[2]/2, 2)
         # # Extract fitted parameters
         # A_fit, gamma_fit, f_fit, phi_fit, C_fit = params
 
         # print(f"Fitted pi pulse = {fitted_value} ns")
-        return fitted_value, x_fit, y_fit
+        return fitted_value, fitted_error, x_fit, y_fit
 
 
     # def __enter__(self):
