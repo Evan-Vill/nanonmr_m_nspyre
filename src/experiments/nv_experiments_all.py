@@ -12,6 +12,8 @@ from pathlib import Path
 from typing import List
 
 from pulsestreamer import PulseStreamer
+from pulsestreamer import TriggerStart, NextAction, When, OnNoData
+
 from spcm import units
 from digitizer_driver import SpectrumDigitizer
 
@@ -96,7 +98,7 @@ class SpinMeasurements:
 
             return [dark_ms1_array, dark_ms0_array, echo_ms1_array, echo_ms0_array, cd_ms1_array, cd_ms0_array]
         
-        elif exp_type == 'CASR':
+        elif exp_type == 'CASR_alt':
             sliced_arrays = array.reshape(-1, pts)
             sig, bg = sliced_arrays[::2, :], sliced_arrays[1::2, :]
 
@@ -198,6 +200,7 @@ class SpinMeasurements:
             sig_gen.set_rf_toggle(0)
             sig_gen.set_mod_toggle(0)
 
+            ps.Pulser.forceFinal()
             ps.Pulser.reset()
             self.dig.stop_card()
             self.dig.reset()
@@ -350,7 +353,8 @@ class SpinMeasurements:
             real_freqs = sig_gen_freq - mod_freqs
             
             # default fit parameters
-            fit_value = None
+            fit_value = []
+            fit_error = []
             fit_x = real_freqs/1e9
             fit_y = np.ones(len(fit_x))
 
@@ -511,15 +515,15 @@ class SpinMeasurements:
             ps = mgr.ps
             hdawg = mgr.awg
             
-            num_angles = (kwargs['stop_angle'] - kwargs['start_angle']) * 2 + 1
+            num_angles = kwargs['iters']
             azi_angles = np.linspace(kwargs['start_angle'], kwargs['stop_angle'], num_angles)
+            # print("azimuthal angles: ", azi_angles)
+            # mgr.thor_polar.set_vel_params(3,7) # reset Thorlabs stages to default acceleration and velocity parameters
+            mgr.thor_azi.set_vel_params(8,15)
 
-            mgr.thor_polar.set_vel_params(3,7) # reset Thorlabs stages to default acceleration and velocity parameters
-            mgr.thor_azi.set_vel_params(3,7)
-
-            mgr.thor_polar.move(kwargs['start_angle'], True)
-            mgr.thor_polar.update_positions_callback() # update position
-            pos = mgr.thor_polar.current_position # set pos to be position as move is beginning
+            # move azimuthal stage to start angle
+            mgr.thor_azi.move(kwargs['start_angle'], True)
+            mgr.thor_azi.update_positions_callback() # update position
             
             # define NV drive frequency & sideband           
             delta = 0
@@ -532,13 +536,11 @@ class SpinMeasurements:
             # define parameter array that will be swept over in experiment & shuffle
             mod_freqs = np.linspace(0, max_sideband_freq, kwargs['num_pts'])            
             mod_freqs = np.flip(mod_freqs)
-            
-            # np.random.shuffle(mod_freqs)
-            
+                        
             real_freqs = sig_gen_freq - mod_freqs
             
             # define pulse sequence
-            sequence = ps.CW_ODMR(kwargs['num_pts']) # pulse streamer sequence for CW ODMR
+            sequence = ps.CW_ODMR(kwargs['num_pts'], kwargs['probe']*1e9) # pulse streamer sequence for CW ODMR
             ps.probe_time = kwargs['probe'] * 1e9
 
             # configure digitizer
@@ -566,15 +568,20 @@ class SpinMeasurements:
                                     'sideband_freqs': mod_freqs, 
                                     'iq_phases': iq_phases,
                                     'num_pts': kwargs['num_pts']}) 
+                time.sleep(2) # wait for AWG to finish setting sequence and magnet mount to get set
             except Exception as e:
                 print(e)
             
             # run the experiment
             else:
+                pos = mgr.thor_azi.current_position # set pos to be position as sweep is beginning (i.e., at start angle)
+                mgr.thor_azi.update_positions_callback() # update position
+                print(f"Moved to start angle: {pos} degrees")
+
                 # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
                 signal_sweeps = StreamingList()
                 background_sweeps = StreamingList()
-                angle_fits = []
+                angle_fits = StreamingList()
 
                 # open laser shutter
                 laser_shutter.open_shutter()
@@ -585,12 +592,11 @@ class SpinMeasurements:
                 # emit MW for NV drive
                 sig_gen.set_rf_toggle(1) # turn on NV signal generator
 
-                mgr.thor_polar.set_vel_params(3,7) # TODO: speed up Thorlabs stage for quicker scan
-                mgr.thor_azi.set_vel_params(3,7)
+                # mgr.thor_polar.set_vel_params(3,7) # TODO: speed up Thorlabs stage for quicker scan
+                mgr.thor_azi.set_vel_params(20,30) # set azimuthal stage velocity and acceleration
 
                 # configure laser settings and turn on
-                # laser.set_modulation_state('cw')
-                laser.set_modulation_state('pulsed')
+                laser.set_modulation_state('cw')
                 laser.set_analog_control_mode('current')
                 laser.set_diode_current_realtime(kwargs['laser_power'])
                 laser.laser_on()
@@ -608,15 +614,14 @@ class SpinMeasurements:
 
                 # start experiment loop
                 for i in range(num_angles):
-                    mgr.thor_polar.move(azi_angles[i], True)
-                    mgr.thor_polar.update_positions_callback() # update position
-                    pos = mgr.thor_polar.current_position # set pos to be position as move is beginning
+                    mgr.thor_azi.move(azi_angles[i], True)
+                    mgr.thor_azi.update_positions_callback() # update position
+                    pos = mgr.thor_azi.current_position # set pos to be position as move is beginning
                 
                     odmr_result_raw = self.dig.acquire() # acquire data from digitizer
 
                     # average all data over each trigger/segment 
                     odmr_result=np.mean(odmr_result_raw,axis=1)
-                    segments=(np.shape(odmr_result))[0]
 
                     # partition buffer into signal and background datasets
                     try:
@@ -631,13 +636,20 @@ class SpinMeasurements:
                     background_sweeps.updated_item(-1)
 
                     # Fit the data
-                    initial_guess = [0.1, kwargs['center_freq']/1e9, 5]  # [A, x0, gamma]
-                    params, params_covariance = curve_fit(self.negative_lorentzian, real_freqs/1e9, sig/bg, p0=initial_guess)
+                    initial_guess = [0.01, kwargs['center_freq']/1e9, 6e-3, 1]  # [A, x0, gamma, c]
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("error", OptimizeWarning)
+                        try:
+                            params, params_covariance = curve_fit(self.negative_lorentzian, real_freqs/1e9, sig/bg, p0=initial_guess)
+                            # fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+                        except (RuntimeError, OptimizeWarning) as e:
+                            _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
                     # Extract fitted parameters
                     freq_fit = params[1]
                     angle_fits.append(np.stack([azi_angles[i], freq_fit]))
                     angle_fits.updated_item(-1) 
+                    print(f"ODMR = {params} GHz at angle {azi_angles[i]} degrees")
 
                     # save the current data to the data server
                     cw_odmr_data.push({'params': {'kwargs': kwargs},
@@ -651,10 +663,25 @@ class SpinMeasurements:
                     percent_completed = str(int(((i+1)/num_angles)*100))
                     self.queue_from_exp.put_nowait([percent_completed, 'in progress', None])
 
+                    if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
+                        # the GUI has asked us nicely to exit. Save data if requested.
+                        self.equipment_off(kwargs['detector'])
+                        
+                        mgr.thor_polar.set_vel_params(3,7) # reset Thorlabs stages to default acceleration and velocity parameters
+                        mgr.thor_azi.set_vel_params(3,7)
+
+                        self.queue_from_exp.put_nowait([percent_completed, 'stopped', None])
+                        
+                        if kwargs['save'] == True:
+                            self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
+                        return
+                    
                 # save data if requested upon completion of experiment
                 if kwargs['save'] == True:
                     self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
-            
+
+                self.queue_from_exp.put_nowait([percent_completed, 'complete', None])
+
             finally:
                 self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
 
@@ -672,7 +699,12 @@ class SpinMeasurements:
                         min_azi_angle = azi_angle
 
                 # Print the results
-                print(f"Minimum freq_fit: {min_freq_fit}, Corresponding azi_angle: {min_azi_angle}")
+                print(f"Best alignment at {min_azi_angle} degrees -> min. freq_fit: {min_freq_fit} GHz")
+
+                time.sleep(1) # wait for Thorlabs stage to finish moving
+
+                mgr.thor_azi.move(min_azi_angle, True)
+                print(f"Stage alignment set at {min_azi_angle} degrees")
 
     def rabi_scan(self, **kwargs):
         """
@@ -702,7 +734,8 @@ class SpinMeasurements:
             sig_gen_freq, iq_phases = self.choose_sideband(kwargs['sideband'], kwargs['freq'], kwargs['sideband_freq'], kwargs['pulse_axis'])
 
             # default fit parameters
-            fit_value = None
+            fit_value = []
+            fit_error = []
             fit_x = np.linspace(kwargs['start'], kwargs['stop'], kwargs['num_pts']) * 1e9
             fit_y = np.ones(len(fit_x))
 
@@ -888,6 +921,7 @@ class SpinMeasurements:
 
             # default fit parameters
             fit_value = None
+            fit_error = None
             fit_x = real_freqs/1e9
             fit_y = np.ones(len(fit_x))
 
@@ -1074,6 +1108,7 @@ class SpinMeasurements:
 
             # default fit parameters
             fit_value = None
+            fit_error = None
             fit_x = real_freqs/1e9
             fit_y = np.ones(len(fit_x))
             fitted_diff = 0
@@ -1388,7 +1423,8 @@ class SpinMeasurements:
                     tau_times = np.linspace(kwargs['start'], kwargs['stop'], kwargs['num_pts']) * 1e9
 
             # default fit parameters
-            fit_value = None
+            fit_value = []
+            fit_error = []
             fit_x = tau_times[1:]/1e6
             fit_y = np.ones(len(fit_x))
 
@@ -1489,14 +1525,12 @@ class SpinMeasurements:
                         background_sweeps.append(np.stack([tau_times[1:]/1e6, bg[1:]]))
                         background_sweeps.updated_item(-1)
 
-                        print(f"signal_sweeps size: {np.shape(signal_sweeps)}")
-
                         if kwargs['fit_live'] == True:
                             with warnings.catch_warnings():
                                 warnings.simplefilter("error", OptimizeWarning)
                                 try:
                                     fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
-                                    print(f"Fitted T1: {fit_value} +/- {fit_error}")
+                                    # print(f"Fitted T1: {fit_value} +/- {fit_error}")
                                 except (RuntimeError, OptimizeWarning) as e:
                                     _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
                 
@@ -1577,7 +1611,8 @@ class SpinMeasurements:
                     tau_times = np.linspace(kwargs['start'], kwargs['stop'], kwargs['num_pts']) * 1e9
 
             # default fit parameters
-            fit_value = None
+            fit_value = []
+            fit_error = []
             fit_x = tau_times[1:]
             fit_y = np.ones(len(fit_x))
 
@@ -1772,12 +1807,12 @@ class SpinMeasurements:
 
                             self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
                             if kwargs['save'] == True:
-                                self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
+                                self.run_save(f"{kwargs['dataset']}_{kwargs['t2_seq'].lower()}", kwargs['filename'], [kwargs['directory']])
                             return
                             
                     # save data if requested upon completion of experiment
                     if kwargs['save'] == True:
-                        self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
+                        self.run_save(f"{kwargs['dataset']}_{kwargs['t2_seq'].lower()}", kwargs['filename'], [kwargs['directory']])
 
                     if kwargs['fit'] == True:
                         with warnings.catch_warnings():
@@ -1822,6 +1857,7 @@ class SpinMeasurements:
 
             # default fit parameters
             fit_value = None
+            fit_error = None
             fit_x = tau_times[1:]
             fit_y = np.ones(len(fit_x))
 
@@ -2206,7 +2242,8 @@ class SpinMeasurements:
             hdawg = mgr.awg
             
             # default fit parameters
-            fit_value = None
+            fit_value = []
+            fit_error = []
             fit_x = np.linspace(kwargs['start'], kwargs['stop'], kwargs['num_pts'])/1e6   
             fit_y = np.ones(len(fit_x))
 
@@ -2435,7 +2472,8 @@ class SpinMeasurements:
             hdawg = mgr.awg
             
             # default fit parameters
-            fit_value = None
+            fit_value = []
+            fit_error = []
             fit_x = np.linspace(kwargs['start'], kwargs['stop'], kwargs['num_pts']) * 1e9   
             fit_y = np.ones(len(fit_x))
 
@@ -3285,13 +3323,13 @@ class SpinMeasurements:
                             continue
 
                         # notify the streaminglist that this entry has updated so it will be pushed to the data server
-                        with_pulse_py_sweeps.append(np.stack([t_corr_times*1e6, with_py]))
+                        with_pulse_py_sweeps.append(np.stack([t_corr_times[1:]*1e6, with_py[1:]]))
                         with_pulse_py_sweeps.updated_item(-1) 
-                        without_pulse_py_sweeps.append(np.stack([t_corr_times*1e6, without_py]))
+                        without_pulse_py_sweeps.append(np.stack([t_corr_times[1:]*1e6, without_py[1:]]))
                         without_pulse_py_sweeps.updated_item(-1)
-                        with_pulse_ny_sweeps.append(np.stack([t_corr_times*1e6, with_ny]))
+                        with_pulse_ny_sweeps.append(np.stack([t_corr_times[1:]*1e6, with_ny[1:]]))
                         with_pulse_ny_sweeps.updated_item(-1) 
-                        without_pulse_ny_sweeps.append(np.stack([t_corr_times*1e6, without_ny]))
+                        without_pulse_ny_sweeps.append(np.stack([t_corr_times[1:]*1e6, without_ny[1:]]))
                         without_pulse_ny_sweeps.updated_item(-1)
 
                         # save the current data to the data server
@@ -3907,12 +3945,12 @@ class SpinMeasurements:
                     sig_gen_freq, iq_phases = self.choose_sideband(kwargs['sideband'], kwargs['freq'], kwargs['sideband_freq']) # iq_phases for x pulse by default
 
                     # define pulse sequence
-                    # sequence = ps.CASR(kwargs['rf_pi_half']*1e9, laser_init_time, singlet_decay, 
-                    #                 pi_half[0], pi_half[1], pi[0], pi[1], 
-                    #                 tau, kwargs['n'], mw_buffer_time, kwargs['laser_readout'], wait_time, kwargs['num_pts'])
-                    sequence = ps.CASR_RF(laser_init_time, singlet_decay, 
+                    sequence = ps.CASR(kwargs['rf_pi_half']*1e9, laser_init_time, singlet_decay, 
                                     pi_half[0], pi_half[1], pi[0], pi[1], 
                                     tau, kwargs['n'], mw_buffer_time, kwargs['laser_readout'], wait_time, kwargs['num_pts'])
+                    # sequence = ps.CASR_Coil(laser_init_time, singlet_decay, 
+                    #                 pi_half[0], pi_half[1], pi[0], pi[1], 
+                    #                 tau, kwargs['n'], mw_buffer_time, kwargs['laser_readout'], wait_time, kwargs['num_pts'])
                     
                     # configure digitizer
                     dig_config = self.digitizer_configure(num_pts_in_exp = kwargs['num_pts'], iters = kwargs['iters'], 
@@ -3932,7 +3970,7 @@ class SpinMeasurements:
 
                     # upload AWG sequence first
                     try:
-                        hdawg.set_sequence(**{'seq': 'CASR',
+                        hdawg.set_sequence(**{'seq': 'CASR2',
                                             'i_offset': kwargs['i_offset'],
                                             'q_offset': kwargs['q_offset'],
                                             'sideband_power': kwargs['sideband_power'],
@@ -3947,8 +3985,8 @@ class SpinMeasurements:
                                             'rf_freq': kwargs['rf_pulse_freq'],
                                             'rf_power': kwargs['rf_pulse_power'],
                                             'rf_phase': kwargs['rf_pulse_phase'],
-                                            # 'rf_pihalf': kwargs['rf_pi_half']})
-                                            'rf_pihalf': kwargs['num_pts']*t_seq*1e-9})
+                                            'rf_pihalf': kwargs['rf_pi_half']})
+                                            # 'rf_pihalf': kwargs['num_pts']*t_seq*1e-9})
                     except Exception as e:
                         print(e)
                     
@@ -4043,6 +4081,221 @@ class SpinMeasurements:
                         self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed 
 
     
+    def CASR_cont_scan(self, **kwargs):
+        """
+        Run a Coherently Averaged Synchronized Readout NMR sweep over a range of frequencies.
+        
+        Keyword args:
+            dataset: name of the dataset to push data to
+            start (float): start frequency
+            stop (float): stop frequency
+            num_pts (int): number of points between start-stop (inclusive)
+            iterations: number of times to repeat the experiment
+        """
+        # connect to the instrument server & the data server.
+        # create a data set, or connect to an existing one with the same name if it was created earlier.
+        with InstrumentManager() as mgr, DataSource(kwargs['dataset']) as casr_data:
+            # load devices used in scan
+            laser = mgr.laser
+            laser_shutter = mgr.laser_shutter
+            sig_gen = mgr.sg
+            ps = mgr.ps
+            hdawg = mgr.awg
+            
+            # period = (1/kwargs['central_freq'])*1e9 # reference for ensuring sequence is a multiple of this central period [ns]
+            
+            # intervals in pulse sequence used to define time points on x-axis in seconds
+            laser_init_time = kwargs['laser_init']*1e9
+            singlet_decay = 500 
+            pi = [kwargs['pi']*1e9, kwargs['pi']*1e9]
+            pi_half = [pi[0]/2, pi[1]/2]
+            tau = int(kwargs['tau']*1e9) # half period of central frequency [ns] - used in DD blocks
+            print(f"tau = {tau} ns")
+            period = 2*tau
+
+            dd_time = pi_half[0] + (4*pi[0] + 4*pi[1] + 8*tau)*kwargs['n'] + pi_half[1]
+
+            mw_buffer_time = 100 # buffer time between DD block and readout pulse [ns]
+            laser_read_time = kwargs['laser_readout']*1e9 # laser readout pulse [ns]
+            wait_time = 100 # dead time at end of sequence before next subsequence [ns]
+
+            t_seq = laser_init_time + singlet_decay + dd_time + mw_buffer_time + laser_read_time + wait_time
+            print(f"initial t_seq = {t_seq}")
+            try:
+                if t_seq % period != 0:
+                    nearest_integer = np.ceil(t_seq/period)
+                    new_t_seq = nearest_integer * period
+                    wait_time = new_t_seq - (t_seq - wait_time)
+                    assert wait_time >= 0, "new wait_time is unphysical (negative)"
+                    t_seq = new_t_seq
+            except AssertionError as e:
+                self.queue_from_exp.put_nowait([0, 'failed', None, e])
+            else:
+                try:
+                    if t_seq % period > 1e-6:
+                        assert math.isclose(t_seq % period, period, abs_tol=1e-9), "Adjusted 't_seq' still not an integer multiple of 1/f0"
+                    print(f"New wait time = {wait_time}")
+                    print(f"t_seq = {t_seq} ns")
+                    print(f"period = {period} ns")
+                    print(f"\u0394f = f - f0 = {(0.5/((tau+pi[0])*1e-9) - kwargs['rf_pulse_freq'])/1000} kHz")
+                except AssertionError as e:  
+                    exception_type = type(e).__name__
+                    self.queue_from_exp.put_nowait([0, 'failed', None, e])
+
+                else:
+                    # x-axis time values array for experiment [s]
+                    times = np.linspace(t_seq - wait_time - laser_read_time/2, kwargs['num_pts']*t_seq, kwargs['num_pts']) * 1e-9
+
+                    # define NV drive frequency & sideband
+                    sig_gen_freq, iq_phases = self.choose_sideband(kwargs['sideband'], kwargs['freq'], kwargs['sideband_freq']) # iq_phases for x pulse by default
+
+                    # define pulse sequences
+                    seq_rf = ps.CASR_RF(kwargs['rf_pi_half']*1e9)
+                    seq_nv = ps.CASR_NV(laser_init_time, singlet_decay, 
+                                    pi_half[0], pi_half[1], pi[0], pi[1], 
+                                    tau, kwargs['n'], mw_buffer_time, kwargs['laser_readout'], wait_time)
+                    
+                    # configure digitizer
+                    dig_config = self.digitizer_configure(num_pts_in_exp = kwargs['num_pts'], iters = kwargs['iters'], 
+                                                        segment_size = kwargs['segment_size'], sampling_freq = kwargs['dig_sampling_freq'], dig_amplitude = kwargs['dig_amplitude'], 
+                                                        read_channel = kwargs['read_channel'], coupling = kwargs['dig_coupling'], termination = kwargs['dig_termination'], 
+                                                        pretrig_size = kwargs['pretrig_size'], dig_timeout = kwargs['dig_timeout'], runs = kwargs['runs'])
+                    
+                    # configure signal generator for NV drive
+                    sig_gen.set_frequency(sig_gen_freq) # set carrier frequency
+                    sig_gen.set_rf_amplitude(kwargs['rf_power']) # set MW power
+                    sig_gen.set_mod_type(7) # quadrature amplitude modulation
+                    sig_gen.set_mod_subtype(1) # no constellation mapping
+                    sig_gen.set_mod_function('IQ', 5) # external modulation
+                    sig_gen.set_mod_toggle(1) # turn on modulation mode
+
+                    volt_factor = self.volt_factor(kwargs['detector'])
+
+                    # upload AWG sequence first
+                    try:
+                        hdawg.set_sequence(**{'seq': 'CASR2',
+                                            'i_offset': kwargs['i_offset'],
+                                            'q_offset': kwargs['q_offset'],
+                                            'sideband_power': kwargs['sideband_power'],
+                                            'sideband_freq': kwargs['sideband_freq'], 
+                                            'iq_phases': iq_phases,
+                                            'pihalf_x': pi_half[0]/1e9,
+                                            'pihalf_y': pi_half[1]/1e9,
+                                            'pi_x': pi[0]/1e9, 
+                                            'pi_y': pi[1]/1e9,
+                                            'n_R': kwargs['num_pts'],
+                                            'n': kwargs['n'],
+                                            'rf_freq': kwargs['rf_pulse_freq'],
+                                            'rf_power': kwargs['rf_pulse_power'],
+                                            'rf_phase': kwargs['rf_pulse_phase'],
+                                            'rf_pihalf': kwargs['rf_pi_half']})          
+                    except Exception as e:
+                        print(e)
+                    
+                    # if successfully uploaded, run the experiment
+                    else:
+                        # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
+                        signal_sweeps = StreamingList()
+                        background_sweeps = StreamingList()
+
+                        # open laser shutter
+                        laser_shutter.open_shutter()
+                        time.sleep(0.1)
+
+                        # upload digitizer parameters
+                        self.dig.assign_param(dig_config)
+
+                        # emit MW for NV drive
+                        sig_gen.set_rf_toggle(1) # turn on NV signal generator
+
+                        # configure laser settings and turn on
+                        laser.set_modulation_state('pulsed')
+                        laser.set_analog_control_mode('current')
+                        laser.set_diode_current_realtime(kwargs['laser_power'])
+                        laser.laser_on()
+
+                        # set pulsestreamer to start on software trigger & run infinitely
+                        ps.set_soft_trigger()
+
+                        # new pulse streamer format:
+                        # upload both sequences to pulse streamer
+                        # 1. CASR RF sequence -> pi/2 on nuclear spins (n_runs = 1)
+                        # 2. CASR NV sequence -> pi/2 on electron spins (n_runs = num_pts x 2)
+                        ps.upload(slot_nr=ps.AUTO, data=seq_rf, n_runs=1, next_action=NextAction.SWITCH_SLOT, when=When.IMMEDIATE) #upload initial sequence data with n_runs=1
+                        ps.upload(slot_nr=ps.AUTO, data=seq_nv, n_runs=kwargs['num_pts']*2,next_action=NextAction.SWITCH_SLOT, when=When.IMMEDIATE) #upload measurement sequence with n_runs=num_pts*2
+                        
+                        #start internal data processing only as extra software trigger option is set (memory slots cannot be overwritten anymore)
+                        ps.start(ps.AUTO, slots_to_run=PulseStreamer.REPEAT_INFINITELY) # run 10 slots, so the last slot with the reference signal is played once and repeated 7 times afterwards
+                        
+                        # start digitizer --> waits for trigger from pulse sequence
+                        try:
+                            self.dig.config()
+                        except Exception as e:
+                            print(f"Digitizer exception: {e}")
+                            exception_type = type(e).__name__
+                            self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                        else:
+                            self.dig.start_buffer()
+                        
+                            # start pulse sequence
+                            ps.start_now()
+
+                            # start experiment loop
+                            for i in range(kwargs['iters']):
+                                
+                                casr_result_raw = self.dig.acquire() # acquire data from digitizer
+
+                                # average all data over each trigger/segment 
+                                casr_result=np.mean(casr_result_raw,axis=1)
+
+                                # partition buffer into signal and background datasets
+                                try:
+                                    sig, bg = volt_factor*self.analog_math(casr_result, 'CASR', kwargs['num_pts'])
+                                except ValueError:
+                                    continue
+
+                                # notify the streaminglist that this entry has updated so it will be pushed to the data server
+                                signal_sweeps.append(np.stack([times*1e3, sig]))
+                                signal_sweeps.updated_item(-1) 
+                                background_sweeps.append(np.stack([times*1e3, bg]))
+                                background_sweeps.updated_item(-1)
+
+                                # save the current data to the data server
+                                casr_data.push({'params': {'kwargs': kwargs},
+                                                'title': 'CASR Time Domain Data',
+                                                'xlabel': 'Free Precession Interval (ms) or Frequency (kHz)',
+                                                'ylabel': 'Signal',
+                                                'datasets': {'signal' : signal_sweeps,
+                                                            'background': background_sweeps}
+                                })
+
+                                # update GUI progress bar                        
+                                percent_completed = str(int(((i+1)/kwargs['iters'])*100))
+                                self.queue_from_exp.put_nowait([percent_completed, 'in progress', None])
+
+                                if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
+                                    # the GUI has asked us nicely to exit. Save data if requested.
+                                    # print(f"is there a queue to exp? {self.queue_to_exp.get()}")
+                                    self.equipment_off(kwargs['detector'])
+                                    self.queue_from_exp.put_nowait([percent_completed, 'stopped', None])
+                                    if kwargs['save'] == True:
+                                        self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
+                                    return
+                                    
+                            # save data if requested upon completion of experiment
+                            if kwargs['save'] == True:
+                                self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
+
+                            self.queue_from_exp.put_nowait([percent_completed, 'complete', None])
+
+                    finally:
+                        self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed 
+
+    
+
+
+
+
 
     """ Data Fitting """
 
@@ -4092,32 +4345,33 @@ class SpinMeasurements:
                 param_errors = np.sqrt(np.diag(covariance))
                 # compute fitted value of interest (resonance for ODMR, pi pulse for Rabi, etc.)
                 # fitted_value = round(x_fit[np.argmin(y_fit)],4)
-                fitted_value = round(params[1], 4)
-                fitted_error = round(param_errors[1], 4)
+                fitted_values = [round(i, 4) for i in params]
+                fitted_errors = [round(i, 4) for i in param_errors]
             case 'rabi':
                 params, covariance = curve_fit(self.decaying_cosine, x_values, y_values, p0=initial_guess)
                 y_fit = self.decaying_cosine(x_fit, *params)
                 param_errors = np.sqrt(np.diag(covariance))
                 # compute fitted value of interest (resonance for ODMR, pi pulse for Rabi, etc.)
-                # fitted_value = round(x_fit[np.argmin(y_fit)],2)
-                fitted_value = round(params[2]/2, 2)
-                fitted_error = round(param_errors[2]/2, 2)
+                fitted_values = [round(i, 2) for i in params]
+                fitted_errors = [round(i, 2) for i in param_errors]
+                fitted_values[2] = round(x_fit[np.argmin(y_fit)],2)
+                fitted_errors[2] = 0
             case 't1':
                 params, covariance = curve_fit(self.stretched_exponential, x_values, y_values, p0=initial_guess)
                 y_fit = self.stretched_exponential(x_fit, *params)
                 param_errors = np.sqrt(np.diag(covariance))
                 # compute fitted value of interest (resonance for ODMR, pi pulse for Rabi, etc.)
-                fitted_value = round(params[1], 3)
-                fitted_error = round(param_errors[1], 3)
+                fitted_values = [round(i, 3) for i in params]
+                fitted_errors = [round(i, 3) for i in param_errors]
             case 't2':
                 params, covariance = curve_fit(self.mod_stretched_exponential, x_values, y_values, p0=initial_guess)
                 y_fit = self.mod_stretched_exponential(x_fit, *params)
                 param_errors = np.sqrt(np.diag(covariance))
                 # compute fitted value of interest (resonance for ODMR, pi pulse for Rabi, etc.)
-                fitted_value = round(params[1],3)
-                fitted_error = round(param_errors[1], 3)
+                fitted_values = [round(i, 3) for i in params]
+                fitted_errors = [round(i, 3) for i in param_errors]
 
-        return fitted_value, fitted_error, x_fit, y_fit
+        return fitted_values, fitted_errors, x_fit, y_fit
     
     def fit_deer_data(self, exp, dark_sig_data, dark_back_data, echo_sig_data, echo_back_data, *args):
         # Combine all dark signal sweeps into a single 3D array and average
@@ -4157,20 +4411,27 @@ class SpinMeasurements:
                 y_fit = self.negative_lorentzian(x_fit, *params)
                 param_errors = np.sqrt(np.diag(covariance))
                 # fitted_value = round(x_fit[np.argmin(y_fit)],3)
-                fitted_value = round(params[1], 3)
-                fitted_error = round(param_errors[1], 3)
+                fitted_values = [round(i, 3) for i in params]
+                fitted_errors = [round(i, 3) for i in param_errors]
+                # fitted_values[0] = 100*round(params[0], 3) # to display DEER contrast as percent
+                # fitted_errors[0] = 100*round(param_errors[0], 3)
             case 'deer rabi':
                 params, covariance = curve_fit(self.decaying_cosine, x_values, y_values, p0=initial_guess)
                 y_fit = self.decaying_cosine(x_fit, *params)
                 param_errors = np.sqrt(np.diag(covariance))
                 # fitted_value = round(x_fit[np.argmin(y_fit)],2)
-                fitted_value = round(params[2]/2, 2)
-                fitted_error = round(param_errors[2]/2, 2)
+                fitted_values = [round(i, 2) for i in params]
+                fitted_errors = [round(i, 2) for i in param_errors]
+                # fitted_values[2] = round(params[2]/2, 2)
+                # fitted_errors[2] = round(param_errors[2]/2, 2)
+                fitted_values[2] = round(x_fit[np.argmin(y_fit)],2)
+                fitted_errors[2] = 0
+
         # # Extract fitted parameters
         # A_fit, gamma_fit, f_fit, phi_fit, C_fit = params
 
         # print(f"Fitted pi pulse = {fitted_value} ns")
-        return fitted_value, fitted_error, x_fit, y_fit
+        return fitted_values, fitted_errors, x_fit, y_fit
 
 
     # def __enter__(self):

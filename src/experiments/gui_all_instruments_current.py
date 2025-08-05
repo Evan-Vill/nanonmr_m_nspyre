@@ -81,11 +81,49 @@ class InstWidget(QWidget):
         self.magnet_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.magnet_label.setFont(QFont(self.font, 20))
 
+        all_disable_button_style = """
+        QPushButton {
+        background-color: #333333;
+        color: white;
+        border: 2px solid white;
+        border-radius: 5px;
+        padding: 5px;
+        }
+
+        QPushButton:hover {
+        background-color: #444444;
+        border: 2px solid #ffffff;
+        }
+
+        QPushButton:pressed {
+        background-color: #555555;
+        border: 2px solid #ffffff;
+        }"""
         self.all_disable_button = QPushButton("Enable All")
+        self.all_disable_button.setStyleSheet(all_disable_button_style)
         self.all_disable_proc = ProcessRunner()
         self.all_disable_button.clicked.connect(self.all_disable_clicked)
         
+        all_standby_button_style = """
+        QPushButton {
+        background-color: #474b00;
+        color: white;
+        border: 2px solid #d7d700;
+        border-radius: 5px;
+        padding: 5px;
+        }
+        
+        QPushButton:hover {
+        background-color: #3f4b00;
+        border: 2px solid #00d7c9;
+        }
+        
+        QPushButton:pressed {
+        background-color: #4f5f00;
+        border: 2px solid #00d7c9;
+        }"""
         self.all_standby_button = QPushButton("Standby")
+        self.all_standby_button.setStyleSheet(all_standby_button_style)
         self.all_standby_proc = ProcessRunner()
         self.all_standby_button.clicked.connect(self.all_standby_clicked)
 
@@ -147,7 +185,7 @@ class InstWidget(QWidget):
             self.r_opacity_effects.append(QGraphicsOpacityEffect())
             self.r_opacity_effects[i].setOpacity(0.3)
 
-        self.r_label = QLabel("R")
+        self.r_label = QLabel("Step 3: R")
         self.r_label.setFixedHeight(30)
         self.r_label.setFont(QFont(self.font, 20))
         # self.r_pos_label = QLabel(f"r position = {self.curr_r} mm (mag. sep. = {2*self.curr_r + self.r_offset} mm)")
@@ -199,7 +237,7 @@ class InstWidget(QWidget):
             self.polar_opacity_effects.append(QGraphicsOpacityEffect())
             self.polar_opacity_effects[i].setOpacity(0.3)
 
-        self.polar_label = QLabel("\u03B8")    
+        self.polar_label = QLabel("Step 2: \u03B8")    
         self.polar_label.setFixedHeight(30)
         self.polar_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.polar_label.setFont(QFont(self.font, 20))    
@@ -250,7 +288,7 @@ class InstWidget(QWidget):
             self.azi_opacity_effects.append(QGraphicsOpacityEffect())
             self.azi_opacity_effects[i].setOpacity(0.3)
 
-        self.azi_label = QLabel("\u03C6")
+        self.azi_label = QLabel("Step 1: \u03C6")
         self.azi_label.setFixedHeight(30)
         self.azi_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.azi_label.setFont(QFont(self.font, 20))
@@ -480,8 +518,8 @@ class InstWidget(QWidget):
         self.gui_layout = QVBoxLayout()
 
         self.magnet_frame = QFrame(self)
-        self.magnet_frame.setStyleSheet("background-color: #2b2b2b")
-
+        self.magnet_frame.setObjectName("magFrame")
+        self.magnet_frame.setStyleSheet("QFrame#magFrame {background-color: #2b2b2b; border: 2px solid #717171; border-radius: 5px;}")
         self.magnet_layout = QGridLayout(self.magnet_frame)
         self.magnet_layout.setSpacing(0)
         self.magnet_layout.addWidget(self.magnet_label,1,1,1,3)
@@ -490,7 +528,8 @@ class InstWidget(QWidget):
         self.magnet_layout.addWidget(self.azi_label,2,3,1,1, Qt.AlignmentFlag.AlignCenter)
 
         self.b_frame = QFrame(self)
-        self.b_frame.setStyleSheet("background-color: #2b2b2b")
+        self.b_frame.setObjectName("bFrame")
+        self.b_frame.setStyleSheet("QFrame#bFrame {background-color: #20373b; border: 2px solid #47747c; border-radius: 5px;}")
         self.b_layout = QGridLayout(self.b_frame)
         self.b_layout.setSpacing(0)
         self.b_layout.addWidget(self.b_label,1,1,1,2, Qt.AlignmentFlag.AlignCenter)
@@ -501,7 +540,8 @@ class InstWidget(QWidget):
         self.b_layout.addWidget(self.b_execute_button,4,1)
 
         self.zaber_frame = QFrame(self)
-        self.zaber_frame.setStyleSheet("background-color: #2b2b2b")
+        self.zaber_frame.setObjectName("zaberFrame")
+        self.zaber_frame.setStyleSheet("QFrame#zaberFrame {background-color: #331313; border: 2px solid #854141; border-radius: 5px;}")
         # self.zaber_frame.setFrameShape(QFrame.StyledPanel)
         # self.zaber_frame.setFrameShadow(QFrame.Raised)
 
@@ -517,7 +557,8 @@ class InstWidget(QWidget):
         self.r_layout.addWidget(self.r_stop_button,5,1,1,2)
 
         self.thor1_frame = QFrame(self)
-        self.thor1_frame.setStyleSheet("background-color: #2b2b2b")
+        self.thor1_frame.setObjectName("thor1Frame")
+        self.thor1_frame.setStyleSheet("QFrame#thor1Frame {background-color: #331313; border: 2px solid #854141; border-radius: 5px;}")
         # self.thor1_frame.setFrameShape(QFrame.StyledPanel)
         # self.thor1_frame.setFrameShadow(QFrame.Raised)
         
@@ -533,7 +574,8 @@ class InstWidget(QWidget):
         self.polar_layout.addWidget(self.polar_stop_button,5,1,1,2)
         
         self.thor2_frame = QFrame(self)
-        self.thor2_frame.setStyleSheet("background-color: #2b2b2b")
+        self.thor2_frame.setObjectName("thor2Frame")
+        self.thor2_frame.setStyleSheet("QFrame#thor2Frame {background-color: #331313; border: 2px solid #854141; border-radius: 5px;}")
         # self.thor2_frame.setFrameShape(QFrame.StyledPanel)
         # self.thor2_frame.setFrameShadow(QFrame.Raised)
 
@@ -549,8 +591,8 @@ class InstWidget(QWidget):
         self.azi_layout.addWidget(self.azi_stop_button,5,1,1,2)
 
         self.status_frame = QFrame(self)
-        self.status_frame.setStyleSheet("background-color: #2b2b2b")
-
+        self.status_frame.setObjectName("statusFrame")
+        self.status_frame.setStyleSheet("QFrame#statusFrame {background-color: #2b2b2b; border: 2px solid #717171; border-radius: 5px;}")
         self.status_bar_layout = QGridLayout(self.status_frame)
         self.status_bar_layout.setSpacing(0)
         self.status_bar_layout.addWidget(self.all_disable_button,1,1,1,1)
@@ -561,16 +603,17 @@ class InstWidget(QWidget):
         self.individual_cmds_layout.setSpacing(0)
 
         self.individual_cmds_layout.addWidget(self.magnet_frame,1,1,1,4)
-        self.individual_cmds_layout.addWidget(self.b_frame,2,1,1,1)
-        self.individual_cmds_layout.addWidget(self.zaber_frame,2,2,1,1)
-        self.individual_cmds_layout.addWidget(self.thor1_frame,2,3,1,1)
-        self.individual_cmds_layout.addWidget(self.thor2_frame,2,4,1,1)
+        self.individual_cmds_layout.addWidget(self.thor2_frame,2,1,1,1)
+        self.individual_cmds_layout.addWidget(self.thor1_frame,2,2,1,1)
+        self.individual_cmds_layout.addWidget(self.zaber_frame,2,3,1,1)
+        self.individual_cmds_layout.addWidget(self.b_frame,2,4,1,1)
         self.individual_cmds_layout.addWidget(self.status_frame,3,1,1,4)
 
 
 
         self.sg396_frame = QFrame(self)
-        self.sg396_frame.setStyleSheet("background-color: #2b2b2b")
+        self.sg396_frame.setObjectName("sgFrame")
+        self.sg396_frame.setStyleSheet("QFrame#sgFrame {background-color: #2b2b2b; border: 2px solid #717171; border-radius: 5px;}")
         self.sg396_layout = QGridLayout(self.sg396_frame)
         self.sg396_layout.setSpacing(0)
         self.sg396_layout.addWidget(self.sg396_label,1,1,1,2)
@@ -589,7 +632,10 @@ class InstWidget(QWidget):
 
 
         self.laser_frame = QFrame(self)
-        self.laser_frame.setStyleSheet("background-color: #454545")
+        self.laser_frame.setObjectName("laserFrame")
+        # self.laser_frame.setFrameShape(QFrame.StyledPanel)
+        # self.laser_frame.setFrameShadow(QFrame.Raised)
+        self.laser_frame.setStyleSheet("QFrame#laserFrame {background-color: #003407; border: 2px solid limegreen; border-radius: 5px;}")
         self.laser_layout = QGridLayout(self.laser_frame)
         self.laser_layout.setSpacing(0)
         self.laser_layout.addWidget(self.laser_label,1,1,1,2)
@@ -914,31 +960,31 @@ class InstWidget(QWidget):
             self.status_label.setStyleSheet("color: black; background-color: red; border: 4px solid black;")
             self.status_label.setText("Magnet Status: CANNOT MOVE STAGE IS PARKED")
             
-    def all_move_types_changed(self, state):
-        if state == "Absolute":
-            self.r, self.rPressed = QInputDialog.getDouble(self, "Set r", "Position (mm):", 100, 0, 100, 0.01)
-            if self.rPressed:
-                new_positions = f"r = {self.r} mm"
-                self.all_positions.setText(new_positions)
+    # def all_move_types_changed(self, state):
+    #     if state == "Absolute":
+    #         self.r, self.rPressed = QInputDialog.getDouble(self, "Set r", "Position (mm):", 100, 0, 100, 0.01)
+    #         if self.rPressed:
+    #             new_positions = f"r = {self.r} mm"
+    #             self.all_positions.setText(new_positions)
 
-            self.theta, self.thetaPressed = QInputDialog.getDouble(self, "Set \u03B8", "Angle (\N{DEGREE SIGN}):", 0, -50, 50, 0.01)
-            if self.thetaPressed:
-                new_positions += f"\n\u03B8 = {self.theta}\N{DEGREE SIGN}"
-                self.all_positions.setText(new_positions)
+    #         self.theta, self.thetaPressed = QInputDialog.getDouble(self, "Set \u03B8", "Angle (\N{DEGREE SIGN}):", 0, -50, 50, 0.01)
+    #         if self.thetaPressed:
+    #             new_positions += f"\n\u03B8 = {self.theta}\N{DEGREE SIGN}"
+    #             self.all_positions.setText(new_positions)
             
-            self.phi, self.phiPressed = QInputDialog.getDouble(self, "Set \u03C6", "Angle (\N{DEGREE SIGN}):", 0, 0, 130, 0.01)
-            if self.phiPressed:
-                new_positions += f"\n\u03C6 = {self.phi}\N{DEGREE SIGN}"
-                self.all_positions.setText(new_positions)
+    #         self.phi, self.phiPressed = QInputDialog.getDouble(self, "Set \u03C6", "Angle (\N{DEGREE SIGN}):", 0, 0, 130, 0.01)
+    #         if self.phiPressed:
+    #             new_positions += f"\n\u03C6 = {self.phi}\N{DEGREE SIGN}"
+    #             self.all_positions.setText(new_positions)
             
-            self.all_opacity_effects[2].setEnabled(False)
-            self.clear_all_positions.setEnabled(True)
+    #         self.all_opacity_effects[2].setEnabled(False)
+    #         self.clear_all_positions.setEnabled(True)
 
-        elif state == "Jog":
-            pass
+    #     elif state == "Jog":
+    #         pass
 
-        else:
-            pass
+    #     else:
+    #         pass
 
     def clear_positions_clicked(self):
         self.all_positions.clear()
@@ -989,9 +1035,9 @@ class InstWidget(QWidget):
                 self.status_label.setStyleSheet("color: black; background-color: limegreen; border: 4px solid black;")
                 self.status_label.setText("Magnet Status: MOVEMENT COMPLETED")
 
-                self.r_label.setText(f"R = {queueText[1][0]}")
-                self.polar_label.setText(f"\u03B8 = {round(queueText[2],1)}\N{DEGREE SIGN}")
-                self.azi_label.setText(f"\u03C6 = {round(queueText[3],1)}\N{DEGREE SIGN}")
+                self.r_label.setText(f"Step 3: R = {queueText[1][0]}")
+                self.polar_label.setText(f"Step 2: \u03B8 = {round(queueText[2],1)}\N{DEGREE SIGN}")
+                self.azi_label.setText(f"Step 1: \u03C6 = {round(queueText[3],1)}\N{DEGREE SIGN}")
 
             elif queueText[0] == 'start standby':
                 self.status_label.setStyleSheet("color: black; background-color: gold; border: 4px solid black;")

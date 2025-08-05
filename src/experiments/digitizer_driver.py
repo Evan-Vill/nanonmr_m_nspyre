@@ -131,7 +131,9 @@ class SpectrumDigitizer():
         # print(obtain(self.mem_size), type(obtain(self.mem_size)))
         # setup clock engine
         clock = spcm.Clock(self.card)
-        clock.mode(spcm.SPC_CM_INTPLL)
+        # clock.mode(spcm.SPC_CM_INTPLL)
+        clock.mode(spcm.SPC_CM_EXTREFCLOCK)
+        clock.reference_clock(10000000) # reference clk = 10 MHz
         clock.sample_rate(self.sampling_frequency)
         
         CH_mapping = {

@@ -15,7 +15,7 @@ from rpyc.utils.classic import obtain
 from pulsestreamer.grpc.pulse_streamer_grpc import PulseStreamer
 # from c:\NSpyre\miniconda3\envs\ev_nspy\Lib\site-packages\pulsestreamer
 from pulsestreamer.sequence import Sequence
-from pulsestreamer.enums import TriggerStart
+from pulsestreamer.enums import TriggerStart, ClockSource
 
 class Pulses():
 
@@ -46,6 +46,8 @@ class Pulses():
         self.awg_pulse_delay = awg_pulse_delay
 
         self.Pulser = PulseStreamer(ip)
+        self.Pulser.selectClock(ClockSource.EXT_10MHZ)
+        print("PS clock: ", self.Pulser.getClock())
         self.sequence = Sequence()
 
         self.latest_streamed = pd.DataFrame({})
@@ -2706,9 +2708,9 @@ class Pulses():
 
             # assign sequences to respective channels for seq
             nuclear_spin_ps = nuclear_spin_seq
-            laser_ps = laser_seq1 + laser_seq2*(n_R-1)
-            dig_ps = dig_clock_seq1 + dig_clock_seq2*(n_R-1)
-            mw_ps = mw_iq_seq1 + mw_iq_seq2*(n_R-1)
+            laser_ps = laser_seq1 + laser_seq2*(2*n_R-1)
+            dig_ps = dig_clock_seq1 + dig_clock_seq2*(2*n_R-1)
+            mw_ps = mw_iq_seq1 + mw_iq_seq2*(2*n_R-1)
             
             seq.setDigital(1, dig_ps) # digitizer trigger
             seq.setDigital(2, mw_ps) # MW IQ
@@ -2721,7 +2723,7 @@ class Pulses():
 
         return seqs
         
-    def CASR_RF(self, laser_time, singlet_decay, pihalf_x, pihalf_y, pi_x, pi_y, tau, n, mw_buffer_time, read_time, wait_time, n_R):
+    def CASR_Coil(self, laser_time, singlet_decay, pihalf_x, pihalf_y, pi_x, pi_y, tau, n, mw_buffer_time, read_time, wait_time, n_R):
         '''
         Coherent averaged synchronized readout (CASR).
         '''
@@ -2798,6 +2800,100 @@ class Pulses():
             return seq
         
         seqs = SingleCASR()
+
+        return seqs
+
+
+    def CASR_RF(self, nuclear_pihalf):
+        '''
+        Coherent averaged synchronized readout (CASR).
+        '''
+        nuclear_pihalf = self.convert_type(round(nuclear_pihalf), float)
+
+        def SingleCASR_RF():
+            # create sequence objects for MW on and off blocks
+            seq = self.Pulser.createSequence()
+
+            # nuclear spin pi/2 initial pulse
+            nuclear_spin_off = - self.awg_trig_time + nuclear_pihalf
+            nuclear_spin_seq = [(self.awg_trig_time, 1), (nuclear_spin_off, 0)]
+
+            # assign sequences to respective channels for seq
+            nuclear_spin_ps = nuclear_spin_seq
+            
+            seq.setDigital(7, nuclear_spin_ps)
+
+            return seq
+
+        seqs = SingleCASR_RF()
+
+        return seqs
+    
+    def CASR_NV(self, laser_time, singlet_decay, pihalf_x, pihalf_y, pi_x, pi_y, tau, n, mw_buffer_time, read_time, wait_time):
+        '''
+        Coherent averaged synchronized readout (CASR).
+        '''
+        laser_time = self.convert_type(round(laser_time), float)
+        singlet_decay = self.convert_type(round(singlet_decay), float)
+        pihalf_x = self.convert_type(round(pihalf_x), float)
+        pihalf_y = self.convert_type(round(pihalf_y), float)
+        pi_x = self.convert_type(round(pi_x), float)
+        pi_y = self.convert_type(round(pi_y), float)
+        tau = self.convert_type(round(tau), float)
+        n = self.convert_type(round(n), int)
+        mw_buffer_time = self.convert_type(round(mw_buffer_time), float)
+        read_time = self.convert_type(round(read_time), float)
+        wait_time = self.convert_type(round(wait_time), float)
+
+        def PiPulsesN(tau, N):
+            xy8_iq_seq = [(tau/2, 0), (self.awg_trig_time, 1), 
+                          ((pi_x - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1), 
+                          ((pi_y - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1), 
+                          ((pi_x - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1), 
+                          ((pi_y - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1),
+                          ((pi_y - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1),
+                          ((pi_x - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1),
+                          ((pi_y - self.awg_trig_time) + tau, 0), (self.awg_trig_time, 1),
+                          ((pi_x - self.awg_trig_time) + tau/2, 0)]
+
+            mw_IQ = (xy8_iq_seq)*N
+                
+            return mw_IQ
+
+        def SingleCASR_NV():
+            # create sequence objects for MW on and off blocks
+            seq = self.Pulser.createSequence()
+
+            # total time for CASR DD subsequence
+            casr_time = pihalf_x + (tau/2 + 4*pi_x + 4*pi_y + 7*tau + tau/2)*n + pihalf_y
+
+            # laser       
+            laser_off1 = singlet_decay + casr_time + mw_buffer_time
+            laser_off2 = wait_time
+            laser_seq = [(laser_time, 1), (laser_off1, 0), (read_time, 1), (laser_off2, 0)]
+
+            # digitizer 
+            clock_off1 = laser_time + laser_off1
+            clock_off2 = - self.clock_time + read_time + laser_off2
+            dig_clock_seq = [(clock_off1, 0), (self.clock_time, 1), (clock_off2, 0)] # define sequence structure for digitizer trigger
+
+            # mw I & Q off windows 
+            iq_off_start = laser_time + self.singlet_decay
+            iq_off_end = (pihalf_y - self.awg_trig_time) + mw_buffer_time + read_time + laser_off2
+            mw_iq_seq = [(iq_off_start, 0), (self.awg_trig_time, 1), (pihalf_x - self.awg_trig_time, 0)] + PiPulsesN(tau, n) + [(self.awg_trig_time, 1), (iq_off_end, 0)] # sequence structure for I & Q MW channels             
+
+            # assign sequences to respective channels for seq
+            laser_ps = laser_seq
+            dig_ps = dig_clock_seq
+            mw_ps = mw_iq_seq
+            
+            seq.setDigital(1, dig_ps) # digitizer trigger
+            seq.setDigital(2, mw_ps) # MW IQ
+            seq.setDigital(3, laser_ps) # laser
+
+            return seq
+        
+        seqs = SingleCASR_NV()
 
         return seqs
     

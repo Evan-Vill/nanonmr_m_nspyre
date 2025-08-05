@@ -35,10 +35,10 @@ with InstrumentServer() as local_inserv:
                      class_path = _HERE / 'fw102c_driver_current.py', 
                      class_name = 'FilterWheel')
                          
-    local_inserv.add(name = 'laser', 
-                     class_path = _HERE / 'laser_driver_current.py', 
-                     class_name = 'LaserControl',
-                     args = ['LAS-08166'])
+    # local_inserv.add(name = 'laser', 
+    #                  class_path = _HERE / 'laser_driver_current.py', 
+    #                  class_name = 'LaserControl',
+    #                  args = ['LAS-08166'])
 
     local_inserv.add(name = 'laser_shutter', 
                      class_path = _HERE / 'thorlabs_laser_shutter_driver_current.py', 
