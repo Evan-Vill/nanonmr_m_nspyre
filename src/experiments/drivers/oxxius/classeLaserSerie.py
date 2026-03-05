@@ -10,7 +10,9 @@ class LasersList():
     def __init__(self):
         self.count = 0
         self.laserslist = []
-        self.ports_com = self.serial_ports()
+        # self.ports_com = self.serial_ports()
+        self.ports_com = ['COM6']  # laser on COM6
+        print("Detected COM ports:", self.ports_com)
         for com in self.ports_com:
             ser = serial.Serial()
             ser.baudrate = 38400
@@ -37,7 +39,8 @@ class LasersList():
                     couleur = infos[1]
                     puissance = infos[2]
                     self.laserslist.append([serial_number, type, couleur, puissance, com, ser.baudrate])
-    
+        
+
     def send(self,ser, command, init):
         ser.open()
         if init:

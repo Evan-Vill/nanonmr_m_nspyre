@@ -119,6 +119,16 @@ class NIDAQ():
         
         self.do_task.write(data)
 
+    def read_do_task(self):
+        """
+        Reads the digital output state of a specified PFI channel.
+
+        Returns:
+            bool: The digital state (True for high, False for low).
+        """
+        value = self.do_task.read()
+        return value
+    
     def stop_do_task(self):  
         print(f"{self.do_task} task stopped.")
         self.do_task.stop()
@@ -132,7 +142,8 @@ class NIDAQ():
         else:
             self.do_task = None
 
-
+    
+    
     ### Analog output task management
     def start_ao_task(self):
         self.ao_task.start()

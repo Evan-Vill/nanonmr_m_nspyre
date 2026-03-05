@@ -17,7 +17,7 @@ from scipy.optimize import curve_fit
 from rpyc.utils.classic import obtain
 
 # from nspyre import FlexLinePlotWidget, LinePlotWidget
-from nspyre.gui.widgets.flex_line_plot_3 import FlexLinePlotWidget
+from nspyre.gui.widgets.flex_line_plot_4 import FlexLinePlotWidget
 from nspyre import DataSink
 from pyqtgraph import SpinBox, ComboBox
 from pyqtgraph import PlotWidget
@@ -38,7 +38,7 @@ from nspyre import InstrumentManager
 
 from gui_test import Communicate 
 
-import nv_experiments_all
+import nv_experiments_all_2
 import nv_experiments_daq
 
 class ExpWidget(QWidget):
@@ -57,14 +57,14 @@ class ExpWidget(QWidget):
         # parameter defaults for different experiments
         self.sideband_opts = ["Lower", "Upper"]
         self.sideband_cw_opts = ["Lower", "Upper"]
-        self.detector_opts = ["APD", "BPD", "PMT"]
+        self.detector_opts = ["APD", "BPD"]
 
         self.dig_ro_chan_opts = ["0", "1"]
         self.dig_coupling_opts = ["DC", "AC"]
         self.dig_termination_opts = ["1M", "50"]
         
-        self.sigvstime_detector_opts = ["APD", "BPD", "PMT"]
-        self.sigvstime_mw_detector_opts = ["APD", "BPD", "PMT"]
+        self.sigvstime_detector_opts = ["APD", "BPD"]
+        self.sigvstime_mw_detector_opts = ["APD", "BPD"]
 
         self.rabi_axis_opts = ["y", "x"]
         self.opt_t1_array_opts = ["geomspace", "linspace"]
@@ -83,6 +83,7 @@ class ExpWidget(QWidget):
         self.sigvstime_mw_params_defaults = [1e3, self.sigvstime_mw_detector_opts] # not needed - hidden in GUI
 
         self.laser_params_defaults = [0, 15e-6, 2.5e-6, 30e6, 0.45, self.sideband_opts, -0.002, -0.004, self.detector_opts]
+        self.laser_params_sigvstime_defaults = [0]
         self.digitizer_defaults = [1024, 500e6, 1, self.dig_ro_chan_opts, self.dig_coupling_opts, self.dig_termination_opts, 32, 5]
 
         # split up defaults into the non-MW and MW settings to save vertical space in GUI
@@ -152,9 +153,10 @@ class ExpWidget(QWidget):
         self.fit_deer_rabi_defaults = [0.1, 0.001, 100, 0, 1]
 
         # experiment dictionary - associates experiment function, default parameter array, dataset, laser parameters and digitizer parameters to an experiment type
-        self.exp_dict = {"Signal vs Time": ["sigvstime_scan", self.sigvstime_params_defaults, self.sigvstime_mw_params_defaults, 'sigvstime', self.laser_params_defaults, self.digitizer_defaults], # ODMR MW params hidden and serves as placeholder for sig vs time experiment in GUI
+        self.exp_dict = {"Signal vs Time": ["sigvstime_scan", self.sigvstime_params_defaults, self.sigvstime_mw_params_defaults, 'sigvstime', self.laser_params_sigvstime_defaults, self.digitizer_defaults], # ODMR MW params hidden and serves as placeholder for sig vs time experiment in GUI
                     "CW ODMR": ["odmr_scan", self.odmr_params_defaults, self.odmr_mw_params_defaults, 'odmr', self.laser_params_defaults, self.digitizer_defaults],
                     "ODMR Smart Scan": ["odmr_smart_scan", self.odmr_smart_params_defaults, self.odmr_smart_mw_params_defaults, 'odmr', self.laser_params_defaults, self.digitizer_defaults],
+                    "Sig Laser": [None, self.laser_params_sigvstime_defaults],
                     "Laser": [None, self.laser_params_defaults],
                     "Digitizer": [None, self.digitizer_defaults],
                     "Pulsed ODMR": ["pulsed_odmr_scan", self.pulsed_odmr_params_defaults, self.pulsed_odmr_mw_params_defaults, 'odmr', self.laser_params_defaults, self.digitizer_defaults],
@@ -608,10 +610,14 @@ class ExpWidget(QWidget):
 
     def create_params_widget(self, tag, defaults): 
         match tag:
+            case 'Sig Laser':    
+                params = {
+                        'laser_power': {'display_text': 'Power (%): ',
+                                'widget': SpinBox(value = defaults[0], int = True, bounds=(0, 100), dec = True)}}
             case 'Laser':    
                 params = {
                         'laser_power': {'display_text': 'Power (%): ',
-                                'widget': SpinBox(value = defaults[0], int = True, bounds=(0, 110), dec = True)},
+                                'widget': SpinBox(value = defaults[0], int = True, bounds=(0, 100), dec = True)},
                         'laser_init': {'display_text': 'Initialize Time (pulsed): ',
                                 'widget': SpinBox(value = defaults[1], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
                         'laser_readout': {'display_text': 'Read Time (pulsed): ',
@@ -1605,8 +1611,11 @@ class ExpWidget(QWidget):
                 else:
                     self.opacity_effects[i].setEnabled(False)
             self.opacity_effects[16].setEnabled(False) # auto fit checkbox
-
-            self.laser_params_widget = ParamsWidget(self.create_params_widget('Laser', self.exp_dict['Laser'][1]), get_param_value_funs = {ComboBox: self.get_combobox_val})
+            
+            if self.experiments.currentText() == 'Signal vs Time': # use specific signal vs time laser parameters (just power)
+                self.laser_params_widget = ParamsWidget(self.create_params_widget('Sig Laser', self.exp_dict['Sig Laser'][1]), get_param_value_funs = {ComboBox: self.get_combobox_val})
+            else:
+                self.laser_params_widget = ParamsWidget(self.create_params_widget('Laser', self.exp_dict['Laser'][1]), get_param_value_funs = {ComboBox: self.get_combobox_val})
             self.laser_params_widget.setGraphicsEffect(self.opacity_effects[6]) # reset opacity effects
             self.dig_params_widget = ParamsWidget(self.create_params_widget('Digitizer', self.exp_dict['Digitizer'][1]), get_param_value_funs = {ComboBox: self.get_combobox_val})
             self.dig_params_widget.setGraphicsEffect(self.opacity_effects[8]) # reset opacity effects
@@ -1656,8 +1665,8 @@ class ExpWidget(QWidget):
             if self.experiments.currentText() == 'Signal vs Time': # hide MW, laser and digitizer params widgets
                 self.mw_label.hide()
                 self.mw_params_widget.hide()
-                self.laser_label.hide()
-                self.laser_params_widget.hide()
+                self.laser_label.show()
+                self.laser_params_widget.show()
                 self.daq_b1.show()
                 self.daq_b2.show()
                 self.dig_label.hide()
@@ -1766,11 +1775,11 @@ class ExpWidget(QWidget):
 
             # reload the module at runtime in case any changes were made to the code
             if self.daq_b1.isChecked(): # digitizer settings
-                reload(nv_experiments_all)
+                reload(nv_experiments_all_2)
                 # call the function in a new process
                 self.run_proc.run(
                 run_experiment,
-                exp_cls = nv_experiments_all.SpinMeasurements,
+                exp_cls = nv_experiments_all_2.SpinMeasurements,
                 fun_name = self.exp_dict[self.experiments.currentText()][0],
                 constructor_args = list(),
                 constructor_kwargs = dict(),

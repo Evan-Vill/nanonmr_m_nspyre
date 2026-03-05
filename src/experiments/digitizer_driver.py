@@ -45,6 +45,7 @@ class SpectrumDigitizer():
                                 pretrig_size = 32*units.Sa, 
                                 posttrig_size = None,
                                 readout_ch = None,
+                                both_ch = False,
                                 ip_address = ip_address,
                                 runs = None, 
                                 sampling_frequency = 0.5*units.GHz,
@@ -86,15 +87,34 @@ class SpectrumDigitizer():
     def reset(self):
         self.card.reset()
 
-    def assign_param(self,settings_dict):
-        # assign the configuration to self
+    def assign_param(self, settings_dict):
         for key, value in settings_dict.items():
-            if hasattr(self, key):
-                # setattr(self, key, value)
-                if key == "segment_size" or "pretrig_size":
-                    setattr(self, key, value*units.Sa)
-                else:
-                    setattr(self, key, value)
+            if not hasattr(self, key):
+                continue
+            
+            # keep readout_ch as a plain int
+            if key == "readout_ch":
+                setattr(self, key, int(value))
+                continue
+
+            if key in ("segment_size", "pretrig_size", "posttrig_size", "num_pts_in_exp", "runs"):
+                setattr(self, key, value * units.Sa)
+            elif key in ("sampling_frequency",):
+                setattr(self, key, value * units.GHz)  # or units.Hz depending on how you pass it
+            elif key in ("card_timeout",):
+                setattr(self, key, value * units.s)
+            else:
+                setattr(self, key, value)
+
+    # def assign_param(self,settings_dict):
+    #     # assign the configuration to self
+    #     for key, value in settings_dict.items():
+    #         if hasattr(self, key):
+    #             # setattr(self, key, value)
+    #             if key == "segment_size" or "pretrig_size":
+    #                 setattr(self, key, value*units.Sa)
+    #             else:
+    #                 setattr(self, key, value)
    
     def config(self):
         
@@ -113,13 +133,13 @@ class SpectrumDigitizer():
         # print(self.card.max_sample_value())
 
         # get rid of samples [Sa] units on integer-valued quantities
-        self.AMP = self.AMP/units.Sa
-        self.ACCOUPLE = self.ACCOUPLE/units.Sa
-        self.HF_INPUT_50OHM = self.HF_INPUT_50OHM/units.Sa
-        self.sampling_frequency = self.sampling_frequency*units.GHz/units.Sa
-        self.card_timeout = self.card_timeout*units.s/units.Sa
-        self.runs = self.runs/units.Sa
-        self.num_pts_in_exp = self.num_pts_in_exp/units.Sa
+        self.AMP = self.AMP
+        self.ACCOUPLE = self.ACCOUPLE
+        self.HF_INPUT_50OHM = self.HF_INPUT_50OHM
+        self.sampling_frequency = self.sampling_frequency
+        self.card_timeout = self.card_timeout
+        self.runs = self.runs
+        self.num_pts_in_exp = self.num_pts_in_exp
         
         self.posttrig_size = (self.segment_size - self.pretrig_size)
         self.num_segment = self.runs*self.num_pts_in_exp #*self.num_iters
@@ -163,10 +183,20 @@ class SpectrumDigitizer():
         self.card.timeout(self.card_timeout) # get rid of samples [Sa] units on card timeout param
 
         # set Analog input parameters
+        if not self.both_ch:
+            self.card.set_i(spcm.SPC_CHENABLE, CH_mapping[self.readout_ch])
+        else:
+            self.card.set_i(spcm.SPC_CHENABLE, spcm.CHANNEL0 | spcm.CHANNEL1)
+        
         self.card.set_i(self.PATH, int(self.HF_INPUT_50OHM))
         self.card.set_i(self.AMP_ch, int(self.AMP))
         # self.card.set_i(spcm.SPC_OFFS0, int(50)) # offset by how much percent
         self.card.set_i(self.ACDC, int(self.ACCOUPLE))
+
+        # print("CHENABLE:", self.card.get_i(spcm.SPC_CHENABLE))
+        # print("PATH:", self.card.get_i(self.PATH))
+        # print("AMP:", self.card.get_i(self.AMP_ch))
+        # print("ACDC:", self.card.get_i(self.ACDC))
 
         # setup trigger engine
         trigger = spcm.Trigger(self.card)
@@ -253,10 +283,10 @@ class SpectrumDigitizer():
         # return self.raw_data*((self.AMP/1000)/np.abs(self.max_value))
         # return self.raw_data*((self.AMP/1000)/np.abs(self.max_value)) + 0.1
         # return (self.raw_data+540)*((self.AMP/1000)/np.abs(self.max_value+540)) 
-        # self.card.set_i(self.m, int(self.HF_INPUT_50OHM/units.Sa))
+        # self.card.set_i(self.m, int(self.HF_INPUT_50OHM))
         # channels = spcm.Channels(self.card, card_enable=spcm.CHANNEL0)
 
         # return channels[0].convert_data(self.raw_data,units.V) # (self.raw_data)*((self.AMP/1000)/np.abs(self.max_value)) 
         
         # return (self.raw_data / self.max_value ) 
-        return self.raw_data*((self.AMP/1000)/np.abs(self.max_value))
+        return self.raw_data*((self.AMP/1000)/np.abs(self.max_value)) * units.V

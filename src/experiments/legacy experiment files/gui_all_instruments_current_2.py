@@ -1,0 +1,1509 @@
+"""
+Copyright (c) 2021, Jacob Feder
+All rights reserved.
+
+This work is licensed under the terms of the 3-Clause BSD license.
+For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
+"""
+
+"""
+Magnet Mount Motion and Magnet Alignment GUI
+Evan Villafranca - 2022
+"""
+
+from functools import partial
+from importlib import reload
+
+import numpy as np
+import nnmr_magnet_motion as mag
+from find_magnet_position import pos_solver, find_mag_pos
+from find_laser_power import find_las_power
+
+from nspyre import DataSink
+from nspyre import LinePlotWidget
+from nspyre import ParamsWidget
+from nspyre import ProcessRunner
+from nspyre import InstrumentManager
+
+from pyqtgraph import SpinBox, ComboBox
+
+from multiprocessing import Queue
+from nspyre import SaveWidget
+from PyQt6.QtWidgets import QLabel, QPushButton, QCheckBox, QComboBox, QLineEdit, QInputDialog, QRadioButton, QSlider, QDoubleSpinBox
+from PyQt6.QtWidgets import QFrame, QVBoxLayout, QHBoxLayout, QGridLayout, QFormLayout
+from PyQt6.QtWidgets import QWidget, QGraphicsOpacityEffect
+from PyQt6.QtGui import QFont
+from PyQt6.QtCore import Qt, QTimer
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+class InstWidget(QWidget):
+    """
+    Qt widget subclass that generates an interface for operating magnet mount.
+    """
+
+    QUEUE_CHECK_TIME = 50 # ms
+
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle('NanoNMR Magnet Alignment')
+
+        self.updateTimer = QTimer() #create a timer that will try to update that widget with messages from the from_exp_queue
+        self.updateTimer.timeout.connect(lambda: self.check_queue_from_mag())
+        self.updateTimer.start(self.QUEUE_CHECK_TIME)
+
+        # self.calibrator = BFieldCalibrate('B_field_cal.xlsx')
+
+        # current stage positions
+        self.curr_r = 0 
+        self.curr_theta = 0
+        self.curr_phi = 0
+        self.r_offset = 0
+
+        self.r_min = 0
+        self.r_max = 100
+        self.theta_min = -50
+        self.theta_max = 50
+        self.phi_min = 0
+        self.phi_max = 100
+
+        self.white_border = "border: 1px solid white"
+        self.font = "Arial"
+        
+        self.q = Queue()
+        
+        # magnet stage widgets
+        self.magnet_label = QLabel("Magnet Stage Control")
+        self.magnet_label.setFixedHeight(30)
+        # self.magnet_label.setStyleSheet("color: white; background-color:  #2b2b2b; border: 1px solid black;")
+        self.magnet_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.magnet_label.setFont(QFont(self.font, 20))
+
+        all_disable_button_style = """
+        QPushButton {
+        background-color: #333333;
+        color: white;
+        border: 2px solid white;
+        border-radius: 5px;
+        padding: 5px;
+        }
+
+        QPushButton:hover {
+        background-color: #444444;
+        border: 2px solid #ffffff;
+        }
+
+        QPushButton:pressed {
+        background-color: #555555;
+        border: 2px solid #ffffff;
+        }"""
+        self.all_disable_button = QPushButton("Enable All")
+        self.all_disable_button.setStyleSheet(all_disable_button_style)
+        self.all_disable_proc = ProcessRunner()
+        self.all_disable_button.clicked.connect(self.all_disable_clicked)
+        
+        all_standby_button_style = """
+        QPushButton {
+        background-color: #474b00;
+        color: white;
+        border: 2px solid #d7d700;
+        border-radius: 5px;
+        padding: 5px;
+        }
+        
+        QPushButton:hover {
+        background-color: #3f4b00;
+        border: 2px solid #00d7c9;
+        }
+        
+        QPushButton:pressed {
+        background-color: #4f5f00;
+        border: 2px solid #00d7c9;
+        }"""
+        self.all_standby_button = QPushButton("Standby")
+        self.all_standby_button.setStyleSheet(all_standby_button_style)
+        self.all_standby_proc = ProcessRunner()
+        self.all_standby_button.clicked.connect(self.all_standby_clicked)
+
+        self.status_label = QLabel("Magnets status here")
+        self.status_label.setStyleSheet("color: white; background-color: black; border: 4px solid black;")
+        self.status_label.setFixedHeight(40)
+
+        self.init_b_widgets()
+        self.init_r_widgets()
+        self.init_polar_widgets()
+        self.init_azi_widgets()
+        # self.init_b_field_calc_widgets()
+        self.init_sg396_widgets()
+        self.init_laser_widgets()
+        self.init_flipper_widgets()
+        self.init_nd_filter_widgets()
+        self.init_bpd_shutter_widgets()
+
+        # self.obtain_current_positions() # update stage positions on GUI startup 
+        self.layouts()
+
+        self.park_all()
+
+    '''
+    CREATE WIDGETS
+    '''
+    def init_b_widgets(self):
+        '''
+        B field widgets
+        '''
+        self.b_label = QLabel("B Field (G)")
+        self.b_label.setFixedHeight(30)
+        self.b_label.setFont(QFont(self.font, 20))
+        
+        self.phi_label = QLabel("Set \u03C6: ")
+        self.phi_label.setFixedHeight(30)
+        self.phi_label.setFont(QFont(self.font, 20))
+
+        self.phi_position = QLineEdit()
+        self.phi_position.setStyleSheet("QLineEdit { border: 1px solid #666666; }")
+
+        self.target_b_label = QLabel("Target B Field (G): ")
+        self.target_b_label.setFixedHeight(30)
+        self.target_b_label.setFont(QFont(self.font, 20))
+
+        self.target_b_value = QLineEdit()
+        self.target_b_value.setStyleSheet("QLineEdit { border: 1px solid #666666; }")
+
+        self.b_execute_button = QPushButton("Go To B Field")
+        self.b_execute_button_proc = ProcessRunner()
+        self.b_execute_button.clicked.connect(lambda:self.single_move_clicked('B_zaber'))
+
+    def init_r_widgets(self):
+        '''
+        r stage widgets
+        '''
+        self.r_opacity_effects = []
+        for i in range(4):
+            self.r_opacity_effects.append(QGraphicsOpacityEffect())
+            self.r_opacity_effects[i].setOpacity(0.3)
+
+        self.r_label = QLabel("Step 3: R")
+        self.r_label.setFixedHeight(30)
+        self.r_label.setFont(QFont(self.font, 20))
+        # self.r_pos_label = QLabel(f"r position = {self.curr_r} mm (mag. sep. = {2*self.curr_r + self.r_offset} mm)")
+        # self.r_pos_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # self.r_pos_label.setStyleSheet(self.white_border)
+
+        # self.r_park_button = QPushButton("Unpark")
+        # self.r_park_button_proc = ProcessRunner()
+        # self.r_park_button.clicked.connect(lambda:self.park_button_clicked('zaber'))
+        self.r_move_checkbox = QCheckBox("R Move Type: ")
+        self.r_move_checkbox.setChecked(False)
+        self.r_move_checkbox.setStyleSheet("QCheckBox::indicator:hover" "{""background-color : yellow;""}"
+                                            "QCheckBox::indicator:pressed" "{""background-color : lightgreen;""}")
+        self.r_move_checkbox.stateChanged.connect(lambda:self.move_button_checked(self.r_move_checkbox))
+        
+        self.r_move_types = QComboBox()
+        self.r_move_types.addItems(["Absolute", "Relative", "B-Field"])
+        self.r_move_types.currentIndexChanged.connect(lambda: self.r_move_type_changed())
+        self.r_move_option = "Absolute"
+        self.r_move_position = QLineEdit()       
+        self.r_move_position_units = QLabel("")     
+        self.r_execute_move_button = QPushButton("Execute Move")
+        self.r_execute_move_button_proc = ProcessRunner()
+        self.r_execute_move_button.clicked.connect(lambda:self.single_move_clicked('zaber'))
+
+        self.r_move_types.setEnabled(False)
+        self.r_move_position.setEnabled(False)
+        self.r_move_position_units.setEnabled(False)
+        self.r_execute_move_button.setEnabled(False)
+
+        self.r_move_types.setGraphicsEffect(self.r_opacity_effects[0])
+        self.r_move_position.setGraphicsEffect(self.r_opacity_effects[1])
+        self.r_move_position_units.setGraphicsEffect(self.r_opacity_effects[2])
+        self.r_execute_move_button.setGraphicsEffect(self.r_opacity_effects[3])
+
+        self.r_stop_button = QPushButton("Stop Motion")
+        self.r_stop_button_proc = ProcessRunner()
+        self.r_stop_button.clicked.connect(lambda:self.stop_button_clicked('zaber'))
+        # self.r_home_button = QPushButton("Home")
+        # self.r_home_button_proc = ProcessRunner()
+        # self.r_home_button.clicked.connect(lambda:self.home_button_clicked('zaber'))
+
+    def init_polar_widgets(self):
+        '''
+        polar stage widgets
+        '''
+        self.polar_opacity_effects = []
+        for i in range(4):
+            self.polar_opacity_effects.append(QGraphicsOpacityEffect())
+            self.polar_opacity_effects[i].setOpacity(0.3)
+
+        self.polar_label = QLabel("Step 2: \u03B8")    
+        self.polar_label.setFixedHeight(30)
+        self.polar_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.polar_label.setFont(QFont(self.font, 20))    
+        # self.polar_pos_label = QLabel("\u03B8 position = ")
+        # self.polar_pos_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # self.polar_pos_label.setStyleSheet(self.white_border)
+
+        # self.polar_enable_button = QPushButton("Enable")
+        # self.polar_enable_button_proc = ProcessRunner()
+        # self.polar_enable_button.clicked.connect(lambda:self.park_button_clicked('thor_polar'))
+        self.polar_move_checkbox = QCheckBox("\u03B8 Move Type: ")
+        self.polar_move_checkbox.setChecked(False)
+        self.polar_move_checkbox.setStyleSheet("QCheckBox::indicator:hover" "{""background-color : yellow;""}"
+                                            "QCheckBox::indicator:pressed" "{""background-color : lightgreen;""}")
+        self.polar_move_checkbox.stateChanged.connect(lambda:self.move_button_checked(self.polar_move_checkbox))
+        
+        self.polar_move_types = QComboBox()
+        self.polar_move_types.addItems(["Absolute", "Jog"])
+        self.polar_move_position = QLineEdit()
+        self.polar_move_position_units = QLabel("")
+        self.polar_execute_move_button = QPushButton("Execute Move")
+        self.polar_execute_move_button_proc = ProcessRunner()
+        self.polar_execute_move_button.clicked.connect(lambda:self.single_move_clicked('thor_polar'))
+        
+        self.polar_move_types.setEnabled(False)
+        self.polar_move_position.setEnabled(False)
+        self.polar_move_position_units.setEnabled(False)
+        self.polar_execute_move_button.setEnabled(False)
+
+        self.polar_move_types.setGraphicsEffect(self.polar_opacity_effects[0])
+        self.polar_move_position.setGraphicsEffect(self.polar_opacity_effects[1])
+        self.polar_move_position_units.setGraphicsEffect(self.polar_opacity_effects[2])
+        self.polar_execute_move_button.setGraphicsEffect(self.polar_opacity_effects[3])
+
+        self.polar_stop_button = QPushButton("Stop Motion")
+        self.polar_stop_button_proc = ProcessRunner()
+        self.polar_stop_button.clicked.connect(lambda:self.stop_button_clicked('thor_polar'))
+        # self.polar_home_button = QPushButton("Home")
+        # self.polar_home_button_proc = ProcessRunner()
+        # self.polar_home_button.clicked.connect(lambda:self.home_button_clicked('thor_polar'))
+
+    def init_azi_widgets(self):
+        '''
+        azimuthal stage widgets
+        '''
+        self.azi_opacity_effects = []
+        for i in range(4):
+            self.azi_opacity_effects.append(QGraphicsOpacityEffect())
+            self.azi_opacity_effects[i].setOpacity(0.3)
+
+        self.azi_label = QLabel("Step 1: \u03C6")
+        self.azi_label.setFixedHeight(30)
+        self.azi_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.azi_label.setFont(QFont(self.font, 20))
+        # self.azi_pos_label = QLabel("\u03C6 position = ")
+        # self.azi_pos_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # self.azi_pos_label.setStyleSheet(self.white_border)
+
+        # self.azi_enable_button = QPushButton("Enable")
+        # self.azi_enable_button_proc = ProcessRunner()
+        # self.azi_enable_button.clicked.connect(lambda:self.park_button_clicked('thor_azi'))
+        self.azi_move_checkbox = QCheckBox("\u03C6 Move Type: ")
+        self.azi_move_checkbox.setChecked(False)
+        self.azi_move_checkbox.setStyleSheet("QCheckBox::indicator:hover" "{""background-color : yellow;""}"
+                                            "QCheckBox::indicator:pressed" "{""background-color : lightgreen;""}")
+        self.azi_move_checkbox.stateChanged.connect(lambda:self.move_button_checked(self.azi_move_checkbox))
+        
+        self.azi_move_types = QComboBox()
+        self.azi_move_types.addItems(["Absolute", "Jog"])
+        self.azi_move_position = QLineEdit()
+        self.azi_move_position_units = QLabel("")    
+        self.azi_execute_move_button = QPushButton("Execute Move")
+        self.azi_execute_move_button_proc = ProcessRunner()
+        self.azi_execute_move_button.clicked.connect(lambda:self.single_move_clicked('thor_azi'))
+
+        self.azi_move_types.setEnabled(False)
+        self.azi_move_position.setEnabled(False)
+        self.azi_move_position_units.setEnabled(False)
+        self.azi_execute_move_button.setEnabled(False)
+
+        self.azi_move_types.setGraphicsEffect(self.azi_opacity_effects[0])
+        self.azi_move_position.setGraphicsEffect(self.azi_opacity_effects[1])
+        self.azi_move_position_units.setGraphicsEffect(self.azi_opacity_effects[2])
+        self.azi_execute_move_button.setGraphicsEffect(self.azi_opacity_effects[3])
+
+        self.azi_stop_button = QPushButton("Stop Motion")
+        self.azi_stop_button_proc = ProcessRunner()
+        self.azi_stop_button.clicked.connect(lambda:self.stop_button_clicked('thor_azi'))
+        # self.azi_home_button = QPushButton("Home")
+        # self.azi_home_button_proc = ProcessRunner()
+        # self.azi_home_button.clicked.connect(lambda:self.home_button_clicked('thor_azi'))
+
+    # def init_b_field_calc_widgets(self):
+    #     '''
+    #     B-field calculation widgets
+    #     '''
+    #     self.bfield_calc_label = QLabel("B-Field Resonance Calculator")
+
+
+    def get_combobox_val(self, combobox):
+        return str(combobox.value())
+    
+
+    def init_sg396_widgets(self):
+        # magnet stage widgets
+        self.sg396_label = QLabel("Signal Generator Control")
+        self.sg396_label.setFixedHeight(30)
+        # self.sg396_label.setStyleSheet("color: white; background-color:  #2b2b2b; border: 1px solid black;")
+        self.sg396_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.sg396_label.setFont(QFont(self.font, 20))
+
+        self.sg396_checkbox = QCheckBox("Enable SG396 output")
+        self.sg396_checkbox.setChecked(False)
+        self.sg396_checkbox.setStyleSheet("QCheckBox::indicator:hover" "{""background-color : yellow;""}"
+                                            "QCheckBox::indicator:pressed" "{""background-color : lightgreen;""}")
+        self.sg396_checkbox.stateChanged.connect(lambda:self.sg396_checked(self.sg396_checkbox))
+
+        self.sg396_opacity_effects = []
+        for i in range(5):
+            self.sg396_opacity_effects.append(QGraphicsOpacityEffect())
+            self.sg396_opacity_effects[i].setOpacity(0.3)
+
+
+        self.sideband_opts = ["Lower", "Upper"]
+        self.channel_opts = ["IQ", "DEER"]
+
+        self.sg396_params_widget_1 = ParamsWidget(
+            { 
+                'channel': {'display_text': 'AWG Channel: ',
+                                        'widget': ComboBox(items = self.channel_opts)},
+
+                'RF_Frequency': {
+                    'display_text': 'MW Frequency: ',
+                    'widget': SpinBox(
+                        value = 2.87e9,
+                        suffix = 'Hz',
+                        siPrefix = True,
+                        bounds = (100e3, 6e9),
+                        dec = True,
+                    ),
+                },
+
+                'RF_Power': {
+                    'display_text': 'MW Power: ',
+                    'widget': SpinBox(
+                        value = 1e-9,
+                        suffix = 'W',
+                        siPrefix = True,
+                    )
+                },
+
+                'deer_power': {'display_text': 'DEER RF Power: ',
+                                        'widget': SpinBox(value = 0.2, suffix = 'V', siPrefix = True)},
+            },
+            get_param_value_funs = {ComboBox: self.get_combobox_val}
+        )
+
+        self.sg396_params_widget_2 = ParamsWidget(
+            {
+                'sideband_freq': {'display_text': 'Sideband Mod. Frequency: ',
+                                        'widget': SpinBox(value = 30e6, suffix = 'Hz', siPrefix = True, bounds = (100, 100e6), dec = True)},
+                
+                'sideband_power': {'display_text': 'Sideband Power: ',
+                                        'widget': SpinBox(value = 0.45, suffix = 'V', siPrefix = True)},
+                
+                'sideband': {'display_text': 'Sideband: ',
+                                        'widget': ComboBox(items = self.sideband_opts)},
+                
+                'i_offset': {'display_text': 'I Offset: ',
+                                        'widget': SpinBox(value = -0.002, suffix = 'V', siPrefix = True)},
+                
+                'q_offset': {'display_text': 'Q Offset: ',
+                                        'widget': SpinBox(value = -0.004, suffix = 'V', siPrefix = True)},
+            },
+            get_param_value_funs = {ComboBox: self.get_combobox_val}
+        )
+
+
+        self.sg396_status_label = QLabel("SRS SG396 status here")
+        self.sg396_status_label.setStyleSheet("color: white; background-color: black; border: 4px solid black;")
+        self.sg396_status_label.setFixedHeight(40)
+
+        self.sg396_emit_button = QPushButton("Emit")
+        self.sg396_emit_button_proc = ProcessRunner()
+        self.sg396_emit_button.clicked.connect(lambda:self.sg396_emit_button_clicked())
+
+        self.sg396_stop_button = QPushButton("Stop")
+        self.sg396_stop_button_proc = ProcessRunner()
+        self.sg396_stop_button.clicked.connect(lambda:self.sg396_stop_button_clicked())
+        
+        self.sg396_params_widget_1.setEnabled(False)
+        self.sg396_params_widget_2.setEnabled(False)
+        self.sg396_status_label.setEnabled(False)
+        self.sg396_emit_button.setEnabled(False)
+        self.sg396_stop_button.setEnabled(False)
+
+        self.sg396_params_widget_1.setGraphicsEffect(self.sg396_opacity_effects[0])
+        self.sg396_params_widget_2.setGraphicsEffect(self.sg396_opacity_effects[1])
+        self.sg396_status_label.setGraphicsEffect(self.sg396_opacity_effects[2])
+        self.sg396_emit_button.setGraphicsEffect(self.sg396_opacity_effects[3])
+        self.sg396_stop_button.setGraphicsEffect(self.sg396_opacity_effects[4])
+
+    def init_laser_widgets(self):
+        self.laser_label = QLabel("Laser")
+        self.laser_label.setFixedHeight(20)
+        self.laser_label.setStyleSheet("font-weight: bold")
+
+        laser_style = """QRadioButton::indicator {
+        width: 25px; /* Adjust size as needed */
+        height: 15px;
+        border-radius: 7px; /* Makes it circular */
+        background-color: lightgray; /* Default color when unchecked */
+        border: 1px solid black;}
+                                        
+        QRadioButton::indicator:checked {
+            background-color: limegreen; /* Color when checked */
+            border: 1px solid green;}
+
+        QRadioButton {
+            color: white; /* Default text color */}
+
+        QRadioButton:checked {
+            color: limegreen; /* Text color when checked */}"""
+
+        self.laser_b1 = QRadioButton("CW ON")
+        self.laser_b1.toggled.connect(lambda:self.toggle_laser(self.laser_b1))
+        self.laser_b1.setStyleSheet(laser_style)
+        
+        self.laser_b2 = QRadioButton("CW OFF")
+        self.laser_b2.setChecked(True)
+        self.laser_b2.toggled.connect(lambda:self.toggle_laser(self.laser_b2))
+        self.laser_b2.setStyleSheet(laser_style)
+
+        self.laser_current_label = QLabel("Diode Current (%):")
+        self.laser_current_label.setFont(QFont("Sanserif", 15))
+        
+        self.laser_current_value = QLineEdit()
+
+        laser_button_style = """
+        QPushButton {
+        background-color: #184B00;
+        color: white;
+        border: 2px solid #64D700;
+        border-radius: 5px;
+        padding: 5px;
+        }
+        
+        QPushButton:hover {
+        background-color: #004B31;
+        border: 2px solid #0ED700;
+        }
+        
+        QPushButton:pressed {
+        background-color: #155F00;
+        border: 2px solid #1DD700;
+        }"""
+
+        self.laser_power_set_button = QPushButton("Set")
+        self.laser_power_set_button.setStyleSheet(laser_button_style)
+        self.laser_power_set_button.clicked.connect(lambda: self.laser_power_changed())
+
+        self.laser_power_label = QLabel("Laser Power: 0 mW")
+        self.laser_power_label.setFont(QFont("Sanserif", 15))
+
+        self.laser_baseplate_temp_button = QPushButton("Get Base Temp")
+        self.laser_baseplate_temp_button.setStyleSheet(laser_button_style)
+        self.laser_baseplate_temp_button.clicked.connect(lambda: self.laser_temp_clicked('base'))
+        self.laser_diode_temp_button = QPushButton("Get Diode Temp")
+        self.laser_diode_temp_button.setStyleSheet(laser_button_style)
+        self.laser_diode_temp_button.clicked.connect(lambda: self.laser_temp_clicked('diode'))
+
+        with InstrumentManager() as mgr:
+            initial_base_temp = mgr.laser.get_baseplate_temp()
+            initial_diode_temp = mgr.laser.get_diode_temp()
+            
+        self.laser_baseplate_temp_label = QLabel(f"{initial_base_temp:.2f} °C")
+        self.laser_baseplate_temp_label.setStyleSheet("color: white; background-color: black; border: 4px solid black;")
+        self.laser_baseplate_temp_label.setFixedHeight(40)
+        self.laser_diode_temp_label = QLabel(f"{initial_diode_temp:.2f} °C")
+        self.laser_diode_temp_label.setStyleSheet("color: white; background-color: black; border: 4px solid black;")
+        self.laser_diode_temp_label.setFixedHeight(40)
+
+        # predefine initial labels
+        self.laser_status_label = QLabel("Laser status")
+        self.laser_status_label.setFixedHeight(40)
+        self.get_laser_status()
+
+        self.laser_emit_status_label = QLabel("Emission status")
+        self.laser_emit_status_label.setStyleSheet("color: white; background-color: black; border: 4px solid black;")
+        self.laser_emit_status_label.setFixedHeight(40)
+
+        self.laser_shutter_button = QPushButton("Open shutter")
+        self.laser_shutter_button.setStyleSheet(laser_button_style)
+        self.laser_shutter_button.clicked.connect(lambda: self.laser_shutter_status_changed())
+
+        self.laser_shutter_status_label = QLabel("Shutter status")
+        self.laser_shutter_status_label.setStyleSheet("color: white; background-color: black; border: 4px solid black;")
+        self.laser_shutter_status_label.setFixedHeight(40)
+
+        self.laser_alarm_reset_button = QPushButton("Reset Alarm")
+        self.laser_alarm_reset_button.setStyleSheet(laser_button_style)
+        self.laser_alarm_reset_button.clicked.connect(lambda: self.laser_alarm_reset_clicked())
+
+    def init_flipper_widgets(self):
+        self.flipper_label = QLabel("Microscope Configuration")
+        self.flipper_label.setFixedHeight(20)
+        self.flipper_label.setStyleSheet("font-weight: bold")
+
+        flipper_style = """QRadioButton::indicator {
+        width: 25px; /* Adjust size as needed */
+        height: 15px;
+        border-radius: 7px; /* Makes it circular */
+        background-color: lightgray; /* Default color when unchecked */
+        border: 1px solid black;}
+                                        
+        QRadioButton::indicator:checked {
+            background-color: #27CFF5; /* Color when checked */
+            border: 1px solid blue;}
+
+        QRadioButton {
+            color: white; /* Default text color */}
+
+        QRadioButton:checked {
+            color: #27CFF5; /* Text color when checked */}"""
+        self.flipper_b1 = QRadioButton("Epi. (APD)")
+        self.flipper_b1.toggled.connect(lambda:self.toggle_flipper_current(self.flipper_b1))
+        self.flipper_b1.setStyleSheet(flipper_style)
+
+        self.flipper_b2 = QRadioButton("Epi. (BPD)")
+        self.flipper_b2.toggled.connect(lambda:self.toggle_flipper_current(self.flipper_b2))
+        self.flipper_b2.setStyleSheet(flipper_style)
+
+        self.flipper_b3 = QRadioButton("TIRF")
+        self.flipper_b3.toggled.connect(lambda:self.toggle_flipper_current(self.flipper_b3))
+        self.flipper_b3.setStyleSheet(flipper_style)
+
+    def init_nd_filter_widgets(self):
+        self.nd_filter_label = QLabel("BPD ND Filter")
+        self.nd_filter_label.setFixedHeight(20)
+        self.nd_filter_label.setStyleSheet("font-weight: bold")
+        
+        nd_filter_stylesheet = """
+        QComboBox {
+            border: 3px solid lightblue;
+            border-radius: 3px;
+            padding: 1px 18px 1px 3px;
+            min-width: 6em;
+        }
+
+        QComboBox::drop-down {
+            subcontrol-origin: padding;
+            subcontrol-position: top right;
+            width: 15px;
+            border-left-width: 1px;
+            border-left-color: black;
+            border-left-style: solid;
+            border-top-right-radius: 5px;
+            border-bottom-right-radius: 5px;
+        }
+
+        QComboBox QAbstractItemView {
+            border: 1px solid lightblue;
+            selection-background-color: lightblue;
+        }
+        """
+        self.nd_filter_opts = QComboBox()
+        self.nd_filter_opts.setStyleSheet(nd_filter_stylesheet)
+        self.nd_filter_opts.addItems(["None", "0.5", "1", "2", "3", "4"])
+        self.nd_filter_opts.currentIndexChanged.connect(lambda: self.nd_filter_changed())
+
+    def init_bpd_shutter_widgets(self):
+        self.bpd_shutter_label = QLabel("BPD Shutter")
+        self.bpd_shutter_label.setFixedHeight(20)
+        self.bpd_shutter_label.setStyleSheet("font-weight: bold")
+
+        bpd_shutter_button_style = """
+        QPushButton {
+        background-color: #002E4B;
+        color: white;
+        border: 2px solid #0088D7;
+        border-radius: 5px;
+        padding: 5px;
+        }
+        
+        QPushButton:hover {
+        background-color: #00284B;
+        border: 2px solid #005DD7;
+        }
+        
+        QPushButton:pressed {
+        background-color: #004A5F;
+        border: 2px solid #0085D7;
+        }"""
+        self.bpd_shutter_button = QPushButton("Open BPD shutter")
+        self.bpd_shutter_button.setStyleSheet(bpd_shutter_button_style)
+        self.bpd_shutter_button.clicked.connect(lambda: self.bpd_shutter_status_changed())
+
+    def layouts(self):
+        '''
+        GUI Layout Structure
+        '''
+        self.gui_layout = QVBoxLayout()
+
+        self.magnet_frame = QFrame(self)
+        self.magnet_frame.setObjectName("magFrame")
+        self.magnet_frame.setStyleSheet("QFrame#magFrame {background-color: #2b2b2b; border: 2px solid #717171; border-radius: 5px;}")
+        self.magnet_layout = QGridLayout(self.magnet_frame)
+        self.magnet_layout.setSpacing(0)
+        self.magnet_layout.addWidget(self.magnet_label,1,1,1,3)
+        self.magnet_layout.addWidget(self.r_label,2,1,1,1, Qt.AlignmentFlag.AlignCenter)
+        self.magnet_layout.addWidget(self.polar_label,2,2,1,1, Qt.AlignmentFlag.AlignCenter)
+        self.magnet_layout.addWidget(self.azi_label,2,3,1,1, Qt.AlignmentFlag.AlignCenter)
+
+        self.b_frame = QFrame(self)
+        self.b_frame.setObjectName("bFrame")
+        self.b_frame.setStyleSheet("QFrame#bFrame {background-color: #20373b; border: 2px solid #47747c; border-radius: 5px;}")
+        self.b_layout = QGridLayout(self.b_frame)
+        self.b_layout.setSpacing(0)
+        self.b_layout.addWidget(self.b_label,1,1,1,2, Qt.AlignmentFlag.AlignCenter)
+        self.b_layout.addWidget(self.phi_label,2,1)
+        self.b_layout.addWidget(self.phi_position,2,2)
+        self.b_layout.addWidget(self.target_b_label,3,1)
+        self.b_layout.addWidget(self.target_b_value,3,2)
+        self.b_layout.addWidget(self.b_execute_button,4,1)
+
+        self.zaber_frame = QFrame(self)
+        self.zaber_frame.setObjectName("zaberFrame")
+        self.zaber_frame.setStyleSheet("QFrame#zaberFrame {background-color: #331313; border: 2px solid #854141; border-radius: 5px;}")
+        # self.zaber_frame.setFrameShape(QFrame.StyledPanel)
+        # self.zaber_frame.setFrameShadow(QFrame.Raised)
+
+        self.r_layout = QGridLayout(self.zaber_frame)
+        self.r_layout.setSpacing(0)
+        self.r_layout.addWidget(self.r_label,1,1,1,2, Qt.AlignmentFlag.AlignCenter)
+        # self.r_layout.addWidget(self.r_park_button,2,1,1,2)
+        self.r_layout.addWidget(self.r_move_checkbox,2,1)
+        self.r_layout.addWidget(self.r_move_types,2,2)
+        self.r_layout.addWidget(self.r_move_position,3,1)
+        self.r_layout.addWidget(self.r_move_position_units,3,2)
+        self.r_layout.addWidget(self.r_execute_move_button,4,1,1,2)
+        self.r_layout.addWidget(self.r_stop_button,5,1,1,2)
+
+        self.thor1_frame = QFrame(self)
+        self.thor1_frame.setObjectName("thor1Frame")
+        self.thor1_frame.setStyleSheet("QFrame#thor1Frame {background-color: #331313; border: 2px solid #854141; border-radius: 5px;}")
+        # self.thor1_frame.setFrameShape(QFrame.StyledPanel)
+        # self.thor1_frame.setFrameShadow(QFrame.Raised)
+        
+        self.polar_layout = QGridLayout(self.thor1_frame)
+        self.polar_layout.setSpacing(0)
+        self.polar_layout.addWidget(self.polar_label,1,1,1,2)
+        # self.polar_layout.addWidget(self.polar_enable_button,2,1,1,2)
+        self.polar_layout.addWidget(self.polar_move_checkbox,2,1)
+        self.polar_layout.addWidget(self.polar_move_types,2,2)
+        self.polar_layout.addWidget(self.polar_move_position,3,1)
+        self.polar_layout.addWidget(self.polar_move_position_units,3,2)
+        self.polar_layout.addWidget(self.polar_execute_move_button,4,1,1,2)
+        self.polar_layout.addWidget(self.polar_stop_button,5,1,1,2)
+        
+        self.thor2_frame = QFrame(self)
+        self.thor2_frame.setObjectName("thor2Frame")
+        self.thor2_frame.setStyleSheet("QFrame#thor2Frame {background-color: #331313; border: 2px solid #854141; border-radius: 5px;}")
+        # self.thor2_frame.setFrameShape(QFrame.StyledPanel)
+        # self.thor2_frame.setFrameShadow(QFrame.Raised)
+
+        self.azi_layout = QGridLayout(self.thor2_frame)
+        self.azi_layout.setSpacing(0)
+        self.azi_layout.addWidget(self.azi_label,1,1,1,2)
+        # self.azi_layout.addWidget(self.azi_enable_button,2,1,1,2)
+        self.azi_layout.addWidget(self.azi_move_checkbox,2,1)
+        self.azi_layout.addWidget(self.azi_move_types,2,2)
+        self.azi_layout.addWidget(self.azi_move_position,3,1)
+        self.azi_layout.addWidget(self.azi_move_position_units,3,2)
+        self.azi_layout.addWidget(self.azi_execute_move_button,4,1,1,2)
+        self.azi_layout.addWidget(self.azi_stop_button,5,1,1,2)
+
+        self.status_frame = QFrame(self)
+        self.status_frame.setObjectName("statusFrame")
+        self.status_frame.setStyleSheet("QFrame#statusFrame {background-color: #2b2b2b; border: 2px solid #717171; border-radius: 5px;}")
+        self.status_bar_layout = QGridLayout(self.status_frame)
+        self.status_bar_layout.setSpacing(0)
+        self.status_bar_layout.addWidget(self.all_disable_button,1,1,1,1)
+        self.status_bar_layout.addWidget(self.all_standby_button,1,2,1,1)
+        self.status_bar_layout.addWidget(self.status_label,2,1,1,2)
+
+        self.individual_cmds_layout = QGridLayout()
+        self.individual_cmds_layout.setSpacing(0)
+
+        self.individual_cmds_layout.addWidget(self.magnet_frame,1,1,1,4)
+        self.individual_cmds_layout.addWidget(self.thor2_frame,2,1,1,1)
+        self.individual_cmds_layout.addWidget(self.thor1_frame,2,2,1,1)
+        self.individual_cmds_layout.addWidget(self.zaber_frame,2,3,1,1)
+        self.individual_cmds_layout.addWidget(self.b_frame,2,4,1,1)
+        self.individual_cmds_layout.addWidget(self.status_frame,3,1,1,4)
+
+
+
+        self.sg396_frame = QFrame(self)
+        self.sg396_frame.setObjectName("sgFrame")
+        self.sg396_frame.setStyleSheet("QFrame#sgFrame {background-color: #2b2b2b; border: 2px solid #717171; border-radius: 5px;}")
+        self.sg396_layout = QGridLayout(self.sg396_frame)
+        self.sg396_layout.setSpacing(0)
+        self.sg396_layout.addWidget(self.sg396_label,1,1,1,2)
+        self.sg396_layout.addWidget(self.sg396_checkbox,2,1,1,2)
+        self.sg396_layout.addWidget(self.sg396_params_widget_1,3,1,1,1)
+        self.sg396_layout.addWidget(self.sg396_params_widget_2,3,2,1,1)
+        self.sg396_layout.addWidget(self.sg396_status_label,4,1,1,2)
+        self.sg396_layout.addWidget(self.sg396_emit_button,5,1,1,1)
+        self.sg396_layout.addWidget(self.sg396_stop_button,5,2,1,1)
+
+        self.sig_gens_layout = QGridLayout()
+        self.sig_gens_layout.setSpacing(0)
+
+        self.sig_gens_layout.addWidget(self.sg396_frame,1,1,1,1)
+
+
+
+        self.laser_frame = QFrame(self)
+        self.laser_frame.setObjectName("laserFrame")
+        # self.laser_frame.setFrameShape(QFrame.StyledPanel)
+        # self.laser_frame.setFrameShadow(QFrame.Raised)
+        self.laser_frame.setStyleSheet("QFrame#laserFrame {background-color: #003407; border: 2px solid limegreen; border-radius: 5px;}")
+        self.laser_layout = QGridLayout(self.laser_frame)
+        self.laser_layout.setSpacing(0)
+        self.laser_layout.addWidget(self.laser_label,1,1,1,4)
+
+        self.laser_layout.addWidget(self.laser_current_label,2,1,1,1)
+        self.laser_layout.addWidget(self.laser_current_value,2,2,1,1)
+        self.laser_layout.addWidget(self.laser_power_set_button,2,3,1,2)
+
+        self.laser_layout.addWidget(self.laser_power_label,3,1,1,4)
+
+        self.laser_layout.addWidget(self.laser_baseplate_temp_button,4,1,1,1)
+        self.laser_layout.addWidget(self.laser_baseplate_temp_label,4,2,1,1)
+        self.laser_layout.addWidget(self.laser_diode_temp_button,4,3,1,1)
+        self.laser_layout.addWidget(self.laser_diode_temp_label,4,4,1,1)
+
+        self.laser_layout.addWidget(self.laser_b1,5,1,1,1)
+        self.laser_layout.addWidget(self.laser_b2,5,2,1,1)
+        self.laser_layout.addWidget(self.laser_status_label,5,3,1,1)
+        self.laser_layout.addWidget(self.laser_emit_status_label,5,4,1,1)
+
+        self.laser_layout.addWidget(self.laser_shutter_button,6,1,1,1)
+        self.laser_layout.addWidget(self.laser_shutter_status_label,6,2,1,1)
+        self.laser_layout.addWidget(self.laser_alarm_reset_button,6,3,1,2)
+
+        self.detector_frame = QFrame(self)
+        self.detector_frame.setObjectName("detectorFrame")
+        self.detector_frame.setStyleSheet("QFrame#detectorFrame {background-color: #0A0034; border: 2px solid blue; border-radius: 5px;}")
+        self.detector_layout = QGridLayout(self.detector_frame)
+        self.detector_layout.setSpacing(0)
+        self.detector_layout.addWidget(self.flipper_label,1,1,1,3)
+        self.detector_layout.addWidget(self.flipper_b1,2,1,1,1)
+        self.detector_layout.addWidget(self.flipper_b2,2,2,1,1)
+        self.detector_layout.addWidget(self.flipper_b3,2,3,1,1)
+
+        self.detector_layout.addWidget(self.nd_filter_label,3,1,1,2)
+        self.detector_layout.addWidget(self.nd_filter_opts,4,1,1,2)
+        self.detector_layout.addWidget(self.bpd_shutter_label,3,3,1,2)
+        self.detector_layout.addWidget(self.bpd_shutter_button,4,3,1,2)
+
+        # self.srs_frame = QFrame(self)
+        # self.srs_frame.setStyleSheet("background-color: #454545")
+        # self.srs_layout = QGridLayout(self.srs_frame)
+        # self.srs_layout.setSpacing(0)
+        # self.srs_layout.addWidget(self.laser_label,1,1,1,2)
+
+        self.other_widgets_layout = QHBoxLayout()
+        self.other_widgets_layout.addWidget(self.laser_frame)
+        self.other_widgets_layout.addWidget(self.detector_frame)
+
+        # bfield_layout = QGridLayout()
+        # bfield_layout.addWidget(self.bfield_calc_label,1,1)
+
+        self.gui_layout.addLayout(self.individual_cmds_layout)
+        self.gui_layout.addLayout(self.status_bar_layout)
+        self.gui_layout.addLayout(self.sig_gens_layout)
+        self.gui_layout.addLayout(self.other_widgets_layout)
+
+        self.setLayout(self.gui_layout)
+    
+    def park_all(self):
+        reload(mag)
+        mag_control = mag.NanoNMRMagnetMotion()
+        
+        self.all_disable_proc.run(mag_control.disable_all)
+        
+        logger.info("All magnet stages have been parked upon startup of magnet alignment widget.")
+    
+    '''
+    INTERACTIVE WIDGET FUNCTIONS
+    '''
+
+    # def obtain_current_positions(self, positions):
+    #     self.curr_r_left = round(positions[0][0], 2)
+    #     self.curr_r_right = round(positions[0][1], 2)
+    #     self.curr_theta = round(positions[1], 2)
+    #     self.curr_phi = round(positions[2], 2)
+        
+    #     print("ZABER CURRENT POSITIONS: ", self.curr_r_left, self.curr_r_right)
+    #     self.r_pos_label.setText(f"r position = {self.curr_r_left} mm")
+    #     self.r_pos_label.setText(f"r positions: L = {self.curr_r[0]} mm, R = {self.curr_r[1]} mm")
+    #     (f"(mag. sep. = {2*self.curr_r + self.r_offset} mm)")
+    #     self.polar_pos_label.setText(f"\u03B8 position = {self.curr_theta}\N{DEGREE SIGN}")
+    #     self.azi_pos_label.setText(f"\u03C6 position = {self.curr_phi}\N{DEGREE SIGN}")
+
+    # r move type changed
+    def r_move_type_changed(self):
+        # TODO: update this part
+        self.r_move_option = self.r_move_types.currentText()
+        
+        match self.r_move_types.currentIndex():
+                    case 2:
+                        self.r_move_position_units.setText("G")
+                    case _: 
+                        self.r_move_position_units.setText("mm")
+
+    # move type checkbox toggled
+    def move_button_checked(self, box):
+        if box.text() == "R Move Type: ":
+            if box.isChecked() == True:
+                self.r_move_types.setEnabled(True)
+                self.r_move_position.setEnabled(True)
+                self.r_move_position_units.setEnabled(True)
+                self.r_execute_move_button.setEnabled(True)
+                [self.r_opacity_effects[i].setEnabled(False) for i in range(4)]
+
+                match self.r_move_types.currentIndex():
+                    case 2:
+                        self.r_move_position_units.setText("G")
+                    case _: 
+                        self.r_move_position_units.setText("mm")
+            else:
+                self.r_move_types.setEnabled(False)
+                self.r_move_position.setEnabled(False)
+                self.r_move_position_units.setEnabled(False)
+                self.r_move_position_units.setText("")
+                self.r_execute_move_button.setEnabled(False)
+                [self.r_opacity_effects[i].setEnabled(True) for i in range(4)]
+
+        elif box.text() == "\u03B8 Move Type: ":
+            if box.isChecked() == True:
+                self.polar_move_types.setEnabled(True)
+                self.polar_move_position.setEnabled(True)
+                self.polar_move_position_units.setEnabled(True)
+                self.polar_move_position_units.setText("\N{DEGREE SIGN}")
+                self.polar_execute_move_button.setEnabled(True)
+                [self.polar_opacity_effects[i].setEnabled(False) for i in range(4)]
+            else:
+                self.polar_move_types.setEnabled(False)
+                self.polar_move_position.setEnabled(False)
+                self.polar_move_position_units.setEnabled(False)
+                self.polar_move_position_units.setText("")
+                self.polar_execute_move_button.setEnabled(False)
+                [self.polar_opacity_effects[i].setEnabled(True) for i in range(4)]
+        
+        elif box.text() == "\u03C6 Move Type: ":
+            if box.isChecked() == True:
+                self.azi_move_types.setEnabled(True)
+                self.azi_move_position.setEnabled(True)
+                self.azi_move_position_units.setEnabled(True)
+                self.azi_move_position_units.setText("\N{DEGREE SIGN}")
+                self.azi_execute_move_button.setEnabled(True)
+                [self.azi_opacity_effects[i].setEnabled(False) for i in range(4)]
+            else:
+                self.azi_move_types.setEnabled(False)
+                self.azi_move_position.setEnabled(False)
+                self.azi_move_position_units.setEnabled(False)
+                self.azi_move_position_units.setText("")
+                self.azi_execute_move_button.setEnabled(False)
+                [self.azi_opacity_effects[i].setEnabled(True) for i in range(4)]
+
+    # def park_button_clicked(self, stage):
+    #     reload(mag)
+    #     mag_control = mag.NanoNMRMagnetMotion()
+    #     stage = stage
+
+    #     if stage == "zaber":
+    #         if self.r_park_button.text() == "Unpark":
+    #             self.r_park_button_proc.run(mag_control.enable, stage)
+    #             self.r_park_button.setText("Park")
+    #         else:
+    #             self.r_park_button_proc.run(mag_control.disable, stage)
+    #             self.r_park_button.setText("Unpark")
+                
+    #     elif stage == "thor_polar":
+    #         if self.polar_enable_button.text() == "Enable":
+    #             self.polar_enable_button_proc.run(mag_control.enable, stage)
+    #             self.polar_enable_button.setText("Disable")
+    #         else:
+    #             self.polar_enable_button_proc.run(mag_control.disable, stage)
+    #             self.polar_enable_button.setText("Enable")
+
+    #     elif stage == "thor_azi":
+    #         if self.azi_enable_button.text() == "Enable":
+    #             self.azi_enable_button_proc.run(mag_control.enable, stage)
+    #             self.azi_enable_button.setText("Disable")
+    #         else:
+    #             self.azi_enable_button_proc.run(mag_control.disable, stage)
+    #             self.azi_enable_button.setText("Enable")
+    #     else:
+    #         pass
+
+    #     return 0
+
+    def single_move_clicked(self, stage):
+        reload(mag)
+        mag_control = mag.NanoNMRMagnetMotion()
+        stage = stage
+
+        if self.all_disable_button.text() == "Disable All":    
+            if stage == 'zaber':
+                type_idx = self.r_move_types.currentIndex()
+                try:
+                    new_position = float(self.r_move_position.text())
+                    if type_idx == 0:
+                        self.r_execute_move_button_proc.run(mag_control.move_to_orientation,
+                                                    **{'stage': stage, 'new_pos': new_position, 'queue': self.q, 'abs': True})
+                    elif type_idx == 1:
+                        self.r_execute_move_button_proc.run(mag_control.move_to_orientation,
+                                                    **{'stage': stage, 'new_pos': new_position, 'queue': self.q, 'abs': False})
+                    else:
+                        pass
+
+                    # self.position_tracker = Worker(self.q, True)
+                    # self.position_tracker.position.connect(self.obtain_current_positions)
+                    # self.position_tracker.start()
+
+                except ValueError:
+                    logger.debug("Invalid entry for new position. Try again.")
+
+            elif stage == 'thor_polar':
+                type_idx = self.polar_move_types.currentIndex()
+                try:
+                    new_position = float(self.polar_move_position.text())
+                    if type_idx == 0:
+                        self.polar_execute_move_button_proc.run(mag_control.move_to_orientation,
+                                                    **{'stage': stage, 'new_angle': new_position, 'queue': self.q, 'abs': True})
+                    elif type_idx == 1:
+                        self.polar_execute_move_button_proc.run(mag_control.move_to_orientation,
+                                                    **{'stage': stage, 'new_angle': new_position, 'queue': self.q, 'abs': False})
+                    else:
+                        pass
+
+                    # self.position_tracker = Worker(self.q, True)
+                    # self.position_tracker.position.connect(self.obtain_current_positions)
+                    # self.position_tracker.start()
+
+                except ValueError:
+                    logger.debug("Invalid entry for new angle. Try again.")
+
+            elif stage == 'thor_azi':
+                type_idx = self.azi_move_types.currentIndex()
+                try:
+                    new_position = float(self.azi_move_position.text())
+                    if type_idx == 0:
+                        self.azi_execute_move_button_proc.run(mag_control.move_to_orientation,
+                                                    **{'stage': stage, 'new_angle': new_position, 'queue': self.q, 'abs': True})
+                    elif type_idx == 1:
+                        self.azi_execute_move_button_proc.run(mag_control.move_to_orientation,
+                                                    **{'stage': stage, 'new_angle': new_position, 'queue': self.q, 'abs': False})
+                    else:
+                        pass
+                    
+                    # self.position_tracker = Worker(self.q, True)
+                    # self.position_tracker.position.connect(self.obtain_current_positions)
+                    # self.position_tracker.start()
+
+                except ValueError:
+                    logger.debug("Invalid entry for new angle. Try again.")
+                
+            else:
+                # Move Zaber (z) to target B field
+                try:
+                    phi_val = float(self.phi_position.text())
+                    b_val = float(self.target_b_value.text())
+                except TypeError:
+                    pass
+                else:
+                    new_position = find_mag_pos(phi_val, b_val)
+                    
+                    self.status_label.setStyleSheet("color: black; background-color: gold; border: 4px solid black;")
+                    self.status_label.setText(f"Magnet Status: MOVING ZABER TO {new_position}...")
+                    
+                    self.b_execute_button_proc.run(mag_control.move_to_orientation,
+                                                    **{'stage': 'zaber', 'new_pos': new_position, 'queue': self.q, 'abs': True})
+                
+        else:
+            self.status_label.setStyleSheet("color: black; background-color: red; border: 4px solid black;")
+            self.status_label.setText("Magnet Status: CANNOT MOVE STAGE IS PARKED")
+            
+        return 0
+
+    def stop_button_clicked(self, stage):
+        reload(mag)
+        mag_control = mag.NanoNMRMagnetMotion()
+        stage = stage
+
+        if stage == "zaber":
+            self.r_stop_button_proc.run(mag_control.stop_motion, stage)
+        elif stage == "thor_polar":
+            self.polar_stop_button_proc.run(mag_control.stop_motion, stage)
+        elif stage == "thor_azi":
+            self.azi_stop_button_proc.run(mag_control.stop_motion, stage)     
+        else:
+            pass
+
+        return 0
+
+    # def home_button_clicked(self, stage):
+    #     reload(mag)
+    #     mag_control = mag.NanoNMRMagnetMotion()
+    #     stage = stage
+    #     if stage == "zaber":
+    #         self.r_home_button_proc.run(mag_control.move_to_home, stage)
+    #     elif stage == "thor_polar":
+    #         self.polar_home_button_proc.run(mag_control.move_to_home, stage)
+    #     elif stage == "thor_azi":
+    #         self.azi_home_button_proc.run(mag_control.move_to_home, stage)     
+    #     else:
+    #         pass
+
+    #     return 0
+
+    def all_disable_clicked(self):
+        reload(mag)
+        mag_control = mag.NanoNMRMagnetMotion()
+        
+        if self.all_disable_button.text() == "Disable All":    
+            self.all_disable_proc.run(mag_control.disable_all)
+            self.all_disable_button.setText("Enable All")
+            self.status_label.setStyleSheet("color: white; background-color: black; border: 4px solid black;")
+            self.status_label.setText("Magnet Status: STAGES DISABLED")
+            # self.r_park_button.setText("Unpark")
+            # self.polar_enable_button.setText("Enable")
+            # self.azi_enable_button.setText("Enable")          
+        else:
+            self.all_disable_proc.run(mag_control.enable_all)
+            self.all_disable_button.setText("Disable All")
+            self.status_label.setStyleSheet("color: black; background-color: white; border: 4px solid black;")
+            self.status_label.setText("Magnet Status: STAGES ENABLED")
+            # self.r_park_button.setText("Park")
+            # self.polar_enable_button.setText("Disable")
+            # self.azi_enable_button.setText("Disable")
+
+    def all_standby_clicked(self):
+        reload(mag)
+        mag_control = mag.NanoNMRMagnetMotion()
+        
+        if self.all_disable_button.text() == "Disable All":
+            self.all_standby_proc.run(mag_control.standby_all, **{'queue': self.q})
+        else:
+            self.status_label.setStyleSheet("color: black; background-color: red; border: 4px solid black;")
+            self.status_label.setText("Magnet Status: CANNOT MOVE STAGE IS PARKED")
+            
+    def check_queue_from_mag(self):
+        # queue checker to control progress bar display
+        while not self.q.empty(): #if there is something in the queue
+            queueText = self.q.get_nowait() #get it
+            
+            if queueText[0] == 'done':
+                self.status_label.setStyleSheet("color: black; background-color: limegreen; border: 4px solid black;")
+                self.status_label.setText("Magnet Status: MOVEMENT COMPLETED")
+
+                self.r_label.setText(f"Step 3: R = {queueText[1][0]}")
+                self.polar_label.setText(f"Step 2: \u03B8 = {round(queueText[2],1)}\N{DEGREE SIGN}")
+                self.azi_label.setText(f"Step 1: \u03C6 = {round(queueText[3],1)}\N{DEGREE SIGN}")
+                
+                self.r_label.setStyleSheet("color: white;")
+                self.polar_label.setStyleSheet("color: white;")
+                self.azi_label.setStyleSheet("color: white;")
+
+            elif queueText[0] == 'start standby':
+                self.status_label.setStyleSheet("color: black; background-color: gold; border: 4px solid black;")
+                self.status_label.setText("Magnet Status: MOVING TO STANDBY POSITION...")
+
+            elif queueText[0] == 'in motion to standby':
+                self.status_label.setStyleSheet("color: black; background-color: gold; border: 4px solid black;")
+                self.status_label.setText("Magnet Status: MOVING TO STANDBY POSITION...")
+
+                self.r_label.setText(f"Step 3: R = {queueText[1][0]}")
+                self.polar_label.setText(f"Step 2: \u03B8 = {round(queueText[2],1)}\N{DEGREE SIGN}")
+                self.azi_label.setText(f"Step 1: \u03C6 = {round(queueText[3],1)}\N{DEGREE SIGN}")
+
+                # Change color to yellow while moving
+                self.r_label.setStyleSheet("color: yellow;")
+                self.polar_label.setStyleSheet("color: yellow;")
+                self.azi_label.setStyleSheet("color: yellow;")
+
+            elif queueText[0] == 'start z move':
+                self.status_label.setStyleSheet("color: black; background-color: gold; border: 4px solid black;")
+                
+                if queueText[6] == True:
+                    self.status_label.setText(f"Magnet Status: MOVING {queueText[4]} TO {queueText[5]}...")
+                else:
+                    self.status_label.setText(f"Magnet Status: MOVING {queueText[4]} BY {queueText[5]}...")
+                
+                self.r_label.setText(f"Step 3: R = {queueText[1][0]}")
+                self.r_label.setStyleSheet("color: yellow;")
+                self.polar_label.setStyleSheet("color: white;")
+                self.azi_label.setStyleSheet("color: white;")
+
+            elif queueText[0] == 'start rotation move':
+                self.status_label.setStyleSheet("color: black; background-color: gold; border: 4px solid black;")
+                
+                if queueText[6] == True:
+                    self.status_label.setText(f"Magnet Status: MOVING {queueText[4]} TO {queueText[5]}\N{DEGREE SIGN} ...")
+                else:
+                    self.status_label.setText(f"Magnet Status: MOVING {queueText[4]} BY {queueText[5]}\N{DEGREE SIGN} ...")
+
+            elif queueText[0] == 'in rotation motion to target':
+                self.status_label.setStyleSheet("color: black; background-color: gold; border: 4px solid black;")
+                
+                if queueText[4] == 'thor_polar':
+                    if queueText[6] == True:
+                        self.status_label.setText(f"Magnet Status: MOVING \u03B8 TO {queueText[5]}\N{DEGREE SIGN} ...")
+                    else:
+                        self.status_label.setText(f"Magnet Status: MOVING \u03B8 BY {queueText[5]}\N{DEGREE SIGN} ...")
+
+                    self.polar_label.setText(f"Step 2: \u03B8 = {round(queueText[2],1)}\N{DEGREE SIGN}")
+                    self.r_label.setStyleSheet("color: white;")
+                    self.polar_label.setStyleSheet("color: yellow;")
+                    self.azi_label.setStyleSheet("color: white;")
+
+                elif queueText[4] == 'thor_azi':
+                    if queueText[6] == True:
+                        self.status_label.setText(f"Magnet Status: MOVING \u03C6 TO {queueText[5]}\N{DEGREE SIGN} ...")
+                    else:
+                        self.status_label.setText(f"Magnet Status: MOVING \u03C6 BY {queueText[5]}\N{DEGREE SIGN} ...")
+
+                    self.azi_label.setText(f"Step 1: \u03C6 = {round(queueText[3],1)}\N{DEGREE SIGN}")
+                    self.r_label.setStyleSheet("color: white;")
+                    self.polar_label.setStyleSheet("color: white;")
+                    self.azi_label.setStyleSheet("color: yellow;")
+
+            else:
+                self.status_label.setStyleSheet("color: black; background-color: gold; border: 4px solid black;")
+                self.status_label.setText("Magnet Status: MOVEMENT IN PROGRESS...")
+
+                self.r_label.setStyleSheet("color: white;")
+                self.polar_label.setStyleSheet("color: white;")
+                self.azi_label.setStyleSheet("color: white;")
+
+            # elif queueText[:9]=='SAVE_REQ:': #if it's a save request, save data in new proc we'll track
+            #     saveType, self.datasetName, self.nameForAutosave = queueText.split(':', 1)[1].split(' ')[::2]
+
+            #     self.saveProcs.append(saveInNewProc(datasetName=self.datasetName, expNameForAutosave=self.nameForAutosave, saveType=saveType))
+            # else: #you gave an invalid response in the queue, bozo
+            #     print(f'Invalid queue_from_exp text:{queueText}')
+
+        self.updateTimer.start(self.QUEUE_CHECK_TIME)
+
+    # output sg396 frequency without sideband modulation
+    # def sg396_emit_button_clicked(self):
+    #     with InstrumentManager() as mgr:
+    #         fun_kwargs = dict(**self.sg396_params_widget_1.all_params(), **self.sg396_params_widget_2.all_params())
+    #         # print("power to emit:", fun_kwargs['RF_Power'])
+    #         # print("freq to emit: ", fun_kwargs['RF_Frequency'])
+    #         mgr.sg.set_frequency(fun_kwargs['RF_Frequency'])
+    #         mgr.sg.set_rf_amplitude(fun_kwargs['RF_Power'])
+    #         mgr.sg.set_mod_type('QAM')
+    #         mgr.sg.set_mod_toggle(1)
+    #         mgr.sg.set_rf_toggle(1)
+    #         mgr.sg.set_mod_function('external')
+
+    def sg396_checked(self, box):
+        if box.isChecked() == True:
+            self.sg396_params_widget_1.setEnabled(True)
+            self.sg396_params_widget_2.setEnabled(True)
+            self.sg396_status_label.setEnabled(True)
+            self.sg396_emit_button.setEnabled(True)
+            self.sg396_stop_button.setEnabled(True)
+            [self.sg396_opacity_effects[i].setEnabled(False) for i in range(5)]
+
+        else:
+            self.sg396_params_widget_1.setEnabled(False)
+            self.sg396_params_widget_2.setEnabled(False)
+            self.sg396_status_label.setEnabled(False)
+            self.sg396_emit_button.setEnabled(False)
+            self.sg396_stop_button.setEnabled(False)
+            [self.sg396_opacity_effects[i].setEnabled(True) for i in range(5)]
+
+    def choose_sideband(self, opt, nv_freq, side_freq, pulse_axis='x'):
+        match pulse_axis:
+            case 'y':
+                delta = 90
+            case _: 
+                delta = 0
+
+        match opt:
+            case 'Upper':
+                frequency = nv_freq - side_freq
+                iq_phases = [delta+90, delta+0]
+            case 'Both':
+                frequency = nv_freq - side_freq
+                iq_phases = [delta+0, delta+90, delta+90, delta+0] # lower sideband phases + upper sideband phases
+            case _:
+                frequency = nv_freq + side_freq
+                iq_phases = [delta+0, delta+90]
+
+        return frequency, iq_phases
+    
+    def sg396_emit_button_clicked(self):
+        with InstrumentManager() as mgr:
+            sig_gen = mgr.sg
+            hdawg = mgr.awg
+
+            fun_kwargs = dict(**self.sg396_params_widget_1.all_params(), **self.sg396_params_widget_2.all_params())
+            # print("power to emit:", fun_kwargs['RF_Power'])
+            # print("freq to emit: ", fun_kwargs['RF_Frequency'])
+            output_freq, iq_phases = self.choose_sideband(fun_kwargs['sideband'], fun_kwargs['RF_Frequency'], fun_kwargs['sideband_freq'], 'y')
+
+            sig_gen.set_frequency(output_freq)
+            sig_gen.set_rf_amplitude(fun_kwargs['RF_Power'])
+            sig_gen.set_mod_type('QAM')
+            sig_gen.set_mod_function('external')
+            sig_gen.set_mod_toggle(1)
+
+            hdawg.set_sequence(**{'seq': 'Test',
+                                    'channel': fun_kwargs['channel'],
+                                    'RF_Frequency': fun_kwargs['RF_Frequency'],
+                                    'deer_power': fun_kwargs['deer_power'],
+                                    'i_offset': fun_kwargs['i_offset'],
+                                    'q_offset': fun_kwargs['q_offset'],
+                                    'sideband_power': fun_kwargs['sideband_power'],
+                                    'sideband_freq': fun_kwargs['sideband_freq'], 
+                                    'iq_phases': iq_phases})
+            
+            sig_gen.set_rf_toggle(1)
+
+            self.sg396_status_label.setStyleSheet("color: black; background-color: gold; border: 4px solid black;")
+            self.sg396_status_label.setText(f"SRS SG396 Status: ON ({output_freq*1e-9} GHz at {fun_kwargs['RF_Power']*1e6} uW)")
+            
+    def sg396_stop_button_clicked(self):
+        with InstrumentManager() as mgr:
+            mgr.sg.set_rf_toggle(0)
+            mgr.sg.set_mod_toggle(0)
+            mgr.awg.set_disabled()
+
+            self.sg396_status_label.setStyleSheet("color: white; background-color: black; border: 4px solid black;")
+            self.sg396_status_label.setText("SRS SG396 Status: OFF")
+
+    def laser_temp_clicked(self, component):
+        with InstrumentManager() as mgr:
+            match component:
+                case 'diode':
+                    diode_temp = mgr.laser.get_diode_temp()
+                    self.laser_diode_temp_label.setStyleSheet("color: white; background-color: black; border: 4px solid black;")
+                    self.laser_diode_temp_label.setText(f"{diode_temp:.2f} °C")
+                case 'base':
+                    heat_sink_temp = mgr.laser.get_baseplate_temp()
+                    self.laser_baseplate_temp_label.setStyleSheet("color: white; background-color: black; border: 4px solid black;")
+                    self.laser_baseplate_temp_label.setText(f"{heat_sink_temp:.2f} °C")
+                case _:
+                    pass
+
+    def get_laser_status(self):
+        with InstrumentManager() as mgr:
+            laser_status = mgr.laser.get_status()
+            if laser_status == 'Warm Up' or laser_status == 'Standby' or laser_status == 'Searching SLM point':
+                self.laser_status_label.setStyleSheet("color: black; background-color: orange; border: 4px solid black;")
+                self.laser_status_label.setText(f"{laser_status}")
+            elif laser_status == 'Laser ON':
+                self.laser_status_label.setStyleSheet("color: black; background-color: limegreen; border: 4px solid black;")
+                self.laser_status_label.setText(f"{laser_status}")
+            elif laser_status == 'Error' or laser_status == 'Alarm':
+                self.laser_status_label.setStyleSheet("color: black; background-color: red; border: 4px solid black;")
+                self.laser_status_label.setText(f"{laser_status}")
+            else:
+                self.laser_status_label.setStyleSheet("color: black; background-color: white; border: 4px solid black;")
+                self.laser_status_label.setText(f"{laser_status}")
+        
+        return laser_status
+
+    def laser_alarm_reset_clicked(self):
+        with InstrumentManager() as mgr:
+            mgr.laser.reset_alarm()
+        self.get_laser_status()
+
+    def toggle_laser(self, b):
+        with InstrumentManager() as mgr:
+            match b.text():
+                case 'CW ON':
+                    if b.isChecked() == True:
+                        mgr.ps.laser_ttl_toggle_on()
+                        self.laser_emit_status_label.setText("Emission: ON")
+                        self.laser_emit_status_label.setStyleSheet("color: black; background-color: limegreen; border: 4px solid black;")
+                        self.laser_power_label.setStyleSheet("color: limegreen;")
+                    else:
+                        mgr.ps.laser_ttl_toggle_off()
+                        self.laser_emit_status_label.setText("Emission: OFF")
+                        self.laser_emit_status_label.setStyleSheet("color: black; background-color: white; border: 4px solid black;")
+                        self.laser_power_label.setStyleSheet("color: white;")
+
+                case 'CW OFF':
+                    if b.isChecked() == True:
+                        mgr.ps.laser_ttl_toggle_off()
+                        self.laser_emit_status_label.setText("Emission: OFF")
+                        self.laser_emit_status_label.setStyleSheet("color: black; background-color: white; border: 4px solid black;")
+                        self.laser_power_label.setStyleSheet("color: white;")
+                    else:
+                        mgr.ps.laser_ttl_toggle_on()
+                        self.laser_emit_status_label.setText("Emission: ON")
+                        self.laser_emit_status_label.setStyleSheet("color: black; background-color: limegreen; border: 4px solid black;")
+                        self.laser_power_label.setStyleSheet("color: limegreen;")
+
+            self.get_laser_status()
+
+    def toggle_flipper_2(self, b):
+        with InstrumentManager() as mgr:
+            daq = mgr.daq
+            daq.open_do_task('flip mirror')
+            daq.start_do_task()
+            
+            match b.text():
+                case 'APDs':
+                    daq.write_do_task('flip mirror', detector='apd')
+                case 'PMT':
+                    daq.write_do_task('flip mirror', detector='pmt')
+
+            daq.stop_do_task()
+            daq.close_do_task()
+    
+    def toggle_flipper_current(self, b):
+        with InstrumentManager() as mgr:
+            daq = mgr.daq
+            daq.open_do_task('flip mirror')
+            daq.start_do_task()
+            
+            match b.text():
+                case 'Epi. (APD)':
+                    daq.write_do_task('flip mirror', detector='apd')
+                    daq.stop_do_task()
+                    daq.close_do_task()
+
+                    # second flip mirror to APD
+                    daq.open_do_task('flip mirror 2')
+                    daq.start_do_task()
+                    daq.write_do_task('flip mirror 2', detector='apd')
+                
+                case 'Epi. (BPD)':
+                    daq.write_do_task('flip mirror', detector='apd')
+                    daq.stop_do_task()
+                    daq.close_do_task()
+
+                    # second flip mirror to BPD
+                    daq.open_do_task('flip mirror 2')
+                    daq.start_do_task()
+                    daq.write_do_task('flip mirror 2', detector='bpd')
+                    
+                case 'TIRF':
+                    daq.write_do_task('flip mirror', detector='tirf')
+                    daq.stop_do_task()
+                    daq.close_do_task()
+
+                    # second flip mirror to BPD
+                    daq.open_do_task('flip mirror 2')
+                    daq.start_do_task()
+                    daq.write_do_task('flip mirror 2', detector='bpd')
+
+            daq.stop_do_task()
+            daq.close_do_task()
+
+    def toggle_flipper(self, b):
+        with InstrumentManager() as mgr:
+            daq = mgr.daq
+            daq.open_do_task('flip mirror')
+            daq.start_do_task()
+            
+            match b.text():
+                case 'APD':
+                    daq.write_do_task('flip mirror', detector='apd')
+                    daq.stop_do_task()
+                    daq.close_do_task()
+
+                    # second flip mirror to APD
+                    daq.open_do_task('flip mirror 2')
+                    daq.start_do_task()
+                    daq.write_do_task('flip mirror 2', detector='apd')
+                
+                case 'BPD':
+                    daq.write_do_task('flip mirror', detector='apd')
+                    daq.stop_do_task()
+                    daq.close_do_task()
+
+                    # second flip mirror to BPD
+                    daq.open_do_task('flip mirror 2')
+                    daq.start_do_task()
+                    daq.write_do_task('flip mirror 2', detector='bpd')
+                    
+                case 'PMT':
+                    daq.write_do_task('flip mirror', detector='pmt')
+
+            daq.stop_do_task()
+            daq.close_do_task()
+
+    def nd_filter_changed(self):
+        with InstrumentManager() as mgr:
+            wheel = mgr.filter_wheel
+
+            self.nd_filter_choice = self.nd_filter_opts.currentText()
+            idx = self.nd_filter_opts.findText(self.nd_filter_choice)
+
+            wheel.set_pos(idx+1)
+
+    def bpd_shutter_status_changed(self):
+        with InstrumentManager() as mgr:
+            daq = mgr.daq
+            daq.open_do_task('shutter')
+            daq.start_do_task()
+
+            if self.bpd_shutter_button.text() == "Open BPD shutter":
+                self.bpd_shutter_button.setText("Close BPD shutter")
+                daq.write_do_task('shutter', shutter_status='open')
+            else:
+                self.bpd_shutter_button.setText("Open BPD shutter")
+                daq.write_do_task('shutter', shutter_status='close')
+
+            daq.stop_do_task()
+            daq.close_do_task()
+        
+    def laser_power_changed(self):
+        try:
+            self.laser_power = float(self.laser_current_value.text())
+        except ValueError:
+            logger.debug("Invalid laser power value. Try again.")
+        else:
+            with InstrumentManager() as mgr:
+                self.laser_power_label.setText(f"Laser Power: {str(round((self.laser_power),1))} mW")
+                mgr.laser.set_diode_current_realtime(self.laser_power)
+
+
+    def laser_shutter_status_changed(self):
+        with InstrumentManager() as mgr:
+            laser_shutter = mgr.laser_shutter
+            
+            if self.laser_shutter_button.text() == "Open shutter":
+                self.laser_shutter_button.setText("Close shutter")
+                laser_shutter.open_shutter()
+                self.laser_shutter_status_label.setStyleSheet("color: black; background-color: white; border: 4px solid black;")
+                self.laser_shutter_status_label.setText("Shutter: OPEN")
+            else:
+                self.laser_shutter_button.setText("Open shutter")
+                laser_shutter.close_shutter()
+                self.laser_shutter_status_label.setStyleSheet("color: white; background-color: black; border: 4px solid black;")
+                self.laser_shutter_status_label.setText("Shutter: CLOSED")
+
+    # def pickoff_shutter_status_changed(self):
+    #     with InstrumentManager() as mgr:
+    #         pickoff_shutter = mgr.pickoff_shutter
+            
+    #         if self.pickoff_shutter_button.text() == "Open laser pickoff shutter":
+    #             self.pickoff_shutter_button.setText("Close laser pickoff shutter")
+    #             pickoff_shutter.open_shutter()
+    #             self.pickoff_status_label.setStyleSheet("color: black; background-color: white; border: 4px solid black;")
+    #             self.pickoff_status_label.setText("Pickoff shutter status: OPEN")
+    #         else:
+    #             self.pickoff_shutter_button.setText("Open laser pickoff shutter")
+    #             pickoff_shutter.close_shutter()
+    #             self.pickoff_status_label.setStyleSheet("color: white; background-color: black; border: 4px solid black;")
+    #             self.pickoff_status_label.setText("Pickoff shutter status: CLOSED")
+
+    def kill_process(self):
+        """Stop the run process."""
+        self.run_proc.kill()
+
+
+

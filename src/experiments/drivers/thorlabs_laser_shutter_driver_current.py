@@ -47,12 +47,29 @@ class LaserShutter:
         # set laser shutter to "Manual" mode --> this is only mode that will need to be used
         self.device.SetOperatingMode(SolenoidStatus.OperatingModes.Manual)
 
+        self._state = self.device.GetOperatingState()
+        print(f"Initial shutter state: {self._state}")
+        
     def open_shutter(self):
         self.device.SetOperatingState(SolenoidStatus.OperatingStates.Active)
 
     def close_shutter(self):
         self.device.SetOperatingState(SolenoidStatus.OperatingStates.Inactive)
 
+    def get_shutter_state(self):
+        """Return 'Active' or 'Inactive' as plain string."""
+        try:
+            state = self.device.GetOperatingState()
+            # handle enum or plain object
+            if hasattr(state, "name"):
+                self._state = state.name
+            else:
+                self._state = str(state)
+        except Exception as e:
+            self._state = f"Error: {e}"
+        return self._state
+
+    
     def disconnect(self):
         # Stop Polling and Disconnect
         self.device.StopPolling()

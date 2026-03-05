@@ -35,8 +35,8 @@ class NanoNMRThorlabs:
         if self.Tstage_serial == '40179174':
             'Azimuthal stage parameters'
             self.lower_bound = 0  # angular lower & upper bounds (degrees)
-            self.upper_bound = 115 
-            self.standby_pos = 115  # standby position (degrees)
+            self.upper_bound = 100 
+            self.standby_pos = 100  # standby position (degrees)
 
         elif self.Tstage_serial == '40251814': 
             'Polar stage parameters'

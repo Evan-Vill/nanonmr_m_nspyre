@@ -29,7 +29,11 @@ class HDAWG:
         zhinst.utils.api_server_version_check(self.daq)
 
         self.set_channels()
-        self.sampling_rate = 2.4e9 # Hz
+        self.sampling_rate = [2.4e9, 2.4e9] # Hz
+        self.awg_sampling_rate_opts_dict = {"2.4 GHz": [0, 2.4e9], "1.2 GHz": [1, 1.2e9], "600 MHz": [2, 600e6], "300 MHz": [3, 300e6],
+                                            "150 MHz": [4, 150e6], "75 MHz": [5, 75e6], "37.5 MHz": [6, 37.5e6], "18.75 MHz": [7, 18.75e6],
+                                            "9.37 MHz": [8, 9.37e6], "4.68 MHz": [9, 4.68e6], "2.34 MHz": [10, 2.34e6], "1.17 MHz": [11, 1.17e6],
+                                            "585.93 kHz": [12, 585930], "292.96 kHz": [13, 292960]}
         self.voltage_range = 0.8
         self.voltage_range_rf = 2
         self.control_both_groups = -1
@@ -189,9 +193,11 @@ class HDAWG:
             case _:
                 self.daq.setInt(f"/{self.device}/system/awg/oscillatorcontrol", 0)
     
-    def set_sampling_rate(self, group, idx):
+    def set_sampling_rate(self, group, val):
         try:
-            self.daq.setInt(f"/{self.device}/awgs/{group}/time", {idx}),
+            print("setting sampling rate for group ", group, " to idx ", self.awg_sampling_rate_opts_dict[val][0], " which is ", self.awg_sampling_rate_opts_dict[val][1], " Hz")
+            self.daq.setInt(f"/{self.device}/awgs/{group}/time", self.awg_sampling_rate_opts_dict[val][0]) # set sampling rate option for specific group
+            self.sampling_rate[group] = self.awg_sampling_rate_opts_dict[val][1] # set sampling rate in Hz for specific group
         except Exception as e:
             print(e)
 
@@ -273,8 +279,8 @@ class HDAWG:
 
             # FIXME: outdated loop structure
             case 'Calibrate':
-                i_wave = [self.create_rect_wave("I", kwargs['pi']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave = [self.create_rect_wave("Q", kwargs['pi']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave = [self.create_rect_wave("I", kwargs['pi']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave = [self.create_rect_wave("Q", kwargs['pi']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
 
                 i_phase = [self.set_sine_phase(0, kwargs['iq_phases'][0])]
                 q_phase = [self.set_sine_phase(1, kwargs['iq_phases'][1])]
@@ -300,8 +306,8 @@ class HDAWG:
                 odmr_side_freqs = kwargs['sideband_freqs'] # define frequency array
                 
                 # define the sideband frequencies for the ODMR experiment over range ("start", "stop", step defined by num_pts)
-                i_wave = [self.create_rect_wave("I", kwargs['probe_length']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave = [self.create_rect_wave("Q", kwargs['probe_length']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave = [self.create_rect_wave("I", kwargs['probe_length']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave = [self.create_rect_wave("Q", kwargs['probe_length']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
                 
                 odmr_pulses: List[str] = []
                 
@@ -325,8 +331,8 @@ class HDAWG:
                 odmr_side_freqs = kwargs['sideband_freqs'] # define frequency array
                 
                 # define the sideband frequencies for the ODMR experiment over range ("start", "stop", step defined by num_pts)
-                i_wave = [self.create_rect_wave("I", kwargs['probe_length']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave = [self.create_rect_wave("Q", kwargs['probe_length']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave = [self.create_rect_wave("I", kwargs['probe_length']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave = [self.create_rect_wave("Q", kwargs['probe_length']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
                 
                 odmr_pulses: List[str] = []
                 
@@ -361,8 +367,8 @@ class HDAWG:
 
                 for i in range(kwargs['num_pts']):
                     # awg_waves.append(f"wave {i} = rect({rabi_pulses[i]}, {kwargs['awg_power']});")
-                    i_waves.append(self.create_rect_wave(f"I{i}", rabi_pulses[i]*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power'])))
-                    q_waves.append(self.create_rect_wave(f"Q{i}", rabi_pulses[i]*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power'])))
+                    i_waves.append(self.create_rect_wave(f"I{i}", rabi_pulses[i]*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power'])))
+                    q_waves.append(self.create_rect_wave(f"Q{i}", rabi_pulses[i]*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power'])))
                     
                     awg_pulses.append(f"""{self.create_iq_pulses(1, 1, f"I{i}", 2, f"Q{i}")} waitWave();""")
 
@@ -381,8 +387,8 @@ class HDAWG:
                 odmr_side_freqs = kwargs['sideband_freqs'] # define frequency array
                 
                 # define the sideband frequencies for the ODMR experiment over range ("start", "stop", step defined by num_pts)
-                i_wave = [self.create_rect_wave("I_pi", kwargs['pi_pulse']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave = [self.create_rect_wave("Q_pi", kwargs['pi_pulse']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave = [self.create_rect_wave("I_pi", kwargs['pi_pulse']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave = [self.create_rect_wave("Q_pi", kwargs['pi_pulse']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
                 
                 odmr_pulses: List[str] = []
                 
@@ -406,8 +412,8 @@ class HDAWG:
                 odmr_side_freqs = kwargs['sideband_freqs'] # define frequency array
                 
                 # define the sideband frequencies for the ODMR experiment over range ("start", "stop", step defined by num_pts)
-                i_wave = [self.create_rect_wave("I_pi", kwargs['pi_pulse']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave = [self.create_rect_wave("Q_pi", kwargs['pi_pulse']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave = [self.create_rect_wave("I_pi", kwargs['pi_pulse']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave = [self.create_rect_wave("Q_pi", kwargs['pi_pulse']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
                 
                 odmr_pulses: List[str] = []
                 
@@ -423,7 +429,7 @@ repeat(2){{{self.create_iq_pulses(1, 1, "I_pi", 2, "Q_pi")} waitWave();}}""")
 
                 self.awg_iq_program_text = "\n".join(i_wave + q_wave + inf_repeat + odmr_pulses + inf_end)
 
-                awg_wave = [self.create_rect_wave("waveRF", kwargs['rf_length']*self.sampling_rate, self.convert_mw_power_rf(kwargs['rf_power']))]
+                awg_wave = [self.create_rect_wave("waveRF", kwargs['rf_length']*self.sampling_rate[1], self.convert_mw_power_rf(kwargs['rf_power']))]
                 awg_pulses = [f"""repeat({kwargs['num_pts']}){{
 repeat(1){{resetOscPhase();
 {self.set_sine_phase(1, kwargs['rf_phase'])}
@@ -438,8 +444,8 @@ repeat(1){{resetOscPhase();
                 self.control_both_groups = 2
 
             case 'T1':
-                i_wave = [self.create_rect_wave("I_pi", kwargs['pi_pulse']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave = [self.create_rect_wave("Q_pi", kwargs['pi_pulse']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave = [self.create_rect_wave("I_pi", kwargs['pi_pulse']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave = [self.create_rect_wave("Q_pi", kwargs['pi_pulse']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
 
                 i_phase = [self.set_sine_phase(0, kwargs['iq_phases'][0])]
                 q_phase = [self.set_sine_phase(1, kwargs['iq_phases'][1])]
@@ -460,10 +466,10 @@ repeat(1){{resetOscPhase();
                 self.control_both_groups = 0
 
             case 'DQ':
-                i_wave_minus1 = [self.create_rect_wave("I_minus1", kwargs['pi_minus1']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_minus1 = [self.create_rect_wave("Q_minus1", kwargs['pi_minus1']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_plus1 = [self.create_rect_wave("I_plus1", kwargs['pi_plus1']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_plus1 = [self.create_rect_wave("Q_plus1", kwargs['pi_plus1']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_minus1 = [self.create_rect_wave("I_minus1", kwargs['pi_minus1']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_minus1 = [self.create_rect_wave("Q_minus1", kwargs['pi_minus1']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_plus1 = [self.create_rect_wave("I_plus1", kwargs['pi_plus1']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_plus1 = [self.create_rect_wave("Q_plus1", kwargs['pi_plus1']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
 
                 awg_pulses: List[str] = [] # lines telling AWG to emit pulse
                 
@@ -487,14 +493,14 @@ repeat(1){{{self.create_iq_pulses(1, 1, "I_plus1", 2, "Q_plus1")} waitWave();}}}
                 self.control_both_groups = 0
                 
             case 'T2':
-                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]          
-                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]            
-                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]          
+                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]            
+                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
 
                 awg_pulses: List[str] = [] # lines telling AWG to emit pulse
                 
@@ -681,14 +687,14 @@ repeat({kwargs['n']}){{
                 self.control_both_groups = 0
 
             case 'T2 RF':
-                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]          
-                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]            
-                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]          
+                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]            
+                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
 
                 awg_pulses: List[str] = [] # lines telling AWG to emit pulse
                 
@@ -801,11 +807,11 @@ repeat({kwargs['n']}){{
                 
                 for i in range(kwargs['num_pts']):
                     # awg_waves.append(f"wave {i} = rect({rabi_pulses[i]}, {kwargs['awg_power']});")
-                    awg_waves.append(self.create_rect_wave(f"waveRF{i}", rf_times[i]*self.sampling_rate, self.convert_mw_power_rf(kwargs['rf_power'])))
+                    awg_waves.append(self.create_rect_wave(f"waveRF{i}", rf_times[i]*self.sampling_rate[1], self.convert_mw_power_rf(kwargs['rf_power'])))
                     
                     awg_pulses.append(f"""repeat(2){{{self.create_pulses(2, 2, f"waveRF{i}")} waitWave();}}""")
 
-#                 awg_wave = [self.create_rect_wave("waveRF", kwargs['rf_length']*self.sampling_rate, self.convert_mw_power_rf(kwargs['rf_power']))]
+#                 awg_wave = [self.create_rect_wave("waveRF", kwargs['rf_length']*self.sampling_rate[1], self.convert_mw_power_rf(kwargs['rf_power']))]
 #                 awg_pulses = [f"""repeat({kwargs['num_pts']}){{
 # repeat(1){{
 # {self.set_sine_phase(0, kwargs['rf_phase'])}
@@ -820,14 +826,14 @@ repeat({kwargs['n']}){{
                 self.control_both_groups = 2
 
             case 'DEER':  
-                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]          
-                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]            
-                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]          
+                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]            
+                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
 
                 awg_iq_pulses: List[str] = []
 
@@ -857,8 +863,8 @@ repeat(2){{{self.set_pulse_phases('x', kwargs['iq_phases'])}
                 deer_freqs = kwargs['freqs'] # define frequency array
                 # print("DEER FREQUENCIES: ", deer_freqs)
                 #define the frequency for the deer experiment over range ("start", "stop", step defined by num_pts)
-                #awg_wave = [f"wave waveRF = rect({kwargs['dark_pi']*self.sampling_rate}, {kwargs['awg_power']});"] 
-                awg_wave = [self.create_rect_wave("waveRF", kwargs['pi_pulse']*self.sampling_rate, self.convert_mw_power(kwargs['mw_power']))]
+                #awg_wave = [f"wave waveRF = rect({kwargs['dark_pi']*self.sampling_rate[1]}, {kwargs['awg_power']});"] 
+                awg_wave = [self.create_rect_wave("waveRF", kwargs['pi_pulse']*self.sampling_rate[1], self.convert_mw_power(kwargs['mw_power']))]
                 awg_pulses: List[str] = []
 
                 for i in range(kwargs['num_pts']):
@@ -872,14 +878,14 @@ repeat(4){{{self.create_pulses(1, 1, "waveRF")} waitWave();}}""")
                 self.control_both_groups = 2
 
             case 'DEER CD':           
-                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]          
-                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]            
-                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]          
+                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]            
+                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
 
                 awg_iq_pulses: List[str] = []
 
@@ -908,8 +914,8 @@ repeat(3){{{self.set_pulse_phases('x', kwargs['iq_phases'])}
                 deer_freqs = kwargs['freqs'] # define frequency array
                 # print("DEER FREQUENCIES: ", deer_freqs)
                 #define the frequency for the deer experiment over range ("start", "stop", step defined by num_pts)
-                #awg_wave = [f"wave waveRF = rect({kwargs['dark_pi']*self.sampling_rate}, {kwargs['awg_power']});"] 
-                awg_wave = [self.create_rect_wave("waveRF", kwargs['pi_pulse']*self.sampling_rate, self.convert_mw_power(kwargs['mw_power']))]
+                #awg_wave = [f"wave waveRF = rect({kwargs['dark_pi']*self.sampling_rate[1]}, {kwargs['awg_power']});"] 
+                awg_wave = [self.create_rect_wave("waveRF", kwargs['pi_pulse']*self.sampling_rate[1], self.convert_mw_power(kwargs['mw_power']))]
                 awg_pulses: List[str] = []
 
                 for i in range(kwargs['num_pts']):
@@ -923,14 +929,14 @@ repeat(2){{{self.create_pulses(1, 1, "waveRF")} waitWave();}}""")
                 self.control_both_groups = 2
 
             case 'DEER Rabi':
-                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]          
-                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]            
-                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]          
+                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]            
+                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
 
                 awg_iq_pulses: List[str] = []
 
@@ -963,7 +969,7 @@ repeat(2){{{self.set_pulse_phases('x', kwargs['iq_phases'])}
 
                 for i in range(kwargs['num_pts']):
                     # awg_waves.append(f"wave {i} = rect({rabi_pulses[i]}, {kwargs['awg_power']});")
-                    awg_waves.append(self.create_rect_wave(f"w{i}", rabi_pulses[i]*self.sampling_rate, self.convert_mw_power(kwargs['mw_power'])))
+                    awg_waves.append(self.create_rect_wave(f"w{i}", rabi_pulses[i]*self.sampling_rate[1], self.convert_mw_power(kwargs['mw_power'])))
                     # awg_pulses.append(f"waitDigTrigger(1); playWave(1, {i});")
                     
                     awg_pulses.append(f"""repeat(4){{
@@ -978,14 +984,14 @@ repeat(2){{{self.set_pulse_phases('x', kwargs['iq_phases'])}
                 self.control_both_groups = 2
 
             case 'DEER Corr Rabi':
-                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]          
-                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]            
-                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]          
+                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]            
+                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
 
                 awg_iq_pulses: List[str] = []
 
@@ -1013,14 +1019,14 @@ repeat(3){{{self.set_pulse_phases('x', kwargs['iq_phases'])}
                 
                 rabi_pulses = kwargs['pi_pulses']
                 
-                awg_wave = [self.create_rect_wave("waveRF", kwargs['dark_pulse']*self.sampling_rate, self.convert_mw_power(kwargs['mw_power']))]
+                awg_wave = [self.create_rect_wave("waveRF", kwargs['dark_pulse']*self.sampling_rate[1], self.convert_mw_power(kwargs['mw_power']))]
 
                 awg_waves: List[str] = [] # defines wave structures
                 awg_pulses: List[str] = [] # lines telling AWG to emit pulse
 
                 for i in range(kwargs['num_pts']):
                     # awg_waves.append(f"wave {i} = rect({rabi_pulses[i]}, {kwargs['awg_power']});")
-                    awg_waves.append(self.create_rect_wave(f"w{i}", rabi_pulses[i]*self.sampling_rate, self.convert_mw_power(kwargs['mw_power'])))
+                    awg_waves.append(self.create_rect_wave(f"w{i}", rabi_pulses[i]*self.sampling_rate[1], self.convert_mw_power(kwargs['mw_power'])))
                     # awg_pulses.append(f"waitDigTrigger(1); playWave(1, {i});")
                     awg_pulses.append(f"""repeat(2){{{self.create_pulses(1, 1, "waveRF")} {self.create_pulses(1, 1, "waveRF")}
 {self.create_pulses(1, 1, f"w{i}")} {self.create_pulses(1, 1, "waveRF")} {self.create_pulses(1, 1, "waveRF")}}}""")
@@ -1034,14 +1040,14 @@ repeat(3){{{self.set_pulse_phases('x', kwargs['iq_phases'])}
                 self.control_both_groups = 2
 
             case 'DEER FID':
-                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]          
-                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]            
-                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]          
+                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]            
+                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
 
                 awg_iq_pulses: List[str] = []
 
@@ -1071,8 +1077,8 @@ repeat(2){{{self.set_pulse_phases('x', kwargs['iq_phases'])}
                                              i_wave_pi_x + q_wave_pi_x + i_wave_pi_y + q_wave_pi_y + 
                                              inf_repeat + awg_iq_pulses + inf_end)
                 
-                #awg_wave = [f"wave waveRF = rect({kwargs['dark_pi']*self.sampling_rate}, {kwargs['awg_power']});"] 
-                awg_wave = [self.create_rect_wave("waveRF", kwargs['pi_pulse']*self.sampling_rate, self.convert_mw_power(kwargs['mw_power']))]
+                #awg_wave = [f"wave waveRF = rect({kwargs['dark_pi']*self.sampling_rate[1]}, {kwargs['awg_power']});"] 
+                awg_wave = [self.create_rect_wave("waveRF", kwargs['pi_pulse']*self.sampling_rate[1], self.convert_mw_power(kwargs['mw_power']))]
                 awg_pulses = [f"""repeat({kwargs['num_pts']}){{
 repeat({4*kwargs['n']}){{
 {self.create_pulses(1, 1, "waveRF")}}}}}"""]
@@ -1086,14 +1092,14 @@ repeat({4*kwargs['n']}){{
                 self.control_both_groups = 2
 
             case 'DEER FID CD':
-                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]          
-                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]            
-                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]          
+                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]            
+                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
 
                 awg_iq_pulses: List[str] = []
 
@@ -1121,14 +1127,14 @@ repeat(3){{{self.set_pulse_phases('x', kwargs['iq_phases'])}
                 
                 taus = kwargs['taus']
 
-                #awg_wave = [f"wave waveRF = rect({kwargs['dark_pi']*self.sampling_rate}, {kwargs['awg_power']});"] 
-                awg_wave_DEER = [self.create_rect_wave("waveDEER", kwargs['pi_pulse']*self.sampling_rate, self.convert_mw_power(kwargs['mw_power']))]
+                #awg_wave = [f"wave waveRF = rect({kwargs['dark_pi']*self.sampling_rate[1]}, {kwargs['awg_power']});"] 
+                awg_wave_DEER = [self.create_rect_wave("waveDEER", kwargs['pi_pulse']*self.sampling_rate[1], self.convert_mw_power(kwargs['mw_power']))]
                 
                 awg_CD_waves: List[str] = [] # defines wave structures
                 awg_pulses: List[str] = [] # lines telling AWG to emit pulse
 
                 for i in range(kwargs['num_pts']):
-                    awg_CD_waves.append(self.create_rect_wave(f"waveCD{i}", taus[i]*self.sampling_rate, self.convert_mw_power(kwargs['cd_mw_power'])))
+                    awg_CD_waves.append(self.create_rect_wave(f"waveCD{i}", taus[i]*self.sampling_rate[1], self.convert_mw_power(kwargs['cd_mw_power'])))
 
                     awg_pulses.append(f"""repeat({4*kwargs['n']}){{
 {self.create_pulses(1, 1, "waveDEER")}}}
@@ -1144,14 +1150,14 @@ repeat({4*kwargs['n']}){{
                 self.control_both_groups = 2
 
             case 'DEER Corr T1':
-                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]          
-                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]            
-                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]          
+                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]            
+                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
 
                 awg_iq_pulses: List[str] = []
 
@@ -1190,8 +1196,8 @@ repeat(2){{{self.set_pulse_phases('x', kwargs['iq_phases'])}
                                              i_wave_pi_x + q_wave_pi_x + i_wave_pi_y + q_wave_pi_y + 
                                              inf_repeat + awg_iq_pulses + inf_end)
                 
-                #awg_wave = [f"wave waveRF = rect({kwargs['dark_pi']*self.sampling_rate}, {kwargs['awg_power']});"] 
-                awg_wave = [self.create_rect_wave("waveRF", kwargs['dark_pulse']*self.sampling_rate, self.convert_mw_power(kwargs['mw_power']))]
+                #awg_wave = [f"wave waveRF = rect({kwargs['dark_pi']*self.sampling_rate[1]}, {kwargs['awg_power']});"] 
+                awg_wave = [self.create_rect_wave("waveRF", kwargs['dark_pulse']*self.sampling_rate[1], self.convert_mw_power(kwargs['mw_power']))]
                 awg_pulses = [f"""repeat({kwargs['num_pts']}){{
 repeat(1){{
 repeat(18){{
@@ -1206,14 +1212,14 @@ repeat(18){{
                 self.control_both_groups = 2
 
             case 'DEER T2':
-                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]          
-                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]            
-                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]          
+                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]            
+                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
 
                 awg_iq_pulses: List[str] = []
 
@@ -1243,9 +1249,9 @@ repeat(1){{{self.set_pulse_phases('x', kwargs['iq_phases'])}
                                              i_wave_pi_x + q_wave_pi_x + i_wave_pi_y + q_wave_pi_y + 
                                              inf_repeat + awg_iq_pulses + inf_end)
                 
-                #awg_wave = [f"wave waveRF = rect({kwargs['dark_pi']*self.sampling_rate}, {kwargs['awg_power']});"] 
-                awg_pihalf_wave = [self.create_rect_wave("wave_pihalf_RF", kwargs['dark_half_pulse']*self.sampling_rate, self.convert_mw_power(kwargs['mw_power']))]
-                awg_pi_wave = [self.create_rect_wave("wave_pi_RF", kwargs['dark_pulse']*self.sampling_rate, self.convert_mw_power(kwargs['mw_power']))]
+                #awg_wave = [f"wave waveRF = rect({kwargs['dark_pi']*self.sampling_rate[1]}, {kwargs['awg_power']});"] 
+                awg_pihalf_wave = [self.create_rect_wave("wave_pihalf_RF", kwargs['dark_half_pulse']*self.sampling_rate[1], self.convert_mw_power(kwargs['mw_power']))]
+                awg_pi_wave = [self.create_rect_wave("wave_pi_RF", kwargs['dark_pulse']*self.sampling_rate[1], self.convert_mw_power(kwargs['mw_power']))]
 
                 awg_pulses = [f"""repeat({kwargs['num_pts']}){{
 repeat(2){{
@@ -1270,14 +1276,14 @@ repeat(2){{
                 self.control_both_groups = 2
 
             case 'NMR':
-                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]          
-                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]            
-                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]          
+                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]            
+                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
 
                 awg_pulses: List[str] = [] # lines telling AWG to emit pulse
 
@@ -1360,7 +1366,7 @@ repeat({kwargs['n']}){{
                 self.daq.setDouble(f"/{self.device}/oscs/0/freq", kwargs['sideband_freq'])
 
                 ### RF coil signal
-                awg_wave = [self.create_rect_wave("waveRF_pihalf", kwargs['total_exp_time']*self.sampling_rate, self.convert_mw_power_rf(kwargs['rf_power']))]
+                awg_wave = [self.create_rect_wave("waveRF_pihalf", kwargs['total_exp_time']*self.sampling_rate[1], self.convert_mw_power_rf(kwargs['rf_power']))]
                 awg_pulses = [f"""repeat(1){{{self.set_sine_phase(1, kwargs['rf_phase'])}
 {self.create_pulses(2, 2, "waveRF_pihalf")} waitWave();}}"""]
                 
@@ -1375,14 +1381,14 @@ repeat({kwargs['n']}){{
                 self.control_both_groups = 2
 
             case 'CASR':
-                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]          
-                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]            
-                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]          
+                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]            
+                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
 
                 awg_pulses: List[str] = [] # lines telling AWG to emit pulse
 
@@ -1441,9 +1447,7 @@ repeat({kwargs['n']}){{
 
                 self.daq.setDouble(f"/{self.device}/oscs/0/freq", kwargs['sideband_freq'])
 
-                # casr_signal_sampling = self.set_sampling_rate(1, 7)
-
-                awg_wave = [self.create_rect_wave("waveRF_pihalf", kwargs['rf_pihalf']*75e6, self.convert_mw_power_rf(kwargs['rf_power']))]
+                awg_wave = [self.create_rect_wave("waveRF_pihalf", kwargs['rf_pihalf']*self.sampling_rate[1], self.convert_mw_power_rf(kwargs['rf_power']))]
                 awg_pulses = [f"""repeat(1){{resetOscPhase();
 {self.set_sine_phase(1, kwargs['rf_phase'])}
 {self.create_pulses(2, 2, "waveRF_pihalf")} waitWave();}}"""]
@@ -1457,14 +1461,14 @@ repeat({kwargs['n']}){{
                 self.control_both_groups = 2
 
             case 'CASR2':
-                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]          
-                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]            
-                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]          
+                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]            
+                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
 
                 awg_pulses: List[str] = [] # lines telling AWG to emit pulse
 
@@ -1522,9 +1526,8 @@ repeat({kwargs['n']}){{
 
                 self.daq.setDouble(f"/{self.device}/oscs/0/freq", kwargs['sideband_freq'])
 
-                # casr_signal_sampling = self.set_sampling_rate(1, 7)
-
-                awg_wave = [self.create_rect_wave("waveRF_pihalf", kwargs['rf_pihalf']*75e6, self.convert_mw_power_rf(kwargs['rf_power']))]
+                # awg_wave = [self.create_rect_wave("waveRF_pihalf", kwargs['rf_pihalf']*75e6, self.convert_mw_power_rf(kwargs['rf_power']))]
+                awg_wave = [self.create_rect_wave("waveRF_pihalf", kwargs['rf_pihalf']*self.sampling_rate[1], self.convert_mw_power_rf(kwargs['rf_power']))]
                 awg_pulses = [f"""repeat(1){{resetOscPhase();
 {self.set_sine_phase(1, kwargs['rf_phase'])}
 {self.create_pulses(2, 2, "waveRF_pihalf")} waitWave();}}"""]
@@ -1538,14 +1541,14 @@ repeat({kwargs['n']}){{
                 self.control_both_groups = 2
 
             case 'CASR RF':
-                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]          
-                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]            
-                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
-                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate, self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pihalf_y = [self.create_rect_wave("I_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]          
+                q_wave_pihalf_y = [self.create_rect_wave("Q_pihalf_y", kwargs['pihalf_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]            
+                i_wave_pi_x = [self.create_rect_wave("I_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_x = [self.create_rect_wave("Q_pi_x", kwargs['pi_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                i_wave_pi_y = [self.create_rect_wave("I_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
+                q_wave_pi_y = [self.create_rect_wave("Q_pi_y", kwargs['pi_y']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
 
                 awg_pulses: List[str] = [] # lines telling AWG to emit pulse
 
@@ -1604,7 +1607,7 @@ repeat({kwargs['n']}){{
 
                 self.daq.setDouble(f"/{self.device}/oscs/0/freq", kwargs['sideband_freq'])
 
-                # awg_wave = [self.create_sine_wave("signal", kwargs['rf_pihalf']*self.sampling_rate, self.convert_mw_power_rf(kwargs['rf_power']), 0, )]
+                # awg_wave = [self.create_sine_wave("signal", kwargs['rf_pihalf']*self.sampling_rate[1], self.convert_mw_power_rf(kwargs['rf_power']), 0, )]
                 # awg_pulses = [f"""{self.create_pulses(2, 2, "signal")}"""]
                 
                 # self.awg_program_text = "\n".join(awg_wave + inf_repeat + awg_pulses + inf_end)

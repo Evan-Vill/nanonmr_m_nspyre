@@ -14,7 +14,7 @@ from rpyc.utils.classic import obtain
 
 from pulsestreamer.grpc.pulse_streamer_grpc import PulseStreamer
 # from c:\NSpyre\miniconda3\envs\ev_nspy\Lib\site-packages\pulsestreamer
-from pulsestreamer.sequence import Sequence
+from pulsestreamer.sequence import OutputState, Sequence
 from pulsestreamer.enums import TriggerStart, ClockSource
 
 class Pulses():
@@ -65,9 +65,14 @@ class Pulses():
         """
         return self.Pulser.hasFinished()
     
-    def laser_on(self):
-        return self.Pulser.constant(([7], 0.0, 0.0))
+    def laser_ttl_toggle_on(self):
+        # set laser to on
+        return self.Pulser.constant(OutputState([3], 0.0, 0.0))
 
+    def laser_ttl_toggle_off(self):
+        # set laser to off
+        return self.Pulser.constant(OutputState([], 0.0, 0.0))
+    
     def stream(self,seq,n_runs):
         seq = obtain(seq)
         # print(type(seq))
@@ -138,7 +143,7 @@ class Pulses():
             # print(f"clock off 2: {clock_off}")
             iq_off = mw_probe_time - self.awg_trig_time
 
-            # laser_seq = [mw_probe_time, 1)]
+            laser_seq = [(mw_probe_time, 1)]
             # laser_seq = [(1000, 0), (1000, 1), (mw_probe_time - 4000, 0), (1000, 1), (1000, 0)]
 
             # define sequence structure for clock and MW I/Q channels
@@ -150,11 +155,11 @@ class Pulses():
             mw_iq_seq_off = [(mw_probe_time, 0)]
 
             # assign sequences to respective channels
-            # seq_on.setDigital(3, laser_seq) # laser 
+            seq_on.setDigital(3, laser_seq) # laser 
             seq_on.setDigital(1, dig_clock_seq) # digitizer trigger
             seq_on.setDigital(2, mw_iq_seq_on) # MW IQ
 
-            # seq_off.setDigital(3, laser_seq) # laser 
+            seq_off.setDigital(3, laser_seq) # laser 
             seq_off.setDigital(1, dig_clock_seq) # digitizer trigger
             seq_off.setDigital(2, mw_iq_seq_off) # MW IQ
 

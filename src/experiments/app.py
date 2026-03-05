@@ -18,8 +18,8 @@ from nspyre import nspyreApp
 # module containing your class to MainWidgetItem, since the python reload()
 # function does not recursively reload modules
 import gui_test
-import gui_all_instruments_current
-import gui_experiments_current
+import gui_all_instruments_2026_03_02
+import gui_experiments_2026_03_02
 import gui_calculations
 
 from drivers.insmgr import MyInstrumentManager
@@ -44,17 +44,17 @@ def main():
         main_widget = MainWidget(
             {
                 # 'Test': MainWidgetItem(gui_test, 'PowerBar', stretch = (1, 1)),
-                'Instruments': MainWidgetItem(gui_all_instruments_current, 'InstWidget', stretch = (1, 1)),
-                'Experiments': MainWidgetItem(gui_experiments_current, 'ExpWidget', stretch = (1, 1)),
+                'Instruments': MainWidgetItem(gui_all_instruments_2026_03_02, 'InstWidget', stretch = (1, 1)),
+                'Experiments': MainWidgetItem(gui_experiments_2026_03_02, 'ExpWidget', stretch = (1, 1)),
                 # 'Subsystems': MainWidgetItem(nspyre.gui.widgets.subsystem, 'SubsystemsWidget', args=[insmgr.subs.subsystems], stretch=(1, 1)),
                 'Plots': {
                     'FlexLinePlot': MainWidgetItem(
-                        gui_experiments_current,
+                        gui_experiments_2026_03_02,
                         'FlexLinePlotWidgetAllDefaults',
                         stretch=(100, 100),
                     ),
                 },
-                'Fitter': MainWidgetItem(gui_experiments_current, 'FitterWidget', stretch = (1, 1)),                
+                'Fitter': MainWidgetItem(gui_experiments_2026_03_02, 'FitterWidget', stretch = (1, 1)),                
                 'Calculations': MainWidgetItem(gui_calculations, 'CalcWidget', stretch = (1, 1)),
                 'Save': MainWidgetItem(nspyre.gui.widgets.save, 'SaveWidget', stretch=(1, 1)),
                 'Load': MainWidgetItem(nspyre.gui.widgets.load, 'LoadWidget', stretch=(1, 1)),

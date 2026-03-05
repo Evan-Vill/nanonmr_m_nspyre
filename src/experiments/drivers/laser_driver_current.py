@@ -29,7 +29,16 @@ class LaserControl(Laser):
             # connect to the specific laser
             laser_infos = lasers.find_serial_number(serial_num)
         super().__init__(laser_infos)
-        self.open()
+        # self.open()
+        self.open_laser()
+        self.set_modulation_state('pulsed')
+        self.set_analog_control_mode('current')
+        self.set_diode_current_realtime(0)
+        self.laser_on()
+        # # from nspyre experiments file for reference
+        # laser.set_modulation_state('cw')
+        # laser.set_analog_control_mode('current')
+        # laser.set_diode_current_realtime(kwargs['laser_power'])
         # self.close()
 
     def send_command(self, input):
@@ -124,7 +133,7 @@ class LaserControl(Laser):
         self.send_command(f"PM={power_int}")
 
     def reset_alarm(self):
-        logger.info("Alarm resetted")
+        logger.info("Alarm reset")
         self.send_command("RST")
 
     def set_TEC_enable(self, enable=True):
@@ -223,6 +232,17 @@ class LaserControl(Laser):
         return "ext" if rep==1 else 'int'
 
     # some helper methods------------------------------------------------------------
+    def open_laser(self):
+        self.open()
+
+    def close(self):
+        try:
+            print("Turning off laser before closing...")
+            self.laser_off()
+        finally:
+            print("Closing laser: call base Laser.close()...")
+            super().close()
+    
     def set_analog_modulation_external(self):
         self.set_analog_modulation("external")
 

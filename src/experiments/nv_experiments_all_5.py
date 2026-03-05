@@ -1,40 +1,66 @@
-"""
-NanoNMR-M Experiments
+"""NanoNMR-M experiments.
 
-Written by Evan Villafranca
-Updated on 2/20/2025
+This module implements a collection of NV/NNMR experiment routines used by
+the NanoNMR-M setup. It contains the :class:`SpinMeasurements` class with
+helpers for digitizer configuration, pulse sequence control, and a set of
+experiment implementations (ODMR, Rabi, T1/T2, DEER, CASR, etc.).
 
+Author: Evan Villafranca
+Updated: 2025-02-20
 """
-import time
 import logging
-
+import math
+import time
 from pathlib import Path
 from typing import List
+from typing import Optional
 
-from pulsestreamer import PulseStreamer
-from pulsestreamer import TriggerStart, NextAction, When, OnNoData
-
-from spcm import units
-from digitizer_driver import SpectrumDigitizer
-
-import math
 import numpy as np
 import warnings
-from scipy.optimize import curve_fit, OptimizeWarning
-from numba import njit 
+from scipy.optimize import OptimizeWarning, curve_fit
 
-from nspyre import DataSource, DataSink
-from nspyre import InstrumentServer, InstrumentManager
-from nspyre import experiment_widget_process_queue
-from nspyre import StreamingList
-from nspyre.data.save import save_json
-# from nspyre import nspyre_init_logger
-# from saver import DataSaver
+from digitizer_driver import SpectrumDigitizer
+import daq_read_samples as daq
+from pulsestreamer import (
+    PulseStreamer,
+    TriggerStart,
+    NextAction,
+    When,
+    OnNoData,
+)
+from nspyre import DataSource, InstrumentManager
+from nspyre import StreamingList, experiment_widget_process_queue
 
-from customUtils import flexSave
+from saveUtils import flexSave
 
 _HERE = Path(__file__).parent
 _logger = logging.getLogger(__name__)
+
+def format_hhmmss(seconds: float) -> str:
+        seconds = int(seconds)
+        m, s = divmod(seconds, 60)
+        h, m = divmod(m, 60)
+        return f'{h:02d}:{m:02d}:{s:02d}'
+
+def format_minutes_seconds(seconds: float) -> str:
+    seconds = int(round(seconds))
+
+    if seconds < 60:
+        return f"{seconds} sec"
+
+    minutes, sec = divmod(seconds, 60)
+
+    if minutes < 60:
+        return f"{minutes} min {sec} sec"
+
+    hours, minutes = divmod(minutes, 60)
+
+    if hours < 24:
+        return f"{hours} hr {minutes} min"
+
+    days, hours = divmod(hours, 24)
+    return f"{days} d {hours} hr"
+
 
 class SpinMeasurements:
     """NanoNMR-M experiments
@@ -52,9 +78,13 @@ class SpinMeasurements:
         self.queue_from_exp = queue_from_exp
         self.dig = SpectrumDigitizer('dev/spcm0') # instantiate digitizer for high-speed data acquisition
         
-    def run_save(self, data_name, file_name, directory):
+    def run_save(self, data_name, file_name, directory, seq=None):
         logging.info("Saving file with flexSave...")
-        flexSave(data_name, data_name, file_name, directory)
+        if seq is not None:
+            exp_name = f"{data_name}_{seq.lower()}"
+        else:
+            exp_name = data_name
+        flexSave(datasetName=data_name, expType=exp_name, filename=file_name, dirs=directory)
     
     # @njit(parallel=True)
     def analog_math(self, array, exp_type, pts):        
@@ -122,10 +152,51 @@ class SpinMeasurements:
 
             return [ms1_array, ms0_array]
 
+    def build_status_msg(
+        self,
+        *,
+        status: str,
+        percent_completed: int,
+        fit_value: float | None,
+        fit_error: float | None,
+        start_time: float,
+        total_iters: int,
+        iters_completed: int,
+        fit_value2: Optional[float] = None,
+        fit_error2: Optional[float] = None,
+        exception: Optional[str] = None,
+    ) -> dict:
+        now = time.perf_counter()
+        elapsed = now - start_time
 
+        if iters_completed > 0:
+            avg_loop = elapsed / iters_completed
+            est_total = avg_loop * total_iters
+        else:
+            avg_loop = 0.0
+            est_total = 0.0
+
+        remaining = max(est_total - elapsed, 0.0)
+
+        return {
+            "status": status,
+            "percent": int(percent_completed),
+
+            "fit_value": fit_value,
+            "fit_error": fit_error,
+
+            "elapsed_s": elapsed,
+            "remaining_s": remaining,
+            "est_total_s": est_total,
+
+            "elapsed_str": format_hhmmss(elapsed),
+            "remaining_str": format_hhmmss(remaining),
+            "est_total_str": format_minutes_seconds(est_total),
+
+            "exception": exception,
+        }
 
     """ Configure equipment """
-
     def choose_sideband(self, opt, nv_freq, side_freq, pulse_axis='x'):
         """Return signal generator frequency & IQ phase values
         
@@ -176,25 +247,18 @@ class SpinMeasurements:
                       'runs': kwargs['runs']}
         
         return dig_config
-    
-    def volt_factor(self, detector):
-        if detector == 'APD':
-            factor = 1
-        else:
-            factor = -1
-        return factor 
-    
-    def equipment_off(self, detector):
+        
+    def equipment_off(self):
         """Shut off equipment at experiment end/stop.
         """
         with InstrumentManager() as mgr:
-            laser = mgr.laser
+            # laser = mgr.laser
             laser_shutter = mgr.laser_shutter
             sig_gen = mgr.sg
             ps = mgr.ps
             hdawg = mgr.awg
 
-            laser.laser_off()
+            # laser.laser_off()
             laser_shutter.close_shutter()
 
             sig_gen.set_rf_toggle(0)
@@ -216,54 +280,25 @@ class SpinMeasurements:
             sig_gen.set_mod_function('IQ', 5) # external modulation
             sig_gen.set_mod_toggle(1) # turn on modulation mode
 
+
     """ Experiment logic """
-
-    # def experiment_scan(self, **kwargs):
-    #     with InstrumentManager() as mgr, DataSource(kwargs['dataset']) as data:
-    #         # load devices used in scan
-    #         laser = mgr.laser
-    #         laser_shutter = mgr.laser_shutter
-    #         pickoff_shutter = mgr.pickoff_shutter
-    #         sig_gen = mgr.sg
-    #         ps = mgr.ps
-    #         hdawg = mgr.awg
-
-    #         # define pulse sequence
-    #         sequence = ps.CW_ODMR(kwargs['num_pts'], kwargs['probe']*1e9) # pulse streamer sequence for CW ODMR
-
-    #         # configure digitizer (need to set impedance = 1 Mohm for AC coupling)
-    #         dig_config = self.digitizer_configure(num_pts_in_exp = kwargs['num_pts'], iters = kwargs['iters'], 
-    #                                               segment_size = kwargs['segment_size'], sampling_freq = kwargs['dig_sampling_freq'], dig_amplitude = kwargs['dig_amplitude'], 
-    #                                               read_channel = kwargs['read_channel'], coupling = kwargs['dig_coupling'], termination = kwargs['dig_termination'], 
-    #                                               pretrig_size = kwargs['pretrig_size'], dig_timeout = kwargs['dig_timeout'], runs = kwargs['runs'])
-            
-    #         # configure signal generator for NV drive
-    #         sig_gen.set_frequency(sig_gen_freq) # set carrier frequency
-    #         sig_gen.set_rf_amplitude(kwargs['rf_power']) # set MW power
-    #         sig_gen.set_mod_type(7) # quadrature amplitude modulation
-    #         sig_gen.set_mod_subtype(1) # no constellation mapping
-    #         sig_gen.set_mod_function('IQ', 5) # external modulation
-    #         sig_gen.set_mod_toggle(1) # turn on modulation mode
-
     def sigvstime_scan(self, **kwargs):     
         with InstrumentManager() as mgr, DataSource(kwargs['dataset']) as sigvstime_data:
             # run laser on continuously here from laser driver
+            laser = mgr.laser
             laser_shutter = mgr.laser_shutter
             ps = mgr.ps
 
-            sequence = ps.SigvsTime(1/kwargs['exp_sampling_rate'] * 1e9) # pulse streamer sequence for CW ODMR
+            token = f"SIGVSTIME_{time.strftime('%Y%m%d_%H%M%S')}"  # unique token for this experiment run
+            ps.begin_exclusive(token, takeover=True, restore_on_release=True)  # take exclusive control of the pulse streamer
 
+            sequence = ps.SigvsTime(1/kwargs['exp_sampling_rate'] * 1e9) # pulse streamer sequence for CW ODMR
+            
             # configure digitizer (need to use DC coupling for signal vs time)           
-            if kwargs['sigvstime_detector'] == 'BPD':
-                dig_config = self.digitizer_configure(num_pts_in_exp = 1, iters = 1, 
-                                                    segment_size = kwargs['segment_size'], sampling_freq = 0.5e9, dig_amplitude = 5, 
-                                                    read_channel = kwargs['read_channel'], coupling = 'DC', termination = '1M', 
-                                                    pretrig_size = kwargs['pretrig_size'], dig_timeout = 5, runs = 400)
-            else:
-                dig_config = self.digitizer_configure(num_pts_in_exp = 1, iters = 1, 
-                                                    segment_size = kwargs['segment_size'], sampling_freq = 0.5e9, dig_amplitude = 5, 
-                                                    read_channel = kwargs['read_channel'], coupling = 'DC', termination = '1M', 
-                                                    pretrig_size = kwargs['pretrig_size'], dig_timeout = 5, runs = 400)
+            dig_config = self.digitizer_configure(num_pts_in_exp = 1, iters = 1, 
+                                                segment_size = kwargs['segment_size'], sampling_freq = 0.5e9, dig_amplitude = 5, 
+                                                read_channel = kwargs['read_channel'], coupling = 'DC', termination = '1M', 
+                                                pretrig_size = kwargs['pretrig_size'], dig_timeout = 5, runs = 400)
                 
             time_start = time.time()
 
@@ -275,44 +310,73 @@ class SpinMeasurements:
             # upload digitizer parameters
             self.dig.assign_param(dig_config)
 
+            # configure laser settings and turn on
+            laser.set_diode_current_realtime(kwargs['laser_power'])
+            
             # set pulsestreamer to start on software trigger & run infinitely
             ps.set_soft_trigger()
-            ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY) #kwargs['runs']*kwargs['iters']) # execute chosen sequence on Pulse Streamer
+            ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) #kwargs['runs']*kwargs['iters']) # execute chosen sequence on Pulse Streamer
             
             # start digitizer --> waits for trigger from pulse sequence
             self.dig.config()
             self.dig.start_buffer()
             
             # start pulse sequence
-            ps.start_now()
+            ps.start_now(owner=token)
             
+            exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
+
             for i in range(10000):                
                 sig_result_raw = self.dig.acquire() # acquire data from digitizer
 
                 # average all data over each trigger/segment 
                 sig_result = np.mean(sig_result_raw,axis=1)
                 sig_result = np.mean(sig_result)
-
+                sig_val = sig_result.magnitude if hasattr(sig_result, "magnitude") else sig_result
                 time_pt = time.time() - time_start
 
                 # read the analog voltage levels received by the APD.
                 # notify the streaminglist that this entry has updated so it will be pushed to the data server
-                signal_sweeps.append(np.array([[time_pt], [sig_result]]))
+                signal_sweeps.append(np.array([[time_pt], [sig_val]]))
                 signal_sweeps.updated_item(-1) 
                 
                 # save the current data to the data server.
-                sigvstime_data.push({'params': {'kwargs': kwargs},
+                sigvstime_data.push({'params': {'kwargs': kwargs, 'elapsed': time.perf_counter() - exp_start_time},
                                      'title': 'Signal Vs Time',
                                      'xlabel': 'Time step',
                                      'ylabel': 'APD Voltage (V)',
                                      'datasets': {'signal': signal_sweeps}})
 
-                self.queue_from_exp.put_nowait(['0', 'in progress', None])
+                msg = self.build_status_msg(
+                    status='in progress',
+                    percent_completed=0,
+                    fit_value=None,
+                    fit_error=None,
+                    start_time=exp_start_time,
+                    total_iters=1,
+                    iters_completed=0,
+                )
 
+                self.queue_from_exp.put_nowait(msg)
+                
                 if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                     # the GUI has asked us nicely to exit. Save data if requested.
-                    self.equipment_off(kwargs['sigvstime_detector'])
-                    self.queue_from_exp.put_nowait(['0', 'stopped', None])
+                    self.equipment_off()
+
+                    ps.end_exclusive(token)  # release exclusive control of the pulse streamer
+
+                    msg = self.build_status_msg(
+                        status="stopped",
+                        percent_completed=0,
+                        fit_value=None,
+                        fit_error=None,
+                        start_time=exp_start_time,
+                        total_iters=0,
+                        iters_completed=0,
+                    )
+                    # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                    self.queue_from_exp.put_nowait(msg)
+
                     if kwargs['save'] == True:
                         self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                     return
@@ -330,6 +394,7 @@ class SpinMeasurements:
         """
         # connect to the instrument server & the data server.
         # create a data set, or connect to an existing one with the same name if it was created earlier.
+                
         with InstrumentManager() as mgr, DataSource(kwargs['dataset']) as cw_odmr_data:
             # load devices used in scan
             laser = mgr.laser
@@ -337,6 +402,9 @@ class SpinMeasurements:
             sig_gen = mgr.sg
             ps = mgr.ps
             hdawg = mgr.awg
+            
+            token = f"ODMR_{time.strftime('%Y%m%d_%H%M%S')}"  # unique token for this experiment run
+            ps.begin_exclusive(token, takeover=True, restore_on_release=True)  # take exclusive control of the pulse streamer
 
             # define NV drive frequency & sideband           
             delta = 0
@@ -369,9 +437,7 @@ class SpinMeasurements:
             
             # configure signal generator for NV drive
             self.set_srs396(sig_gen_freq, kwargs['rf_power'])
-                        
-            volt_factor = self.volt_factor(kwargs['detector']) # if using PMT, make negative voltages positive  
-
+                                    
             try:
                 hdawg.set_sequence(**{'seq': 'CW ODMR',
                                     'i_offset': kwargs['i_offset'],
@@ -381,8 +447,10 @@ class SpinMeasurements:
                                     'sideband_freqs': mod_freqs, 
                                     'iq_phases': iq_phases,
                                     'num_pts': kwargs['num_pts']})
+                hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
+                hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
             except Exception as e:
-                print(e)
+                print(f"AWG exception: {e}")
             
             # run the experiment
             else:
@@ -400,25 +468,37 @@ class SpinMeasurements:
                 sig_gen.set_rf_toggle(1) # turn on NV signal generator
 
                 # configure laser settings and turn on
-                laser.set_modulation_state('cw')
-                laser.set_analog_control_mode('current')
                 laser.set_diode_current_realtime(kwargs['laser_power'])
-                laser.laser_on()
 
-                # set pulsestreamer to start on software trigger & run infinitely
-                ps.set_soft_trigger()
-                ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY) # execute chosen sequence on Pulse Streamer
-                
-                # start digitizer --> waits for trigger from pulse sequence
                 try:
+                    # set pulsestreamer to start on software trigger & run infinitely
+                    ps.set_soft_trigger()
+                    ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # execute chosen sequence on Pulse Streamer
+                    
+                    # start digitizer --> waits for trigger from pulse sequence
                     self.dig.config()
+
                 except Exception as e:
-                    print(f"Digitizer exception: {e}")
+                    print(f"Exception: {e}")
                     exception_type = type(e).__name__
-                    self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+
+                    msg = self.build_status_msg(
+                            status='failed',
+                            percent_completed=0,
+                            fit_value=fit_value,
+                            fit_error=fit_error,
+                            start_time=exp_start_time if "exp_start_time" in locals() else time.perf_counter(),
+                            total_iters=kwargs['iters'],
+                            iters_completed=0,
+                            exception=exception_type,
+                        )
+                    # self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    self.queue_from_exp.put_nowait(msg)
                 else:
                     self.dig.start_buffer() # start digitizer (enable trigger)  
-                    ps.start_now() # start pulse sequence
+                    ps.start_now(owner=token) # start pulse sequence
+                    
+                    exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
                     # start experiment loop
                     for i in range(kwargs['iters']):
@@ -428,7 +508,7 @@ class SpinMeasurements:
                         
                         # partition buffer into signal and background datasets
                         try:
-                            sig, bg = volt_factor*self.analog_math(odmr_result, 'CW ODMR', kwargs['num_pts'])
+                            sig, bg = self.analog_math(odmr_result, 'CW ODMR', kwargs['num_pts'])
                         except ValueError:
                             continue
                         
@@ -447,22 +527,35 @@ class SpinMeasurements:
                                 except (RuntimeError, OptimizeWarning) as e:
                                     _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
+                        # update GUI progress bar & ETA
+                        iter_completed = i + 1                      
+                        percent_completed = int((iter_completed / kwargs["iters"]) * 100)
+
                         # save the current data to the data server
-                        cw_odmr_data.push({'params': {'kwargs': kwargs},
+                        cw_odmr_data.push({'params': {'kwargs': kwargs, 'iters_completed': iter_completed, 'elapsed': time.perf_counter() - exp_start_time},
                                             'title': 'CW Optically Detected Magnetic Resonance',
                                             'xlabel': 'Frequency (GHz)',
                                             'ylabel': 'Signal',
                                             'datasets': {'signal' : signal_sweeps, 'background': background_sweeps,
                                                         'x_fit': fit_x, 'y_fit': fit_y}})
-
-                        # update GUI progress bar                        
-                        percent_completed = str(int(((i+1)/kwargs['iters'])*100))
                         
-                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                        msg = self.build_status_msg(
+                            status='in progress',
+                            percent_completed=percent_completed,
+                            fit_value=fit_value,
+                            fit_error=fit_error,
+                            start_time=exp_start_time,
+                            total_iters=kwargs['iters'],
+                            iters_completed=iter_completed,
+                        )
+
+                        # self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                        self.queue_from_exp.put_nowait(msg)
 
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
-                            self.equipment_off(kwargs['detector'])
+                            self.equipment_off()
+
                             if kwargs['fit'] == True:
                                 with warnings.catch_warnings():
                                     warnings.simplefilter("error", OptimizeWarning)
@@ -471,8 +564,18 @@ class SpinMeasurements:
                                     except (RuntimeError, OptimizeWarning) as e:
                                         _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
-                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
-                            
+                            msg = self.build_status_msg(
+                                status="stopped",
+                                percent_completed=int(percent_completed),
+                                fit_value=fit_value,
+                                fit_error=fit_error,
+                                start_time=exp_start_time,
+                                total_iters=kwargs["iters"],
+                                iters_completed=iter_completed,
+                            )
+                            # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                            self.queue_from_exp.put_nowait(msg)
+
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                             return
@@ -489,10 +592,21 @@ class SpinMeasurements:
                             except (RuntimeError, OptimizeWarning) as e:
                                 _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
-                    self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                    msg = self.build_status_msg(
+                        status="complete",
+                        percent_completed=int(percent_completed),
+                        fit_value=fit_value,
+                        fit_error=fit_error,
+                        start_time=exp_start_time,
+                        total_iters=kwargs["iters"],
+                        iters_completed=iter_completed,
+                    )
+                    # self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                    self.queue_from_exp.put_nowait(msg)
 
             finally:
-                self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
+                self.equipment_off() # turn off equipment regardless of if experiment started or failed
+                ps.end_exclusive(token)  # release exclusive control of the pulse streamer
 
     def odmr_smart_scan(self, **kwargs):
         """
@@ -515,6 +629,9 @@ class SpinMeasurements:
             ps = mgr.ps
             hdawg = mgr.awg
             
+            token = f"ODMRSMRTSCN_{time.strftime('%Y%m%d_%H%M%S')}"  # unique token for this experiment run
+            ps.begin_exclusive(token, takeover=True, restore_on_release=True)  # take exclusive control of the pulse streamer
+
             num_angles = kwargs['iters']
             azi_angles = np.linspace(kwargs['start_angle'], kwargs['stop_angle'], num_angles)
             # print("azimuthal angles: ", azi_angles)
@@ -557,8 +674,6 @@ class SpinMeasurements:
             sig_gen.set_mod_function('IQ', 5) # external modulation
             sig_gen.set_mod_toggle(1) # turn on modulation mode
 
-            volt_factor = self.volt_factor(kwargs['detector']) # if using PMT, make negative voltages positive    
-
             try:
                 hdawg.set_sequence(**{'seq': 'CW ODMR',
                                     'i_offset': kwargs['i_offset'],
@@ -568,6 +683,8 @@ class SpinMeasurements:
                                     'sideband_freqs': mod_freqs, 
                                     'iq_phases': iq_phases,
                                     'num_pts': kwargs['num_pts']}) 
+                hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
+                hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
                 time.sleep(2) # wait for AWG to finish setting sequence and magnet mount to get set
             except Exception as e:
                 print(e)
@@ -596,21 +713,20 @@ class SpinMeasurements:
                 mgr.thor_azi.set_vel_params(20,30) # set azimuthal stage velocity and acceleration
 
                 # configure laser settings and turn on
-                laser.set_modulation_state('cw')
-                laser.set_analog_control_mode('current')
                 laser.set_diode_current_realtime(kwargs['laser_power'])
-                laser.laser_on()
 
                 # set pulsestreamer to start on software trigger & run infinitely
                 ps.set_soft_trigger()
-                ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY) #kwargs['runs']*kwargs['iters']) # execute chosen sequence on Pulse Streamer
+                ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # execute chosen sequence on Pulse Streamer
                 
                 # start digitizer --> waits for trigger from pulse sequence
                 self.dig.config()
                 self.dig.start_buffer()
                 
                 # start pulse sequence
-                ps.start_now()
+                ps.start_now(owner=token)
+
+                exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
                 # start experiment loop
                 for i in range(num_angles):
@@ -625,7 +741,7 @@ class SpinMeasurements:
 
                     # partition buffer into signal and background datasets
                     try:
-                        sig, bg = volt_factor*self.analog_math(odmr_result, 'CW ODMR', kwargs['num_pts'])
+                        sig, bg = self.analog_math(odmr_result, 'CW ODMR', kwargs['num_pts'])
                     except ValueError:
                         continue
                     
@@ -651,26 +767,49 @@ class SpinMeasurements:
                     angle_fits.updated_item(-1) 
                     print(f"ODMR = {params} GHz at angle {azi_angles[i]} degrees")
 
+                    # update GUI progress bar & ETA
+                    iter_completed = i + 1                      
+                    percent_completed = int((iter_completed / kwargs["iters"]) * 100)
+                    
                     # save the current data to the data server
-                    cw_odmr_data.push({'params': {'kwargs': kwargs},
+                    cw_odmr_data.push({'params': {'kwargs': kwargs, 'iters_completed': iter_completed, 'elapsed': time.perf_counter() - exp_start_time},
                                         'title': 'CW Optically Detected Magnetic Resonance',
                                         'xlabel': 'Frequency (GHz)',
                                         'ylabel': 'Signal',
                                         'datasets': {'signal' : signal_sweeps,
                                                     'background': background_sweeps}})
 
-                    # update GUI progress bar                        
-                    percent_completed = str(int(((i+1)/num_angles)*100))
-                    self.queue_from_exp.put_nowait([percent_completed, 'in progress', None])
+                    msg = self.build_status_msg(
+                            status='in progress',
+                            percent_completed=percent_completed,
+                            fit_value=None,
+                            fit_error=None,
+                            start_time=exp_start_time,
+                            total_iters=kwargs['iters'],
+                            iters_completed=iter_completed,
+                        )
+
+                    # self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                    self.queue_from_exp.put_nowait(msg)
 
                     if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                         # the GUI has asked us nicely to exit. Save data if requested.
-                        self.equipment_off(kwargs['detector'])
+                        self.equipment_off()
                         
                         mgr.thor_polar.set_vel_params(3,7) # reset Thorlabs stages to default acceleration and velocity parameters
                         mgr.thor_azi.set_vel_params(3,7)
 
-                        self.queue_from_exp.put_nowait([percent_completed, 'stopped', None])
+                        msg = self.build_status_msg(
+                            status="stopped",
+                            percent_completed=int(percent_completed),
+                            fit_value=None,
+                            fit_error=None,
+                            start_time=exp_start_time,
+                            total_iters=kwargs["iters"],
+                            iters_completed=iter_completed,
+                        )
+                        # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                        self.queue_from_exp.put_nowait(msg)
                         
                         if kwargs['save'] == True:
                             self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
@@ -680,10 +819,21 @@ class SpinMeasurements:
                 if kwargs['save'] == True:
                     self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
 
-                self.queue_from_exp.put_nowait([percent_completed, 'complete', None])
+                msg = self.build_status_msg(
+                    status="complete",
+                    percent_completed=int(percent_completed),
+                    fit_value=None,
+                    fit_error=None,
+                    start_time=exp_start_time,
+                    total_iters=kwargs["iters"],
+                    iters_completed=iter_completed,
+                )
+                # self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                self.queue_from_exp.put_nowait(msg)
 
             finally:
-                self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
+                self.equipment_off() # turn off equipment regardless of if experiment started or failed
+                ps.end_exclusive(token)  # release exclusive control of the pulse streamer
 
                 mgr.thor_polar.set_vel_params(3,7) # reset Thorlabs stages to default acceleration and velocity parameters
                 mgr.thor_azi.set_vel_params(3,7)
@@ -727,6 +877,9 @@ class SpinMeasurements:
             ps = mgr.ps
             hdawg = mgr.awg
 
+            token = f"RABI_{time.strftime('%Y%m%d_%H%M%S')}"  # unique token for this experiment run
+            ps.begin_exclusive(token, takeover=True, restore_on_release=True)  # take exclusive control of the pulse streamer
+
             # define parameter array that will be swept over in experiment & shuffle
             mw_times = np.linspace(kwargs['start'], kwargs['stop'], kwargs['num_pts']) * 1e9
 
@@ -756,8 +909,6 @@ class SpinMeasurements:
             sig_gen.set_mod_function('IQ', 5) # external modulation
             sig_gen.set_mod_toggle(1) # turn on modulation mode
 
-            volt_factor = self.volt_factor(kwargs['detector']) # if using PMT, make negative voltages positive    
-
             # upload AWG sequence first
             try:
                 hdawg.set_sequence(**{'seq': 'Rabi',
@@ -768,7 +919,9 @@ class SpinMeasurements:
                                     'iq_phases': iq_phases,
                                     'pi_pulses': mw_times/1e9, 
                                     'num_pts': kwargs['num_pts'],
-                                    'runs': kwargs['runs']})  
+                                    'runs': kwargs['runs']}) 
+                hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
+                hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2']) 
             except Exception as e:
                 _logger.info("HDAWG disconnected. Restart in Instrument Server with 'restart awg'.")
                 exception_type = type(e).__name__
@@ -790,27 +943,37 @@ class SpinMeasurements:
                 sig_gen.set_rf_toggle(1) # turn on NV signal generator
 
                 # configure laser settings and turn on
-                laser.set_modulation_state('pulsed')
-                laser.set_analog_control_mode('current')
                 laser.set_diode_current_realtime(kwargs['laser_power'])
-                laser.laser_on()
-
-                # set pulsestreamer to start on software trigger & run infinitely
-                ps.set_soft_trigger()
-                ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY) # execute chosen sequence on Pulse Streamer
                 
                 # start digitizer --> waits for trigger from pulse sequence
                 try:
+                    # set pulsestreamer to start on software trigger & run infinitely
+                    ps.set_soft_trigger()
+                    ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # execute chosen sequence on Pulse Streamer
+
                     self.dig.config()
                 except Exception as e:
                     print(f"Digitizer exception: {e}")
                     exception_type = type(e).__name__
-                    self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    msg = self.build_status_msg(
+                            status='failed',
+                            percent_completed=0,
+                            fit_value=fit_value,
+                            fit_error=fit_error,
+                            start_time=exp_start_time if "exp_start_time" in locals() else time.perf_counter(),
+                            total_iters=kwargs['iters'],
+                            iters_completed=0,
+                            exception=exception_type,
+                        )
+                    # self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    self.queue_from_exp.put_nowait(msg)
                 else:
                     self.dig.start_buffer()
                     
                     # start pulse sequence
-                    ps.start_now()
+                    ps.start_now(owner=token)
+                    
+                    exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
                     # start experiment loop
                     for i in range(kwargs['iters']):
@@ -821,7 +984,7 @@ class SpinMeasurements:
 
                         # partition buffer into signal and background datasets
                         try:
-                            sig, bg = volt_factor*self.analog_math(rabi_result, 'Rabi', kwargs['num_pts'])
+                            sig, bg = self.analog_math(rabi_result, 'Rabi', kwargs['num_pts'])
                         except ValueError:
                             continue
                         
@@ -840,8 +1003,12 @@ class SpinMeasurements:
                                 except (RuntimeError, OptimizeWarning) as e:
                                     _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
+                        # update GUI progress bar & ETA
+                        iter_completed = i + 1                      
+                        percent_completed = int((iter_completed / kwargs["iters"]) * 100)
+
                         # save the current data to the data server
-                        rabi_data.push({'params': {'kwargs': kwargs},
+                        rabi_data.push({'params': {'kwargs': kwargs, 'iters_completed': iter_completed, 'elapsed': time.perf_counter() - exp_start_time},
                                         'title': 'Rabi Oscillation',
                                         'xlabel': 'MW Pulse Duration (ns)',
                                         'ylabel': 'Signal',
@@ -850,13 +1017,22 @@ class SpinMeasurements:
                                                     'x_fit': fit_x,
                                                     'y_fit': fit_y}})
 
-                        # update GUI progress bar                        
-                        percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                        msg = self.build_status_msg(
+                            status='in progress',
+                            percent_completed=percent_completed,
+                            fit_value=fit_value,
+                            fit_error=fit_error,
+                            start_time=exp_start_time,
+                            total_iters=kwargs['iters'],
+                            iters_completed=iter_completed,
+                        )
+
+                        # self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                        self.queue_from_exp.put_nowait(msg)
 
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
-                            self.equipment_off(kwargs['detector'])
+                            self.equipment_off()
                             if kwargs['fit'] == True:
                                 with warnings.catch_warnings():
                                     warnings.simplefilter("error", OptimizeWarning)
@@ -865,7 +1041,17 @@ class SpinMeasurements:
                                     except (RuntimeError, OptimizeWarning) as e:
                                         _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
                             
-                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                            msg = self.build_status_msg(
+                                status="stopped",
+                                percent_completed=int(percent_completed),
+                                fit_value=fit_value,
+                                fit_error=fit_error,
+                                start_time=exp_start_time,
+                                total_iters=kwargs["iters"],
+                                iters_completed=iter_completed,
+                            )
+                            # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                            self.queue_from_exp.put_nowait(msg)
                             
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
@@ -883,11 +1069,22 @@ class SpinMeasurements:
                             except (RuntimeError, OptimizeWarning) as e:
                                 _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
                     
-                    self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                    msg = self.build_status_msg(
+                        status="complete",
+                        percent_completed=int(percent_completed),
+                        fit_value=fit_value,
+                        fit_error=fit_error,
+                        start_time=exp_start_time,
+                        total_iters=kwargs["iters"],
+                        iters_completed=iter_completed,
+                    )
+                    # self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                    self.queue_from_exp.put_nowait(msg)
 
             finally:
-                self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
-                
+                self.equipment_off() # turn off equipment regardless of if experiment started or failed
+                ps.end_exclusive(token)  # release exclusive control of the pulse streamer
+
     def pulsed_odmr_scan(self, **kwargs):
         """Run a Pulsed ODMR sweep over a set of microwave frequencies.
 
@@ -907,6 +1104,9 @@ class SpinMeasurements:
             ps = mgr.ps
             hdawg = mgr.awg
             
+            token = f"PLSDODMR_{time.strftime('%Y%m%d_%H%M%S')}"  # unique token for this experiment run
+            ps.begin_exclusive(token, takeover=True, restore_on_release=True)  # take exclusive control of the pulse streamer
+
             # define NV drive frequency & sideband           
             delta = 0
             iq_phases = [delta+0, delta+90] # set IQ phase relations for lower sideband [lower I, lower Q]
@@ -942,8 +1142,6 @@ class SpinMeasurements:
             sig_gen.set_mod_function('IQ', 5) # external modulation
             sig_gen.set_mod_toggle(1) # turn on modulation mode
 
-            volt_factor = self.volt_factor(kwargs['detector']) # if using PMT, make negative voltages positive
-
             # upload AWG sequence first
             try:
                 hdawg.set_sequence(**{'seq': 'Pulsed ODMR',
@@ -955,6 +1153,8 @@ class SpinMeasurements:
                                     'pi_pulse': kwargs['pi'], 
                                     'num_pts': kwargs['num_pts'],
                                     'runs': kwargs['runs']})
+                hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
+                hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
             except Exception as e:
                 print(e)
             
@@ -974,27 +1174,37 @@ class SpinMeasurements:
                 sig_gen.set_rf_toggle(1) # turn on NV signal generator
 
                 # configure laser settings and turn on
-                laser.set_modulation_state('pulsed')
-                laser.set_analog_control_mode('current')
                 laser.set_diode_current_realtime(kwargs['laser_power'])
-                laser.laser_on()
 
-                # set pulsestreamer to start on software trigger & run infinitely
-                ps.set_soft_trigger()
-                ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY) #kwargs['runs']*kwargs['iters']) # execute chosen sequence on Pulse Streamer
-                
                 # start digitizer --> waits for trigger from pulse sequence
                 try:
+                    # set pulsestreamer to start on software trigger & run infinitely
+                    ps.set_soft_trigger()
+                    ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # execute chosen sequence on Pulse Streamer
+
                     self.dig.config()
                 except Exception as e:
                     print(f"Digitizer exception: {e}")
                     exception_type = type(e).__name__
-                    self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    msg = self.build_status_msg(
+                            status='failed',
+                            percent_completed=0,
+                            fit_value=fit_value,
+                            fit_error=fit_error,
+                            start_time=exp_start_time if "exp_start_time" in locals() else time.perf_counter(),
+                            total_iters=kwargs['iters'],
+                            iters_completed=0,
+                            exception=exception_type,
+                        )
+                    # self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    self.queue_from_exp.put_nowait(msg)
                 else:
                     self.dig.start_buffer()
                 
                     # start pulse sequence
-                    ps.start_now()
+                    ps.start_now(owner=token)
+
+                    exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
                     # start experiment loop
                     for i in range(kwargs['iters']):
@@ -1004,7 +1214,7 @@ class SpinMeasurements:
 
                         # partition buffer into signal and background datasets
                         try:
-                            sig, bg = volt_factor*self.analog_math(pulsed_odmr_result, 'Pulsed ODMR', kwargs['num_pts'])
+                            sig, bg = self.analog_math(pulsed_odmr_result, 'Pulsed ODMR', kwargs['num_pts'])
                         except ValueError:
                             continue
 
@@ -1023,22 +1233,35 @@ class SpinMeasurements:
                                 except (RuntimeError, OptimizeWarning) as e:
                                     _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
+                        # update GUI progress bar & ETA
+                        iter_completed = i + 1                      
+                        percent_completed = int((iter_completed / kwargs["iters"]) * 100)
+
                         # save the current data to the data server
-                        pulsed_odmr_data.push({'params': {'kwargs': kwargs},
+                        pulsed_odmr_data.push({'params': {'kwargs': kwargs, 'iters_completed': iter_completed, 'elapsed': time.perf_counter() - exp_start_time},
                                         'title': 'Pulsed Optically Detected Magnetic Resonance',
                                         'xlabel': 'Frequency (GHz)',
                                         'ylabel': 'Signal',
                                         'datasets': {'signal' : signal_sweeps, 'background': background_sweeps,
                                                     'x_fit': fit_x, 'y_fit': fit_y}})
 
-                        # update GUI progress bar                        
-                        percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                        msg = self.build_status_msg(
+                            status='in progress',
+                            percent_completed=percent_completed,
+                            fit_value=fit_value,
+                            fit_error=fit_error,
+                            start_time=exp_start_time,
+                            total_iters=kwargs['iters'],
+                            iters_completed=iter_completed,
+                        )
+
+                        # self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                        self.queue_from_exp.put_nowait(msg)
 
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
                             # print(f"is there a queue to exp? {self.queue_to_exp.get()}")
-                            self.equipment_off(kwargs['detector'])
+                            self.equipment_off()
 
                             # produce live fitting if requested
                             if kwargs['fit'] == True:
@@ -1049,7 +1272,18 @@ class SpinMeasurements:
                                     except (RuntimeError, OptimizeWarning) as e:
                                         _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
-                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                            msg = self.build_status_msg(
+                                status="stopped",
+                                percent_completed=int(percent_completed),
+                                fit_value=fit_value,
+                                fit_error=fit_error,
+                                start_time=exp_start_time,
+                                total_iters=kwargs["iters"],
+                                iters_completed=iter_completed,
+                            )
+                            # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                            self.queue_from_exp.put_nowait(msg)
+                            
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                             return
@@ -1066,10 +1300,21 @@ class SpinMeasurements:
                             except (RuntimeError, OptimizeWarning) as e:
                                 _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
-                    self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                    msg = self.build_status_msg(
+                        status="complete",
+                        percent_completed=int(percent_completed),
+                        fit_value=fit_value,
+                        fit_error=fit_error,
+                        start_time=exp_start_time,
+                        total_iters=kwargs["iters"],
+                        iters_completed=iter_completed,
+                    )
+                    # self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                    self.queue_from_exp.put_nowait(msg)
 
             finally:
-                self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
+                self.equipment_off() # turn off equipment regardless of if experiment started or failed
+                ps.end_exclusive(token)  # release exclusive control of the pulse streamer
 
     def pulsed_odmr_rf_scan(self, **kwargs):
         """
@@ -1092,6 +1337,9 @@ class SpinMeasurements:
             ps = mgr.ps
             hdawg = mgr.awg
             
+            token = f"PLSDODMRRF_{time.strftime('%Y%m%d_%H%M%S')}"  # unique token for this experiment run
+            ps.begin_exclusive(token, takeover=True, restore_on_release=True)  # take exclusive control of the pulse streamer
+
             # define NV drive frequency & sideband           
             delta = 0
             iq_phases = [delta+0, delta+90] # set IQ phase relations for lower sideband [lower I, lower Q]
@@ -1109,13 +1357,18 @@ class SpinMeasurements:
             # default fit parameters
             fit_value = None
             fit_error = None
+            fit_no_rf_value = None
+            fit_no_rf_error = None
             fit_x = real_freqs/1e9
             fit_y = np.ones(len(fit_x))
+            fit_no_rf_x = real_freqs/1e9
+            fit_no_rf_y = fit_y.copy()
             fitted_diff = 0
 
             pi_pulse = kwargs['pi']*1e9 # [ns] units for pulse streamer
             rf_period = 1/kwargs['rf_pulse_freq']*1e9 # rf pulse period [ns] units for pulse streamer
-
+            print(f"NV pi pulse: {pi_pulse:.3f}")
+            print(f"RF period: {rf_period:.3f}")
             # define pulse sequence
             sequence = ps.Pulsed_ODMR_RF(kwargs['laser_init']*1e9, kwargs['num_pts'], pi_pulse, rf_period, kwargs['laser_readout']*1e9) # pulse streamer sequence
 
@@ -1133,10 +1386,10 @@ class SpinMeasurements:
             sig_gen.set_mod_function('IQ', 5) # external modulation
             sig_gen.set_mod_toggle(1) # turn on modulation mode
 
-            volt_factor = self.volt_factor(kwargs['detector']) 
-
             # upload AWG sequence first
             try:
+                hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
+                hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
                 hdawg.set_sequence(**{'seq': 'Pulsed ODMR RF',
                                     'i_offset': kwargs['i_offset'],
                                     'q_offset': kwargs['q_offset'],
@@ -1151,7 +1404,7 @@ class SpinMeasurements:
                                     'num_pts': kwargs['num_pts'],
                                     'runs': kwargs['runs'], 
                                     'iters': kwargs['iters']})
-
+                print(f"AWG rf_length: {3*rf_period/1e9}")
             except Exception as e:
                 print(e)
             
@@ -1173,27 +1426,39 @@ class SpinMeasurements:
                 sig_gen.set_rf_toggle(1) # turn on NV signal generator
 
                 # configure laser settings and turn on
-                laser.set_modulation_state('pulsed')
-                laser.set_analog_control_mode('current')
                 laser.set_diode_current_realtime(kwargs['laser_power'])
-                laser.laser_on()
 
-                # set pulsestreamer to start on software trigger & run infinitely
-                ps.set_soft_trigger()
-                ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY) #kwargs['runs']*kwargs['iters']) # execute chosen sequence on Pulse Streamer
-                
                 # start digitizer --> waits for trigger from pulse sequence
                 try:
+                    # set pulsestreamer to start on software trigger & run infinitely
+                    ps.set_soft_trigger()
+                    ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # execute chosen sequence on Pulse Streamer
+
                     self.dig.config()
                 except Exception as e:
                     print(f"Digitizer exception: {e}")
                     exception_type = type(e).__name__
-                    self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    msg = self.build_status_msg(
+                            status='failed',
+                            percent_completed=0,
+                            fit_value=fit_value,
+                            fit_error=fit_error,
+                            fit_value2=fit_no_rf_value,
+                            fit_error2=fit_no_rf_error,
+                            start_time=exp_start_time if "exp_start_time" in locals() else time.perf_counter(),
+                            total_iters=kwargs['iters'],
+                            iters_completed=0,
+                            exception=exception_type,
+                        )
+                    # self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    self.queue_from_exp.put_nowait(msg)
                 else:
                     self.dig.start_buffer()
                 
                     # start pulse sequence
-                    ps.start_now()
+                    ps.start_now(owner=token)
+
+                    exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
                     # start experiment loop
                     for i in range(kwargs['iters']):
@@ -1204,7 +1469,7 @@ class SpinMeasurements:
 
                         # partition buffer into signal and background datasets
                         try:
-                            rf_sig, rf_bg, no_rf_sig, no_rf_bg = volt_factor*self.analog_math(pulsed_odmr_result, 'DEER', kwargs['num_pts']) # same math logic as DEER sequence
+                            rf_sig, rf_bg, no_rf_sig, no_rf_bg = self.analog_math(pulsed_odmr_result, 'DEER', kwargs['num_pts']) # same math logic as DEER sequence
                         except ValueError:
                             continue
                         
@@ -1222,30 +1487,47 @@ class SpinMeasurements:
                             with warnings.catch_warnings():
                                 warnings.simplefilter("error", OptimizeWarning)
                                 try:
+                                    # fit_value, fit_error, fit_x, fit_y = self.fit_data('odmr', rf_signal_sweeps, rf_background_sweeps, *kwargs['fit_params'])
+                                    # fit_no_rf_value, fit_no_rf_error, fit_no_rf_x, fit_no_rf_y = self.fit_data('odmr', no_rf_signal_sweeps, no_rf_background_sweeps, *kwargs['fit_params'])
                                     fit_value, fit_error, fit_x, fit_y = self.fit_data('odmr', rf_signal_sweeps, rf_background_sweeps, 0.005, 1, 0.006, 1)
                                     fit_no_rf_value, fit_no_rf_error, fit_no_rf_x, fit_no_rf_y = self.fit_data('odmr', no_rf_signal_sweeps, no_rf_background_sweeps, 0.005, 1, 0.006, 1)
                                 except (RuntimeError, OptimizeWarning) as e:
                                     _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
                                 else:
-                                    fitted_diff = fit_no_rf_value - fit_value
+                                    fitted_diff = fit_no_rf_value[1] - fit_value[1]
+
+                        # update GUI progress bar & ETA
+                        iter_completed = i + 1                      
+                        percent_completed = int((iter_completed / kwargs["iters"]) * 100)
 
                         # save the current data to the data server
-                        pulsed_odmr_rf_data.push({'params': {'kwargs': kwargs},
-                                        'title': 'Pulsed Optically Detected Magnetic Resonance',
+                        pulsed_odmr_rf_data.push({'params': {'kwargs': kwargs, 'iters_completed': iter_completed, 'elapsed': time.perf_counter() - exp_start_time},
+                                        'title': 'Pulsed Optically Detected Magnetic Resonance with RF',
                                         'xlabel': 'Frequency (GHz)',
                                         'ylabel': 'Signal',
                                         'datasets': {'rf_signal' : rf_signal_sweeps, 'rf_background': rf_background_sweeps,
                                                     'signal' : no_rf_signal_sweeps, 'background': no_rf_background_sweeps,
                                                     'x_fit': fit_x, 'y_fit': fit_y}})
 
-                        # update GUI progress bar                        
-                        percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                        msg = self.build_status_msg(
+                            status='in progress',
+                            percent_completed=percent_completed,
+                            fit_value=fit_value,
+                            fit_error=fit_error,
+                            fit_value2=fit_no_rf_value,
+                            fit_error2=fit_no_rf_error,
+                            start_time=exp_start_time,
+                            total_iters=kwargs['iters'],
+                            iters_completed=iter_completed,
+                        )
+
+                        # self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                        self.queue_from_exp.put_nowait(msg)
 
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
                             # print(f"is there a queue to exp? {self.queue_to_exp.get()}")
-                            self.equipment_off(kwargs['detector'])
+                            self.equipment_off()
 
                             # produce live fitting if requested
                             # if kwargs['fit'] == True:
@@ -1256,7 +1538,20 @@ class SpinMeasurements:
                             #         except (RuntimeError, OptimizeWarning) as e:
                             #             _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
-                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                            msg = self.build_status_msg(
+                                status="stopped",
+                                percent_completed=int(percent_completed),
+                                fit_value=fit_value,
+                                fit_error=fit_error,
+                                fit_value2=fit_no_rf_value,
+                                fit_error2=fit_no_rf_error,
+                                start_time=exp_start_time,
+                                total_iters=kwargs["iters"],
+                                iters_completed=iter_completed,
+                            )
+                            # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                            self.queue_from_exp.put_nowait(msg)
+                            
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                             return
@@ -1273,13 +1568,29 @@ class SpinMeasurements:
                     #         except (RuntimeError, OptimizeWarning) as e:
                     #             _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
-                    self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                    msg = self.build_status_msg(
+                        status="complete",
+                        percent_completed=int(percent_completed),
+                        fit_value=fit_value,
+                        fit_error=fit_error,
+                        fit_value2=fit_no_rf_value,
+                        fit_error2=fit_no_rf_error,
+                        start_time=exp_start_time,
+                        total_iters=kwargs["iters"],
+                        iters_completed=iter_completed,
+                    )
+                    # self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                    self.queue_from_exp.put_nowait(msg)
 
             finally:
-                self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
-                print(f"Fitted resonances = {fit_value} GHz (RF), {fit_no_rf_value} GHz (no RF)")
-                print(f"Fitted difference = {round(fitted_diff*1000,4)} MHz")
-                print(f"Coil B field = {round(fitted_diff*1000/2.8,4)} G")
+                self.equipment_off() # turn off equipment regardless of if experiment started or failed
+                ps.end_exclusive(token)  # release exclusive control of the pulse streamer
+                if fit_value is not None and fit_no_rf_value is not None:
+                    coil_b_field_gauss = round(fitted_diff*1000/2.8,4)
+                    print(f"Fitted resonances = {fit_value[1]} GHz (RF), {fit_no_rf_value[1]} GHz (no RF)")
+                    print(f"Fitted difference = {round(fitted_diff*1000,4)} MHz")
+                    print(f"Coil B field = {coil_b_field_gauss} G")
+                    print(f"1H pi/2 pulse = {round(1/(42.577e-4*coil_b_field_gauss)/4,4)} us")
 
     def OPT_T1_scan(self, **kwargs):
         """
@@ -1319,14 +1630,9 @@ class SpinMeasurements:
             sequence = ps.Optical_T1(tau_times, kwargs['laser_readout']*1e9)
 
             # configure devices used in scan
-            laser.set_modulation_state('pulsed')
-            laser.set_analog_control_mode('current')
             laser.set_diode_current_realtime(kwargs['laser_power'])
-            laser.laser_on()
 
-            volt_factor = self.volt_factor(kwargs['detector'])
-
-            daq.open_ai_task(kwargs['detector'], len(t1_buffer[0]))
+            # daq.open_ai_task(kwargs['detector'], len(t1_buffer[0])) # kwargs['detector'] used for APD/BPD now, this line is not current
 
             self.dig.assign_param(dig_config)
 
@@ -1334,6 +1640,8 @@ class SpinMeasurements:
             # list of numpy arrays of shape (2, num_points)
             signal_sweeps = StreamingList()
             background_sweeps = StreamingList()
+            
+            exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
             for i in range(kwargs['iters']):
                 
@@ -1347,7 +1655,7 @@ class SpinMeasurements:
                 
                 # partition buffer into signal and background datasets
                 try:
-                    sig, bg = volt_factor*self.analog_math(t1_result, 'MW_T1', kwargs['num_pts'])
+                    sig, bg = self.analog_math(t1_result, 'MW_T1', kwargs['num_pts'])
                 except ValueError:
                     continue
                 
@@ -1357,32 +1665,60 @@ class SpinMeasurements:
                 background_sweeps.append(np.stack([tau_times/1e6, bg]))
                 background_sweeps.updated_item(-1)
 
+                # update GUI progress bar & ETA
+                iter_completed = i + 1                      
+                percent_completed = int((iter_completed / kwargs["iters"]) * 100)
+                
                 # save the current data to the data server.
-                t1_data.push({'params': {'kwargs': kwargs},
+                t1_data.push({'params': {'kwargs': kwargs, 'iters_completed': iter_completed, 'elapsed': time.perf_counter() - exp_start_time},
                                 'title': 'Optical T1 Relaxation',
                                 'xlabel': 'Free Precession Interval (ms)',
                                 'ylabel': 'Signal',
                                 'datasets': {'signal' : signal_sweeps,
                                             'background': background_sweeps}
                 })
+                
+                msg = self.build_status_msg(
+                            status='in progress',
+                            percent_completed=percent_completed,
+                            fit_value=None,
+                            fit_error=None,
+                            start_time=exp_start_time,
+                            total_iters=kwargs['iters'],
+                            iters_completed=iter_completed,
+                        )
 
+                # self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                self.queue_from_exp.put_nowait(msg)
+                
                 if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                     # the GUI has asked us nicely to exit
                     if kwargs['save'] == True:
                         flexSave(kwargs['dataset'], kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                     
-                    self.equipment_off(kwargs['detector'])
+                    self.equipment_off()
 
                     return
                 
-                percent_completed = str(int(((i+1)/kwargs['iters'])*100))
                 self.queue_from_exp.put_nowait([percent_completed, 'in progress', None])
 
                 if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                     # the GUI has asked us nicely to exit. Save data if requested.
                     # print(f"is there a queue to exp? {self.queue_to_exp.get()}")
-                    self.equipment_off(kwargs['detector'])
-                    self.queue_from_exp.put_nowait([percent_completed, 'stopped', None])
+                    self.equipment_off()
+
+                    msg = self.build_status_msg(
+                        status="stopped",
+                        percent_completed=int(percent_completed),
+                        fit_value=None,
+                        fit_error=None,
+                        start_time=exp_start_time,
+                        total_iters=kwargs["iters"],
+                        iters_completed=iter_completed,
+                    )
+                    # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                    self.queue_from_exp.put_nowait(msg)
+
                     if kwargs['save'] == True:
                         self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                     return
@@ -1392,7 +1728,7 @@ class SpinMeasurements:
 
             self.queue_from_exp.put_nowait([percent_completed, 'complete', None])
 
-            self.equipment_off(kwargs['detector'])
+            self.equipment_off()
 
     def MW_T1_scan(self, **kwargs):
         """
@@ -1414,6 +1750,9 @@ class SpinMeasurements:
             sig_gen = mgr.sg
             ps = mgr.ps
             hdawg = mgr.awg
+
+            token = f"MWT1_{time.strftime('%Y%m%d_%H%M%S')}"  # unique token for this experiment run
+            ps.begin_exclusive(token, takeover=True, restore_on_release=True)  # take exclusive control of the pulse streamer
 
             # define parameter array that will be swept over in experiment & shuffle
             match kwargs['array_type']:
@@ -1450,8 +1789,6 @@ class SpinMeasurements:
             sig_gen.set_mod_function('IQ', 5) # external modulation
             sig_gen.set_mod_toggle(1) # turn on modulation mode
 
-            volt_factor = self.volt_factor(kwargs['detector'])
-
             # upload AWG sequence first
             try:
                 hdawg.set_sequence(**{'seq': 'T1',
@@ -1464,6 +1801,8 @@ class SpinMeasurements:
                                     'num_pts': kwargs['num_pts'],
                                     'runs': kwargs['runs'], 
                                     'iters': kwargs['iters']})  
+                hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
+                hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
             except Exception as e:
                 print(e)
             
@@ -1483,27 +1822,37 @@ class SpinMeasurements:
                 sig_gen.set_rf_toggle(1) # turn on NV signal generator
 
                 # configure laser settings and turn on
-                laser.set_modulation_state('pulsed')
-                laser.set_analog_control_mode('current')
                 laser.set_diode_current_realtime(kwargs['laser_power'])
-                laser.laser_on()
-
-                # set pulsestreamer to start on software trigger & run infinitely
-                ps.set_soft_trigger()
-                ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY) #kwargs['runs']*kwargs['iters']) # execute chosen sequence on Pulse Streamer
                 
                 # start digitizer --> waits for trigger from pulse sequence
                 try:
+                    # set pulsestreamer to start on software trigger & run infinitely
+                    ps.set_soft_trigger()
+                    ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # execute chosen sequence on Pulse Streamer
+
                     self.dig.config()
                 except Exception as e:
                     print(f"Digitizer exception: {e}")
                     exception_type = type(e).__name__
-                    self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    msg = self.build_status_msg(
+                            status='failed',
+                            percent_completed=0,
+                            fit_value=fit_value,
+                            fit_error=fit_error,
+                            start_time=exp_start_time if "exp_start_time" in locals() else time.perf_counter(),
+                            total_iters=kwargs['iters'],
+                            iters_completed=0,
+                            exception=exception_type,
+                        )
+                    # self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    self.queue_from_exp.put_nowait(msg)
                 else:
                     self.dig.start_buffer()
                 
                     # start pulse sequence
-                    ps.start_now()
+                    ps.start_now(owner=token)
+
+                    exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
                     # start experiment loop
                     for i in range(kwargs['iters']):
@@ -1515,7 +1864,7 @@ class SpinMeasurements:
 
                         # partition buffer into signal and background datasets
                         try:
-                            sig, bg = volt_factor*self.analog_math(t1_result, 'MW_T1', kwargs['num_pts'])
+                            sig, bg = self.analog_math(t1_result, 'MW_T1', kwargs['num_pts'])
                         except ValueError:
                             continue
                     
@@ -1530,26 +1879,39 @@ class SpinMeasurements:
                                 warnings.simplefilter("error", OptimizeWarning)
                                 try:
                                     fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
-                                    # print(f"Fitted T1: {fit_value} +/- {fit_error}")
+                                    print(f"Fitted T1: {fit_value} +/- {fit_error}")
                                 except (RuntimeError, OptimizeWarning) as e:
                                     _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
-                
+
+                        # update GUI progress bar & ETA
+                        iter_completed = i + 1                      
+                        percent_completed = int((iter_completed / kwargs["iters"]) * 100)
+
                         # save the current data to the data server
-                        t1_data.push({'params': {'kwargs': kwargs},
+                        t1_data.push({'params': {'kwargs': kwargs, 'iters_completed': iter_completed, 'elapsed': time.perf_counter() - exp_start_time},
                                         'title': 'MW T1 Relaxation',
                                         'xlabel': 'Free Precession Interval (ms)',
                                         'ylabel': 'Signal',
                                         'datasets': {'signal' : signal_sweeps, 'background': background_sweeps, 
                                                     'x_fit': fit_x, 'y_fit': fit_y}})
 
-                        # update GUI progress bar                        
-                        percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                        msg = self.build_status_msg(
+                            status='in progress',
+                            percent_completed=percent_completed,
+                            fit_value=fit_value,
+                            fit_error=fit_error,
+                            start_time=exp_start_time,
+                            total_iters=kwargs['iters'],
+                            iters_completed=iter_completed,
+                        )
+
+                        # self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                        self.queue_from_exp.put_nowait(msg)
 
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
                             # print(f"is there a queue to exp? {self.queue_to_exp.get()}")
-                            self.equipment_off(kwargs['detector'])
+                            self.equipment_off()
 
                             if kwargs['fit'] == True:
                                 with warnings.catch_warnings():
@@ -1559,7 +1921,17 @@ class SpinMeasurements:
                                     except (RuntimeError, OptimizeWarning) as e:
                                         _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
                 
-                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                            msg = self.build_status_msg(
+                                status="stopped",
+                                percent_completed=int(percent_completed),
+                                fit_value=fit_value,
+                                fit_error=fit_error,
+                                start_time=exp_start_time,
+                                total_iters=kwargs["iters"],
+                                iters_completed=iter_completed,
+                            )
+                            # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                            self.queue_from_exp.put_nowait(msg)
 
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
@@ -1577,10 +1949,21 @@ class SpinMeasurements:
                             except (RuntimeError, OptimizeWarning) as e:
                                 _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
                     
-                    self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                    msg = self.build_status_msg(
+                        status="complete",
+                        percent_completed=int(percent_completed),
+                        fit_value=fit_value,
+                        fit_error=fit_error,
+                        start_time=exp_start_time,
+                        total_iters=kwargs["iters"],
+                        iters_completed=iter_completed,
+                    )
+                    # self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                    self.queue_from_exp.put_nowait(msg)
 
             finally:
-                self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
+                self.equipment_off() # turn off equipment regardless of if experiment started or failed
+                ps.end_exclusive(token)  # release exclusive control of the pulse streamer
 
     def T2_scan(self, **kwargs):
         """
@@ -1603,6 +1986,9 @@ class SpinMeasurements:
             ps = mgr.ps
             hdawg = mgr.awg
             
+            token = f"T2{kwargs['t2_seq']}_{time.strftime('%Y%m%d_%H%M%S')}"  # unique token for this experiment run
+            ps.begin_exclusive(token, takeover=True, restore_on_release=True)  # take exclusive control of the pulse streamer
+
             # define parameter array that will be swept over in experiment & shuffle
             match kwargs['array_type']:
                 case 'geomspace':
@@ -1695,8 +2081,6 @@ class SpinMeasurements:
             sig_gen.set_mod_function('IQ', 5) # external modulation
             sig_gen.set_mod_toggle(1) # turn on modulation mode
 
-            volt_factor = self.volt_factor(kwargs['detector'])
-
             # upload AWG sequence first
             try:
                 hdawg.set_sequence(**{'seq': 'T2',
@@ -1714,6 +2098,8 @@ class SpinMeasurements:
                                     'num_pts': kwargs['num_pts'],
                                     'runs': kwargs['runs'], 
                                     'iters': kwargs['iters']}) 
+                hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
+                hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
             except Exception as e:
                 print(f"AWG ERROR: {e}")
             # if successfully uploaded, run the experiment
@@ -1732,27 +2118,37 @@ class SpinMeasurements:
                 sig_gen.set_rf_toggle(1) # turn on NV signal generator
 
                 # configure laser settings and turn on
-                laser.set_modulation_state('pulsed')
-                laser.set_analog_control_mode('current')
                 laser.set_diode_current_realtime(kwargs['laser_power'])
-                laser.laser_on()
 
-                # set pulsestreamer to start on software trigger & run infinitely
-                ps.set_soft_trigger()
-                ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY) #kwargs['runs']*kwargs['iters']) # execute chosen sequence on Pulse Streamer
-                
                 # start digitizer --> waits for trigger from pulse sequence
                 try:
+                    # set pulsestreamer to start on software trigger & run infinitely
+                    ps.set_soft_trigger()
+                    ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # execute chosen sequence on Pulse Streamer
+
                     self.dig.config()
                 except Exception as e:
                     print(f"Digitizer exception: {e}")
                     exception_type = type(e).__name__
-                    self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    msg = self.build_status_msg(
+                            status='failed',
+                            percent_completed=0,
+                            fit_value=fit_value,
+                            fit_error=fit_error,
+                            start_time=exp_start_time if "exp_start_time" in locals() else time.perf_counter(),
+                            total_iters=kwargs['iters'],
+                            iters_completed=0,
+                            exception=exception_type,
+                        )
+                    # self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    self.queue_from_exp.put_nowait(msg)
                 else:
                     self.dig.start_buffer()
                 
                     # start pulse sequence
-                    ps.start_now()
+                    ps.start_now(owner=token)
+
+                    exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
                     # start experiment loop
                     for i in range(kwargs['iters']):
@@ -1764,7 +2160,7 @@ class SpinMeasurements:
 
                         # partition buffer into signal and background datasets
                         try:
-                            sig, bg = volt_factor*self.analog_math(t2_result, 'T2', kwargs['num_pts'])
+                            sig, bg = self.analog_math(t2_result, 'T2', kwargs['num_pts'])
                         except ValueError:
                             continue
                         
@@ -1782,21 +2178,34 @@ class SpinMeasurements:
                                 except (RuntimeError, OptimizeWarning) as e:
                                     _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
+                        # update GUI progress bar & ETA
+                        iter_completed = i + 1                      
+                        percent_completed = int((iter_completed / kwargs["iters"]) * 100)
+
                         # save the current data to the data server
-                        t2_data.push({'params': {'kwargs': kwargs},
+                        t2_data.push({'params': {'kwargs': kwargs, 'iters_completed': iter_completed, 'elapsed': time.perf_counter() - exp_start_time},
                                         'title': 'T2 Relaxation',
                                         'xlabel': 'Free Precession Interval (\u03BCs)',
                                         'ylabel': 'Signal',
                                         'datasets': {'signal' : signal_sweeps, 'background': background_sweeps, 
                                                     'x_fit': fit_x, 'y_fit': fit_y}})
 
-                        # update GUI progress bar                        
-                        percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                        msg = self.build_status_msg(
+                            status='in progress',
+                            percent_completed=percent_completed,
+                            fit_value=fit_value,
+                            fit_error=fit_error,
+                            start_time=exp_start_time,
+                            total_iters=kwargs['iters'],
+                            iters_completed=iter_completed,
+                        )
+
+                        # self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                        self.queue_from_exp.put_nowait(msg)
                         
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
-                            self.equipment_off(kwargs['detector'])
+                            self.equipment_off()
                             if kwargs['fit'] == True:
                                 with warnings.catch_warnings():
                                     warnings.simplefilter("error", OptimizeWarning)
@@ -1805,14 +2214,26 @@ class SpinMeasurements:
                                     except (RuntimeError, OptimizeWarning) as e:
                                         _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
-                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                            msg = self.build_status_msg(
+                                status="stopped",
+                                percent_completed=int(percent_completed),
+                                fit_value=fit_value,
+                                fit_error=fit_error,
+                                start_time=exp_start_time,
+                                total_iters=kwargs["iters"],
+                                iters_completed=iter_completed,
+                            )
+                            # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                            self.queue_from_exp.put_nowait(msg)
+                            
                             if kwargs['save'] == True:
-                                self.run_save(f"{kwargs['dataset']}_{kwargs['t2_seq'].lower()}", kwargs['filename'], [kwargs['directory']])
+                                # TODO: fix save function call
+                                self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']], seq=kwargs['t2_seq'])
                             return
                             
                     # save data if requested upon completion of experiment
                     if kwargs['save'] == True:
-                        self.run_save(f"{kwargs['dataset']}_{kwargs['t2_seq'].lower()}", kwargs['filename'], [kwargs['directory']])
+                        self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']], seq=kwargs['t2_seq'])
 
                     if kwargs['fit'] == True:
                         with warnings.catch_warnings():
@@ -1822,10 +2243,21 @@ class SpinMeasurements:
                             except (RuntimeError, OptimizeWarning) as e:
                                 _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
                     
-                    self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                    msg = self.build_status_msg(
+                        status="complete",
+                        percent_completed=int(percent_completed),
+                        fit_value=fit_value,
+                        fit_error=fit_error,
+                        start_time=exp_start_time,
+                        total_iters=kwargs["iters"],
+                        iters_completed=iter_completed,
+                    )
+                    # self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                    self.queue_from_exp.put_nowait(msg)
 
             finally:
-                self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
+                self.equipment_off() # turn off equipment regardless of if experiment started or failed
+                ps.end_exclusive(token)  # release exclusive control of the pulse streamer
     
     def T2_rf_scan(self, **kwargs):
         """
@@ -1848,6 +2280,9 @@ class SpinMeasurements:
             ps = mgr.ps
             hdawg = mgr.awg
             
+            token = f"T2RF_{time.strftime('%Y%m%d_%H%M%S')}"  # unique token for this experiment run
+            ps.begin_exclusive(token, takeover=True, restore_on_release=True)  # take exclusive control of the pulse streamer
+
             # define parameter array that will be swept over in experiment & shuffle
             match kwargs['array_type']:
                 case 'geomspace':
@@ -1903,8 +2338,6 @@ class SpinMeasurements:
             sig_gen.set_mod_function('IQ', 5) # external modulation
             sig_gen.set_mod_toggle(1) # turn on modulation mode
 
-            volt_factor = self.volt_factor(kwargs['detector'])
-
             # upload AWG sequence first
             try:
                 hdawg.set_sequence(**{'seq': 'T2 RF',
@@ -1926,6 +2359,8 @@ class SpinMeasurements:
                                     'num_pts': kwargs['num_pts'],
                                     'runs': kwargs['runs'], 
                                     'iters': kwargs['iters']}) 
+                hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
+                hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
             except Exception as e:
                 print(f"AWG ERROR: {e}")
                 # print(f"DEVICES: {InstrumentServer._devs}")
@@ -1946,27 +2381,37 @@ class SpinMeasurements:
                 sig_gen.set_rf_toggle(1) # turn on NV signal generator
 
                 # configure laser settings and turn on
-                laser.set_modulation_state('pulsed')
-                laser.set_analog_control_mode('current')
                 laser.set_diode_current_realtime(kwargs['laser_power'])
-                laser.laser_on()
 
-                # set pulsestreamer to start on software trigger & run infinitely
-                ps.set_soft_trigger()
-                ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY) #kwargs['runs']*kwargs['iters']) # execute chosen sequence on Pulse Streamer
-                
                 # start digitizer --> waits for trigger from pulse sequence
                 try:
+                    # set pulsestreamer to start on software trigger & run infinitely
+                    ps.set_soft_trigger()
+                    ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # execute chosen sequence on Pulse Streamer
+
                     self.dig.config()
                 except Exception as e:
                     print(f"Digitizer exception: {e}")
                     exception_type = type(e).__name__
-                    self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    msg = self.build_status_msg(
+                            status='failed',
+                            percent_completed=0,
+                            fit_value=fit_value,
+                            fit_error=fit_error,
+                            start_time=exp_start_time if "exp_start_time" in locals() else time.perf_counter(),
+                            total_iters=kwargs['iters'],
+                            iters_completed=0,
+                            exception=exception_type,
+                        )
+                    # self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    self.queue_from_exp.put_nowait(msg)
                 else:
                     self.dig.start_buffer()
                 
                     # start pulse sequence
-                    ps.start_now()
+                    ps.start_now(owner=token)
+
+                    exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
                     # start experiment loop
                     for i in range(kwargs['iters']):
@@ -1978,7 +2423,7 @@ class SpinMeasurements:
 
                         # partition buffer into signal and background datasets
                         try:
-                            sig, bg = volt_factor*self.analog_math(t2_result, 'T2', kwargs['num_pts'])
+                            sig, bg = self.analog_math(t2_result, 'T2', kwargs['num_pts'])
                         except ValueError:
                             continue
                         
@@ -1996,24 +2441,34 @@ class SpinMeasurements:
                                 except (RuntimeError, OptimizeWarning) as e:
                                     _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
-                        # print(f"type signal_sweeps = {type(signal_sweeps)}")
-                        # print(f"type sig: {type(sig)}")
+                        # update GUI progress bar & ETA
+                        iter_completed = i + 1                      
+                        percent_completed = int((iter_completed / kwargs["iters"]) * 100)
 
                         # save the current data to the data server
-                        t2_data.push({'params': {'kwargs': kwargs},
+                        t2_data.push({'params': {'kwargs': kwargs, 'iters_completed': iter_completed, 'elapsed': time.perf_counter() - exp_start_time},
                                         'title': 'T2 Relaxation',
                                         'xlabel': 'Free Precession Interval (\u03BCs)',
                                         'ylabel': 'Signal',
                                         'datasets': {'signal' : signal_sweeps, 'background': background_sweeps, 
                                                     'x_fit': fit_x, 'y_fit': fit_y}})
 
-                        # update GUI progress bar                        
-                        percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                        msg = self.build_status_msg(
+                            status='in progress',
+                            percent_completed=percent_completed,
+                            fit_value=fit_value,
+                            fit_error=fit_error,
+                            start_time=exp_start_time,
+                            total_iters=kwargs['iters'],
+                            iters_completed=iter_completed,
+                        )
+
+                        # self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                        self.queue_from_exp.put_nowait(msg)
                         
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
-                            self.equipment_off(kwargs['detector'])
+                            self.equipment_off()
                             if kwargs['fit'] == True:
                                 with warnings.catch_warnings():
                                     warnings.simplefilter("error", OptimizeWarning)
@@ -2022,7 +2477,18 @@ class SpinMeasurements:
                                     except (RuntimeError, OptimizeWarning) as e:
                                         _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
-                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                            msg = self.build_status_msg(
+                                status="stopped",
+                                percent_completed=int(percent_completed),
+                                fit_value=fit_value,
+                                fit_error=fit_error,
+                                start_time=exp_start_time,
+                                total_iters=kwargs["iters"],
+                                iters_completed=iter_completed,
+                            )
+                            # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                            self.queue_from_exp.put_nowait(msg)
+                            
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                             return
@@ -2039,10 +2505,21 @@ class SpinMeasurements:
                             except (RuntimeError, OptimizeWarning) as e:
                                 _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
                     
-                    self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                    msg = self.build_status_msg(
+                        status="complete",
+                        percent_completed=int(percent_completed),
+                        fit_value=fit_value,
+                        fit_error=fit_error,
+                        start_time=exp_start_time,
+                        total_iters=kwargs["iters"],
+                        iters_completed=iter_completed,
+                    )
+                    # self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                    self.queue_from_exp.put_nowait(msg)
 
             finally:
-                self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
+                self.equipment_off() # turn off equipment regardless of if experiment started or failed
+                ps.end_exclusive(token)  # release exclusive control of the pulse streamer
     
     def DQ_scan(self, **kwargs):
         """
@@ -2065,6 +2542,9 @@ class SpinMeasurements:
             ps = mgr.ps
             hdawg = mgr.awg
             
+            token = f"DQ_{time.strftime('%Y%m%d_%H%M%S')}"  # unique token for this experiment run
+            ps.begin_exclusive(token, takeover=True, restore_on_release=True)  # take exclusive control of the pulse streamer
+
             # define parameter array that will be swept over in experiment & shuffle
             match kwargs['array_type']:
                 case 'geomspace':
@@ -2104,8 +2584,6 @@ class SpinMeasurements:
             sig_gen.set_mod_function('IQ', 5) # external modulation
             sig_gen.set_mod_toggle(1) # turn on modulation mode
 
-            volt_factor = self.volt_factor(kwargs['detector'])
-
             # upload AWG sequence first
             try:
                 hdawg.set_sequence(**{'seq': 'DQ',
@@ -2119,6 +2597,8 @@ class SpinMeasurements:
                                     'num_pts': kwargs['num_pts'],
                                     'runs': kwargs['runs'], 
                                     'iters': kwargs['iters']})
+                hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
+                hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
             except Exception as e:
                 print(e)
             
@@ -2140,27 +2620,37 @@ class SpinMeasurements:
                 sig_gen.set_rf_toggle(1) # turn on NV signal generator
 
                 # configure laser settings and turn on
-                laser.set_modulation_state('pulsed')
-                laser.set_analog_control_mode('current')
                 laser.set_diode_current_realtime(kwargs['laser_power'])
-                laser.laser_on()
 
-                # set pulsestreamer to start on software trigger & run infinitely
-                ps.set_soft_trigger()
-                ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY) #kwargs['runs']*kwargs['iters']) # execute chosen sequence on Pulse Streamer
-                
                 # start digitizer --> waits for trigger from pulse sequence
                 try:
+                    # set pulsestreamer to start on software trigger & run infinitely
+                    ps.set_soft_trigger()
+                    ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # execute chosen sequence on Pulse Streamer
+
                     self.dig.config()
                 except Exception as e:
                     print(f"Digitizer exception: {e}")
                     exception_type = type(e).__name__
-                    self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    msg = self.build_status_msg(
+                            status='failed',
+                            percent_completed=0,
+                            fit_value=None,
+                            fit_error=None,
+                            start_time=exp_start_time if "exp_start_time" in locals() else time.perf_counter(),
+                            total_iters=kwargs['iters'],
+                            iters_completed=0,
+                            exception=exception_type,
+                        )
+                    # self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    self.queue_from_exp.put_nowait(msg)
                 else:
                     self.dig.start_buffer()
                 
                     # start pulse sequence
-                    ps.start_now()
+                    ps.start_now(owner=token)
+
+                    exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
                     # start experiment loop
                     for i in range(kwargs['iters']):
@@ -2172,7 +2662,7 @@ class SpinMeasurements:
 
                         # partition buffer into signal and background datasets FIXME: maybe need to use DEER option for 4 pts in analog math
                         try:
-                            s00, s0m, smm, smp = volt_factor*self.analog_math(dq_result, 'DQ', kwargs['num_pts']) # data for S0,0, S0,-1, S-1,-1, and S-1,+1 sequence
+                            s00, s0m, smm, smp = self.analog_math(dq_result, 'DQ', kwargs['num_pts']) # data for S0,0, S0,-1, S-1,-1, and S-1,+1 sequence
                         except ValueError:
                             continue
                         
@@ -2187,8 +2677,12 @@ class SpinMeasurements:
                         smp_sweeps.append(np.stack([tau_times/1e3, smp]))
                         smp_sweeps.updated_item(-1)
 
+                        # update GUI progress bar & ETA
+                        iter_completed = i + 1                      
+                        percent_completed = int((iter_completed / kwargs["iters"]) * 100)
+
                         # save the current data to the data server
-                        dq_data.push({'params': {'kwargs': kwargs},
+                        dq_data.push({'params': {'kwargs': kwargs, 'iters_completed': iter_completed, 'elapsed': time.perf_counter() - exp_start_time},
                                         'title': 'T1 Relaxation',
                                         'xlabel': 'Free Precession Interval (\u03BCs)',
                                         'ylabel': 'Signal',
@@ -2198,15 +2692,36 @@ class SpinMeasurements:
                                                     'S-1,+1': smp_sweeps}
                         })
 
-                        # update GUI progress bar                        
-                        percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', None])
+                        msg = self.build_status_msg(
+                            status='in progress',
+                            percent_completed=percent_completed,
+                            fit_value=None,
+                            fit_error=None,
+                            start_time=exp_start_time,
+                            total_iters=kwargs['iters'],
+                            iters_completed=iter_completed,
+                        )
+
+                        # self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                        self.queue_from_exp.put_nowait(msg)
 
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
                             # print(f"is there a queue to exp? {self.queue_to_exp.get()}")
-                            self.equipment_off(kwargs['detector'])
-                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', None])
+                            self.equipment_off()
+                            
+                            msg = self.build_status_msg(
+                                status="stopped",
+                                percent_completed=int(percent_completed),
+                                fit_value=None,
+                                fit_error=None,
+                                start_time=exp_start_time,
+                                total_iters=kwargs["iters"],
+                                iters_completed=iter_completed,
+                            )
+                            # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                            self.queue_from_exp.put_nowait(msg)
+                            
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                             return
@@ -2215,10 +2730,21 @@ class SpinMeasurements:
                     if kwargs['save'] == True:
                         self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
 
-                    self.queue_from_exp.put_nowait([percent_completed, 'complete', None])
+                    msg = self.build_status_msg(
+                        status="complete",
+                        percent_completed=int(percent_completed),
+                        fit_value=None,
+                        fit_error=None,
+                        start_time=exp_start_time,
+                        total_iters=kwargs["iters"],
+                        iters_completed=iter_completed,
+                    )
+                    # self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                    self.queue_from_exp.put_nowait(msg)
 
             finally:
-                self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
+                self.equipment_off() # turn off equipment regardless of if experiment started or failed
+                ps.end_exclusive(token)  # release exclusive control of the pulse streamer
     
     def DEER_scan(self, **kwargs):
         """
@@ -2241,6 +2767,9 @@ class SpinMeasurements:
             ps = mgr.ps
             hdawg = mgr.awg
             
+            token = f"DEER_{time.strftime('%Y%m%d_%H%M%S')}"  # unique token for this experiment run
+            ps.begin_exclusive(token, takeover=True, restore_on_release=True)  # take exclusive control of the pulse streamer
+
             # default fit parameters
             fit_value = []
             fit_error = []
@@ -2288,8 +2817,6 @@ class SpinMeasurements:
             sig_gen.set_mod_function('IQ', 5) # external modulation
             sig_gen.set_mod_toggle(1) # turn on modulation mode
 
-            volt_factor = self.volt_factor(kwargs['detector'])
-
             # upload AWG sequence first
             try:
                 if kwargs['drive_type'] == 'Continuous':
@@ -2326,6 +2853,8 @@ class SpinMeasurements:
                                         'runs': kwargs['runs'], 
                                         'iters': kwargs['iters'],
                                         'freqs': frequencies})
+                hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
+                hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
             except Exception as e:
                 print(e)
             
@@ -2347,27 +2876,37 @@ class SpinMeasurements:
                 sig_gen.set_rf_toggle(1) # turn on NV signal generator
 
                 # configure laser settings and turn on
-                laser.set_modulation_state('pulsed')
-                laser.set_analog_control_mode('current')
                 laser.set_diode_current_realtime(kwargs['laser_power'])
-                laser.laser_on()
 
-                # set pulsestreamer to start on software trigger & run infinitely
-                ps.set_soft_trigger()
-                ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY) #kwargs['runs']*kwargs['iters']) # execute chosen sequence on Pulse Streamer
-                
                 # start digitizer --> waits for trigger from pulse sequence
                 try:
+                    # set pulsestreamer to start on software trigger & run infinitely
+                    ps.set_soft_trigger()
+                    ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # execute chosen sequence on Pulse Streamer
+
                     self.dig.config()
                 except Exception as e:
                     print(f"Digitizer exception: {e}")
                     exception_type = type(e).__name__
-                    self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    msg = self.build_status_msg(
+                            status='failed',
+                            percent_completed=0,
+                            fit_value=fit_value,
+                            fit_error=fit_error,
+                            start_time=exp_start_time if "exp_start_time" in locals() else time.perf_counter(),
+                            total_iters=kwargs['iters'],
+                            iters_completed=0,
+                            exception=exception_type,
+                        )
+                    # self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    self.queue_from_exp.put_nowait(msg)
                 else:
                     self.dig.start_buffer()
                 
                     # start pulse sequence
-                    ps.start_now()
+                    ps.start_now(owner=token)
+
+                    exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
                     time_start = time.time()
                     # start experiment loop
@@ -2380,7 +2919,7 @@ class SpinMeasurements:
 
                         # partition buffer into signal and background datasets
                         try:
-                            dark_sig, dark_bg, echo_sig, echo_bg = volt_factor*self.analog_math(deer_result, 'DEER', kwargs['num_pts'])
+                            dark_sig, dark_bg, echo_sig, echo_bg = self.analog_math(deer_result, 'DEER', kwargs['num_pts'])
                         except ValueError:
                             continue
                         
@@ -2402,8 +2941,12 @@ class SpinMeasurements:
                                 except (RuntimeError, OptimizeWarning) as e:
                                     _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
+                        # update GUI progress bar & ETA
+                        iter_completed = i + 1                      
+                        percent_completed = int((iter_completed / kwargs["iters"]) * 100)
+
                         # save the current data to the data server
-                        deer_data.push({'params': {'kwargs': kwargs},
+                        deer_data.push({'params': {'kwargs': kwargs, 'iters_completed': iter_completed, 'elapsed': time.perf_counter() - exp_start_time},
                                         'title': 'DEER',
                                         'xlabel': 'Surface Electron Resonance (MHz)',
                                         'ylabel': 'Signal',
@@ -2411,14 +2954,23 @@ class SpinMeasurements:
                                                     'echo_signal' : echo_signal_sweeps, 'echo_background': echo_background_sweeps,
                                                     'x_fit': fit_x, 'y_fit': fit_y}})
 
-                        # update GUI progress bar                        
-                        percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                        msg = self.build_status_msg(
+                            status='in progress',
+                            percent_completed=percent_completed,
+                            fit_value=fit_value,
+                            fit_error=fit_error,
+                            start_time=exp_start_time,
+                            total_iters=kwargs['iters'],
+                            iters_completed=iter_completed,
+                        )
+
+                        # self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                        self.queue_from_exp.put_nowait(msg)
 
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
-                            self.equipment_off(kwargs['detector'])
-                            print(f"Experiment stopped after: {round(time.time() - time_start,2)} seconds")   
+                            self.equipment_off()
+                               
                             if kwargs['fit'] == True:
                                 with warnings.catch_warnings():
                                     warnings.simplefilter("error", OptimizeWarning)
@@ -2427,7 +2979,18 @@ class SpinMeasurements:
                                     except (RuntimeError, OptimizeWarning) as e:
                                         _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
-                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                            msg = self.build_status_msg(
+                                status="stopped",
+                                percent_completed=int(percent_completed),
+                                fit_value=fit_value,
+                                fit_error=fit_error,
+                                start_time=exp_start_time,
+                                total_iters=kwargs["iters"],
+                                iters_completed=iter_completed,
+                            )
+                            # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                            self.queue_from_exp.put_nowait(msg)
+                            
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                             return
@@ -2445,10 +3008,21 @@ class SpinMeasurements:
                             except (RuntimeError, OptimizeWarning) as e:
                                 _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
                     
-                    self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                    msg = self.build_status_msg(
+                        status="complete",
+                        percent_completed=int(percent_completed),
+                        fit_value=fit_value,
+                        fit_error=fit_error,
+                        start_time=exp_start_time,
+                        total_iters=kwargs["iters"],
+                        iters_completed=iter_completed,
+                    )
+                    # self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                    self.queue_from_exp.put_nowait(msg)
 
             finally:
-                self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
+                self.equipment_off() # turn off equipment regardless of if experiment started or failed
+                ps.end_exclusive(token)  # release exclusive control of the pulse streamer
 
     def DEER_rabi_scan(self, **kwargs):
         """
@@ -2471,6 +3045,9 @@ class SpinMeasurements:
             ps = mgr.ps
             hdawg = mgr.awg
             
+            token = f"DEERRABI_{time.strftime('%Y%m%d_%H%M%S')}"  # unique token for this experiment run
+            ps.begin_exclusive(token, takeover=True, restore_on_release=True)  # take exclusive control of the pulse streamer
+
             # default fit parameters
             fit_value = []
             fit_error = []
@@ -2510,8 +3087,6 @@ class SpinMeasurements:
             sig_gen.set_mod_function('IQ', 5) # external modulation
             sig_gen.set_mod_toggle(1) # turn on modulation mode
 
-            volt_factor = self.volt_factor(kwargs['detector'])
-
             # upload AWG sequence first
             try:
                 hdawg.set_sequence(**{'seq': 'DEER Rabi',     
@@ -2530,6 +3105,8 @@ class SpinMeasurements:
                                     'runs': kwargs['runs'], 
                                     'iters': kwargs['iters'],
                                     'pi_pulses': dark_taus/1e9})
+                hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
+                hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
             except Exception as e:
                 print(e)
             
@@ -2551,27 +3128,37 @@ class SpinMeasurements:
                 sig_gen.set_rf_toggle(1) # turn on NV signal generator
 
                 # configure laser settings and turn on
-                laser.set_modulation_state('pulsed')
-                laser.set_analog_control_mode('current')
                 laser.set_diode_current_realtime(kwargs['laser_power'])
-                laser.laser_on()
 
-                # set pulsestreamer to start on software trigger & run infinitely
-                ps.set_soft_trigger()
-                ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY) #kwargs['runs']*kwargs['iters']) # execute chosen sequence on Pulse Streamer
-                
                 # start digitizer --> waits for trigger from pulse sequence
                 try:
+                    # set pulsestreamer to start on software trigger & run infinitely
+                    ps.set_soft_trigger()
+                    ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # execute chosen sequence on Pulse Streamer
+
                     self.dig.config()
                 except Exception as e:
                     print(f"Digitizer exception: {e}")
                     exception_type = type(e).__name__
-                    self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    msg = self.build_status_msg(
+                            status='failed',
+                            percent_completed=0,
+                            fit_value=fit_value,
+                            fit_error=fit_error,
+                            start_time=exp_start_time if "exp_start_time" in locals() else time.perf_counter(),
+                            total_iters=kwargs['iters'],
+                            iters_completed=0,
+                            exception=exception_type,
+                        )
+                    # self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    self.queue_from_exp.put_nowait(msg)
                 else:
                     self.dig.start_buffer()
                 
                     # start pulse sequence
-                    ps.start_now()
+                    ps.start_now(owner=token)
+
+                    exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
                     # start experiment loop
                     for i in range(kwargs['iters']):
@@ -2583,7 +3170,7 @@ class SpinMeasurements:
 
                         # partition buffer into signal and background datasets
                         try:
-                            dark_sig, dark_bg, echo_sig, echo_bg = volt_factor*self.analog_math(deer_result, 'DEER', kwargs['num_pts'])
+                            dark_sig, dark_bg, echo_sig, echo_bg = self.analog_math(deer_result, 'DEER', kwargs['num_pts'])
                         except ValueError:
                             continue
                         
@@ -2605,8 +3192,12 @@ class SpinMeasurements:
                                 except (RuntimeError, OptimizeWarning) as e:
                                     _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
+                        # update GUI progress bar & ETA
+                        iter_completed = i + 1                      
+                        percent_completed = int((iter_completed / kwargs["iters"]) * 100)
+
                         # save the current data to the data server
-                        deer_data.push({'params': {'kwargs': kwargs},
+                        deer_data.push({'params': {'kwargs': kwargs, 'iters_completed': iter_completed, 'elapsed': time.perf_counter() - exp_start_time},
                                         'title': 'DEER Rabi',
                                         'xlabel': 'MW Pulse Duration (ns)',
                                         'ylabel': 'Signal',
@@ -2614,14 +3205,23 @@ class SpinMeasurements:
                                                     'echo_signal' : echo_signal_sweeps, 'echo_background': echo_background_sweeps,
                                                     'x_fit': fit_x, 'y_fit': fit_y}})
 
-                        # update GUI progress bar                        
-                        percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                        msg = self.build_status_msg(
+                            status='in progress',
+                            percent_completed=percent_completed,
+                            fit_value=fit_value,
+                            fit_error=fit_error,
+                            start_time=exp_start_time,
+                            total_iters=kwargs['iters'],
+                            iters_completed=iter_completed,
+                        )
+
+                        # self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                        self.queue_from_exp.put_nowait(msg)
 
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
                             # print(f"is there a queue to exp? {self.queue_to_exp.get()}")
-                            self.equipment_off(kwargs['detector'])
+                            self.equipment_off()
                             if kwargs['fit'] == True:
                                 with warnings.catch_warnings():
                                     warnings.simplefilter("error", OptimizeWarning)
@@ -2630,7 +3230,18 @@ class SpinMeasurements:
                                     except (RuntimeError, OptimizeWarning) as e:
                                         _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
 
-                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                            msg = self.build_status_msg(
+                                status="stopped",
+                                percent_completed=int(percent_completed),
+                                fit_value=fit_value,
+                                fit_error=fit_error,
+                                start_time=exp_start_time,
+                                total_iters=kwargs["iters"],
+                                iters_completed=iter_completed,
+                            )
+                            # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                            self.queue_from_exp.put_nowait(msg)
+                            
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                             return
@@ -2647,10 +3258,21 @@ class SpinMeasurements:
                             except (RuntimeError, OptimizeWarning) as e:
                                 _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
                     
-                    self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                    msg = self.build_status_msg(
+                        status="complete",
+                        percent_completed=int(percent_completed),
+                        fit_value=fit_value,
+                        fit_error=fit_error,
+                        start_time=exp_start_time,
+                        total_iters=kwargs["iters"],
+                        iters_completed=iter_completed,
+                    )
+                    # self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                    self.queue_from_exp.put_nowait(msg)
 
             finally:
-                self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
+                self.equipment_off() # turn off equipment regardless of if experiment started or failed
+                ps.end_exclusive(token)  # release exclusive control of the pulse streamer
 
     def DEER_FID_scan(self, **kwargs):
         """
@@ -2673,6 +3295,9 @@ class SpinMeasurements:
             ps = mgr.ps
             hdawg = mgr.awg
             
+            token = f"DEERFID_{time.strftime('%Y%m%d_%H%M%S')}"  # unique token for this experiment run
+            ps.begin_exclusive(token, takeover=True, restore_on_release=True)  # take exclusive control of the pulse streamer
+
             # define parameter array that will be swept over in experiment & shuffle
             match kwargs['array_type']:
                 case 'geomspace':
@@ -2710,8 +3335,6 @@ class SpinMeasurements:
             sig_gen.set_mod_function('IQ', 5) # external modulation
             sig_gen.set_mod_toggle(1) # turn on modulation mode
 
-            volt_factor = self.volt_factor(kwargs['detector'])
-
             # upload AWG sequence first
             try:
                 hdawg.set_sequence(**{'seq': 'DEER FID',
@@ -2731,6 +3354,8 @@ class SpinMeasurements:
                                     'n': kwargs['n'],
                                     'runs': kwargs['runs'], 
                                     'iters': kwargs['iters']})
+                hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
+                hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
             except Exception as e:
                 print(e)
             
@@ -2752,27 +3377,37 @@ class SpinMeasurements:
                 sig_gen.set_rf_toggle(1) # turn on NV signal generator
 
                 # configure laser settings and turn on
-                laser.set_modulation_state('pulsed')
-                laser.set_analog_control_mode('current')
                 laser.set_diode_current_realtime(kwargs['laser_power'])
-                laser.laser_on()
 
-                # set pulsestreamer to start on software trigger & run infinitely
-                ps.set_soft_trigger()
-                ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY) #kwargs['runs']*kwargs['iters']) # execute chosen sequence on Pulse Streamer
-                
                 # start digitizer --> waits for trigger from pulse sequence
                 try:
+                    # set pulsestreamer to start on software trigger & run infinitely
+                    ps.set_soft_trigger()
+                    ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # execute chosen sequence on Pulse Streamer
+
                     self.dig.config()
                 except Exception as e:
                     print(f"Digitizer exception: {e}")
                     exception_type = type(e).__name__
-                    self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    msg = self.build_status_msg(
+                            status='failed',
+                            percent_completed=0,
+                            fit_value=None,
+                            fit_error=None,
+                            start_time=exp_start_time if "exp_start_time" in locals() else time.perf_counter(),
+                            total_iters=kwargs['iters'],
+                            iters_completed=0,
+                            exception=exception_type,
+                        )
+                    # self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    self.queue_from_exp.put_nowait(msg)
                 else:
                     self.dig.start_buffer()
                 
                     # start pulse sequence
-                    ps.start_now()
+                    ps.start_now(owner=token)
+
+                    exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
                     # start experiment loop
                     for i in range(kwargs['iters']):
@@ -2782,7 +3417,7 @@ class SpinMeasurements:
 
                         # partition buffer into signal and background datasets
                         try:
-                            dark_sig, dark_bg, echo_sig, echo_bg = volt_factor*self.analog_math(deer_result, 'DEER', kwargs['num_pts'])
+                            dark_sig, dark_bg, echo_sig, echo_bg = self.analog_math(deer_result, 'DEER', kwargs['num_pts'])
                         except ValueError:
                             continue
                         
@@ -2796,8 +3431,12 @@ class SpinMeasurements:
                         echo_background_sweeps.append(np.stack([tau_times, echo_bg]))
                         echo_background_sweeps.updated_item(-1)
 
+                        # update GUI progress bar & ETA
+                        iter_completed = i + 1                      
+                        percent_completed = int((iter_completed / kwargs["iters"]) * 100)
+
                         # save the current data to the data server
-                        deer_data.push({'params': {'kwargs': kwargs},
+                        deer_data.push({'params': {'kwargs': kwargs, 'iters_completed': iter_completed, 'elapsed': time.perf_counter() - exp_start_time},
                                         'title': 'DEER FID',
                                         'xlabel': 'Free Precession Interval (ns)',
                                         'ylabel': 'Signal',
@@ -2807,15 +3446,36 @@ class SpinMeasurements:
                                                     'echo_background': echo_background_sweeps,}
                         })
 
-                        # update GUI progress bar                        
-                        percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', None])
+                        msg = self.build_status_msg(
+                            status='in progress',
+                            percent_completed=percent_completed,
+                            fit_value=None,
+                            fit_error=None,
+                            start_time=exp_start_time,
+                            total_iters=kwargs['iters'],
+                            iters_completed=iter_completed,
+                        )
+
+                        # self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                        self.queue_from_exp.put_nowait(msg)
 
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
                             # print(f"is there a queue to exp? {self.queue_to_exp.get()}")
-                            self.equipment_off(kwargs['detector'])
-                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', None])
+                            self.equipment_off()
+
+                            msg = self.build_status_msg(
+                                status="stopped",
+                                percent_completed=int(percent_completed),
+                                fit_value=None,
+                                fit_error=None,
+                                start_time=exp_start_time,
+                                total_iters=kwargs["iters"],
+                                iters_completed=iter_completed,
+                            )
+                            # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                            self.queue_from_exp.put_nowait(msg)
+                            
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                             return
@@ -2824,10 +3484,21 @@ class SpinMeasurements:
                     if kwargs['save'] == True:
                         self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
 
-                    self.queue_from_exp.put_nowait([percent_completed, 'complete', None])
+                    msg = self.build_status_msg(
+                        status="complete",
+                        percent_completed=int(percent_completed),
+                        fit_value=None,
+                        fit_error=None,
+                        start_time=exp_start_time,
+                        total_iters=kwargs["iters"],
+                        iters_completed=iter_completed,
+                    )
+                    # self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                    self.queue_from_exp.put_nowait(msg)
 
             finally:
-                self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
+                self.equipment_off() # turn off equipment regardless of if experiment started or failed
+                ps.end_exclusive(token)  # release exclusive control of the pulse streamer
 
     def DEER_FID_CD_scan(self, **kwargs):
         """
@@ -2850,6 +3521,9 @@ class SpinMeasurements:
             ps = mgr.ps
             hdawg = mgr.awg
             
+            token = f"DEERFIDCD_{time.strftime('%Y%m%d_%H%M%S')}"  # unique token for this experiment run
+            ps.begin_exclusive(token, takeover=True, restore_on_release=True)  # take exclusive control of the pulse streamer
+
             # define parameter array that will be swept over in experiment & shuffle
             match kwargs['array_type']:
                 case 'geomspace':
@@ -2888,8 +3562,6 @@ class SpinMeasurements:
             sig_gen.set_mod_function('IQ', 5) # external modulation
             sig_gen.set_mod_toggle(1) # turn on modulation mode
 
-            volt_factor = self.volt_factor(kwargs['detector'])
-
             # upload AWG sequence first
             try:
                 hdawg.set_sequence(**{'seq': 'DEER FID CD',                
@@ -2911,6 +3583,8 @@ class SpinMeasurements:
                                     'n': kwargs['n'],
                                     'runs': kwargs['runs'], 
                                     'iters': kwargs['iters']})
+                hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
+                hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
             except Exception as e:
                 print(e)
             
@@ -2934,27 +3608,37 @@ class SpinMeasurements:
                 sig_gen.set_rf_toggle(1) # turn on NV signal generator
 
                 # configure laser settings and turn on
-                laser.set_modulation_state('pulsed')
-                laser.set_analog_control_mode('current')
                 laser.set_diode_current_realtime(kwargs['laser_power'])
-                laser.laser_on()
 
-                # set pulsestreamer to start on software trigger & run infinitely
-                ps.set_soft_trigger()
-                ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY) #kwargs['runs']*kwargs['iters']) # execute chosen sequence on Pulse Streamer
-                
                 # start digitizer --> waits for trigger from pulse sequence
                 try:
+                    # set pulsestreamer to start on software trigger & run infinitely
+                    ps.set_soft_trigger()
+                    ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # execute chosen sequence on Pulse Streamer
+
                     self.dig.config()
                 except Exception as e:
                     print(f"Digitizer exception: {e}")
                     exception_type = type(e).__name__
-                    self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    msg = self.build_status_msg(
+                            status='failed',
+                            percent_completed=0,
+                            fit_value=None,
+                            fit_error=None,
+                            start_time=exp_start_time if "exp_start_time" in locals() else time.perf_counter(),
+                            total_iters=kwargs['iters'],
+                            iters_completed=0,
+                            exception=exception_type,
+                        )
+                    # self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    self.queue_from_exp.put_nowait(msg)
                 else:
                     self.dig.start_buffer()
                 
                     # start pulse sequence
-                    ps.start_now()
+                    ps.start_now(owner=token)
+
+                    exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
                     # start experiment loop
                     for i in range(kwargs['iters']):
@@ -2966,7 +3650,7 @@ class SpinMeasurements:
 
                         # partition buffer into signal and background datasets
                         try:
-                            dark_sig, dark_bg, echo_sig, echo_bg, cd_sig, cd_bg = volt_factor*self.analog_math(cd_result, 'CD', kwargs['num_pts'])
+                            dark_sig, dark_bg, echo_sig, echo_bg, cd_sig, cd_bg = self.analog_math(cd_result, 'CD', kwargs['num_pts'])
                         except ValueError:
                             continue
 
@@ -2984,8 +3668,12 @@ class SpinMeasurements:
                         cd_background_sweeps.append(np.stack([tau_times, cd_bg]))
                         cd_background_sweeps.updated_item(-1)
 
+                        # update GUI progress bar & ETA
+                        iter_completed = i + 1                      
+                        percent_completed = int((iter_completed / kwargs["iters"]) * 100)
+
                         # save the current data to the data server
-                        cd_data.push({'params': {'kwargs': kwargs},
+                        cd_data.push({'params': {'kwargs': kwargs, 'iters_completed': iter_completed, 'elapsed': time.perf_counter() - exp_start_time},
                                         'title': 'DEER FID Continuous Drive',
                                         'xlabel': 'Free Precession Interval (ns)',
                                         'ylabel': 'Signal',
@@ -2997,15 +3685,36 @@ class SpinMeasurements:
                                                     'cd_background': cd_background_sweeps,}
                         })
 
-                        # update GUI progress bar                        
-                        percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', None])
+                        msg = self.build_status_msg(
+                            status='in progress',
+                            percent_completed=percent_completed,
+                            fit_value=None,
+                            fit_error=None,
+                            start_time=exp_start_time,
+                            total_iters=kwargs['iters'],
+                            iters_completed=iter_completed,
+                        )
+
+                        # self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                        self.queue_from_exp.put_nowait(msg)
 
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
                             # print(f"is there a queue to exp? {self.queue_to_exp.get()}")
-                            self.equipment_off(kwargs['detector'])
-                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', None])
+                            self.equipment_off()
+
+                            msg = self.build_status_msg(
+                                status="stopped",
+                                percent_completed=int(percent_completed),
+                                fit_value=None,
+                                fit_error=None,
+                                start_time=exp_start_time,
+                                total_iters=kwargs["iters"],
+                                iters_completed=iter_completed,
+                            )
+                            # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                            self.queue_from_exp.put_nowait(msg)
+
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                             return
@@ -3014,10 +3723,21 @@ class SpinMeasurements:
                     if kwargs['save'] == True:
                         self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
 
-                    self.queue_from_exp.put_nowait([percent_completed, 'complete', None])
+                    msg = self.build_status_msg(
+                        status="complete",
+                        percent_completed=int(percent_completed),
+                        fit_value=None,
+                        fit_error=None,
+                        start_time=exp_start_time,
+                        total_iters=kwargs["iters"],
+                        iters_completed=iter_completed,
+                    )
+                    # self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                    self.queue_from_exp.put_nowait(msg)
 
             finally:
-                self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
+                self.equipment_off() # turn off equipment regardless of if experiment started or failed
+                ps.end_exclusive(token)  # release exclusive control of the pulse streamer
 
     def DEER_corr_rabi_scan(self, **kwargs):
         """
@@ -3040,6 +3760,9 @@ class SpinMeasurements:
             ps = mgr.ps
             hdawg = mgr.awg
             
+            token = f"DEERCORRRABI_{time.strftime('%Y%m%d_%H%M%S')}"  # unique token for this experiment run
+            ps.begin_exclusive(token, takeover=True, restore_on_release=True)  # take exclusive control of the pulse streamer
+
             # define parameter array that will be swept over in experiment & shuffle
             dark_taus = np.linspace(kwargs['start'], kwargs['stop'], kwargs['num_pts'])          
 
@@ -3073,8 +3796,6 @@ class SpinMeasurements:
             sig_gen.set_mod_function('IQ', 5) # external modulation
             sig_gen.set_mod_toggle(1) # turn on modulation mode
 
-            volt_factor = self.volt_factor(kwargs['detector'])
-
             # upload AWG sequence first
             try:
                 hdawg.set_sequence(**{'seq': 'DEER Corr Rabi',                
@@ -3094,7 +3815,8 @@ class SpinMeasurements:
                                     'runs': kwargs['runs'], 
                                     'iters': kwargs['iters'],
                                     'pi_pulses': dark_taus})
-
+                hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
+                hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
             except Exception as e:
                 print(e)
             
@@ -3114,27 +3836,37 @@ class SpinMeasurements:
                 sig_gen.set_rf_toggle(1) # turn on NV signal generator
 
                 # configure laser settings and turn on
-                laser.set_modulation_state('pulsed')
-                laser.set_analog_control_mode('current')
                 laser.set_diode_current_realtime(kwargs['laser_power'])
-                laser.laser_on()
 
-                # set pulsestreamer to start on software trigger & run infinitely
-                ps.set_soft_trigger()
-                ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY) #kwargs['runs']*kwargs['iters']) # execute chosen sequence on Pulse Streamer
-                
                 # start digitizer --> waits for trigger from pulse sequence
                 try:
+                    # set pulsestreamer to start on software trigger & run infinitely
+                    ps.set_soft_trigger()
+                    ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # execute chosen sequence on Pulse Streamer
+
                     self.dig.config()
                 except Exception as e:
                     print(f"Digitizer exception: {e}")
                     exception_type = type(e).__name__
-                    self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    msg = self.build_status_msg(
+                            status='failed',
+                            percent_completed=0,
+                            fit_value=None,
+                            fit_error=None,
+                            start_time=exp_start_time if "exp_start_time" in locals() else time.perf_counter(),
+                            total_iters=kwargs['iters'],
+                            iters_completed=0,
+                            exception=exception_type,
+                        )
+                    # self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    self.queue_from_exp.put_nowait(msg)
                 else:
                     self.dig.start_buffer()
                 
                     # start pulse sequence
-                    ps.start_now()
+                    ps.start_now(owner=token)
+
+                    exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
                     # start experiment loop
                     for i in range(kwargs['iters']):
@@ -3147,7 +3879,7 @@ class SpinMeasurements:
 
                         # partition buffer into signal and background datasets
                         try:
-                            sig, bg = volt_factor*self.analog_math(corr_result, 'Corr', kwargs['num_pts'])
+                            sig, bg = self.analog_math(corr_result, 'Corr', kwargs['num_pts'])
                         except ValueError:
                             continue
 
@@ -3157,8 +3889,12 @@ class SpinMeasurements:
                         background_sweeps.append(np.stack([dark_taus*1e9, bg]))
                         background_sweeps.updated_item(-1)
 
+                        # update GUI progress bar & ETA
+                        iter_completed = i + 1                      
+                        percent_completed = int((iter_completed / kwargs["iters"]) * 100)
+
                         # save the current data to the data server
-                        corr_rabi_data.push({'params': {'kwargs': kwargs},
+                        corr_rabi_data.push({'params': {'kwargs': kwargs, 'iters_completed': iter_completed, 'elapsed': time.perf_counter() - exp_start_time},
                                         'title': 'DEER Correlation Rabi',
                                         'xlabel': 'MW Pulse Duration (ns)',
                                         'ylabel': 'Signal',
@@ -3166,15 +3902,36 @@ class SpinMeasurements:
                                                     'background': background_sweeps}
                         })
 
-                        # update GUI progress bar                        
-                        percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', None])
+                        msg = self.build_status_msg(
+                            status='in progress',
+                            percent_completed=percent_completed,
+                            fit_value=None,
+                            fit_error=None,
+                            start_time=exp_start_time,
+                            total_iters=kwargs['iters'],
+                            iters_completed=iter_completed,
+                        )
+
+                        # self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                        self.queue_from_exp.put_nowait(msg)
 
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
                             # print(f"is there a queue to exp? {self.queue_to_exp.get()}")
-                            self.equipment_off(kwargs['detector'])
-                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', None])
+                            self.equipment_off()
+
+                            msg = self.build_status_msg(
+                                status="stopped",
+                                percent_completed=int(percent_completed),
+                                fit_value=None,
+                                fit_error=None,
+                                start_time=exp_start_time,
+                                total_iters=kwargs["iters"],
+                                iters_completed=iter_completed,
+                            )
+                            # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                            self.queue_from_exp.put_nowait(msg)
+                            
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                             return
@@ -3183,10 +3940,21 @@ class SpinMeasurements:
                     if kwargs['save'] == True:
                         self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                     
-                    self.queue_from_exp.put_nowait([percent_completed, 'complete', None])
+                    msg = self.build_status_msg(
+                        status="complete",
+                        percent_completed=int(percent_completed),
+                        fit_value=None,
+                        fit_error=None,
+                        start_time=exp_start_time,
+                        total_iters=kwargs["iters"],
+                        iters_completed=iter_completed,
+                    )
+                    # self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                    self.queue_from_exp.put_nowait(msg)
 
             finally:
-                self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
+                self.equipment_off() # turn off equipment regardless of if experiment started or failed
+                ps.end_exclusive(token)  # release exclusive control of the pulse streamer
 
     def DEER_T1_scan(self, **kwargs):
         """
@@ -3209,6 +3977,9 @@ class SpinMeasurements:
             ps = mgr.ps
             hdawg = mgr.awg
             
+            token = f"DEERT1_{time.strftime('%Y%m%d_%H%M%S')}"  # unique token for this experiment run
+            ps.begin_exclusive(token, takeover=True, restore_on_release=True)  # take exclusive control of the pulse streamer
+
             # define parameter array that will be swept over in experiment & shuffle
             match kwargs['array_type']:
                 case 'geomspace':
@@ -3246,8 +4017,6 @@ class SpinMeasurements:
             sig_gen.set_mod_function('IQ', 5) # external modulation
             sig_gen.set_mod_toggle(1) # turn on modulation mode
 
-            volt_factor = self.volt_factor(kwargs['detector'])
-
             # upload AWG sequence first
             try:
                 hdawg.set_sequence(**{'seq': 'DEER Corr T1',                  
@@ -3266,6 +4035,8 @@ class SpinMeasurements:
                                     'num_pts': kwargs['num_pts'],
                                     'runs': kwargs['runs'], 
                                     'iters': kwargs['iters']})
+                hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
+                hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
             except Exception as e:
                 print(e)
             
@@ -3287,27 +4058,37 @@ class SpinMeasurements:
                 sig_gen.set_rf_toggle(1) # turn on NV signal generator
 
                 # configure laser settings and turn on
-                laser.set_modulation_state('pulsed')
-                laser.set_analog_control_mode('current')
                 laser.set_diode_current_realtime(kwargs['laser_power'])
-                laser.laser_on()
 
-                # set pulsestreamer to start on software trigger & run infinitely
-                ps.set_soft_trigger()
-                ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY) #kwargs['runs']*kwargs['iters']) # execute chosen sequence on Pulse Streamer
-                
                 # start digitizer --> waits for trigger from pulse sequence
                 try:
+                    # set pulsestreamer to start on software trigger & run infinitely
+                    ps.set_soft_trigger()
+                    ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # execute chosen sequence on Pulse Streamer
+                    
                     self.dig.config()
                 except Exception as e:
                     print(f"Digitizer exception: {e}")
                     exception_type = type(e).__name__
-                    self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    msg = self.build_status_msg(
+                            status='failed',
+                            percent_completed=0,
+                            fit_value=None,
+                            fit_error=None,
+                            start_time=exp_start_time if "exp_start_time" in locals() else time.perf_counter(),
+                            total_iters=kwargs['iters'],
+                            iters_completed=0,
+                            exception=exception_type,
+                        )
+                    # self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    self.queue_from_exp.put_nowait(msg)
                 else:
                     self.dig.start_buffer()
                 
                     # start pulse sequence
-                    ps.start_now()
+                    ps.start_now(owner=token)
+
+                    exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
                     # start experiment loop
                     for i in range(kwargs['iters']):
@@ -3318,7 +4099,7 @@ class SpinMeasurements:
 
                         # partition buffer into signal and background datasets
                         try:
-                            with_py, without_py, with_ny, without_ny = volt_factor*self.analog_math(corr_result, 'DEER', kwargs['num_pts'])
+                            with_py, without_py, with_ny, without_ny = self.analog_math(corr_result, 'DEER', kwargs['num_pts'])
                         except ValueError:
                             continue
 
@@ -3332,8 +4113,12 @@ class SpinMeasurements:
                         without_pulse_ny_sweeps.append(np.stack([t_corr_times[1:]*1e6, without_ny[1:]]))
                         without_pulse_ny_sweeps.updated_item(-1)
 
+                        # update GUI progress bar & ETA
+                        iter_completed = i + 1                      
+                        percent_completed = int((iter_completed / kwargs["iters"]) * 100)
+
                         # save the current data to the data server
-                        deer_t1_data.push({'params': {'kwargs': kwargs},
+                        deer_t1_data.push({'params': {'kwargs': kwargs, 'iters_completed': iter_completed, 'elapsed': time.perf_counter() - exp_start_time},
                                         'title': 'DEER Correlation T1',
                                         'xlabel': 'Free Precession Interval (\u03BCs) or Frequency (MHz)',
                                         'ylabel': 'Signal',
@@ -3343,15 +4128,36 @@ class SpinMeasurements:
                                                     'without_ny': without_pulse_ny_sweeps}
                         })
 
-                        # update GUI progress bar                        
-                        percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', None])
+                        msg = self.build_status_msg(
+                            status='in progress',
+                            percent_completed=percent_completed,
+                            fit_value=None,
+                            fit_error=None,
+                            start_time=exp_start_time,
+                            total_iters=kwargs['iters'],
+                            iters_completed=iter_completed,
+                        )
+
+                        # self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                        self.queue_from_exp.put_nowait(msg)
 
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
                             # print(f"is there a queue to exp? {self.queue_to_exp.get()}")
-                            self.equipment_off(kwargs['detector'])
-                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', None])
+                            self.equipment_off()
+
+                            msg = self.build_status_msg(
+                                status="stopped",
+                                percent_completed=int(percent_completed),
+                                fit_value=None,
+                                fit_error=None,
+                                start_time=exp_start_time,
+                                total_iters=kwargs["iters"],
+                                iters_completed=iter_completed,
+                            )
+                            # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                            self.queue_from_exp.put_nowait(msg)
+
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                             return
@@ -3360,10 +4166,21 @@ class SpinMeasurements:
                     if kwargs['save'] == True:
                         self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
 
-                    self.queue_from_exp.put_nowait([percent_completed, 'complete', None])
+                    msg = self.build_status_msg(
+                        status="complete",
+                        percent_completed=int(percent_completed),
+                        fit_value=None,
+                        fit_error=None,
+                        start_time=exp_start_time,
+                        total_iters=kwargs["iters"],
+                        iters_completed=iter_completed,
+                    )
+                    # self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                    self.queue_from_exp.put_nowait(msg)
 
             finally:
-                self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
+                self.equipment_off() # turn off equipment regardless of if experiment started or failed
+                ps.end_exclusive(token)  # release exclusive control of the pulse streamer
 
     def DEER_T2_scan(self, **kwargs):
         """
@@ -3386,6 +4203,9 @@ class SpinMeasurements:
             ps = mgr.ps
             hdawg = mgr.awg
             
+            token = f"DEERT2_{time.strftime('%Y%m%d_%H%M%S')}"  # unique token for this experiment run
+            ps.begin_exclusive(token, takeover=True, restore_on_release=True)  # take exclusive control of the pulse streamer
+
             # define parameter array that will be swept over in experiment & shuffle
             match kwargs['array_type']:
                 case 'geomspace':
@@ -3424,8 +4244,6 @@ class SpinMeasurements:
             sig_gen.set_mod_function('IQ', 5) # external modulation
             sig_gen.set_mod_toggle(1) # turn on modulation mode
 
-            volt_factor = self.volt_factor(kwargs['detector'])
-
             # upload AWG sequence first
             try:
                 hdawg.set_sequence(**{'seq': 'DEER T2',                  
@@ -3445,6 +4263,8 @@ class SpinMeasurements:
                                     'num_pts': kwargs['num_pts'],
                                     'runs': kwargs['runs'], 
                                     'iters': kwargs['iters']})
+                hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
+                hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
             except Exception as e:
                 print(e)
             
@@ -3464,27 +4284,37 @@ class SpinMeasurements:
                 sig_gen.set_rf_toggle(1) # turn on NV signal generator
 
                 # configure laser settings and turn on
-                laser.set_modulation_state('pulsed')
-                laser.set_analog_control_mode('current')
                 laser.set_diode_current_realtime(kwargs['laser_power'])
-                laser.laser_on()
 
-                # set pulsestreamer to start on software trigger & run infinitely
-                ps.set_soft_trigger()
-                ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY) #kwargs['runs']*kwargs['iters']) # execute chosen sequence on Pulse Streamer
-                
                 # start digitizer --> waits for trigger from pulse sequence
                 try:
+                    # set pulsestreamer to start on software trigger & run infinitely
+                    ps.set_soft_trigger()
+                    ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # execute chosen sequence on Pulse Streamer
+
                     self.dig.config()
                 except Exception as e:
                     print(f"Digitizer exception: {e}")
                     exception_type = type(e).__name__
-                    self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    msg = self.build_status_msg(
+                            status='failed',
+                            percent_completed=0,
+                            fit_value=None,
+                            fit_error=None,
+                            start_time=exp_start_time if "exp_start_time" in locals() else time.perf_counter(),
+                            total_iters=kwargs['iters'],
+                            iters_completed=0,
+                            exception=exception_type,
+                        )
+                    # self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    self.queue_from_exp.put_nowait(msg)
                 else:
                     self.dig.start_buffer()
                 
                     # start pulse sequence
-                    ps.start_now()
+                    ps.start_now(owner=token)
+
+                    exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
                     # start experiment loop
                     for i in range(kwargs['iters']):
@@ -3496,7 +4326,7 @@ class SpinMeasurements:
 
                         # partition buffer into signal and background datasets
                         try:
-                            sig, bg = volt_factor*self.analog_math(deer_t2_result, 'DEER T2', kwargs['num_pts'])
+                            sig, bg = self.analog_math(deer_t2_result, 'DEER T2', kwargs['num_pts'])
                         except ValueError:
                             continue
 
@@ -3506,8 +4336,12 @@ class SpinMeasurements:
                         background_sweeps.append(np.stack([t_times*1e9, bg]))
                         background_sweeps.updated_item(-1)
 
+                        # update GUI progress bar & ETA
+                        iter_completed = i + 1                      
+                        percent_completed = int((iter_completed / kwargs["iters"]) * 100)
+
                         # save the current data to the data server
-                        deer_t2_data.push({'params': {'kwargs': kwargs},
+                        deer_t2_data.push({'params': {'kwargs': kwargs, 'iters_completed': iter_completed, 'elapsed': time.perf_counter() - exp_start_time},
                                         'title': 'DEER T2',
                                         'xlabel': 'Free Precession Interval (ns)',
                                         'ylabel': 'Signal',
@@ -3515,15 +4349,36 @@ class SpinMeasurements:
                                                     'background': background_sweeps}
                         })
 
-                        # update GUI progress bar                        
-                        percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', None])
+                        msg = self.build_status_msg(
+                            status='in progress',
+                            percent_completed=percent_completed,
+                            fit_value=None,
+                            fit_error=None,
+                            start_time=exp_start_time,
+                            total_iters=kwargs['iters'],
+                            iters_completed=iter_completed,
+                        )
+
+                        # self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                        self.queue_from_exp.put_nowait(msg)
 
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
                             # print(f"is there a queue to exp? {self.queue_to_exp.get()}")
-                            self.equipment_off(kwargs['detector'])
-                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', None])
+                            self.equipment_off()
+
+                            msg = self.build_status_msg(
+                                status="stopped",
+                                percent_completed=int(percent_completed),
+                                fit_value=None,
+                                fit_error=None,
+                                start_time=exp_start_time,
+                                total_iters=kwargs["iters"],
+                                iters_completed=iter_completed,
+                            )
+                            # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                            self.queue_from_exp.put_nowait(msg)
+
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                             return
@@ -3532,12 +4387,23 @@ class SpinMeasurements:
                     if kwargs['save'] == True:
                         self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
 
-                    self.queue_from_exp.put_nowait([percent_completed, 'complete', None])
+                    msg = self.build_status_msg(
+                        status="complete",
+                        percent_completed=int(percent_completed),
+                        fit_value=None,
+                        fit_error=None,
+                        start_time=exp_start_time,
+                        total_iters=kwargs["iters"],
+                        iters_completed=iter_completed,
+                    )
+                    # self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                    self.queue_from_exp.put_nowait(msg)
 
             finally:
-                self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
+                self.equipment_off() # turn off equipment regardless of if experiment started or failed
+                ps.end_exclusive(token)  # release exclusive control of the pulse streamer
 
-    def Corr_Spec_scan(self, **kwargs):
+    def Corr_Spec_RF_scan(self, **kwargs):
         """
         Run a Correlation Spectroscopy NMR sweep over a set of precession time intervals.
         
@@ -3558,6 +4424,9 @@ class SpinMeasurements:
             ps = mgr.ps
             hdawg = mgr.awg
             
+            token = f"CORRSPEC_{time.strftime('%Y%m%d_%H%M%S')}"  # unique token for this experiment run
+            ps.begin_exclusive(token, takeover=True, restore_on_release=True)  # take exclusive control of the pulse streamer
+
             # define parameter array that will be swept over in experiment & shuffle
             t_corr_times = np.linspace(kwargs['start'], kwargs['stop'], kwargs['num_pts']) * 1e9
 
@@ -3591,8 +4460,6 @@ class SpinMeasurements:
             sig_gen.set_mod_function('IQ', 5) # external modulation
             sig_gen.set_mod_toggle(1) # turn on modulation mode
 
-            volt_factor = self.volt_factor(kwargs['detector'])
-
             corr_spec_time = pi_half[0] + (4*pi[0] + 4*pi[1] + 8*kwargs['tau']*1e9)*kwargs['n'] + pi_half[1] + kwargs['stop']*1e9 + \
                              pi_half[0] + (4*pi[0] + 4*pi[1] + 8*kwargs['tau']*1e9)*kwargs['n'] + pi_half[1]
             
@@ -3619,6 +4486,8 @@ class SpinMeasurements:
                                     'rf_power': 0.2,
                                     'rf_freq': 2.88e6,
                                     'rf_phase': 0})
+                hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
+                hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
             except Exception as e:
                 print(e)
             
@@ -3638,27 +4507,37 @@ class SpinMeasurements:
                 sig_gen.set_rf_toggle(1) # turn on NV signal generator
 
                 # configure laser settings and turn on
-                laser.set_modulation_state('pulsed')
-                laser.set_analog_control_mode('current')
                 laser.set_diode_current_realtime(kwargs['laser_power'])
-                laser.laser_on()
 
-                # set pulsestreamer to start on software trigger & run infinitely
-                ps.set_soft_trigger()
-                ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY) #kwargs['runs']*kwargs['iters']) # execute chosen sequence on Pulse Streamer
-                
                 # start digitizer --> waits for trigger from pulse sequence
                 try:
+                    # set pulsestreamer to start on software trigger & run infinitely
+                    ps.set_soft_trigger()
+                    ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # execute chosen sequence on Pulse Streamer
+
                     self.dig.config()
                 except Exception as e:
                     print(f"Digitizer exception: {e}")
                     exception_type = type(e).__name__
-                    self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    msg = self.build_status_msg(
+                            status='failed',
+                            percent_completed=0,
+                            fit_value=None,
+                            fit_error=None,
+                            start_time=exp_start_time if "exp_start_time" in locals() else time.perf_counter(),
+                            total_iters=kwargs['iters'],
+                            iters_completed=0,
+                            exception=exception_type,
+                        )
+                    # self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    self.queue_from_exp.put_nowait(msg)
                 else:
                     self.dig.start_buffer()
                 
                     # start pulse sequence
-                    ps.start_now()
+                    ps.start_now(owner=token)
+
+                    exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
                     # start experiment loop
                     for i in range(kwargs['iters']):
@@ -3670,7 +4549,7 @@ class SpinMeasurements:
 
                         # partition buffer into signal and background datasets
                         try:
-                            sig, bg = volt_factor*self.analog_math(nmr_result, 'NMR', kwargs['num_pts'])
+                            sig, bg = self.analog_math(nmr_result, 'NMR', kwargs['num_pts'])
                         except ValueError:
                             continue
 
@@ -3680,24 +4559,49 @@ class SpinMeasurements:
                         background_sweeps.append(np.stack([t_corr_times/1e3, bg]))
                         background_sweeps.updated_item(-1)
 
+                        # update GUI progress bar & ETA
+                        iter_completed = i + 1                      
+                        percent_completed = int((iter_completed / kwargs["iters"]) * 100)
+
                         # save the current data to the data server
-                        nmr_data.push({'params': {'kwargs': kwargs},
+                        nmr_data.push({'params': {'kwargs': kwargs, 'iters_completed': iter_completed, 'elapsed': time.perf_counter() - exp_start_time},
                                         'title': 'NMR Time Domain Data',
                                         'xlabel': 'Free Precession Interval (\u03BCs) or Frequency (MHz)',
                                         'ylabel': 'Signal',
                                         'datasets': {'signal' : signal_sweeps,
                                                     'background': background_sweeps}
                         })
+                        
+                        msg = self.build_status_msg(
+                            status='in progress',
+                            percent_completed=percent_completed,
+                            fit_value=None,
+                            fit_error=None,
+                            start_time=exp_start_time,
+                            total_iters=kwargs['iters'],
+                            iters_completed=iter_completed,
+                        )
 
-                        # update GUI progress bar                        
-                        percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', None])
+                        # self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                        self.queue_from_exp.put_nowait(msg)
 
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
                             # print(f"is there a queue to exp? {self.queue_to_exp.get()}")
-                            self.equipment_off(kwargs['detector'])
-                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', None])
+                            self.equipment_off()
+
+                            msg = self.build_status_msg(
+                                status="stopped",
+                                percent_completed=int(percent_completed),
+                                fit_value=None,
+                                fit_error=None,
+                                start_time=exp_start_time,
+                                total_iters=kwargs["iters"],
+                                iters_completed=iter_completed,
+                            )
+                            # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                            self.queue_from_exp.put_nowait(msg)
+
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                             return
@@ -3706,12 +4610,23 @@ class SpinMeasurements:
                     if kwargs['save'] == True:
                         self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
 
-                    self.queue_from_exp.put_nowait([percent_completed, 'complete', None])
+                    msg = self.build_status_msg(
+                        status="complete",
+                        percent_completed=int(percent_completed),
+                        fit_value=None,
+                        fit_error=None,
+                        start_time=exp_start_time,
+                        total_iters=kwargs["iters"],
+                        iters_completed=iter_completed,
+                    )
+                    # self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                    self.queue_from_exp.put_nowait(msg)
 
             finally:
-                self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
+                self.equipment_off() # turn off equipment regardless of if experiment started or failed
+                ps.end_exclusive(token)  # release exclusive control of the pulse streamer
 
-    def Corr_Spec_scan_orig(self, **kwargs):
+    def Corr_Spec_scan(self, **kwargs):
         """
         Run a Correlation Spectroscopy NMR sweep over a set of precession time intervals.
         
@@ -3732,6 +4647,9 @@ class SpinMeasurements:
             ps = mgr.ps
             hdawg = mgr.awg
             
+            token = f"CORRSPEC_{time.strftime('%Y%m%d_%H%M%S')}"  # unique token for this experiment run
+            ps.begin_exclusive(token, takeover=True, restore_on_release=True)  # take exclusive control of the pulse streamer
+
             # define parameter array that will be swept over in experiment & shuffle
             t_corr_times = np.linspace(kwargs['start'], kwargs['stop'], kwargs['num_pts']) * 1e9
 
@@ -3765,8 +4683,6 @@ class SpinMeasurements:
             sig_gen.set_mod_function('IQ', 5) # external modulation
             sig_gen.set_mod_toggle(1) # turn on modulation mode
 
-            volt_factor = self.volt_factor(kwargs['detector'])
-
             # upload AWG sequence first
             try:
                 hdawg.set_sequence(**{'seq': 'NMR',
@@ -3784,6 +4700,8 @@ class SpinMeasurements:
                                     'num_pts': kwargs['num_pts'],
                                     'runs': kwargs['runs'], 
                                     'iters': kwargs['iters']})
+                hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
+                hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
             except Exception as e:
                 print(e)
             
@@ -3803,27 +4721,37 @@ class SpinMeasurements:
                 sig_gen.set_rf_toggle(1) # turn on NV signal generator
 
                 # configure laser settings and turn on
-                laser.set_modulation_state('pulsed')
-                laser.set_analog_control_mode('current')
                 laser.set_diode_current_realtime(kwargs['laser_power'])
-                laser.laser_on()
 
-                # set pulsestreamer to start on software trigger & run infinitely
-                ps.set_soft_trigger()
-                ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY) #kwargs['runs']*kwargs['iters']) # execute chosen sequence on Pulse Streamer
-                
                 # start digitizer --> waits for trigger from pulse sequence
                 try:
+                    # set pulsestreamer to start on software trigger & run infinitely
+                    ps.set_soft_trigger()
+                    ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # execute chosen sequence on Pulse Streamer
+
                     self.dig.config()
                 except Exception as e:
                     print(f"Digitizer exception: {e}")
                     exception_type = type(e).__name__
-                    self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    msg = self.build_status_msg(
+                            status='failed',
+                            percent_completed=0,
+                            fit_value=None,
+                            fit_error=None,
+                            start_time=exp_start_time if "exp_start_time" in locals() else time.perf_counter(),
+                            total_iters=kwargs['iters'],
+                            iters_completed=0,
+                            exception=exception_type,
+                        )
+                    # self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    self.queue_from_exp.put_nowait(msg)
                 else:
                     self.dig.start_buffer()
                 
                     # start pulse sequence
-                    ps.start_now()
+                    ps.start_now(owner=token)
+
+                    exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
                     # start experiment loop
                     for i in range(kwargs['iters']):
@@ -3835,7 +4763,7 @@ class SpinMeasurements:
 
                         # partition buffer into signal and background datasets
                         try:
-                            sig, bg = volt_factor*self.analog_math(nmr_result, 'NMR', kwargs['num_pts'])
+                            sig, bg = self.analog_math(nmr_result, 'NMR', kwargs['num_pts'])
                         except ValueError:
                             continue
 
@@ -3845,8 +4773,12 @@ class SpinMeasurements:
                         background_sweeps.append(np.stack([t_corr_times/1e3, bg]))
                         background_sweeps.updated_item(-1)
 
+                        # update GUI progress bar & ETA
+                        iter_completed = i + 1                      
+                        percent_completed = int((iter_completed / kwargs["iters"]) * 100)
+
                         # save the current data to the data server
-                        nmr_data.push({'params': {'kwargs': kwargs},
+                        nmr_data.push({'params': {'kwargs': kwargs, 'iters_completed': iter_completed, 'elapsed': time.perf_counter() - exp_start_time},
                                         'title': 'NMR Time Domain Data',
                                         'xlabel': 'Free Precession Interval (\u03BCs) or Frequency (MHz)',
                                         'ylabel': 'Signal',
@@ -3854,15 +4786,36 @@ class SpinMeasurements:
                                                     'background': background_sweeps}
                         })
 
-                        # update GUI progress bar                        
-                        percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                        self.queue_from_exp.put_nowait([percent_completed, 'in progress', None])
+                        msg = self.build_status_msg(
+                            status='in progress',
+                            percent_completed=percent_completed,
+                            fit_value=None,
+                            fit_error=None,
+                            start_time=exp_start_time,
+                            total_iters=kwargs['iters'],
+                            iters_completed=iter_completed,
+                        )
+
+                        # self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                        self.queue_from_exp.put_nowait(msg)
 
                         if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                             # the GUI has asked us nicely to exit. Save data if requested.
                             # print(f"is there a queue to exp? {self.queue_to_exp.get()}")
-                            self.equipment_off(kwargs['detector'])
-                            self.queue_from_exp.put_nowait([percent_completed, 'stopped', None])
+                            self.equipment_off()
+
+                            msg = self.build_status_msg(
+                                status="stopped",
+                                percent_completed=int(percent_completed),
+                                fit_value=None,
+                                fit_error=None,
+                                start_time=exp_start_time,
+                                total_iters=kwargs["iters"],
+                                iters_completed=iter_completed,
+                            )
+                            # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                            self.queue_from_exp.put_nowait(msg)
+
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                             return
@@ -3871,15 +4824,28 @@ class SpinMeasurements:
                     if kwargs['save'] == True:
                         self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
 
-                    self.queue_from_exp.put_nowait([percent_completed, 'complete', None])
+                    msg = self.build_status_msg(
+                        status="complete",
+                        percent_completed=int(percent_completed),
+                        fit_value=None,
+                        fit_error=None,
+                        start_time=exp_start_time,
+                        total_iters=kwargs["iters"],
+                        iters_completed=iter_completed,
+                    )
+                    # self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                    self.queue_from_exp.put_nowait(msg)
 
             finally:
-                self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed
+                self.equipment_off() # turn off equipment regardless of if experiment started or failed
+                ps.end_exclusive(token)  # release exclusive control of the pulse streamer
 
     def CASR_scan(self, **kwargs):
         """
         Run a Coherently Averaged Synchronized Readout NMR sweep over a range of frequencies.
         
+        Choose either coil drive or RF pi/2 pulse for nuclear spin control.
+
         Keyword args:
             dataset: name of the dataset to push data to
             start (float): start frequency
@@ -3897,6 +4863,9 @@ class SpinMeasurements:
             ps = mgr.ps
             hdawg = mgr.awg
             
+            token = f"CASR_{time.strftime('%Y%m%d_%H%M%S')}"  # unique token for this experiment run
+            ps.begin_exclusive(token, takeover=True, restore_on_release=True)  # take exclusive control of the pulse streamer
+
             # period = (1/kwargs['central_freq'])*1e9 # reference for ensuring sequence is a multiple of this central period [ns]
             
             # intervals in pulse sequence used to define time points on x-axis in seconds
@@ -3935,213 +4904,18 @@ class SpinMeasurements:
                     print(f"\u0394f = f - f0 = {(0.5/((tau+pi[0])*1e-9) - kwargs['rf_pulse_freq'])/1000} kHz")
                 except AssertionError as e:  
                     exception_type = type(e).__name__
-                    self.queue_from_exp.put_nowait([0, 'failed', None, e])
-
-                else:
-                    # x-axis time values array for experiment [s]
-                    times = np.linspace(t_seq - wait_time - laser_read_time/2, kwargs['num_pts']*t_seq, kwargs['num_pts']) * 1e-9
-
-                    # define NV drive frequency & sideband
-                    sig_gen_freq, iq_phases = self.choose_sideband(kwargs['sideband'], kwargs['freq'], kwargs['sideband_freq']) # iq_phases for x pulse by default
-
-                    # define pulse sequence
-                    sequence = ps.CASR(kwargs['rf_pi_half']*1e9, laser_init_time, singlet_decay, 
-                                    pi_half[0], pi_half[1], pi[0], pi[1], 
-                                    tau, kwargs['n'], mw_buffer_time, kwargs['laser_readout'], wait_time, kwargs['num_pts'])
-                    # sequence = ps.CASR_Coil(laser_init_time, singlet_decay, 
-                    #                 pi_half[0], pi_half[1], pi[0], pi[1], 
-                    #                 tau, kwargs['n'], mw_buffer_time, kwargs['laser_readout'], wait_time, kwargs['num_pts'])
-                    
-                    # configure digitizer
-                    dig_config = self.digitizer_configure(num_pts_in_exp = kwargs['num_pts'], iters = kwargs['iters'], 
-                                                        segment_size = kwargs['segment_size'], sampling_freq = kwargs['dig_sampling_freq'], dig_amplitude = kwargs['dig_amplitude'], 
-                                                        read_channel = kwargs['read_channel'], coupling = kwargs['dig_coupling'], termination = kwargs['dig_termination'], 
-                                                        pretrig_size = kwargs['pretrig_size'], dig_timeout = kwargs['dig_timeout'], runs = kwargs['runs'])
-                    
-                    # configure signal generator for NV drive
-                    sig_gen.set_frequency(sig_gen_freq) # set carrier frequency
-                    sig_gen.set_rf_amplitude(kwargs['rf_power']) # set MW power
-                    sig_gen.set_mod_type(7) # quadrature amplitude modulation
-                    sig_gen.set_mod_subtype(1) # no constellation mapping
-                    sig_gen.set_mod_function('IQ', 5) # external modulation
-                    sig_gen.set_mod_toggle(1) # turn on modulation mode
-
-                    volt_factor = self.volt_factor(kwargs['detector'])
-
-                    # upload AWG sequence first
-                    try:
-                        hdawg.set_sequence(**{'seq': 'CASR2',
-                                            'i_offset': kwargs['i_offset'],
-                                            'q_offset': kwargs['q_offset'],
-                                            'sideband_power': kwargs['sideband_power'],
-                                            'sideband_freq': kwargs['sideband_freq'], 
-                                            'iq_phases': iq_phases,
-                                            'pihalf_x': pi_half[0]/1e9,
-                                            'pihalf_y': pi_half[1]/1e9,
-                                            'pi_x': pi[0]/1e9, 
-                                            'pi_y': pi[1]/1e9,
-                                            'n_R': kwargs['num_pts'],
-                                            'n': kwargs['n'],
-                                            'rf_freq': kwargs['rf_pulse_freq'],
-                                            'rf_power': kwargs['rf_pulse_power'],
-                                            'rf_phase': kwargs['rf_pulse_phase'],
-                                            'rf_pihalf': kwargs['rf_pi_half']})
-                                            # 'rf_pihalf': kwargs['num_pts']*t_seq*1e-9})
-                    except Exception as e:
-                        print(e)
-                    
-                    # if successfully uploaded, run the experiment
-                    else:
-                        # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
-                        signal_sweeps = StreamingList()
-                        background_sweeps = StreamingList()
-
-                        # open laser shutter
-                        laser_shutter.open_shutter()
-                        time.sleep(0.1)
-
-                        # upload digitizer parameters
-                        self.dig.assign_param(dig_config)
-
-                        # emit MW for NV drive
-                        sig_gen.set_rf_toggle(1) # turn on NV signal generator
-
-                        # configure laser settings and turn on
-                        laser.set_modulation_state('pulsed')
-                        laser.set_analog_control_mode('current')
-                        laser.set_diode_current_realtime(kwargs['laser_power'])
-                        laser.laser_on()
-
-                        # set pulsestreamer to start on software trigger & run infinitely
-                        ps.set_soft_trigger()
-                        ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY) #kwargs['runs']*kwargs['iters']) # execute chosen sequence on Pulse Streamer
-                        
-                        # start digitizer --> waits for trigger from pulse sequence
-                        try:
-                            self.dig.config()
-                        except Exception as e:
-                            print(f"Digitizer exception: {e}")
-                            exception_type = type(e).__name__
-                            self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
-                        else:
-                            self.dig.start_buffer()
-                        
-                            # start pulse sequence
-                            ps.start_now()
-
-                            # start experiment loop
-                            for i in range(kwargs['iters']):
-                                
-                                casr_result_raw = self.dig.acquire() # acquire data from digitizer
-
-                                # average all data over each trigger/segment 
-                                casr_result=np.mean(casr_result_raw,axis=1)
-
-                                # partition buffer into signal and background datasets
-                                try:
-                                    sig, bg = volt_factor*self.analog_math(casr_result, 'CASR', kwargs['num_pts'])
-                                except ValueError:
-                                    continue
-
-                                # notify the streaminglist that this entry has updated so it will be pushed to the data server
-                                signal_sweeps.append(np.stack([times*1e3, sig]))
-                                signal_sweeps.updated_item(-1) 
-                                background_sweeps.append(np.stack([times*1e3, bg]))
-                                background_sweeps.updated_item(-1)
-
-                                # save the current data to the data server
-                                casr_data.push({'params': {'kwargs': kwargs},
-                                                'title': 'CASR Time Domain Data',
-                                                'xlabel': 'Free Precession Interval (ms) or Frequency (kHz)',
-                                                'ylabel': 'Signal',
-                                                'datasets': {'signal' : signal_sweeps,
-                                                            'background': background_sweeps}
-                                })
-
-                                # update GUI progress bar                        
-                                percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                                self.queue_from_exp.put_nowait([percent_completed, 'in progress', None])
-
-                                if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
-                                    # the GUI has asked us nicely to exit. Save data if requested.
-                                    # print(f"is there a queue to exp? {self.queue_to_exp.get()}")
-                                    self.equipment_off(kwargs['detector'])
-                                    self.queue_from_exp.put_nowait([percent_completed, 'stopped', None])
-                                    if kwargs['save'] == True:
-                                        self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
-                                    return
-                                    
-                            # save data if requested upon completion of experiment
-                            if kwargs['save'] == True:
-                                self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
-
-                            self.queue_from_exp.put_nowait([percent_completed, 'complete', None])
-
-                    finally:
-                        self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed 
-
-    
-    def CASR_cont_scan(self, **kwargs):
-        """
-        Run a Coherently Averaged Synchronized Readout NMR sweep over a range of frequencies.
-        
-        Keyword args:
-            dataset: name of the dataset to push data to
-            start (float): start frequency
-            stop (float): stop frequency
-            num_pts (int): number of points between start-stop (inclusive)
-            iterations: number of times to repeat the experiment
-        """
-        # connect to the instrument server & the data server.
-        # create a data set, or connect to an existing one with the same name if it was created earlier.
-        with InstrumentManager() as mgr, DataSource(kwargs['dataset']) as casr_data:
-            # load devices used in scan
-            laser = mgr.laser
-            laser_shutter = mgr.laser_shutter
-            sig_gen = mgr.sg
-            ps = mgr.ps
-            hdawg = mgr.awg
-            
-            # period = (1/kwargs['central_freq'])*1e9 # reference for ensuring sequence is a multiple of this central period [ns]
-            
-            # intervals in pulse sequence used to define time points on x-axis in seconds
-            laser_init_time = kwargs['laser_init']*1e9
-            singlet_decay = 500 
-            pi = [kwargs['pi']*1e9, kwargs['pi']*1e9]
-            pi_half = [pi[0]/2, pi[1]/2]
-            tau = int(kwargs['tau']*1e9) # half period of central frequency [ns] - used in DD blocks
-            print(f"tau = {tau} ns")
-            period = 2*tau
-
-            dd_time = pi_half[0] + (4*pi[0] + 4*pi[1] + 8*tau)*kwargs['n'] + pi_half[1]
-
-            mw_buffer_time = 100 # buffer time between DD block and readout pulse [ns]
-            laser_read_time = kwargs['laser_readout']*1e9 # laser readout pulse [ns]
-            wait_time = 100 # dead time at end of sequence before next subsequence [ns]
-
-            t_seq = laser_init_time + singlet_decay + dd_time + mw_buffer_time + laser_read_time + wait_time
-            print(f"initial t_seq = {t_seq}")
-            try:
-                if t_seq % period != 0:
-                    nearest_integer = np.ceil(t_seq/period)
-                    new_t_seq = nearest_integer * period
-                    wait_time = new_t_seq - (t_seq - wait_time)
-                    assert wait_time >= 0, "new wait_time is unphysical (negative)"
-                    t_seq = new_t_seq
-            except AssertionError as e:
-                self.queue_from_exp.put_nowait([0, 'failed', None, e])
-            else:
-                try:
-                    if t_seq % period > 1e-6:
-                        assert math.isclose(t_seq % period, period, abs_tol=1e-9), "Adjusted 't_seq' still not an integer multiple of 1/f0"
-                    print(f"New wait time = {wait_time}")
-                    print(f"t_seq = {t_seq} ns")
-                    print(f"period = {period} ns")
-                    print(f"\u0394f = f - f0 = {(0.5/((tau+pi[0])*1e-9) - kwargs['rf_pulse_freq'])/1000} kHz")
-                except AssertionError as e:  
-                    exception_type = type(e).__name__
-                    self.queue_from_exp.put_nowait([0, 'failed', None, e])
-
+                    msg = self.build_status_msg(
+                            status='failed',
+                            percent_completed=0,
+                            fit_value=None,
+                            fit_error=None,
+                            start_time=exp_start_time if "exp_start_time" in locals() else time.perf_counter(),
+                            total_iters=kwargs['iters'],
+                            iters_completed=0,
+                            exception=exception_type,
+                        )
+                    # self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                    self.queue_from_exp.put_nowait(msg)
                 else:
                     # x-axis time values array for experiment [s]
                     times = np.linspace(t_seq - wait_time - laser_read_time/2, kwargs['num_pts']*t_seq, kwargs['num_pts']) * 1e-9
@@ -4150,10 +4924,17 @@ class SpinMeasurements:
                     sig_gen_freq, iq_phases = self.choose_sideband(kwargs['sideband'], kwargs['freq'], kwargs['sideband_freq']) # iq_phases for x pulse by default
 
                     # define pulse sequences
-                    seq_rf = ps.CASR_RF(kwargs['rf_pi_half']*1e9)
+                    if kwargs['sig_opt'] == 'Coil':
+                        print("Using CASR Coil sequence")
+                        rf_duration = kwargs['num_pts']*t_seq*1e-9 # coil on for entire sequence duration
+                        seq_rf = ps.CASR_RF_Coil() # coil drive version
+                    else:
+                        rf_duration = kwargs['rf_pi_half'] # RF pi/2 pulse duration for nuclear spin control
+                        seq_rf = ps.CASR_RF(kwargs['rf_pi_half']*1e9)
+                    
                     seq_nv = ps.CASR_NV(laser_init_time, singlet_decay, 
                                     pi_half[0], pi_half[1], pi[0], pi[1], 
-                                    tau, kwargs['n'], mw_buffer_time, kwargs['laser_readout'], wait_time)
+                                    tau, kwargs['n'], mw_buffer_time, kwargs['laser_readout'], wait_time) # NV DD subsequence
                     
                     # configure digitizer
                     dig_config = self.digitizer_configure(num_pts_in_exp = kwargs['num_pts'], iters = kwargs['iters'], 
@@ -4169,11 +4950,9 @@ class SpinMeasurements:
                     sig_gen.set_mod_function('IQ', 5) # external modulation
                     sig_gen.set_mod_toggle(1) # turn on modulation mode
 
-                    volt_factor = self.volt_factor(kwargs['detector'])
-
                     # upload AWG sequence first
                     try:
-                        hdawg.set_sequence(**{'seq': 'CASR2',
+                        hdawg.set_sequence(**{'seq': 'CASR',
                                             'i_offset': kwargs['i_offset'],
                                             'q_offset': kwargs['q_offset'],
                                             'sideband_power': kwargs['sideband_power'],
@@ -4188,7 +4967,11 @@ class SpinMeasurements:
                                             'rf_freq': kwargs['rf_pulse_freq'],
                                             'rf_power': kwargs['rf_pulse_power'],
                                             'rf_phase': kwargs['rf_pulse_phase'],
-                                            'rf_pihalf': kwargs['rf_pi_half']})          
+                                            'rf_pihalf': rf_duration})
+                                            # 'rf_pihalf': kwargs['rf_pi_half']})  
+                                            # 'rf_pihalf': kwargs['num_pts']*t_seq*1e-9})
+                        hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
+                        hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])    
                     except Exception as e:
                         print(e)
                     
@@ -4209,10 +4992,7 @@ class SpinMeasurements:
                         sig_gen.set_rf_toggle(1) # turn on NV signal generator
 
                         # configure laser settings and turn on
-                        laser.set_modulation_state('pulsed')
-                        laser.set_analog_control_mode('current')
                         laser.set_diode_current_realtime(kwargs['laser_power'])
-                        laser.laser_on()
 
                         # set pulsestreamer to start on software trigger & run infinitely
                         ps.set_soft_trigger()
@@ -4221,24 +5001,40 @@ class SpinMeasurements:
                         # upload both sequences to pulse streamer
                         # 1. CASR RF sequence -> pi/2 on nuclear spins (n_runs = 1)
                         # 2. CASR NV sequence -> pi/2 on electron spins (n_runs = num_pts x 2)
-                        ps.upload(slot_nr=ps.AUTO, data=seq_rf, n_runs=1, next_action=NextAction.SWITCH_SLOT, when=When.IMMEDIATE) #upload initial sequence data with n_runs=1
-                        ps.upload(slot_nr=ps.AUTO, data=seq_nv, n_runs=kwargs['num_pts']*2,next_action=NextAction.SWITCH_SLOT, when=When.IMMEDIATE) #upload measurement sequence with n_runs=num_pts*2
+                        ps.upload(slot_nr=0, data=seq_rf, n_runs=1, next_action=NextAction.SWITCH_SLOT, when=When.IMMEDIATE, owner=token) #upload initial sequence data with n_runs=1
+                        ps.upload(slot_nr=1, data=seq_nv, n_runs=kwargs['num_pts']*2,next_action=NextAction.SWITCH_SLOT, when=When.IMMEDIATE, owner=token) #upload measurement sequence with n_runs=num_pts*2
                         
-                        #start internal data processing only as extra software trigger option is set (memory slots cannot be overwritten anymore)
-                        ps.start(ps.AUTO, slots_to_run=PulseStreamer.REPEAT_INFINITELY) # run 10 slots, so the last slot with the reference signal is played once and repeated 7 times afterwards
+                        ps.start(slot_nr=0, slots_to_run=PulseStreamer.REPEAT_INFINITELY, owner=token) # start on slot 0 (seq_rf) and run rf and nv sequences alternatively infinitely, switching slots automatically 
                         
                         # start digitizer --> waits for trigger from pulse sequence
                         try:
+                            # set pulsestreamer to start on software trigger & run infinitely
+                            # ps.set_soft_trigger()
+                            # ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # execute chosen sequence on Pulse Streamer
+
                             self.dig.config()
                         except Exception as e:
                             print(f"Digitizer exception: {e}")
                             exception_type = type(e).__name__
-                            self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                            msg = self.build_status_msg(
+                            status='failed',
+                            percent_completed=0,
+                            fit_value=None,
+                            fit_error=None,
+                            start_time=exp_start_time if "exp_start_time" in locals() else time.perf_counter(),
+                            total_iters=kwargs['iters'],
+                            iters_completed=0,
+                            exception=exception_type,
+                            )
+                            # self.queue_from_exp.put_nowait([0, 'failed', None, exception_type])
+                            self.queue_from_exp.put_nowait(msg)
                         else:
                             self.dig.start_buffer()
                         
                             # start pulse sequence
-                            ps.start_now()
+                            ps.start_now(owner=token)
+
+                            exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
                             # start experiment loop
                             for i in range(kwargs['iters']):
@@ -4250,18 +5046,22 @@ class SpinMeasurements:
 
                                 # partition buffer into signal and background datasets
                                 try:
-                                    sig, bg = volt_factor*self.analog_math(casr_result, 'CASR', kwargs['num_pts'])
+                                    sig, bg = self.analog_math(casr_result, 'CASR', kwargs['num_pts'])
                                 except ValueError:
                                     continue
 
                                 # notify the streaminglist that this entry has updated so it will be pushed to the data server
-                                signal_sweeps.append(np.stack([times*1e3, sig]))
+                                signal_sweeps.append(np.stack([times[:-1]*1e3, sig[:-1]])) # exclude last point (outlier)
                                 signal_sweeps.updated_item(-1) 
-                                background_sweeps.append(np.stack([times*1e3, bg]))
+                                background_sweeps.append(np.stack([times[:-1]*1e3, bg[:-1]])) # exclude last point (outlier)
                                 background_sweeps.updated_item(-1)
 
+                                # update GUI progress bar & ETA
+                                iter_completed = i + 1                      
+                                percent_completed = int((iter_completed / kwargs["iters"]) * 100)
+
                                 # save the current data to the data server
-                                casr_data.push({'params': {'kwargs': kwargs},
+                                casr_data.push({'params': {'kwargs': kwargs, 'iters_completed': iter_completed, 'elapsed': time.perf_counter() - exp_start_time},
                                                 'title': 'CASR Time Domain Data',
                                                 'xlabel': 'Free Precession Interval (ms) or Frequency (kHz)',
                                                 'ylabel': 'Signal',
@@ -4269,15 +5069,36 @@ class SpinMeasurements:
                                                             'background': background_sweeps}
                                 })
 
-                                # update GUI progress bar                        
-                                percent_completed = str(int(((i+1)/kwargs['iters'])*100))
-                                self.queue_from_exp.put_nowait([percent_completed, 'in progress', None])
+                                msg = self.build_status_msg(
+                                    status='in progress',
+                                    percent_completed=percent_completed,
+                                    fit_value=None,
+                                    fit_error=None,
+                                    start_time=exp_start_time,
+                                    total_iters=kwargs['iters'],
+                                    iters_completed=iter_completed,
+                                )
+
+                                # self.queue_from_exp.put_nowait([percent_completed, 'in progress', [fit_value, fit_error]])
+                                self.queue_from_exp.put_nowait(msg)
 
                                 if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                                     # the GUI has asked us nicely to exit. Save data if requested.
                                     # print(f"is there a queue to exp? {self.queue_to_exp.get()}")
-                                    self.equipment_off(kwargs['detector'])
-                                    self.queue_from_exp.put_nowait([percent_completed, 'stopped', None])
+                                    self.equipment_off()
+
+                                    msg = self.build_status_msg(
+                                        status="stopped",
+                                        percent_completed=int(percent_completed),
+                                        fit_value=None,
+                                        fit_error=None,
+                                        start_time=exp_start_time,
+                                        total_iters=kwargs["iters"],
+                                        iters_completed=iter_completed,
+                                    )
+                                    # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
+                                    self.queue_from_exp.put_nowait(msg)
+
                                     if kwargs['save'] == True:
                                         self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
                                     return
@@ -4286,16 +5107,23 @@ class SpinMeasurements:
                             if kwargs['save'] == True:
                                 self.run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
 
-                            self.queue_from_exp.put_nowait([percent_completed, 'complete', None])
+                            msg = self.build_status_msg(
+                                status="complete",
+                                percent_completed=int(percent_completed),
+                                fit_value=None,
+                                fit_error=None,
+                                start_time=exp_start_time,
+                                total_iters=kwargs["iters"],
+                                iters_completed=iter_completed,
+                            )
+                            # self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
+                            self.queue_from_exp.put_nowait(msg)
 
                     finally:
-                        self.equipment_off(kwargs['detector']) # turn off equipment regardless of if experiment started or failed 
+                        self.equipment_off() # turn off equipment regardless of if experiment started or failed 
+                        ps.end_exclusive(token)  # release exclusive control of the pulse streamer
 
     
-
-
-
-
 
     """ Data Fitting """
 
