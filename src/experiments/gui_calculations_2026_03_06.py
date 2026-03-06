@@ -5,12 +5,18 @@ from PyQt5.QtWidgets import QFrame, QVBoxLayout, QHBoxLayout, QGridLayout, QForm
 from PyQt5.QtWidgets import QStackedWidget, QWidget, QGraphicsOpacityEffect, QApplication
 from PyQt5.QtGui import QFont, QColor, QIcon, QPixmap
 from PyQt5.QtCore import Qt, QTimer
-boltzmann= 1.3806503 * 10e-23
+
+
+
 import numpy as np
 from nspyre import ParamsWidget
 pi=np.pi
 import sys
 from pyqtgraph.Qt import QtWidgets
+
+BOLTZMANN = 1.380649e-23  # J/K
+AVOGADRO = 6.02214076e23  # mol^-1
+
 
 class CalcWidget(QWidget):
     def __init__(self):
@@ -138,7 +144,7 @@ class CalcWidget(QWidget):
             r_hydrodynamic= fun_kwargs['hydro_radius']
             visc = fun_kwargs['viscosity']
 
-            diffusion = (boltzmann * float(temp_k)) / (6 * pi * visc * r_hydrodynamic*10**-9)
+            diffusion = (BOLTZMANN * float(temp_k)) / (6 * pi * visc * r_hydrodynamic*10**-9)
             self.diffusion_coef_label.setText(f"Diffusion coef:\n {diffusion:.2e} m^2/s")
 
             corrtime = (2 * nv_d * nv_d) / diffusion /(10**6)**2
@@ -152,7 +158,7 @@ class CalcWidget(QWidget):
             k_visc = fun_kwargs['kinematic_viscosity']
             visc = float(dens) * float(k_visc)
 
-            diffusion = (boltzmann * float(temp_k)) / (6 * pi * visc * r_hydrodynamic*10**-9)
+            diffusion = (BOLTZMANN * float(temp_k)) / (6 * pi * visc * r_hydrodynamic*10**-9)
             self.diffusion_coef_label.setText(f"Diffusion coef:\n {diffusion:.2e} m^2/s")
 
             corrtime = (2 * nv_d * nv_d) / diffusion /(10**6)**2
