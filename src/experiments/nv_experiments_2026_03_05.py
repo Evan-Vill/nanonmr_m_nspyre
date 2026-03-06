@@ -42,7 +42,7 @@ from nspyre import StreamingList, experiment_widget_process_queue
 
 from saveUtils import flexSave
 
-import nv_dataclasses_2026_03_02 as nvcfg
+import nv_dataclasses_2026_03_05 as nvcfg
 
 _HERE = Path(__file__).parent
 _logger = logging.getLogger(__name__)
@@ -80,13 +80,13 @@ def format_minutes_seconds(seconds: float) -> str:
     days, hours = divmod(hours, 24)
     return f"{days} d {hours} hr"
 
-def run_save(data_name, file_name, directory, seq=None):
+def run_save(data_name, file_name, directory, file_format="json", seq=None):
     logging.info("Saving file with flexSave...")
     if seq is not None:
         exp_name = f"{data_name}_{seq.lower()}"
     else:
         exp_name = data_name
-    flexSave(datasetName=data_name, expType=exp_name, filename=file_name, dirs=directory)
+    flexSave(datasetName=data_name, expType=exp_name, filename=file_name, dirs=directory, file_format=file_format)
 
 @contextmanager
 def _exclusive_ps(ps, token: str):
@@ -400,6 +400,8 @@ class SpinMeasurements:
     def sigvstime_scan(self, **kwargs):     
         with InstrumentManager() as mgr, DataSource(cfg.dataset) as sigvstime_data:
             # run laser on continuously here from laser driver
+            cfg = nvcfg.SignalScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
+            
             laser = mgr.laser
             laser_shutter = mgr.laser_shutter
             ps = mgr.ps
@@ -411,9 +413,9 @@ class SpinMeasurements:
             
             # configure digitizer (need to use DC coupling for signal vs time)           
             dig_config = self.digitizer_configure(exp_type="Sig vs Time", num_pts = 1, iters = 1, 
-                                                segment_size = cfg.segment_size, sampling_freq = 0.5e9, dig_amplitude = 5, 
+                                                segment_size = cfg.segment_size, sampling_freq = cfg.dig_sampling_freq, dig_amplitude = cfg.dig_amplitude, 
                                                 read_channel = cfg.read_channel, coupling = 'DC', termination = '1M', 
-                                                pretrig_size = cfg.pretrig_size, dig_timeout = 5, runs = 400)
+                                                pretrig_size = cfg.pretrig_size, dig_timeout = cfg.dig_timeout, runs = 400)
                 
             time_start = time.time()
 
@@ -497,7 +499,7 @@ class SpinMeasurements:
                     self.queue_from_exp.put_nowait(msg)
 
                     if cfg.save == True:
-                        run_save(cfg.dataset, cfg.filename, [cfg.directory])
+                        run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
                     return
 
     @managed_experiment(token_prefix="CWODMR", dataset_key="dataset")           
@@ -681,7 +683,7 @@ class SpinMeasurements:
                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
         if kwargs.get("save", False):
-            run_save(cfg.dataset, cfg.filename, [cfg.directory])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -904,12 +906,12 @@ class SpinMeasurements:
                         self.queue_from_exp.put_nowait(msg)
                         
                         if cfg.save == True:
-                            run_save(cfg.dataset, cfg.filename, [cfg.directory])
+                            run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
                         return
                     
                 # save data if requested upon completion of experiment
                 if cfg.save == True:
-                    run_save(cfg.dataset, cfg.filename, [cfg.directory])
+                    run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
 
                 msg = self.build_status_msg(
                     status="complete",
@@ -1145,7 +1147,7 @@ class SpinMeasurements:
                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
         if kwargs.get("save", False):
-            run_save(cfg.dataset, cfg.filename, [cfg.directory])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -1341,7 +1343,7 @@ class SpinMeasurements:
                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
         if kwargs.get("save", False):
-            run_save(cfg.dataset, cfg.filename, [cfg.directory])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -1581,7 +1583,7 @@ class SpinMeasurements:
                     proton_pi_half = round(1/(42.577e-4*coil_b_field_gauss)/4,2)
 
         if kwargs.get("save", False):
-            run_save(cfg.dataset, cfg.filename, [cfg.directory])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -1705,7 +1707,7 @@ class SpinMeasurements:
                 if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                     # the GUI has asked us nicely to exit
                     if cfg.save == True:
-                        flexSave(cfg.dataset, cfg.dataset, cfg.filename, [cfg.directory])
+                        run_save(cfg.dataset, cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
                     
                     self.equipment_off()
 
@@ -1731,11 +1733,11 @@ class SpinMeasurements:
                     self.queue_from_exp.put_nowait(msg)
 
                     if cfg.save == True:
-                        run_save(cfg.dataset, cfg.filename, [cfg.directory])
+                        run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
                     return
                     
             if cfg.save == True:
-                run_save(cfg.dataset, cfg.filename, [cfg.directory])
+                run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
 
             self.queue_from_exp.put_nowait([percent_completed, 'complete', None])
 
@@ -1927,7 +1929,7 @@ class SpinMeasurements:
                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
         if kwargs.get("save", False):
-            run_save(cfg.dataset, cfg.filename, [cfg.directory])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -2181,7 +2183,7 @@ class SpinMeasurements:
                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
         if kwargs.get("save", False):
-            run_save(cfg.dataset, cfg.filename, [cfg.directory])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format, seq=cfg.t2_seq)
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -2409,7 +2411,7 @@ class SpinMeasurements:
                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
         if kwargs.get("save", False):
-            run_save(cfg.dataset, cfg.filename, [cfg.directory])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -2611,7 +2613,7 @@ class SpinMeasurements:
         #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
         if kwargs.get("save", False):
-            run_save(cfg.dataset, cfg.filename, [cfg.directory])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -2847,7 +2849,7 @@ class SpinMeasurements:
                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
         if cfg.save:
-            run_save(cfg.dataset, cfg.filename, [cfg.directory])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -3055,7 +3057,7 @@ class SpinMeasurements:
                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
         
         if kwargs.get("save", False):
-            run_save(cfg.dataset, cfg.filename, [cfg.directory])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -3271,7 +3273,7 @@ class SpinMeasurements:
         #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
         
         if kwargs.get("save", False):
-            run_save(cfg.dataset, cfg.filename, [cfg.directory])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -3492,7 +3494,7 @@ class SpinMeasurements:
         #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
         
         if kwargs.get("save", False):
-            run_save(cfg.dataset, cfg.filename, [cfg.directory])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -3696,7 +3698,7 @@ class SpinMeasurements:
                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
         
         if kwargs.get("save", False):
-            run_save(cfg.dataset, cfg.filename, [cfg.directory])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -3909,7 +3911,7 @@ class SpinMeasurements:
                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
         
         if kwargs.get("save", False):
-            run_save(cfg.dataset, cfg.filename, [cfg.directory])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -4118,7 +4120,7 @@ class SpinMeasurements:
         #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
         
         if kwargs.get("save", False):
-            run_save(cfg.dataset, cfg.filename, [cfg.directory])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -4328,7 +4330,7 @@ class SpinMeasurements:
         #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
         if kwargs.get("save", False):
-            run_save(cfg.dataset, cfg.filename, [cfg.directory])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -4529,7 +4531,7 @@ class SpinMeasurements:
         #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
         if kwargs.get("save", False):
-            run_save(cfg.dataset, cfg.filename, [cfg.directory])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -4795,7 +4797,7 @@ class SpinMeasurements:
                 #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
                 if kwargs.get("save", False):
-                    run_save(cfg.dataset, cfg.filename, [cfg.directory])
+                    run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
 
                 status = "failed" if failed else ("stopped" if stopped else "complete")
                 self.queue_from_exp.put_nowait(self.build_status_msg(
