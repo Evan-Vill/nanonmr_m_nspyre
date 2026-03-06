@@ -17,8 +17,8 @@ from inspect import signature
 from scipy.optimize import curve_fit
 from rpyc.utils.classic import obtain
 
-# from nspyre import FlexLinePlotWidget, LinePlotWidget
-from nspyre.gui.widgets.flex_line_plot_4 import FlexLinePlotWidget
+from styling.flex_line_plot_2026_03_05 import FlexLinePlotWidget
+
 from nspyre import DataSink
 from pyqtgraph import SpinBox, ComboBox
 from pyqtgraph import PlotWidget
@@ -33,13 +33,11 @@ from PyQt6.QtCore import Qt, QTimer, pyqtSlot
 from nspyre.misc.misc import ProcessRunner
 from nspyre.misc.misc import run_experiment
 from nspyre import ParamsWidget
-from nspyre import FitParamsWidget
+from styling.params_2026_03_05 import FitParamsWidget
 from nspyre import experiment_widget_process_queue
 from nspyre import InstrumentManager
 
-from gui_test import Communicate 
-
-import nv_experiments_organized_2026_03_03
+import nv_experiments_2026_03_05
 import nv_experiments_daq
 
 def ellipsize(text: str, max_chars: int) -> str:
@@ -224,6 +222,7 @@ class ExpWidget(QWidget):
 
         # used to send to experiment process to determine extra actions to take 
         self.to_save = False 
+        self.file_format = "json"
         self.to_fit = False
         self.to_fit_live = False
         self.to_override_fit = False
@@ -249,12 +248,10 @@ class ExpWidget(QWidget):
         self.mw_overrides = {}
 
         self.opacity_effects = []
-        for i in range(23): # total number of GUI elements that need to be faded when no experiment is selected
+        for i in range(24): # total number of GUI elements that need to be faded when no experiment is selected
             self.opacity_effects.append(QGraphicsOpacityEffect())
             self.opacity_effects[i].setOpacity(0.3)
 
-        self.exp_label.setGraphicsEffect(self.opacity_effects[0])
-        self.params_widget.setGraphicsEffect(self.opacity_effects[1])
         self.params_widget.setEnabled(False)
         
         # save params button
@@ -281,12 +278,9 @@ class ExpWidget(QWidget):
         self.save_params.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.save_params.setMinimumWidth(440)
         self.save_params.clicked.connect(lambda: self.save_params_clicked())
-        self.save_params.setGraphicsEffect(self.opacity_effects[2])
         self.save_params.setEnabled(False)
 
         # mw params widget & label
-        self.mw_label.setGraphicsEffect(self.opacity_effects[3])        
-        self.mw_params_widget.setGraphicsEffect(self.opacity_effects[4])
         self.mw_params_widget.setEnabled(False)
 
         # laser params widget & label
@@ -294,16 +288,12 @@ class ExpWidget(QWidget):
         self.laser_label = QLabel("Laser & AWG Settings")
         self.laser_label.setFixedHeight(24)
         self.laser_label.setStyleSheet("font-weight: bold")
-        self.laser_label.setGraphicsEffect(self.opacity_effects[5])
-        self.laser_params_widget.setGraphicsEffect(self.opacity_effects[6])
         self.laser_params_widget.setEnabled(False)
 
         self.dig_params_widget = ParamsWidget(self.create_params_widget('Digitizer', self.exp_dict['Digitizer'][1]))
         self.dig_label = QLabel("Digitizer Settings")
         self.dig_label.setFixedHeight(24)
         self.dig_label.setStyleSheet("font-weight: bold")
-        self.dig_label.setGraphicsEffect(self.opacity_effects[7])
-        self.dig_params_widget.setGraphicsEffect(self.opacity_effects[8])
         self.dig_params_widget.setEnabled(False)
 
         radio_style = """
@@ -340,7 +330,6 @@ class ExpWidget(QWidget):
         self.daq_b1.setStyleSheet(radio_style)
         self.daq_b1.setFixedHeight(40)
         self.daq_b1.setFixedWidth(120)
-        self.daq_b1.setGraphicsEffect(self.opacity_effects[9])
         self.daq_b1.setEnabled(False)
 
         self.daq_b2 = QRadioButton("NI DAQ")
@@ -348,7 +337,6 @@ class ExpWidget(QWidget):
         self.daq_b2.setStyleSheet(radio_style)
         self.daq_b2.setFixedHeight(40)
         self.daq_b2.setFixedWidth(120)
-        self.daq_b2.setGraphicsEffect(self.opacity_effects[10])
         self.daq_b2.setEnabled(False)
 
         self.daq_group = QButtonGroup()
@@ -383,27 +371,31 @@ class ExpWidget(QWidget):
         self.auto_save_checkbox.setChecked(False)
         self.auto_save_checkbox.setEnabled(False)
         self.auto_save_checkbox.stateChanged.connect(lambda: self.auto_save_changed())
-        self.auto_save_checkbox.setGraphicsEffect(self.opacity_effects[11])
 
         # select directory button
         self.select_dir_button = QPushButton("Select Directory")
         self.select_dir_button.setEnabled(False)
         self.select_dir_button.setStyleSheet("color: white; background-color: #7A7A7A; border: 2px solid #964900; padding: 2px; border-radius: 5px;")
-        self.select_dir_button.setFixedWidth(250)
+        self.select_dir_button.setFixedWidth(225)
         self.select_dir_button.clicked.connect(lambda: self.select_directory())
-        self.select_dir_button.setGraphicsEffect(self.opacity_effects[12])
+        
+
+        # file type selection combobox for saving
+        self.select_file_format_combobox = QComboBox()
+        self.select_file_format_combobox.setStyleSheet("color: white; background-color: #7A7A7A; border: 2px solid #964900; padding: 2px; border-radius: 5px;")
+        self.select_file_format_combobox.addItems(["Format: JSON", "Format: Pickle"])
+        self.select_file_format_combobox.setCurrentIndex(0)
+        self.select_file_format_combobox.setEnabled(False)
+        self.select_file_format_combobox.currentIndexChanged.connect(lambda: self.file_format_selector())
 
         # selected directory display for saving
         self.chosen_dir = QLabel()
-        self.chosen_dir.setGraphicsEffect(self.opacity_effects[13])
         self.chosen_dir.setStyleSheet("color: orange")
 
         self.filename_label = QLabel("Filename: ")
-        self.filename_label.setGraphicsEffect(self.opacity_effects[14])
         self.filename_label.setFixedHeight(20)
 
         self.filename_lineedit = QLineEdit()
-        self.filename_lineedit.setGraphicsEffect(self.opacity_effects[15])
         self.filename_lineedit.setFixedHeight(30)
         self.filename_lineedit.setEnabled(False)
 
@@ -428,13 +420,12 @@ class ExpWidget(QWidget):
         self.auto_fit_checkbox.setChecked(False)
         self.auto_fit_checkbox.setEnabled(False)
         self.auto_fit_checkbox.stateChanged.connect(lambda: self.auto_fit_changed())
-        self.auto_fit_checkbox.setGraphicsEffect(self.opacity_effects[16]) 
         
         # fit type combobox
         self.fit_select = QComboBox()
         self.fit_select.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.fit_select.setStyleSheet("color: #55005F; background-color: #C2C2C2; border: 2px solid #55005F; padding: 2px; border-radius: 5px;")
-        self.fit_select.setGraphicsEffect(self.opacity_effects[17]) 
+         
         self.fit_select.addItems(["Choose Fit Type", 
                                  "Neg. Lorentz.",
                                  "Pos. Lorentz.",
@@ -451,7 +442,6 @@ class ExpWidget(QWidget):
 
 
         self.fit_params_widget = FitParamsWidget(self.create_fit_params_widget('Fit ODMR', self.fit_odmr_defaults))
-        self.fit_params_widget.setGraphicsEffect(self.opacity_effects[18])
         self.fit_params_widget.setEnabled(False)
 
         # live fitting checkbox
@@ -475,7 +465,6 @@ class ExpWidget(QWidget):
         
         self.live_fit_checkbox.setChecked(False)
         self.live_fit_checkbox.stateChanged.connect(lambda: self.live_fit_changed())
-        self.live_fit_checkbox.setGraphicsEffect(self.opacity_effects[19])
         self.live_fit_checkbox.setEnabled(False)
 
         self.override_fit_checkbox = QCheckBox("Apply Fits to Settings")
@@ -495,7 +484,6 @@ class ExpWidget(QWidget):
                 }""")
         self.override_fit_checkbox.setChecked(False)
         self.override_fit_checkbox.stateChanged.connect(lambda: self.override_fit_changed())
-        self.override_fit_checkbox.setGraphicsEffect(self.opacity_effects[20])
         self.override_fit_checkbox.setEnabled(False)
 
         # photodetector selection radio buttons
@@ -530,14 +518,12 @@ class ExpWidget(QWidget):
         self.detector_b1.setStyleSheet(detector_radio_style)
         self.detector_b1.setFixedHeight(40)
         self.detector_b1.setFixedWidth(90)
-        self.detector_b1.setGraphicsEffect(self.opacity_effects[21])
         self.detector_b1.setEnabled(False)
 
         self.detector_b2 = QRadioButton("BPD")
         self.detector_b2.setStyleSheet(detector_radio_style)
         self.detector_b2.setFixedHeight(40)
         self.detector_b2.setFixedWidth(90)
-        self.detector_b2.setGraphicsEffect(self.opacity_effects[22])
         self.detector_b2.setEnabled(False)
 
         self.detector_group = QButtonGroup()
@@ -661,6 +647,32 @@ class ExpWidget(QWidget):
         kill_button.setStyleSheet(kill_button_style)
         kill_button.clicked.connect(self.kill)
 
+        ### --- Set graphics effects for elements that should be faded when no experiment is selected --- ###
+        self.exp_label.setGraphicsEffect(self.opacity_effects[0])
+        self.params_widget.setGraphicsEffect(self.opacity_effects[1])
+        self.save_params.setGraphicsEffect(self.opacity_effects[2])
+        self.mw_label.setGraphicsEffect(self.opacity_effects[3])
+        self.mw_params_widget.setGraphicsEffect(self.opacity_effects[4])
+        self.laser_label.setGraphicsEffect(self.opacity_effects[5])
+        self.laser_params_widget.setGraphicsEffect(self.opacity_effects[6])
+        self.dig_label.setGraphicsEffect(self.opacity_effects[7])
+        self.dig_params_widget.setGraphicsEffect(self.opacity_effects[8])
+        self.daq_b1.setGraphicsEffect(self.opacity_effects[9])
+        self.daq_b2.setGraphicsEffect(self.opacity_effects[10])
+        self.auto_save_checkbox.setGraphicsEffect(self.opacity_effects[11])
+        self.select_dir_button.setGraphicsEffect(self.opacity_effects[12])
+        self.chosen_dir.setGraphicsEffect(self.opacity_effects[13])
+        self.filename_label.setGraphicsEffect(self.opacity_effects[14])
+        self.filename_lineedit.setGraphicsEffect(self.opacity_effects[15])
+        self.auto_fit_checkbox.setGraphicsEffect(self.opacity_effects[16]) 
+        self.fit_select.setGraphicsEffect(self.opacity_effects[17])
+        self.fit_params_widget.setGraphicsEffect(self.opacity_effects[18])
+        self.live_fit_checkbox.setGraphicsEffect(self.opacity_effects[19])
+        self.override_fit_checkbox.setGraphicsEffect(self.opacity_effects[20])
+        self.detector_b1.setGraphicsEffect(self.opacity_effects[21])
+        self.detector_b2.setGraphicsEffect(self.opacity_effects[22])
+        self.select_file_format_combobox.setGraphicsEffect(self.opacity_effects[23])
+
         self.gui_layout = QVBoxLayout()
         
         self.top_frame = QFrame(self)
@@ -721,9 +733,10 @@ class ExpWidget(QWidget):
         self.save_layout.setSpacing(0)
         self.save_layout.addWidget(self.auto_save_checkbox,1,1,1,1)
         self.save_layout.addWidget(self.select_dir_button,1,2,1,1, alignment=Qt.AlignmentFlag.AlignHCenter)
-        self.save_layout.addWidget(self.chosen_dir,2,1,1,2)
+        self.save_layout.addWidget(self.select_file_format_combobox,1,3,1,1)
+        self.save_layout.addWidget(self.chosen_dir,2,1,1,3)
         self.save_layout.addWidget(self.filename_label,3,1,1,1)
-        self.save_layout.addWidget(self.filename_lineedit,3,2,1,1)
+        self.save_layout.addWidget(self.filename_lineedit,3,2,1,2)
         
         self.fit_frame = QFrame(self)
         self.fit_frame.setObjectName("fitFrame")
@@ -1822,22 +1835,33 @@ class ExpWidget(QWidget):
         if self.auto_save_checkbox.isChecked() == True:
             self.to_save = True
             self.select_dir_button.setEnabled(True)
+            self.select_file_format_combobox.setEnabled(True)
             self.filename_lineedit.setEnabled(True)
             # self.opacity_effects[6].setEnabled(False) # change to 6? laser params widget
             self.opacity_effects[12].setEnabled(False)
             self.opacity_effects[13].setEnabled(False)
             self.opacity_effects[14].setEnabled(False)
             self.opacity_effects[15].setEnabled(False)
+            self.opacity_effects[23].setEnabled(False)
 
         else:
             self.to_save = False
             self.select_dir_button.setEnabled(False)
+            self.select_file_format_combobox.setEnabled(False)
             self.filename_lineedit.setEnabled(False)
             # self.opacity_effects[6].setEnabled(True) # change to 6?
             self.opacity_effects[12].setEnabled(True)
             self.opacity_effects[13].setEnabled(True)
             self.opacity_effects[14].setEnabled(True)
             self.opacity_effects[15].setEnabled(True)
+            self.opacity_effects[23].setEnabled(True)
+
+    def file_format_selector(self):
+        match self.select_file_format_combobox.currentText():
+            case 'Format: JSON':
+                self.file_format = "json"
+            case 'Format: Pickle':
+                self.file_format = "pickle"
 
     def save_params_clicked(self):
         params = dict(**self.params_widget.all_params())
@@ -1930,6 +1954,7 @@ class ExpWidget(QWidget):
             self.to_fit = False
             self.fit_params_widget.setEnabled(False)
             self.live_fit_checkbox.setEnabled(False)
+            self.live_fit_checkbox.setChecked(False)
             self.override_fit_checkbox.setChecked(False)
             self.to_fit_live = False
             self.opacity_effects[17].setEnabled(True)
@@ -2007,7 +2032,7 @@ class ExpWidget(QWidget):
             self.dig_params_widget.setGraphicsEffect(self.opacity_effects[8]) # reset opacity effects
             self.fit_params_widget = FitParamsWidget(self.create_fit_params_widget('Fit None', self.fit_none_default), get_param_value_funs = {ComboBox: self.get_combobox_val})
             self.fit_params_widget.setGraphicsEffect(self.opacity_effects[18]) # reset opacity effects
-            for i in range(23):
+            for i in range(24):
                 self.opacity_effects[i].setEnabled(True)
 
             self.params_widget.setEnabled(False)
@@ -2025,6 +2050,8 @@ class ExpWidget(QWidget):
             self.fit_params_widget.setEnabled(False)
             self.auto_save_checkbox.setEnabled(False)
             self.auto_fit_checkbox.setEnabled(False)
+            self.live_fit_checkbox.setEnabled(False)
+            self.override_fit_checkbox.setEnabled(False)
 
         else:
             self.dataset_label.setText(f"<i>Data Set: '{self.exp_dict[self.experiments.currentText()][3]}'</i>")
@@ -2039,6 +2066,7 @@ class ExpWidget(QWidget):
             self.laser_params_widget.setEnabled(True)
             self.auto_save_checkbox.setEnabled(True)
             self.auto_fit_checkbox.setEnabled(True)
+
 
             for i in range(12):
                 if i == 7 or i == 8:
@@ -2161,8 +2189,17 @@ class ExpWidget(QWidget):
             
             if self.auto_fit_checkbox.isChecked() == True:
                 self.fit_params_widget.setEnabled(True)
+                self.live_fit_checkbox.setEnabled(True)
+                self.override_fit_checkbox.setEnabled(True)
             else:
                 self.fit_params_widget.setEnabled(False)
+                self.live_fit_checkbox.setEnabled(False)
+                self.live_fit_checkbox.setChecked(False)
+                self.override_fit_checkbox.setEnabled(False)
+                self.override_fit_checkbox.setChecked(False)
+            
+            self.live_fit_changed() # to set live fit value based on current state of live fit checkbox
+            self.override_fit_changed() # to set override fit value based on current state of override fit checkbox
 
     def fit_selector(self):
         # Choose Fit Type", 
@@ -2213,11 +2250,10 @@ class ExpWidget(QWidget):
         
         self.status.setStyleSheet("color: black; background-color: gold; border: 4px solid black;")
         self.status.setText(f"{self.experiments.currentText()} scan in progress...")
-
-        # self.communicator = Communicate()
-        # self.communicator_params = self.communicator.speak.connect(self.retrieve_exp_params)
-        
+   
         self.extra_kwarg_params['save'] = self.to_save
+        self.extra_kwarg_params['file_format'] = self.file_format
+        
         try:
             self.extra_kwarg_params['dataset'] = self.exp_dict[self.experiments.currentText()][3]
         except KeyError as e:
@@ -2253,11 +2289,11 @@ class ExpWidget(QWidget):
 
             # reload the module at runtime in case any changes were made to the code
             if self.daq_b1.isChecked(): # digitizer settings
-                reload(nv_experiments_organized_2026_03_03)
+                reload(nv_experiments_2026_03_05)
                 # call the function in a new process
                 self.run_proc.run(
                     run_experiment,
-                    exp_cls = nv_experiments_organized_2026_03_03.SpinMeasurements,
+                    exp_cls = nv_experiments_2026_03_05.SpinMeasurements,
                     fun_name = self.exp_dict[self.experiments.currentText()][0],
                     constructor_args = list(),
                     constructor_kwargs = dict(),
