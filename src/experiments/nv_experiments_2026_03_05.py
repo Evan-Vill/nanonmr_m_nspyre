@@ -209,32 +209,32 @@ class SpinMeasurements:
 
     @staticmethod
     def digitizer_configure(**kwargs):
-        match kwargs['coupling']:
+        match cfg.coupling:
             case 'AC':
                 acdc = 1
             case _:
                 acdc = 0
 
-        match kwargs['termination']:
+        match cfg.termination:
             case '1M':
                 term = 0
             case _:
                 term = 1
 
-        num_pts_in_exp = SUBSEQ_COUNT.get(kwargs['exp_type'], 2) * kwargs['num_pts']
+        num_pts_in_exp = SUBSEQ_COUNT.get(cfg.exp_type, 2) * cfg.num_pts
 
         dig_config = {'num_pts_in_exp': num_pts_in_exp, # includes all subsequences
-                      # 'num_pts_in_exp': 2*kwargs['num_pts_in_exp'], # MW ON + OFF subsequences
-                      'num_iters': kwargs['iters'], # number of exp. iterations
-                      'segment_size': kwargs['segment_size'],
-                      'sampling_frequency': kwargs['sampling_freq']/1e9, # digitizer uses [GHz]
-                      'AMP': int(kwargs['dig_amplitude']*1000), # digitizer uses [mV]
-                      'readout_ch': int(kwargs['read_channel']),
+                      # 'num_pts_in_exp': 2*cfg.num_pts_in_exp, # MW ON + OFF subsequences
+                      'num_iters': cfg.iters, # number of exp. iterations
+                      'segment_size': cfg.segment_size,
+                      'sampling_frequency': cfg.sampling_freq/1e9, # digitizer uses [GHz]
+                      'AMP': int(cfg.dig_amplitude*1000), # digitizer uses [mV]
+                      'readout_ch': int(cfg.read_channel),
                       'ACCOUPLE': acdc,
                       'HF_INPUT_50OHM': term,
-                      'card_timeout': kwargs['dig_timeout'],
-                      'pretrig_size': kwargs['pretrig_size'],
-                      'runs': kwargs['runs']}
+                      'card_timeout': cfg.dig_timeout,
+                      'pretrig_size': cfg.pretrig_size,
+                      'runs': cfg.runs}
         
         return dig_config
     
@@ -398,7 +398,7 @@ class SpinMeasurements:
                     )
 
     def sigvstime_scan(self, **kwargs):     
-        with InstrumentManager() as mgr, DataSource(kwargs['dataset']) as sigvstime_data:
+        with InstrumentManager() as mgr, DataSource(cfg.dataset) as sigvstime_data:
             # run laser on continuously here from laser driver
             laser = mgr.laser
             laser_shutter = mgr.laser_shutter
@@ -407,13 +407,13 @@ class SpinMeasurements:
             token = f"SIGVSTIME_{time.strftime('%Y%m%d_%H%M%S')}"  # unique token for this experiment run
             ps.begin_exclusive(token, takeover=True, restore_on_release=True)  # take exclusive control of the pulse streamer
 
-            sequence = ps.SigvsTime(1/kwargs['exp_sampling_rate'] * 1e9) # pulse streamer sequence for CW ODMR
+            sequence = ps.SigvsTime(1/cfg.exp_sampling_rate * 1e9) # pulse streamer sequence for CW ODMR
             
             # configure digitizer (need to use DC coupling for signal vs time)           
             dig_config = self.digitizer_configure(exp_type="Sig vs Time", num_pts = 1, iters = 1, 
-                                                segment_size = kwargs['segment_size'], sampling_freq = 0.5e9, dig_amplitude = 5, 
-                                                read_channel = kwargs['read_channel'], coupling = 'DC', termination = '1M', 
-                                                pretrig_size = kwargs['pretrig_size'], dig_timeout = 5, runs = 400)
+                                                segment_size = cfg.segment_size, sampling_freq = 0.5e9, dig_amplitude = 5, 
+                                                read_channel = cfg.read_channel, coupling = 'DC', termination = '1M', 
+                                                pretrig_size = cfg.pretrig_size, dig_timeout = 5, runs = 400)
                 
             time_start = time.time()
 
@@ -426,11 +426,11 @@ class SpinMeasurements:
             self.dig.assign_param(dig_config)
 
             # configure laser settings and turn on
-            laser.set_diode_current_realtime(kwargs['laser_power'])
+            laser.set_diode_current_realtime(cfg.laser_power)
             
             # set pulsestreamer to start on software trigger & run infinitely
             ps.set_soft_trigger()
-            ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) #kwargs['runs']*kwargs['iters']) # execute chosen sequence on Pulse Streamer
+            ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) #cfg.runs*cfg.iters) # execute chosen sequence on Pulse Streamer
             
             # start digitizer --> waits for trigger from pulse sequence
             self.dig.config()
@@ -496,8 +496,8 @@ class SpinMeasurements:
                     # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
                     self.queue_from_exp.put_nowait(msg)
 
-                    if kwargs['save'] == True:
-                        run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
+                    if cfg.save == True:
+                        run_save(cfg.dataset, cfg.filename, [cfg.directory])
                     return
 
     @managed_experiment(token_prefix="CWODMR", dataset_key="dataset")           
@@ -515,14 +515,14 @@ class SpinMeasurements:
         ### --- Define NV drive parameters and configure SRS signal generator --- ###   
         delta = 0
         iq_phases = [delta + 0, delta + 90] # set IQ phase relations for lower sideband [lower I, lower Q]
-        sig_gen_freq = kwargs['center_freq'] + kwargs['half_span_sideband_freq'] # set freq to sig gen 
-        max_sideband_freq = 2 * kwargs['half_span_sideband_freq'] # set span of ODMR sweep as max sideband modulation frequency --> ? MHz max. for AWG bandwidth
+        sig_gen_freq = cfg.center_freq + cfg.half_span_sideband_freq # set freq to sig gen 
+        max_sideband_freq = 2 * cfg.half_span_sideband_freq # set span of ODMR sweep as max sideband modulation frequency --> ? MHz max. for AWG bandwidth
 
         ### --- Default parameter array for sweep --- ###
-        mod_freqs = np.flip(np.linspace(0, max_sideband_freq, kwargs['num_pts']))
+        mod_freqs = np.flip(np.linspace(0, max_sideband_freq, cfg.num_pts))
         real_freqs = sig_gen_freq - mod_freqs
         
-        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=kwargs["rf_power"]) # configure signal generator for NV drive
+        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=cfg.rf_power) # configure signal generator for NV drive
             
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
@@ -530,35 +530,35 @@ class SpinMeasurements:
         fit_y = np.ones(len(fit_x))
 
         ### --- Set up pulse streamer and digitizer for experiment --- ###
-        sequence = ps.CW_ODMR(kwargs['num_pts'], kwargs['probe']*1e9) # pulse streamer sequence for CW ODMR
+        sequence = ps.CW_ODMR(cfg.num_pts, cfg.probe*1e9) # pulse streamer sequence for CW ODMR
         dig_cfg = self.digitizer_configure(
             exp_type="ODMR",
-            num_pts=kwargs["num_pts"],
-            iters=kwargs["iters"],
-            segment_size=kwargs["segment_size"],
-            sampling_freq=kwargs["dig_sampling_freq"],
-            dig_amplitude=kwargs["dig_amplitude"],
-            read_channel=kwargs["read_channel"],
-            coupling=kwargs["dig_coupling"],
-            termination=kwargs["dig_termination"],
-            pretrig_size=kwargs["pretrig_size"],
-            dig_timeout=kwargs["dig_timeout"],
-            runs=kwargs["runs"],
+            num_pts=cfg.num_pts,
+            iters=cfg.iters,
+            segment_size=cfg.segment_size,
+            sampling_freq=cfg.dig_sampling_freq,
+            dig_amplitude=cfg.dig_amplitude,
+            read_channel=cfg.read_channel,
+            coupling=cfg.dig_coupling,
+            termination=cfg.dig_termination,
+            pretrig_size=cfg.pretrig_size,
+            dig_timeout=cfg.dig_timeout,
+            runs=cfg.runs,
         )
 
         ### --- Upload AWG sequence --- ###                      
         try:
-            hdawg.set_sampling_rate(0, kwargs["awg_samp_rate_1"])
-            hdawg.set_sampling_rate(1, kwargs["awg_samp_rate_2"])
+            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
+            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 "seq": "CW ODMR",
-                "i_offset": kwargs["i_offset"],
-                "q_offset": kwargs["q_offset"],
-                "probe_length": kwargs["probe"],
-                "sideband_power": kwargs["sideband_power"],
+                "i_offset": cfg.i_offset,
+                "q_offset": cfg.q_offset,
+                "probe_length": cfg.probe,
+                "sideband_power": cfg.sideband_power,
                 "sideband_freqs": mod_freqs,
                 "iq_phases": iq_phases,
-                "num_pts": kwargs["num_pts"],
+                "num_pts": cfg.num_pts,
             })
         except Exception as e:
             self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -567,7 +567,7 @@ class SpinMeasurements:
                 fit_value=fit_value,
                 fit_error=fit_error,
                 start_time=time.perf_counter(),
-                total_iters=kwargs["iters"],
+                total_iters=cfg.iters,
                 iters_completed=0,
                 exception=type(e).__name__,
             ))
@@ -576,7 +576,7 @@ class SpinMeasurements:
         signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
 
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
-        laser.set_diode_current_realtime(kwargs['laser_power']) # set laser power
+        laser.set_diode_current_realtime(cfg.laser_power) # set laser power
         
         ### --- Initialize experiment state variables --- ###
         stopped = False
@@ -600,7 +600,7 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=time.perf_counter(),
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=0,
                     exception=type(e).__name__,
                 ))
@@ -609,11 +609,11 @@ class SpinMeasurements:
             exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
             ### --- Main experiment loop --- ###
-            for i in range(kwargs['iters']):
+            for i in range(cfg.iters):
                 if experiment_widget_process_queue(self.queue_to_exp) == "stop":
                     stopped = True
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:
@@ -623,11 +623,11 @@ class SpinMeasurements:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
    
                 try:
-                    sig, bg = self.analog_math(odmr_result, 'CW ODMR', kwargs['num_pts']) # partition buffer into signal and background datasets
+                    sig, bg = self.analog_math(odmr_result, 'CW ODMR', cfg.num_pts) # partition buffer into signal and background datasets
                 except ValueError:
                     continue
 
@@ -639,13 +639,13 @@ class SpinMeasurements:
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
                             fit_value, fit_error, fit_x, fit_y = self.fit_data(
-                                kwargs["dataset"], signal_sweeps, background_sweeps, *kwargs["fit_params"]
+                                cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                             )
                         except (RuntimeError, OptimizeWarning) as e:
-                            _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                            _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
                 iters_completed = i + 1
-                percent_completed = int(100 * iters_completed / kwargs["iters"])
+                percent_completed = int(100 * iters_completed / cfg.iters)
 
                 # save the current data to the data server
                 data.push({
@@ -662,26 +662,26 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=exp_start_time,
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=iters_completed,
                 ))
 
         ### --- Experiment complete: final save and status update --- ###
         if not stopped and not failed:
-            iters_completed, percent_completed = kwargs["iters"], 100
+            iters_completed, percent_completed = cfg.iters, 100
         
         if kwargs.get("fit", False):
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
                     fit_value, fit_error, fit_x, fit_y = self.fit_data(
-                        kwargs["dataset"], signal_sweeps, background_sweeps, *kwargs["fit_params"]
+                        cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                     )
                 except (RuntimeError, OptimizeWarning) as e:
-                    _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                    _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
         if kwargs.get("save", False):
-            run_save(kwargs["dataset"], kwargs["filename"], [kwargs["directory"]])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory])
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -690,7 +690,7 @@ class SpinMeasurements:
             fit_value=fit_value,
             fit_error=fit_error,
             start_time=exp_start_time,
-            total_iters=kwargs["iters"],
+            total_iters=cfg.iters,
             iters_completed=iters_completed,
             exception=exception_type if failed else None,
         ))
@@ -708,7 +708,7 @@ class SpinMeasurements:
         """
         # connect to the instrument server & the data server.
         # create a data set, or connect to an existing one with the same name if it was created earlier.
-        with InstrumentManager() as mgr, DataSource(kwargs['dataset']) as cw_odmr_data:
+        with InstrumentManager() as mgr, DataSource(cfg.dataset) as cw_odmr_data:
             # load devices used in scan
             laser = mgr.laser
             laser_shutter = mgr.laser_shutter
@@ -719,43 +719,43 @@ class SpinMeasurements:
             token = f"ODMRSMRTSCN_{time.strftime('%Y%m%d_%H%M%S')}"  # unique token for this experiment run
             ps.begin_exclusive(token, takeover=True, restore_on_release=True)  # take exclusive control of the pulse streamer
 
-            num_angles = kwargs['iters']
-            azi_angles = np.linspace(kwargs['start_angle'], kwargs['stop_angle'], num_angles)
+            num_angles = cfg.iters
+            azi_angles = np.linspace(cfg.start_angle, cfg.stop_angle, num_angles)
             # print("azimuthal angles: ", azi_angles)
             # mgr.thor_polar.set_vel_params(3,7) # reset Thorlabs stages to default acceleration and velocity parameters
             mgr.thor_azi.set_vel_params(8,15)
 
             # move azimuthal stage to start angle
-            mgr.thor_azi.move(kwargs['start_angle'], True)
+            mgr.thor_azi.move(cfg.start_angle, True)
             mgr.thor_azi.update_positions_callback() # update position
             
             # define NV drive frequency & sideband           
             delta = 0
             iq_phases = [delta+0, delta+90] # set IQ phase relations for lower sideband [lower I, lower Q]
                 
-            sig_gen_freq = kwargs['center_freq'] + kwargs['half_span_sideband_freq'] # set freq to sig gen 
+            sig_gen_freq = cfg.center_freq + cfg.half_span_sideband_freq # set freq to sig gen 
 
-            max_sideband_freq = 2*kwargs['half_span_sideband_freq'] # set span of ODMR sweep as max sideband modulation frequency --> 100 MHz max. for SG396 IQ bandwidth
+            max_sideband_freq = 2*cfg.half_span_sideband_freq # set span of ODMR sweep as max sideband modulation frequency --> 100 MHz max. for SG396 IQ bandwidth
 
             # define parameter array that will be swept over in experiment & shuffle
-            mod_freqs = np.linspace(0, max_sideband_freq, kwargs['num_pts'])            
+            mod_freqs = np.linspace(0, max_sideband_freq, cfg.num_pts)            
             mod_freqs = np.flip(mod_freqs)
                         
             real_freqs = sig_gen_freq - mod_freqs
             
             # define pulse sequence
-            sequence = ps.CW_ODMR(kwargs['num_pts'], kwargs['probe']*1e9) # pulse streamer sequence for CW ODMR
-            ps.probe_time = kwargs['probe'] * 1e9
+            sequence = ps.CW_ODMR(cfg.num_pts, cfg.probe*1e9) # pulse streamer sequence for CW ODMR
+            ps.probe_time = cfg.probe * 1e9
 
             # configure digitizer
-            dig_config = self.digitizer_configure(exp_type = "ODMR", num_pts = kwargs["num_pts"], iters = kwargs['iters'], 
-                                                  segment_size = kwargs['segment_size'], sampling_freq = kwargs['dig_sampling_freq'], dig_amplitude = kwargs['dig_amplitude'], 
-                                                  read_channel = kwargs['read_channel'], coupling = kwargs['dig_coupling'], termination = kwargs['dig_termination'], 
-                                                  pretrig_size = kwargs['pretrig_size'], dig_timeout = kwargs['dig_timeout'], runs = kwargs['runs'])
+            dig_config = self.digitizer_configure(exp_type = "ODMR", num_pts = cfg.num_pts, iters = cfg.iters, 
+                                                  segment_size = cfg.segment_size, sampling_freq = cfg.dig_sampling_freq, dig_amplitude = cfg.dig_amplitude, 
+                                                  read_channel = cfg.read_channel, coupling = cfg.dig_coupling, termination = cfg.dig_termination, 
+                                                  pretrig_size = cfg.pretrig_size, dig_timeout = cfg.dig_timeout, runs = cfg.runs)
             
             # configure signal generator for NV drive
             sig_gen.set_frequency(sig_gen_freq) # set carrier frequency
-            sig_gen.set_rf_amplitude(kwargs['rf_power']) # set MW power
+            sig_gen.set_rf_amplitude(cfg.rf_power) # set MW power
             sig_gen.set_mod_type(7) # quadrature amplitude modulation
             sig_gen.set_mod_subtype(1) # no constellation mapping
             sig_gen.set_mod_function('IQ', 5) # external modulation
@@ -763,15 +763,15 @@ class SpinMeasurements:
 
             try:
                 hdawg.set_sequence(**{'seq': 'CW ODMR',
-                                    'i_offset': kwargs['i_offset'],
-                                    'q_offset': kwargs['q_offset'],
-                                    'probe_length': kwargs['probe'], 
-                                    'sideband_power': kwargs['sideband_power'],
+                                    'i_offset': cfg.i_offset,
+                                    'q_offset': cfg.q_offset,
+                                    'probe_length': cfg.probe, 
+                                    'sideband_power': cfg.sideband_power,
                                     'sideband_freqs': mod_freqs, 
                                     'iq_phases': iq_phases,
-                                    'num_pts': kwargs['num_pts']}) 
-                hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
-                hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
+                                    'num_pts': cfg.num_pts}) 
+                hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
+                hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
                 time.sleep(2) # wait for AWG to finish setting sequence and magnet mount to get set
             except Exception as e:
                 print(e)
@@ -800,7 +800,7 @@ class SpinMeasurements:
                 mgr.thor_azi.set_vel_params(25,35) # set azimuthal stage velocity and acceleration
 
                 # configure laser settings and turn on
-                laser.set_diode_current_realtime(kwargs['laser_power'])
+                laser.set_diode_current_realtime(cfg.laser_power)
 
                 # set pulsestreamer to start on software trigger & run infinitely
                 ps.set_soft_trigger()
@@ -828,7 +828,7 @@ class SpinMeasurements:
 
                     # partition buffer into signal and background datasets
                     try:
-                        sig, bg = self.analog_math(odmr_result, 'CW ODMR', kwargs['num_pts'])
+                        sig, bg = self.analog_math(odmr_result, 'CW ODMR', cfg.num_pts)
                     except ValueError:
                         continue
                     
@@ -839,14 +839,14 @@ class SpinMeasurements:
                     background_sweeps.updated_item(-1)
 
                     # Fit the data
-                    initial_guess = [0.01, kwargs['center_freq']/1e9, 6e-3, 1]  # [A, x0, gamma, c]
+                    initial_guess = [0.01, cfg.center_freq/1e9, 6e-3, 1]  # [A, x0, gamma, c]
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
                             params, params_covariance = curve_fit(self.negative_lorentzian, real_freqs/1e9, sig/bg, p0=initial_guess)
-                            # fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+                            # fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
                         except (RuntimeError, OptimizeWarning) as e:
-                            _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                            _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
                     # Extract fitted parameters
                     freq_fit = params[1]
@@ -856,7 +856,7 @@ class SpinMeasurements:
 
                     # update GUI progress bar & ETA
                     iter_completed = i + 1                      
-                    percent_completed = int((iter_completed / kwargs["iters"]) * 100)
+                    percent_completed = int((iter_completed / cfg.iters) * 100)
                     
                     # save the current data to the data server
                     cw_odmr_data.push({'params': {'kwargs': kwargs, 'iters_completed': iter_completed, 'elapsed': time.perf_counter() - exp_start_time},
@@ -872,7 +872,7 @@ class SpinMeasurements:
                             fit_value=None,
                             fit_error=None,
                             start_time=exp_start_time,
-                            total_iters=kwargs['iters'],
+                            total_iters=cfg.iters,
                             iters_completed=iter_completed,
                         )
 
@@ -897,19 +897,19 @@ class SpinMeasurements:
                             fit_value=None,
                             fit_error=None,
                             start_time=exp_start_time,
-                            total_iters=kwargs["iters"],
+                            total_iters=cfg.iters,
                             iters_completed=iter_completed,
                         )
                         # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
                         self.queue_from_exp.put_nowait(msg)
                         
-                        if kwargs['save'] == True:
-                            run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
+                        if cfg.save == True:
+                            run_save(cfg.dataset, cfg.filename, [cfg.directory])
                         return
                     
                 # save data if requested upon completion of experiment
-                if kwargs['save'] == True:
-                    run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
+                if cfg.save == True:
+                    run_save(cfg.dataset, cfg.filename, [cfg.directory])
 
                 msg = self.build_status_msg(
                     status="complete",
@@ -917,7 +917,7 @@ class SpinMeasurements:
                     fit_value=None,
                     fit_error=None,
                     start_time=exp_start_time,
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=iter_completed,
                 )
                 # self.queue_from_exp.put_nowait([percent_completed, 'complete', [fit_value, fit_error]])
@@ -978,14 +978,14 @@ class SpinMeasurements:
         hdawg = mgr.awg
 
         ### --- Default parameter array for sweep --- ###
-        mw_times = np.linspace(kwargs["start"], kwargs["stop"], kwargs["num_pts"]) * 1e9
+        mw_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
 
         ### --- Define NV drive parameters --- ###  
         sig_gen_freq, iq_phases = self.choose_sideband(
-            kwargs["sideband"], kwargs["freq"], kwargs["sideband_freq"], kwargs["pulse_axis"]
+            cfg.sideband, cfg.freq, cfg.sideband_freq, cfg.pulse_axis
         )
 
-        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=kwargs["rf_power"])
+        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=cfg.rf_power)
     
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
@@ -993,36 +993,36 @@ class SpinMeasurements:
         fit_y = np.ones(len(fit_x))
 
         ### --- Set up pulse streamer and digitizer for experiment --- ###
-        sequence = ps.Rabi(kwargs["laser_init"] * 1e9, mw_times, kwargs["laser_readout"] * 1e9)
+        sequence = ps.Rabi(cfg.laser_init * 1e9, mw_times, cfg.laser_readout * 1e9)
         dig_cfg = self.digitizer_configure(
             exp_type="Rabi",
-            num_pts=kwargs["num_pts"],
-            iters=kwargs["iters"],
-            segment_size=kwargs["segment_size"],
-            sampling_freq=kwargs["dig_sampling_freq"],
-            dig_amplitude=kwargs["dig_amplitude"],
-            read_channel=kwargs["read_channel"],
-            coupling=kwargs["dig_coupling"],
-            termination=kwargs["dig_termination"],
-            pretrig_size=kwargs["pretrig_size"],
-            dig_timeout=kwargs["dig_timeout"],
-            runs=kwargs["runs"],
+            num_pts=cfg.num_pts,
+            iters=cfg.iters,
+            segment_size=cfg.segment_size,
+            sampling_freq=cfg.dig_sampling_freq,
+            dig_amplitude=cfg.dig_amplitude,
+            read_channel=cfg.read_channel,
+            coupling=cfg.dig_coupling,
+            termination=cfg.dig_termination,
+            pretrig_size=cfg.pretrig_size,
+            dig_timeout=cfg.dig_timeout,
+            runs=cfg.runs,
         )
 
         ### --- Upload AWG sequence --- ###
         try:
-            hdawg.set_sampling_rate(0, kwargs["awg_samp_rate_1"])
-            hdawg.set_sampling_rate(1, kwargs["awg_samp_rate_2"])
+            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
+            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 "seq": "Rabi",
-                "i_offset": kwargs["i_offset"],
-                "q_offset": kwargs["q_offset"],
-                "sideband_power": kwargs["sideband_power"],
-                "sideband_freq": kwargs["sideband_freq"],
+                "i_offset": cfg.i_offset,
+                "q_offset": cfg.q_offset,
+                "sideband_power": cfg.sideband_power,
+                "sideband_freq": cfg.sideband_freq,
                 "iq_phases": iq_phases,
                 "pi_pulses": mw_times / 1e9,
-                "num_pts": kwargs["num_pts"],
-                "runs": kwargs["runs"],
+                "num_pts": cfg.num_pts,
+                "runs": cfg.runs,
             })   
         except Exception as e:
             self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -1031,7 +1031,7 @@ class SpinMeasurements:
                 fit_value=fit_value,
                 fit_error=fit_error,
                 start_time=time.perf_counter(),
-                total_iters=kwargs["iters"],
+                total_iters=cfg.iters,
                 iters_completed=0,
                 exception=type(e).__name__,
             ))
@@ -1040,7 +1040,7 @@ class SpinMeasurements:
         signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
         
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
-        laser.set_diode_current_realtime(kwargs["laser_power"]) # set laser power
+        laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
         ### --- Initialize experiment state variables --- ###
         stopped = False
@@ -1064,7 +1064,7 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=time.perf_counter(),
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=0,
                     exception=type(e).__name__,
                 ))
@@ -1073,11 +1073,11 @@ class SpinMeasurements:
             exp_start_time = time.perf_counter()
 
             ### --- Main experiment loop --- ###
-            for i in range(kwargs["iters"]):
+            for i in range(cfg.iters):
                 if experiment_widget_process_queue(self.queue_to_exp) == "stop":
                     stopped = True
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:
@@ -1087,11 +1087,11 @@ class SpinMeasurements:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:
-                    sig, bg = self.analog_math(rabi_result, "Rabi", kwargs["num_pts"]) # partition buffer into signal and background datasets
+                    sig, bg = self.analog_math(rabi_result, "Rabi", cfg.num_pts) # partition buffer into signal and background datasets
                 except ValueError:
                     continue
 
@@ -1103,13 +1103,13 @@ class SpinMeasurements:
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
                             fit_value, fit_error, fit_x, fit_y = self.fit_data(
-                                kwargs["dataset"], signal_sweeps, background_sweeps, *kwargs["fit_params"]
+                                cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                             )
                         except (RuntimeError, OptimizeWarning) as e:
-                            _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                            _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
                 iters_completed = i + 1
-                percent_completed = int(100 * iters_completed / kwargs["iters"])
+                percent_completed = int(100 * iters_completed / cfg.iters)
 
                 # save the current data to the data server
                 data.push({
@@ -1126,26 +1126,26 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=exp_start_time,
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=iters_completed,
                 ))
 
         ### --- Experiment complete: final save and status update --- ###
         if not stopped and not failed:
-            iters_completed, percent_completed = kwargs["iters"], 100
+            iters_completed, percent_completed = cfg.iters, 100
 
         if kwargs.get("fit", False):
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
                     fit_value, fit_error, fit_x, fit_y = self.fit_data(
-                        kwargs["dataset"], signal_sweeps, background_sweeps, *kwargs["fit_params"]
+                        cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                     )
                 except (RuntimeError, OptimizeWarning) as e:
-                    _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                    _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
         if kwargs.get("save", False):
-            run_save(kwargs["dataset"], kwargs["filename"], [kwargs["directory"]])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory])
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -1154,7 +1154,7 @@ class SpinMeasurements:
             fit_value=fit_value,
             fit_error=fit_error,
             start_time=exp_start_time,
-            total_iters=kwargs["iters"],
+            total_iters=cfg.iters,
             iters_completed=iters_completed,
             exception=exception_type if failed else None,
         ))
@@ -1174,14 +1174,14 @@ class SpinMeasurements:
         ### --- Define NV drive parameters --- ###           
         delta = 0
         iq_phases = [delta + 0, delta + 90] # set IQ phase relations for lower sideband [lower I, lower Q]   
-        sig_gen_freq = kwargs['center_freq'] + kwargs['half_span_sideband_freq'] # set freq to sig gen 
-        max_sideband_freq = 2 * kwargs['half_span_sideband_freq'] # set span of ODMR sweep as max sideband modulation frequency --> 100 MHz max. for SG396 IQ bandwidth
+        sig_gen_freq = cfg.center_freq + cfg.half_span_sideband_freq # set freq to sig gen 
+        max_sideband_freq = 2 * cfg.half_span_sideband_freq # set span of ODMR sweep as max sideband modulation frequency --> 100 MHz max. for SG396 IQ bandwidth
 
         ### --- Default parameter array for sweep --- ###
-        mod_freqs = np.flip(np.linspace(0, max_sideband_freq, kwargs['num_pts'])) # define parameter array that will be swept over in experiment & shuffle
+        mod_freqs = np.flip(np.linspace(0, max_sideband_freq, cfg.num_pts)) # define parameter array that will be swept over in experiment & shuffle
         real_freqs = sig_gen_freq - mod_freqs
 
-        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=kwargs["rf_power"]) # configure signal generator for NV drive
+        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=cfg.rf_power) # configure signal generator for NV drive
             
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
@@ -1189,36 +1189,36 @@ class SpinMeasurements:
         fit_y = np.ones(len(fit_x))
 
         ### --- Set up pulse streamer and digitizer for experiment --- ###
-        sequence = ps.Pulsed_ODMR(kwargs['laser_init']*1e9, kwargs['num_pts'], kwargs['pi']*1e9, kwargs['laser_readout']*1e9) # pulse streamer sequence
+        sequence = ps.Pulsed_ODMR(cfg.laser_init*1e9, cfg.num_pts, cfg.pi*1e9, cfg.laser_readout*1e9) # pulse streamer sequence
         dig_cfg = self.digitizer_configure(
             exp_type="ODMR",
-            num_pts=kwargs["num_pts"],
-            iters=kwargs["iters"],
-            segment_size=kwargs["segment_size"],
-            sampling_freq=kwargs["dig_sampling_freq"],
-            dig_amplitude=kwargs["dig_amplitude"],
-            read_channel=kwargs["read_channel"],
-            coupling=kwargs["dig_coupling"],
-            termination=kwargs["dig_termination"],
-            pretrig_size=kwargs["pretrig_size"],
-            dig_timeout=kwargs["dig_timeout"],
-            runs=kwargs["runs"],
+            num_pts=cfg.num_pts,
+            iters=cfg.iters,
+            segment_size=cfg.segment_size,
+            sampling_freq=cfg.dig_sampling_freq,
+            dig_amplitude=cfg.dig_amplitude,
+            read_channel=cfg.read_channel,
+            coupling=cfg.dig_coupling,
+            termination=cfg.dig_termination,
+            pretrig_size=cfg.pretrig_size,
+            dig_timeout=cfg.dig_timeout,
+            runs=cfg.runs,
         )
     
         ### --- Upload AWG sequence --- ### 
         try:
-            hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
-            hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
+            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
+            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 'seq': 'Pulsed ODMR',
-                'i_offset': kwargs['i_offset'],
-                'q_offset': kwargs['q_offset'],
-                'sideband_power': kwargs['sideband_power'],
+                'i_offset': cfg.i_offset,
+                'q_offset': cfg.q_offset,
+                'sideband_power': cfg.sideband_power,
                 'sideband_freqs': mod_freqs, 
                 'iq_phases': iq_phases,
-                'pi_pulse': kwargs['pi'], 
-                'num_pts': kwargs['num_pts'],
-                'runs': kwargs['runs']
+                'pi_pulse': cfg.pi, 
+                'num_pts': cfg.num_pts,
+                'runs': cfg.runs
             })    
         except Exception as e:
             self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -1227,7 +1227,7 @@ class SpinMeasurements:
                 fit_value=fit_value,
                 fit_error=fit_error,
                 start_time=time.perf_counter(),
-                total_iters=kwargs["iters"],
+                total_iters=cfg.iters,
                 iters_completed=0,
                 exception=type(e).__name__,
             ))
@@ -1236,7 +1236,7 @@ class SpinMeasurements:
         signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
 
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
-        laser.set_diode_current_realtime(kwargs['laser_power']) # set laser power
+        laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
         ### --- Initialize experiment state variables --- ###
         stopped = False
@@ -1261,7 +1261,7 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=time.perf_counter(),
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=0,
                     exception=type(e).__name__,
                 ))
@@ -1270,11 +1270,11 @@ class SpinMeasurements:
             exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
             ### --- Main experiment loop --- ###
-            for i in range(kwargs['iters']):
+            for i in range(cfg.iters):
                 if experiment_widget_process_queue(self.queue_to_exp) == "stop":
                     stopped = True
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
                 
                 try:
@@ -1284,11 +1284,11 @@ class SpinMeasurements:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:
-                    sig, bg = self.analog_math(pulsed_odmr_result, 'Pulsed ODMR', kwargs['num_pts']) # partition buffer into signal and background datasets
+                    sig, bg = self.analog_math(pulsed_odmr_result, 'Pulsed ODMR', cfg.num_pts) # partition buffer into signal and background datasets
                 except ValueError:
                     continue
 
@@ -1300,13 +1300,13 @@ class SpinMeasurements:
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
                             fit_value, fit_error, fit_x, fit_y = self.fit_data(
-                                kwargs["dataset"], signal_sweeps, background_sweeps, *kwargs["fit_params"]
+                                cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                             )
                         except (RuntimeError, OptimizeWarning) as e:
-                            _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                            _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
                 iters_completed = i + 1
-                percent_completed = int(100 * iters_completed / kwargs["iters"])
+                percent_completed = int(100 * iters_completed / cfg.iters)
 
                 data.push({
                     "params": {"kwargs": kwargs, "iters_completed": iters_completed, "elapsed": time.perf_counter() - exp_start_time},
@@ -1322,26 +1322,26 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=exp_start_time,
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=iters_completed,
                 ))
 
         ### --- Experiment complete: final save and status update --- ###
         if not stopped and not failed:
-            iters_completed, percent_completed = kwargs["iters"], 100
+            iters_completed, percent_completed = cfg.iters, 100
 
         if kwargs.get("fit", False):
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
                     fit_value, fit_error, fit_x, fit_y = self.fit_data(
-                        kwargs["dataset"], signal_sweeps, background_sweeps, *kwargs["fit_params"]
+                        cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                     )
                 except (RuntimeError, OptimizeWarning) as e:
-                    _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                    _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
         if kwargs.get("save", False):
-            run_save(kwargs["dataset"], kwargs["filename"], [kwargs["directory"]])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory])
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -1350,7 +1350,7 @@ class SpinMeasurements:
             fit_value=fit_value,
             fit_error=fit_error,
             start_time=exp_start_time,
-            total_iters=kwargs["iters"],
+            total_iters=cfg.iters,
             iters_completed=iters_completed,
             exception=exception_type if failed else None,
         ))
@@ -1370,14 +1370,14 @@ class SpinMeasurements:
         ### --- Define NV drive parameters --- ###      
         delta = 0
         iq_phases = [delta + 0, delta + 90] # set IQ phase relations for lower sideband [lower I, lower Q]   
-        sig_gen_freq = kwargs['center_freq'] + kwargs['half_span_sideband_freq'] # set freq to sig gen 
-        max_sideband_freq = 2 * kwargs['half_span_sideband_freq'] # set span of ODMR sweep as max sideband modulation frequency --> 100 MHz max. for SG396 IQ bandwidth
+        sig_gen_freq = cfg.center_freq + cfg.half_span_sideband_freq # set freq to sig gen 
+        max_sideband_freq = 2 * cfg.half_span_sideband_freq # set span of ODMR sweep as max sideband modulation frequency --> 100 MHz max. for SG396 IQ bandwidth
 
         ### --- Default parameter array for sweep --- ###
-        mod_freqs = np.flip(np.linspace(0, max_sideband_freq, kwargs['num_pts'])) # define parameter array that will be swept over in experiment & shuffle
+        mod_freqs = np.flip(np.linspace(0, max_sideband_freq, cfg.num_pts)) # define parameter array that will be swept over in experiment & shuffle
         real_freqs = sig_gen_freq - mod_freqs
 
-        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=kwargs["rf_power"]) # configure signal generator for NV drive
+        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=cfg.rf_power) # configure signal generator for NV drive
           
         ### --- Default fit parameters for live fitting --- ###
         fit_value = None
@@ -1392,45 +1392,45 @@ class SpinMeasurements:
         coil_b_field_gauss = None
         proton_pi_half = None
 
-        pi_pulse = kwargs['pi']*1e9 # [ns] units for pulse streamer
-        rf_period = 1/kwargs['rf_pulse_freq']*1e9 # rf pulse period [ns] units for pulse streamer
+        pi_pulse = cfg.pi*1e9 # [ns] units for pulse streamer
+        rf_period = 1/cfg.rf_pulse_freq*1e9 # rf pulse period [ns] units for pulse streamer
         
         ### --- Set up pulse streamer and digitizer for experiment --- ###
-        sequence = ps.Pulsed_ODMR_RF(kwargs['laser_init']*1e9, kwargs['num_pts'], pi_pulse, rf_period, kwargs['laser_readout']*1e9) # pulse streamer sequence
+        sequence = ps.Pulsed_ODMR_RF(cfg.laser_init*1e9, cfg.num_pts, pi_pulse, rf_period, cfg.laser_readout*1e9) # pulse streamer sequence
         dig_cfg = self.digitizer_configure(
             exp_type="ODMR",
-            num_pts=kwargs["num_pts"],
-            iters=kwargs["iters"],
-            segment_size=kwargs["segment_size"],
-            sampling_freq=kwargs["dig_sampling_freq"],
-            dig_amplitude=kwargs["dig_amplitude"],
-            read_channel=kwargs["read_channel"],
-            coupling=kwargs["dig_coupling"],
-            termination=kwargs["dig_termination"],
-            pretrig_size=kwargs["pretrig_size"],
-            dig_timeout=kwargs["dig_timeout"],
-            runs=kwargs["runs"],
+            num_pts=cfg.num_pts,
+            iters=cfg.iters,
+            segment_size=cfg.segment_size,
+            sampling_freq=cfg.dig_sampling_freq,
+            dig_amplitude=cfg.dig_amplitude,
+            read_channel=cfg.read_channel,
+            coupling=cfg.dig_coupling,
+            termination=cfg.dig_termination,
+            pretrig_size=cfg.pretrig_size,
+            dig_timeout=cfg.dig_timeout,
+            runs=cfg.runs,
         )
 
         ### --- Upload AWG sequence --- ### 
         try:
-            hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
-            hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
+            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
+            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 'seq': 'Pulsed ODMR RF',
-                'i_offset': kwargs['i_offset'],
-                'q_offset': kwargs['q_offset'],
-                'sideband_power': kwargs['sideband_power'],
+                'i_offset': cfg.i_offset,
+                'q_offset': cfg.q_offset,
+                'sideband_power': cfg.sideband_power,
                 'sideband_freqs': mod_freqs, 
                 'iq_phases': iq_phases,
                 'pi_pulse': pi_pulse/1e9, 
-                'rf_freq': kwargs['rf_pulse_freq'],
-                'rf_power': kwargs['rf_pulse_power'],
-                'rf_phase': kwargs['rf_pulse_phase'],
+                'rf_freq': cfg.rf_pulse_freq,
+                'rf_power': cfg.rf_pulse_power,
+                'rf_phase': cfg.rf_pulse_phase,
                 'rf_length': 3*rf_period/1e9,
-                'num_pts': kwargs['num_pts'],
-                'runs': kwargs['runs'], 
-                'iters': kwargs['iters']
+                'num_pts': cfg.num_pts,
+                'runs': cfg.runs, 
+                'iters': cfg.iters
             })
         except Exception as e:
             self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -1441,7 +1441,7 @@ class SpinMeasurements:
             fit_value2=fit_no_rf_value,
             fit_error2=fit_no_rf_error,
             start_time=time.perf_counter(),
-            total_iters=kwargs["iters"],
+            total_iters=cfg.iters,
             iters_completed=0,
             exception=type(e).__name__,
         ))
@@ -1451,7 +1451,7 @@ class SpinMeasurements:
         no_rf_signal_sweeps, no_rf_background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
 
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
-        laser.set_diode_current_realtime(kwargs['laser_power']) # set laser power
+        laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
         ### --- Initialize experiment state variables --- ###
         stopped = False
@@ -1478,7 +1478,7 @@ class SpinMeasurements:
                     fit_value2=fit_no_rf_value,
                     fit_error2=fit_no_rf_error,
                     start_time=time.perf_counter(),
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=0,
                     exception=type(e).__name__,
                 ))
@@ -1487,11 +1487,11 @@ class SpinMeasurements:
             exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
             ### --- Main experiment loop --- ###
-            for i in range(kwargs['iters']):
+            for i in range(cfg.iters):
                 if experiment_widget_process_queue(self.queue_to_exp) == "stop":
                     stopped = True
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:       
@@ -1501,11 +1501,11 @@ class SpinMeasurements:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:
-                    rf_sig, rf_bg, no_rf_sig, no_rf_bg = self.analog_math(pulsed_odmr_result, 'DEER', kwargs['num_pts']) # partition buffer into signal and background datasets
+                    rf_sig, rf_bg, no_rf_sig, no_rf_bg = self.analog_math(pulsed_odmr_result, 'DEER', cfg.num_pts) # partition buffer into signal and background datasets
                 except ValueError:
                     continue
 
@@ -1519,20 +1519,20 @@ class SpinMeasurements:
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
                             fit_value, fit_error, fit_x, fit_y = self.fit_data(
-                                'odmr', rf_signal_sweeps, rf_background_sweeps, *kwargs['fit_params'][:4]
+                                'odmr', rf_signal_sweeps, rf_background_sweeps, *cfg.fit_params[:4]
                             )
                             fit_no_rf_value, fit_no_rf_error, fit_no_rf_x, fit_no_rf_y = self.fit_data(
-                                'odmr', no_rf_signal_sweeps, no_rf_background_sweeps, *kwargs['fit_params'][4:]
+                                'odmr', no_rf_signal_sweeps, no_rf_background_sweeps, *cfg.fit_params[4:]
                             )
                         except (RuntimeError, OptimizeWarning) as e:
-                            _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                            _logger.warning(f"For {cfg.dataset} measurement, {e}")
                         else:
                             fitted_diff = fit_no_rf_value[1] - fit_value[1]
                             coil_b_field_gauss = round(fitted_diff*1000/2.8,4)
                             proton_pi_half = round(1/(42.577e-4*coil_b_field_gauss)/4,2)
 
                 iters_completed = i + 1
-                percent_completed = int(100 * iters_completed / kwargs["iters"])
+                percent_completed = int(100 * iters_completed / cfg.iters)
 
                 data.push({
                     'params': {'kwargs': kwargs, 'iters_completed': iters_completed, 'elapsed': time.perf_counter() - exp_start_time},
@@ -1555,33 +1555,33 @@ class SpinMeasurements:
                     fit_value2=fit_no_rf_value,
                     fit_error2=fit_no_rf_error,
                     start_time=exp_start_time,
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=iters_completed,
                 ))
 
         ### --- Experiment complete: final save and status update --- ###
         if not stopped and not failed:
-            iters_completed, percent_completed = kwargs["iters"], 100
+            iters_completed, percent_completed = cfg.iters, 100
 
         if kwargs.get("fit", False):
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
                     fit_value, fit_error, fit_x, fit_y = self.fit_data(
-                        'odmr', rf_signal_sweeps, rf_background_sweeps, *kwargs['fit_params'][:4]
+                        'odmr', rf_signal_sweeps, rf_background_sweeps, *cfg.fit_params[:4]
                     )
                     fit_no_rf_value, fit_no_rf_error, fit_no_rf_x, fit_no_rf_y = self.fit_data(
-                        'odmr', no_rf_signal_sweeps, no_rf_background_sweeps, *kwargs['fit_params'][4:]
+                        'odmr', no_rf_signal_sweeps, no_rf_background_sweeps, *cfg.fit_params[4:]
                     )
                 except (RuntimeError, OptimizeWarning) as e:
-                    _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                    _logger.warning(f"For {cfg.dataset} measurement, {e}")
                 else:
                     fitted_diff = fit_no_rf_value[1] - fit_value[1]
                     coil_b_field_gauss = round(fitted_diff*1000/2.8,4)
                     proton_pi_half = round(1/(42.577e-4*coil_b_field_gauss)/4,2)
 
         if kwargs.get("save", False):
-            run_save(kwargs["dataset"], kwargs["filename"], [kwargs["directory"]])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory])
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -1592,7 +1592,7 @@ class SpinMeasurements:
             fit_value2=fit_no_rf_value,
             fit_error2=fit_no_rf_error,
             start_time=exp_start_time,
-            total_iters=kwargs["iters"],
+            total_iters=cfg.iters,
             iters_completed=iters_completed,
             exception=exception_type if failed else None,
         ))
@@ -1616,7 +1616,7 @@ class SpinMeasurements:
         """
         # connect to the instrument server & the data server.
         # create a data set, or connect to an existing one with the same name if it was created earlier.
-        with InstrumentManager() as mgr, DataSource(kwargs['dataset']) as t1_data:
+        with InstrumentManager() as mgr, DataSource(cfg.dataset) as t1_data:
             # load devices used in scan
             laser = mgr.laser
             laser_shutter = mgr.laser_shutter
@@ -1624,26 +1624,26 @@ class SpinMeasurements:
             ps = mgr.ps
             hdawg = mgr.awg
 
-            match kwargs['array_type']:
+            match cfg.array_type:
                 case 'geomspace':
-                    tau_times = np.geomspace(kwargs['start'], kwargs['stop'], kwargs['num_pts']) * 1e9
+                    tau_times = np.geomspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
                 case 'linspace':
-                    tau_times = np.linspace(kwargs['start'], kwargs['stop'], kwargs['num_pts']) * 1e9
+                    tau_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
             
-            t1_buffer = self.generate_buffer('Opt T1', kwargs['runs'], kwargs['num_pts'])
+            t1_buffer = self.generate_buffer('Opt T1', cfg.runs, cfg.num_pts)
             
             # configure digitizer
-            dig_config = self.digitizer_configure(exp_type="Opt T1", num_pts_in_exp = kwargs['num_pts'], iters = kwargs['iters'], 
-                                                  segment_size = kwargs['segment_size'], sampling_freq = kwargs['dig_sampling_freq'], dig_amplitude = kwargs['dig_amplitude'], 
-                                                  read_channel = kwargs['read_channel'], coupling = kwargs['dig_coupling'], termination = kwargs['dig_termination'], 
-                                                  pretrig_size = kwargs['pretrig_size'], dig_timeout = kwargs['dig_timeout'], runs = kwargs['runs'])
+            dig_config = self.digitizer_configure(exp_type="Opt T1", num_pts_in_exp = cfg.num_pts, iters = cfg.iters, 
+                                                  segment_size = cfg.segment_size, sampling_freq = cfg.dig_sampling_freq, dig_amplitude = cfg.dig_amplitude, 
+                                                  read_channel = cfg.read_channel, coupling = cfg.dig_coupling, termination = cfg.dig_termination, 
+                                                  pretrig_size = cfg.pretrig_size, dig_timeout = cfg.dig_timeout, runs = cfg.runs)
             
-            sequence = ps.Optical_T1(tau_times, kwargs['laser_readout']*1e9)
+            sequence = ps.Optical_T1(tau_times, cfg.laser_readout*1e9)
 
             # configure devices used in scan
-            laser.set_diode_current_realtime(kwargs['laser_power'])
+            laser.set_diode_current_realtime(cfg.laser_power)
 
-            # daq.open_ai_task(kwargs['detector'], len(t1_buffer[0])) # kwargs['detector'] used for APD/BPD now, this line is not current
+            # daq.open_ai_task(cfg.detector, len(t1_buffer[0])) # cfg.detector used for APD/BPD now, this line is not current
 
             self.dig.assign_param(dig_config)
 
@@ -1654,11 +1654,11 @@ class SpinMeasurements:
             
             exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
-            for i in range(kwargs['iters']):
+            for i in range(cfg.iters):
                 
                 self.dig.config()
                 self.dig.start_buffer()
-                ps.stream(sequence, kwargs['runs']) # execute chosen sequence on Pulse Streamer
+                ps.stream(sequence, cfg.runs) # execute chosen sequence on Pulse Streamer
 
                 t1_result_raw = self.dig.acquire()
                 
@@ -1666,7 +1666,7 @@ class SpinMeasurements:
                 
                 # partition buffer into signal and background datasets
                 try:
-                    sig, bg = self.analog_math(t1_result, 'MW_T1', kwargs['num_pts'])
+                    sig, bg = self.analog_math(t1_result, 'MW_T1', cfg.num_pts)
                 except ValueError:
                     continue
                 
@@ -1678,7 +1678,7 @@ class SpinMeasurements:
 
                 # update GUI progress bar & ETA
                 iter_completed = i + 1                      
-                percent_completed = int((iter_completed / kwargs["iters"]) * 100)
+                percent_completed = int((iter_completed / cfg.iters) * 100)
                 
                 # save the current data to the data server.
                 t1_data.push({'params': {'kwargs': kwargs, 'iters_completed': iter_completed, 'elapsed': time.perf_counter() - exp_start_time},
@@ -1695,7 +1695,7 @@ class SpinMeasurements:
                             fit_value=None,
                             fit_error=None,
                             start_time=exp_start_time,
-                            total_iters=kwargs['iters'],
+                            total_iters=cfg.iters,
                             iters_completed=iter_completed,
                         )
 
@@ -1704,8 +1704,8 @@ class SpinMeasurements:
                 
                 if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                     # the GUI has asked us nicely to exit
-                    if kwargs['save'] == True:
-                        flexSave(kwargs['dataset'], kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
+                    if cfg.save == True:
+                        flexSave(cfg.dataset, cfg.dataset, cfg.filename, [cfg.directory])
                     
                     self.equipment_off()
 
@@ -1724,18 +1724,18 @@ class SpinMeasurements:
                         fit_value=None,
                         fit_error=None,
                         start_time=exp_start_time,
-                        total_iters=kwargs["iters"],
+                        total_iters=cfg.iters,
                         iters_completed=iter_completed,
                     )
                     # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
                     self.queue_from_exp.put_nowait(msg)
 
-                    if kwargs['save'] == True:
-                        run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
+                    if cfg.save == True:
+                        run_save(cfg.dataset, cfg.filename, [cfg.directory])
                     return
                     
-            if kwargs['save'] == True:
-                run_save(kwargs['dataset'], kwargs['filename'], [kwargs['directory']])
+            if cfg.save == True:
+                run_save(cfg.dataset, cfg.filename, [cfg.directory])
 
             self.queue_from_exp.put_nowait([percent_completed, 'complete', None])
 
@@ -1754,19 +1754,19 @@ class SpinMeasurements:
         hdawg = mgr.awg
  
         ### --- Default parameter array for sweep --- ###
-        match kwargs['array_type']:
+        match cfg.array_type:
             case 'geomspace':
-                tau_times = np.geomspace(kwargs['start'], kwargs['stop'], kwargs['num_pts']) * 1e9
+                tau_times = np.geomspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
             case 'linspace':
-                tau_times = np.linspace(kwargs['start'], kwargs['stop'], kwargs['num_pts']) * 1e9
+                tau_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
         
         ### --- Define NV drive parameters --- ###  
         sig_gen_freq, iq_phases = self.choose_sideband(
-            kwargs['sideband'], kwargs['freq'], kwargs['sideband_freq'], kwargs['pulse_axis']
+            cfg.sideband, cfg.freq, cfg.sideband_freq, cfg.pulse_axis
         )
-        pi_pulse = kwargs['pi']*1e9 # [ns] units for pulse streamer
+        pi_pulse = cfg.pi*1e9 # [ns] units for pulse streamer
         
-        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=kwargs["rf_power"]) # configure signal generator for NV drive
+        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=cfg.rf_power) # configure signal generator for NV drive
 
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
@@ -1774,37 +1774,37 @@ class SpinMeasurements:
         fit_y = np.ones(len(fit_x))
 
         ### --- Set up pulse streamer and digitizer for experiment --- ###
-        sequence = ps.Diff_T1(kwargs['laser_init']*1e9, tau_times, kwargs['pulse_axis'], pi_pulse, kwargs['laser_readout']*1e9)
+        sequence = ps.Diff_T1(cfg.laser_init*1e9, tau_times, cfg.pulse_axis, pi_pulse, cfg.laser_readout*1e9)
         dig_cfg = self.digitizer_configure(
             exp_type="MW T1",
-            num_pts=kwargs["num_pts"],
-            iters=kwargs["iters"],
-            segment_size=kwargs["segment_size"],
-            sampling_freq=kwargs["dig_sampling_freq"],
-            dig_amplitude=kwargs["dig_amplitude"],
-            read_channel=kwargs["read_channel"],
-            coupling=kwargs["dig_coupling"],
-            termination=kwargs["dig_termination"],
-            pretrig_size=kwargs["pretrig_size"],
-            dig_timeout=kwargs["dig_timeout"],
-            runs=kwargs["runs"],
+            num_pts=cfg.num_pts,
+            iters=cfg.iters,
+            segment_size=cfg.segment_size,
+            sampling_freq=cfg.dig_sampling_freq,
+            dig_amplitude=cfg.dig_amplitude,
+            read_channel=cfg.read_channel,
+            coupling=cfg.dig_coupling,
+            termination=cfg.dig_termination,
+            pretrig_size=cfg.pretrig_size,
+            dig_timeout=cfg.dig_timeout,
+            runs=cfg.runs,
         )
 
         ### --- Upload AWG sequence --- ###
         try:
-            hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
-            hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
+            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
+            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 'seq': 'T1',
-                'i_offset': kwargs['i_offset'],
-                'q_offset': kwargs['q_offset'],
-                'sideband_power': kwargs['sideband_power'],
-                'sideband_freq': kwargs['sideband_freq'], 
+                'i_offset': cfg.i_offset,
+                'q_offset': cfg.q_offset,
+                'sideband_power': cfg.sideband_power,
+                'sideband_freq': cfg.sideband_freq, 
                 'iq_phases': iq_phases,
                 'pi_pulse': pi_pulse/1e9, 
-                'num_pts': kwargs['num_pts'],
-                'runs': kwargs['runs'], 
-                'iters': kwargs['iters']}
+                'num_pts': cfg.num_pts,
+                'runs': cfg.runs, 
+                'iters': cfg.iters}
             )    
         except Exception as e:
             self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -1813,7 +1813,7 @@ class SpinMeasurements:
                 fit_value=fit_value,
                 fit_error=fit_error,
                 start_time=time.perf_counter(),
-                total_iters=kwargs["iters"],
+                total_iters=cfg.iters,
                 iters_completed=0,
                 exception=type(e).__name__,
             ))
@@ -1822,7 +1822,7 @@ class SpinMeasurements:
         signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
         
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
-        laser.set_diode_current_realtime(kwargs["laser_power"]) # set laser power
+        laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
         ### --- Initialize experiment state variables --- ###
         stopped = False
@@ -1846,7 +1846,7 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=time.perf_counter(),
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=0,
                     exception=type(e).__name__,
                 ))
@@ -1855,11 +1855,11 @@ class SpinMeasurements:
             exp_start_time = time.perf_counter()
 
             ### --- Main experiment loop --- ###
-            for i in range(kwargs['iters']):
+            for i in range(cfg.iters):
                 if experiment_widget_process_queue(self.queue_to_exp) == "stop":
                     stopped = True
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:     
@@ -1869,11 +1869,11 @@ class SpinMeasurements:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
                      
                 try:
-                    sig, bg = self.analog_math(t1_result, 'MW_T1', kwargs['num_pts']) # partition buffer into signal and background datasets
+                    sig, bg = self.analog_math(t1_result, 'MW_T1', cfg.num_pts) # partition buffer into signal and background datasets
                 except ValueError:
                     continue
                     
@@ -1885,13 +1885,13 @@ class SpinMeasurements:
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
                             fit_value, fit_error, fit_x, fit_y = self.fit_data(
-                                kwargs["dataset"], signal_sweeps, background_sweeps, *kwargs["fit_params"]
+                                cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                             )
                         except (RuntimeError, OptimizeWarning) as e:
-                            _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                            _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
                 iters_completed = i + 1
-                percent_completed = int(100 * iters_completed / kwargs["iters"])
+                percent_completed = int(100 * iters_completed / cfg.iters)
 
                 # save the current data to the data server
                 data.push({
@@ -1908,26 +1908,26 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=exp_start_time,
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=iters_completed,
                 ))
                             
         ### --- Experiment complete: final save and status update --- ###
         if not stopped and not failed:
-            iters_completed, percent_completed = kwargs["iters"], 100
+            iters_completed, percent_completed = cfg.iters, 100
 
         if kwargs.get("fit", False):
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
                     fit_value, fit_error, fit_x, fit_y = self.fit_data(
-                        kwargs["dataset"], signal_sweeps, background_sweeps, *kwargs["fit_params"]
+                        cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                     )
                 except (RuntimeError, OptimizeWarning) as e:
-                    _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                    _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
         if kwargs.get("save", False):
-            run_save(kwargs["dataset"], kwargs["filename"], [kwargs["directory"]])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory])
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -1936,7 +1936,7 @@ class SpinMeasurements:
             fit_value=fit_value,
             fit_error=fit_error,
             start_time=exp_start_time,
-            total_iters=kwargs["iters"],
+            total_iters=cfg.iters,
             iters_completed=iters_completed,
             exception=exception_type if failed else None,
         ))
@@ -1954,21 +1954,21 @@ class SpinMeasurements:
         hdawg = mgr.awg
             
         ### --- Define parameter array for sweep --- ###
-        match kwargs['array_type']:
+        match cfg.array_type:
             case 'geomspace':
-                tau_times = np.geomspace(kwargs['start'], kwargs['stop'], kwargs['num_pts']) * 1e9
+                tau_times = np.geomspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
             case 'linspace':
-                tau_times = np.linspace(kwargs['start'], kwargs['stop'], kwargs['num_pts']) * 1e9
+                tau_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
 
         ### --- Define NV drive parameters --- ###
-        sig_gen_freq, iq_phases = self.choose_sideband(kwargs['sideband'], kwargs['freq'], kwargs['sideband_freq'])
+        sig_gen_freq, iq_phases = self.choose_sideband(cfg.sideband, cfg.freq, cfg.sideband_freq)
         pi: List[float] = []
         pi_half: List[float] = []
         for i in range(2):
-            pi_half.append(kwargs['pi']*1e9/2)
-            pi.append(kwargs['pi']*1e9)
+            pi_half.append(cfg.pi*1e9/2)
+            pi.append(cfg.pi*1e9)
         
-        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=kwargs["rf_power"]) # configure signal generator for NV drive
+        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=cfg.rf_power) # configure signal generator for NV drive
 
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
@@ -1976,87 +1976,87 @@ class SpinMeasurements:
         fit_y = np.ones(len(fit_x))
 
         ### --- Set up pulse streamer and digitizer for experiment --- ###
-        match kwargs['t2_seq']:
+        match cfg.t2_seq:
             case 'Ramsey':
-                sequence = ps.Ramsey(kwargs['laser_init']*1e9, tau_times, pi_half[0], pi_half[1], kwargs['laser_readout']*1e9)
+                sequence = ps.Ramsey(cfg.laser_init*1e9, tau_times, pi_half[0], pi_half[1], cfg.laser_readout*1e9)
                 x_tau_times = tau_times
             case 'Echo':
-                sequence = ps.Echo(kwargs['laser_init']*1e9, tau_times, pi_half[0], pi_half[1], 
-                                        pi[0], pi[1], kwargs['laser_readout']*1e9)
+                sequence = ps.Echo(cfg.laser_init*1e9, tau_times, pi_half[0], pi_half[1], 
+                                        pi[0], pi[1], cfg.laser_readout*1e9)
                 x_tau_times = 2*tau_times + pi[1] # for definition of pi/2 - tau - pi - tau - pi/2
             case 'XY4':
-                sequence = ps.XY4_N(kwargs['laser_init']*1e9, tau_times, 'xy', 
+                sequence = ps.XY4_N(cfg.laser_init*1e9, tau_times, 'xy', 
                                     pi_half[0], pi_half[1], 
-                                    pi[0], pi[1], kwargs['n'], kwargs['laser_readout']*1e9)
+                                    pi[0], pi[1], cfg.n, cfg.laser_readout*1e9)
                 x_tau_times = 4*tau_times + 2*pi[0] + 2*pi[1] # for definition of (tau/2 - pi - tau - pi - tau - pi - tau - pi - tau/2)*n
-                # x_tau_times = 2*pi_half[0] + (2*(x_tau_times/2)/(4*kwargs['n']) + 2*pi[0] + \
-                #             2*pi[1] + 3*x_tau_times/(4*kwargs['n']))*kwargs['n']
+                # x_tau_times = 2*pi_half[0] + (2*(x_tau_times/2)/(4*cfg.n) + 2*pi[0] + \
+                #             2*pi[1] + 3*x_tau_times/(4*cfg.n))*cfg.n
             case 'YY4':
-                sequence = ps.XY4_N(kwargs['laser_init']*1e9, tau_times, 'yy', 
+                sequence = ps.XY4_N(cfg.laser_init*1e9, tau_times, 'yy', 
                                     pi_half[0], pi_half[1], 
-                                    pi[0], pi[1], kwargs['n'], kwargs['laser_readout']*1e9)
+                                    pi[0], pi[1], cfg.n, cfg.laser_readout*1e9)
                 x_tau_times = 4*tau_times + 4*pi[1] # for definition of (tau/2 - pi - tau - pi - tau - pi - tau - pi - tau/2)*n
-                # x_tau_times = 2*pi_half[0] + (2*(x_tau_times/2)/(4*kwargs['n']) + 4*pi[1] + 3*x_tau_times/(4*kwargs['n']))*kwargs['n']
+                # x_tau_times = 2*pi_half[0] + (2*(x_tau_times/2)/(4*cfg.n) + 4*pi[1] + 3*x_tau_times/(4*cfg.n))*cfg.n
             case 'XY8':
-                sequence = ps.XY8_N(kwargs['laser_init']*1e9, tau_times, 'xy', 
+                sequence = ps.XY8_N(cfg.laser_init*1e9, tau_times, 'xy', 
                                     pi_half[0], pi_half[1], 
-                                    pi[0], pi[1], kwargs['n'], kwargs['laser_readout']*1e9)
+                                    pi[0], pi[1], cfg.n, cfg.laser_readout*1e9)
                 x_tau_times = 8*tau_times + 4*pi[0] + 4*pi[1] # for definition of (tau/2 - pi - tau - pi - tau - pi - tau - pi - tau/2)*n
-                # x_tau_times = 2*pi_half[0] + ((x_tau_times/2)/(8*kwargs['n']) + 4*pi[0] + \
-                #             4*pi[1] + 7*x_tau_times/(8*kwargs['n']) + (x_tau_times/2)/(8*kwargs['n']))*kwargs['n']
+                # x_tau_times = 2*pi_half[0] + ((x_tau_times/2)/(8*cfg.n) + 4*pi[0] + \
+                #             4*pi[1] + 7*x_tau_times/(8*cfg.n) + (x_tau_times/2)/(8*cfg.n))*cfg.n
             case 'YY8':
-                sequence = ps.XY8_N(kwargs['laser_init']*1e9, tau_times, 'yy', 
+                sequence = ps.XY8_N(cfg.laser_init*1e9, tau_times, 'yy', 
                                     pi_half[0], pi_half[1], 
-                                    pi[0], pi[1], kwargs['n'], kwargs['laser_readout']*1e9)
+                                    pi[0], pi[1], cfg.n, cfg.laser_readout*1e9)
                 x_tau_times = 8*tau_times + 8*pi[1] # for definition of (tau/2 - pi - tau - pi - tau - pi - tau - pi - tau/2)*n
-                # x_tau_times = 2*pi_half[0] + ((x_tau_times/2)/(8*kwargs['n']) + 8*pi[1] + \
-                #         7*x_tau_times/(8*kwargs['n']) + (x_tau_times/2)/(8*kwargs['n']))*kwargs['n']
+                # x_tau_times = 2*pi_half[0] + ((x_tau_times/2)/(8*cfg.n) + 8*pi[1] + \
+                #         7*x_tau_times/(8*cfg.n) + (x_tau_times/2)/(8*cfg.n))*cfg.n
             case 'CPMG':
-                sequence = ps.CPMG_N(kwargs['laser_init']*1e9, tau_times, kwargs['pulse_axis'], 
+                sequence = ps.CPMG_N(cfg.laser_init*1e9, tau_times, cfg.pulse_axis, 
                                     pi_half[0], pi_half[1], 
-                                    pi[0], pi[1], kwargs['n'], kwargs['laser_readout']*1e9)
-                x_tau_times = tau_times + (kwargs['n']-1)*(pi[1]+tau_times) # for definition of (tau/2 - pi - tau - pi - tau - pi - tau - pi - tau/2)*n
-                # x_tau_times = 2*pi_half[0] + x_tau_times/kwargs['n'] + (pi[0] + x_tau_times/kwargs['n'])*(kwargs['n']-1) + pi[0]
+                                    pi[0], pi[1], cfg.n, cfg.laser_readout*1e9)
+                x_tau_times = tau_times + (cfg.n-1)*(pi[1]+tau_times) # for definition of (tau/2 - pi - tau - pi - tau - pi - tau - pi - tau/2)*n
+                # x_tau_times = 2*pi_half[0] + x_tau_times/cfg.n + (pi[0] + x_tau_times/cfg.n)*(cfg.n-1) + pi[0]
             # case 'PulsePol':
             #     sequence = ps.PulsePol(tau_times, 
             #                         pi_half[0], pi_half[1], 
-            #                         pi[0], pi[1], kwargs['n'], kwargs['laser_readout']*1e9)
-                # x_tau_times = (x_tau_times + 2*pi_half[1] + pi[0] + 2*pi_half[0] + pi[1])*2*kwargs['n']
+            #                         pi[0], pi[1], cfg.n, cfg.laser_readout*1e9)
+                # x_tau_times = (x_tau_times + 2*pi_half[1] + pi[0] + 2*pi_half[0] + pi[1])*2*cfg.n
         dig_cfg = self.digitizer_configure(
             exp_type="T2",
-            num_pts=kwargs["num_pts"],
-            iters=kwargs["iters"],
-            segment_size=kwargs["segment_size"],
-            sampling_freq=kwargs["dig_sampling_freq"],
-            dig_amplitude=kwargs["dig_amplitude"],
-            read_channel=kwargs["read_channel"],
-            coupling=kwargs["dig_coupling"],
-            termination=kwargs["dig_termination"],
-            pretrig_size=kwargs["pretrig_size"],
-            dig_timeout=kwargs["dig_timeout"],
-            runs=kwargs["runs"],
+            num_pts=cfg.num_pts,
+            iters=cfg.iters,
+            segment_size=cfg.segment_size,
+            sampling_freq=cfg.dig_sampling_freq,
+            dig_amplitude=cfg.dig_amplitude,
+            read_channel=cfg.read_channel,
+            coupling=cfg.dig_coupling,
+            termination=cfg.dig_termination,
+            pretrig_size=cfg.pretrig_size,
+            dig_timeout=cfg.dig_timeout,
+            runs=cfg.runs,
         )
 
         ### --- Upload AWG sequence --- ###
         try:
-            hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
-            hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
+            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
+            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 'seq': 'T2',
-                'seq_dd': kwargs['t2_seq'],
-                'i_offset': kwargs['i_offset'],
-                'q_offset': kwargs['q_offset'],
-                'sideband_power': kwargs['sideband_power'],
-                'sideband_freq': kwargs['sideband_freq'], 
+                'seq_dd': cfg.t2_seq,
+                'i_offset': cfg.i_offset,
+                'q_offset': cfg.q_offset,
+                'sideband_power': cfg.sideband_power,
+                'sideband_freq': cfg.sideband_freq, 
                 'iq_phases': iq_phases,
                 'pihalf_x': pi_half[0]/1e9,
                 'pihalf_y': pi_half[1]/1e9,
                 'pi_x': pi[0]/1e9, 
                 'pi_y': pi[1]/1e9,
-                'n': kwargs['n'],
-                'num_pts': kwargs['num_pts'],
-                'runs': kwargs['runs'], 
-                'iters': kwargs['iters']
+                'n': cfg.n,
+                'num_pts': cfg.num_pts,
+                'runs': cfg.runs, 
+                'iters': cfg.iters
             }) 
         except Exception as e:
             self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -2065,7 +2065,7 @@ class SpinMeasurements:
                 fit_value=fit_value,
                 fit_error=fit_error,
                 start_time=time.perf_counter(),
-                total_iters=kwargs["iters"],
+                total_iters=cfg.iters,
                 iters_completed=0,
                 exception=type(e).__name__,
             ))
@@ -2074,7 +2074,7 @@ class SpinMeasurements:
         signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points) 
 
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
-        laser.set_diode_current_realtime(kwargs["laser_power"]) # set laser power
+        laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
         ### --- Initialize experiment state variables --- ###
         stopped = False
@@ -2098,7 +2098,7 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=time.perf_counter(),
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=0,
                     exception=type(e).__name__,
                 ))
@@ -2107,11 +2107,11 @@ class SpinMeasurements:
             exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
             ### --- Main experiment loop --- ###
-            for i in range(kwargs['iters']):
+            for i in range(cfg.iters):
                 if experiment_widget_process_queue(self.queue_to_exp) == "stop":
                     stopped = True
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:      
@@ -2122,11 +2122,11 @@ class SpinMeasurements:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:
-                    sig, bg = self.analog_math(t2_result, 'T2', kwargs['num_pts']) # partition buffer into signal and background datasets
+                    sig, bg = self.analog_math(t2_result, 'T2', cfg.num_pts) # partition buffer into signal and background datasets
                 except ValueError:
                     continue
 
@@ -2138,13 +2138,13 @@ class SpinMeasurements:
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
                             fit_value, fit_error, fit_x, fit_y = self.fit_data(
-                                kwargs["dataset"], signal_sweeps, background_sweeps, *kwargs["fit_params"]
+                                cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                             )
                         except (RuntimeError, OptimizeWarning) as e:
-                            _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                            _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
                 iters_completed = i + 1
-                percent_completed = int(100 * iters_completed / kwargs["iters"])
+                percent_completed = int(100 * iters_completed / cfg.iters)
 
                 # save the current data to the data server
                 data.push({
@@ -2162,26 +2162,26 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=exp_start_time,
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=iters_completed,
                 ))
 
         ### --- Experiment complete: final save and status update --- ###
         if not stopped and not failed:
-            iters_completed, percent_completed = kwargs["iters"], 100
+            iters_completed, percent_completed = cfg.iters, 100
 
         if kwargs.get("fit", False):
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
                     fit_value, fit_error, fit_x, fit_y = self.fit_data(
-                        kwargs["dataset"], signal_sweeps, background_sweeps, *kwargs["fit_params"]
+                        cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                     )
                 except (RuntimeError, OptimizeWarning) as e:
-                    _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                    _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
         if kwargs.get("save", False):
-            run_save(kwargs["dataset"], kwargs["filename"], [kwargs["directory"]])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory])
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -2190,7 +2190,7 @@ class SpinMeasurements:
             fit_value=fit_value,
             fit_error=fit_error,
             start_time=exp_start_time,
-            total_iters=kwargs["iters"],
+            total_iters=cfg.iters,
             iters_completed=iters_completed,
             exception=exception_type if failed else None,
         ))
@@ -2208,21 +2208,21 @@ class SpinMeasurements:
         hdawg = mgr.awg
             
         ### --- Define parameter array for sweep --- ###
-        match kwargs['array_type']:
+        match cfg.array_type:
             case 'geomspace':
-                tau_times = np.geomspace(kwargs['start'], kwargs['stop'], kwargs['num_pts']) * 1e9
+                tau_times = np.geomspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
             case 'linspace':
-                tau_times = np.linspace(kwargs['start'], kwargs['stop'], kwargs['num_pts']) * 1e9
+                tau_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
 
         ### --- Define NV drive parameters --- ###
-        sig_gen_freq, iq_phases = self.choose_sideband(kwargs['sideband'], kwargs['freq'], kwargs['sideband_freq'])
+        sig_gen_freq, iq_phases = self.choose_sideband(cfg.sideband, cfg.freq, cfg.sideband_freq)
         pi: List[float] = []
         pi_half: List[float] = []
         for i in range(2):
-            pi_half.append(kwargs['pi']*1e9/2)
-            pi.append(kwargs['pi']*1e9)
+            pi_half.append(cfg.pi*1e9/2)
+            pi.append(cfg.pi*1e9)
         
-        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=kwargs["rf_power"]) # configure signal generator for NV drive
+        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=cfg.rf_power) # configure signal generator for NV drive
 
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
@@ -2230,61 +2230,61 @@ class SpinMeasurements:
         fit_y = np.ones(len(fit_x))
 
         ### --- Set up pulse streamer and digitizer for experiment --- ###
-        sequence = ps.XY8_N_RF(kwargs['laser_init']*1e9, tau_times, 'yy', 
+        sequence = ps.XY8_N_RF(cfg.laser_init*1e9, tau_times, 'yy', 
                             pi_half[0], pi_half[1], 
-                            pi[0], pi[1], kwargs['n'], kwargs['laser_readout']*1e9)
+                            pi[0], pi[1], cfg.n, cfg.laser_readout*1e9)
         x_tau_times = 8*tau_times + 8*pi[1] # for definition of (tau/2 - pi - tau - pi - tau - pi - tau - pi - tau/2)*n
-        # x_tau_times = 2*pi_half[0] + ((x_tau_times/2)/(8*kwargs['n']) + 8*pi[1] + \
-        #         7*x_tau_times/(8*kwargs['n']) + (x_tau_times/2)/(8*kwargs['n']))*kwargs['n']
+        # x_tau_times = 2*pi_half[0] + ((x_tau_times/2)/(8*cfg.n) + 8*pi[1] + \
+        #         7*x_tau_times/(8*cfg.n) + (x_tau_times/2)/(8*cfg.n))*cfg.n
 
         # sequence = ps.XY8_N_RF(tau_times, 'xy', 
         #                     pi_half[0], pi_half[1], 
-        #                     pi[0], pi[1], kwargs['n'], kwargs['laser_readout']*1e9)
+        #                     pi[0], pi[1], cfg.n, cfg.laser_readout*1e9)
         # x_tau_times = 8*tau_times + 4*pi[0] + 4*pi[1] # for definition of (tau/2 - pi - tau - pi - tau - pi - tau - pi - tau/2)*n
-        # x_tau_times = 2*pi_half[0] + ((x_tau_times/2)/(8*kwargs['n']) + 4*pi[0] + \
-        #             4*pi[1] + 7*x_tau_times/(8*kwargs['n']) + (x_tau_times/2)/(8*kwargs['n']))*kwargs['n']
+        # x_tau_times = 2*pi_half[0] + ((x_tau_times/2)/(8*cfg.n) + 4*pi[0] + \
+        #             4*pi[1] + 7*x_tau_times/(8*cfg.n) + (x_tau_times/2)/(8*cfg.n))*cfg.n
 
-        rf_times = 500 + 2*pi_half[1] + (x_tau_times)*kwargs['n'] + 100
+        rf_times = 500 + 2*pi_half[1] + (x_tau_times)*cfg.n + 100
 
         dig_cfg = self.digitizer_configure(
             exp_type="T2",
-            num_pts=kwargs["num_pts"],
-            iters=kwargs["iters"],
-            segment_size=kwargs["segment_size"],
-            sampling_freq=kwargs["dig_sampling_freq"],
-            dig_amplitude=kwargs["dig_amplitude"],
-            read_channel=kwargs["read_channel"],
-            coupling=kwargs["dig_coupling"],
-            termination=kwargs["dig_termination"],
-            pretrig_size=kwargs["pretrig_size"],
-            dig_timeout=kwargs["dig_timeout"],
-            runs=kwargs["runs"],
+            num_pts=cfg.num_pts,
+            iters=cfg.iters,
+            segment_size=cfg.segment_size,
+            sampling_freq=cfg.dig_sampling_freq,
+            dig_amplitude=cfg.dig_amplitude,
+            read_channel=cfg.read_channel,
+            coupling=cfg.dig_coupling,
+            termination=cfg.dig_termination,
+            pretrig_size=cfg.pretrig_size,
+            dig_timeout=cfg.dig_timeout,
+            runs=cfg.runs,
         )
 
         ### --- Upload AWG sequence --- ###
         try:
-            hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
-            hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
+            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
+            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 'seq': 'T2 RF',
-                # 'seq_dd': kwargs['t2_seq'],
-                'i_offset': kwargs['i_offset'],
-                'q_offset': kwargs['q_offset'],
-                'sideband_power': kwargs['sideband_power'],
-                'sideband_freq': kwargs['sideband_freq'], 
+                # 'seq_dd': cfg.t2_seq,
+                'i_offset': cfg.i_offset,
+                'q_offset': cfg.q_offset,
+                'sideband_power': cfg.sideband_power,
+                'sideband_freq': cfg.sideband_freq, 
                 'iq_phases': iq_phases,
                 'pihalf_x': pi_half[0]/1e9,
                 'pihalf_y': pi_half[1]/1e9,
                 'pi_x': pi[0]/1e9, 
                 'pi_y': pi[1]/1e9,
-                'rf_freq': kwargs['rf_pulse_freq'],
-                'rf_power': kwargs['rf_pulse_power'],
-                'rf_phase': kwargs['rf_pulse_phase'],
+                'rf_freq': cfg.rf_pulse_freq,
+                'rf_power': cfg.rf_pulse_power,
+                'rf_phase': cfg.rf_pulse_phase,
                 'rf_length': rf_times/1e9,
-                'n': kwargs['n'],
-                'num_pts': kwargs['num_pts'],
-                'runs': kwargs['runs'], 
-                'iters': kwargs['iters']
+                'n': cfg.n,
+                'num_pts': cfg.num_pts,
+                'runs': cfg.runs, 
+                'iters': cfg.iters
             }) 
         except Exception as e:
             self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -2293,7 +2293,7 @@ class SpinMeasurements:
                 fit_value=fit_value,
                 fit_error=fit_error,
                 start_time=time.perf_counter(),
-                total_iters=kwargs["iters"],
+                total_iters=cfg.iters,
                 iters_completed=0,
                 exception=type(e).__name__,
             ))
@@ -2302,7 +2302,7 @@ class SpinMeasurements:
         signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points) 
 
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
-        laser.set_diode_current_realtime(kwargs["laser_power"]) # set laser power
+        laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
         ### --- Initialize experiment state variables --- ###
         stopped = False
@@ -2326,7 +2326,7 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=time.perf_counter(),
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=0,
                     exception=type(e).__name__,
                 ))
@@ -2335,11 +2335,11 @@ class SpinMeasurements:
             exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
             ### --- Main experiment loop --- ###
-            for i in range(kwargs['iters']):
+            for i in range(cfg.iters):
                 if experiment_widget_process_queue(self.queue_to_exp) == "stop":
                     stopped = True
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:      
@@ -2350,11 +2350,11 @@ class SpinMeasurements:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:
-                    sig, bg = self.analog_math(t2_result, 'T2', kwargs['num_pts']) # partition buffer into signal and background datasets
+                    sig, bg = self.analog_math(t2_result, 'T2', cfg.num_pts) # partition buffer into signal and background datasets
                 except ValueError:
                     continue
 
@@ -2366,13 +2366,13 @@ class SpinMeasurements:
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
                             fit_value, fit_error, fit_x, fit_y = self.fit_data(
-                                kwargs["dataset"], signal_sweeps, background_sweeps, *kwargs["fit_params"]
+                                cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                             )
                         except (RuntimeError, OptimizeWarning) as e:
-                            _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                            _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
                 iters_completed = i + 1
-                percent_completed = int(100 * iters_completed / kwargs["iters"])
+                percent_completed = int(100 * iters_completed / cfg.iters)
 
                 # save the current data to the data server
                 data.push({
@@ -2390,26 +2390,26 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=exp_start_time,
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=iters_completed,
                 ))
 
         ### --- Experiment complete: final save and status update --- ###
         if not stopped and not failed:
-            iters_completed, percent_completed = kwargs["iters"], 100
+            iters_completed, percent_completed = cfg.iters, 100
 
         if kwargs.get("fit", False):
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
                     fit_value, fit_error, fit_x, fit_y = self.fit_data(
-                        kwargs["dataset"], signal_sweeps, background_sweeps, *kwargs["fit_params"]
+                        cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                     )
                 except (RuntimeError, OptimizeWarning) as e:
-                    _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                    _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
         if kwargs.get("save", False):
-            run_save(kwargs["dataset"], kwargs["filename"], [kwargs["directory"]])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory])
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -2418,7 +2418,7 @@ class SpinMeasurements:
             fit_value=fit_value,
             fit_error=fit_error,
             start_time=exp_start_time,
-            total_iters=kwargs["iters"],
+            total_iters=cfg.iters,
             iters_completed=iters_completed,
             exception=exception_type if failed else None,
         ))
@@ -2436,24 +2436,24 @@ class SpinMeasurements:
         hdawg = mgr.awg
             
         ### --- Define parameter array for sweep --- ###
-        match kwargs['array_type']:
+        match cfg.array_type:
             case 'geomspace':
-                tau_times = np.geomspace(kwargs['start'], kwargs['stop'], kwargs['num_pts']) * 1e9
+                tau_times = np.geomspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
             case 'linspace':
-                tau_times = np.linspace(kwargs['start'], kwargs['stop'], kwargs['num_pts']) * 1e9
+                tau_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
 
         ### --- Define NV drive parameters --- ###
-        if kwargs['pulse_axis'] == 'y':
+        if cfg.pulse_axis == 'y':
             delta = 90
         else:
             delta = 0
         iq_phases = [delta + 0, delta + 90, delta + 90, delta + 0] # set IQ phase relations for upper and lower sidebands
-        sig_gen_freq = (kwargs['freq_minus'] + kwargs['freq_plus']) / 2 # set mean value freq to sig gen 
-        sideband_freq = sig_gen_freq - kwargs['freq_minus'] # set sideband freq to match the inputted values
-        pi_pulse_minus = kwargs['pi_minus']*1e9 # [ns] units for pulse streamer
-        pi_pulse_plus = kwargs['pi_plus']*1e9 # [ns] units for pulse streamer
+        sig_gen_freq = (cfg.freq_minus + cfg.freq_plus) / 2 # set mean value freq to sig gen 
+        sideband_freq = sig_gen_freq - cfg.freq_minus # set sideband freq to match the inputted values
+        pi_pulse_minus = cfg.pi_minus*1e9 # [ns] units for pulse streamer
+        pi_pulse_plus = cfg.pi_plus*1e9 # [ns] units for pulse streamer
 
-        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=kwargs["rf_power"]) # configure signal generator for NV drive
+        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=cfg.rf_power) # configure signal generator for NV drive
 
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
@@ -2461,38 +2461,38 @@ class SpinMeasurements:
         fit_y = np.ones(len(fit_x))
 
         ### --- Set up pulse streamer and digitizer for experiment --- ###
-        sequence = ps.DQ(kwargs['laser_init'] * 1e9, tau_times, kwargs['pulse_axis'], pi_pulse_minus, pi_pulse_plus, kwargs['laser_readout'] * 1e9)
+        sequence = ps.DQ(cfg.laser_init * 1e9, tau_times, cfg.pulse_axis, pi_pulse_minus, pi_pulse_plus, cfg.laser_readout * 1e9)
         dig_cfg = self.digitizer_configure(
             exp_type="DQ",
-            num_pts=kwargs["num_pts"],
-            iters=kwargs["iters"],
-            segment_size=kwargs["segment_size"],
-            sampling_freq=kwargs["dig_sampling_freq"],
-            dig_amplitude=kwargs["dig_amplitude"],
-            read_channel=kwargs["read_channel"],
-            coupling=kwargs["dig_coupling"],
-            termination=kwargs["dig_termination"],
-            pretrig_size=kwargs["pretrig_size"],
-            dig_timeout=kwargs["dig_timeout"],
-            runs=kwargs["runs"],
+            num_pts=cfg.num_pts,
+            iters=cfg.iters,
+            segment_size=cfg.segment_size,
+            sampling_freq=cfg.dig_sampling_freq,
+            dig_amplitude=cfg.dig_amplitude,
+            read_channel=cfg.read_channel,
+            coupling=cfg.dig_coupling,
+            termination=cfg.dig_termination,
+            pretrig_size=cfg.pretrig_size,
+            dig_timeout=cfg.dig_timeout,
+            runs=cfg.runs,
         )
 
         ### --- Upload AWG sequence --- ###            
         try:
-            hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
-            hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
+            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
+            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 'seq': 'DQ',
-                'i_offset': kwargs['i_offset'],
-                'q_offset': kwargs['q_offset'],
-                'sideband_power': kwargs['sideband_power'],
+                'i_offset': cfg.i_offset,
+                'q_offset': cfg.q_offset,
+                'sideband_power': cfg.sideband_power,
                 'sideband_freq': sideband_freq, 
                 'iq_phases': iq_phases,
                 'pi_minus1': pi_pulse_minus/1e9, 
                 'pi_plus1': pi_pulse_plus/1e9, 
-                'num_pts': kwargs['num_pts'],
-                'runs': kwargs['runs'], 
-                'iters': kwargs['iters']
+                'num_pts': cfg.num_pts,
+                'runs': cfg.runs, 
+                'iters': cfg.iters
             })
         except Exception as e:
             self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -2501,7 +2501,7 @@ class SpinMeasurements:
                 fit_value=fit_value,
                 fit_error=fit_error,
                 start_time=time.perf_counter(),
-                total_iters=kwargs["iters"],
+                total_iters=cfg.iters,
                 iters_completed=0,
                 exception=type(e).__name__,
             ))
@@ -2510,7 +2510,7 @@ class SpinMeasurements:
         s00_sweeps, s0m_sweeps, smm_sweeps, smp_sweeps = StreamingList(), StreamingList(), StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points) 
 
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
-        laser.set_diode_current_realtime(kwargs["laser_power"]) # set laser power
+        laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
         ### --- Initialize experiment state variables --- ###
         stopped = False
@@ -2534,7 +2534,7 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=time.perf_counter(),
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=0,
                     exception=type(e).__name__,
                 ))
@@ -2543,11 +2543,11 @@ class SpinMeasurements:
             exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
             ### --- Main experiment loop --- ###
-            for i in range(kwargs['iters']):
+            for i in range(cfg.iters):
                 if experiment_widget_process_queue(self.queue_to_exp) == "stop":
                     stopped = True
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:        
@@ -2557,12 +2557,12 @@ class SpinMeasurements:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:
                     # partition buffer into signal and background datasets FIXME: maybe need to use DEER option for 4 pts in analog math
-                    s00, s0m, smm, smp = self.analog_math(dq_result, 'DQ', kwargs['num_pts']) # data for S0,0, S0,-1, S-1,-1, and S-1,+1 sequence
+                    s00, s0m, smm, smp = self.analog_math(dq_result, 'DQ', cfg.num_pts) # data for S0,0, S0,-1, S-1,-1, and S-1,+1 sequence
                 except ValueError:
                     continue
                         
@@ -2572,7 +2572,7 @@ class SpinMeasurements:
                 smp_sweeps.append(np.stack([tau_times/1e3, smp])); smp_sweeps.updated_item(-1)
 
                 iters_completed = i + 1
-                percent_completed = int(100 * iters_completed / kwargs["iters"])
+                percent_completed = int(100 * iters_completed / cfg.iters)
 
                 # save the current data to the data server
                 data.push({
@@ -2592,26 +2592,26 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=exp_start_time,
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=iters_completed,
                 ))
 
         ### --- Experiment complete: final save and status update --- ###
         if not stopped and not failed:
-            iters_completed, percent_completed = kwargs["iters"], 100
+            iters_completed, percent_completed = cfg.iters, 100
 
         # if kwargs.get("fit", False):
         #     with warnings.catch_warnings():
         #         warnings.simplefilter("error", OptimizeWarning)
         #         try:
         #             fit_value, fit_error, fit_x, fit_y = self.fit_data(
-        #                 kwargs["dataset"], signal_sweeps, background_sweeps, *kwargs["fit_params"]
+        #                 cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
         #             )
         #         except (RuntimeError, OptimizeWarning) as e:
-        #             _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+        #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
         if kwargs.get("save", False):
-            run_save(kwargs["dataset"], kwargs["filename"], [kwargs["directory"]])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory])
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -2620,7 +2620,7 @@ class SpinMeasurements:
             fit_value=fit_value,
             fit_error=fit_error,
             start_time=exp_start_time,
-            total_iters=kwargs["iters"],
+            total_iters=cfg.iters,
             iters_completed=iters_completed,
             exception=exception_type if failed else None,
         ))
@@ -2716,7 +2716,7 @@ class SpinMeasurements:
                 fit_value=fit_value,
                 fit_error=fit_error,
                 start_time=time.perf_counter(),
-                total_iters=kwargs["iters"],
+                total_iters=cfg.iters,
                 iters_completed=0,
                 exception=type(e).__name__,
             ))
@@ -2726,7 +2726,7 @@ class SpinMeasurements:
         echo_signal_sweeps, echo_background_sweeps = StreamingList(), StreamingList()
 
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
-        laser.set_diode_current_realtime(kwargs["laser_power"]) # set laser power
+        laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
         ### --- Initialize experiment state variables --- ###
         stopped = False
@@ -2874,19 +2874,19 @@ class SpinMeasurements:
         hdawg = mgr.awg
         
         ### --- Default parameter array for sweep --- ###
-        dark_taus = np.linspace(kwargs['start'], kwargs['stop'], kwargs['num_pts']) * 1e9            
+        dark_taus = np.linspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9            
  
         ### --- Define NV drive parameters --- ###
         sig_gen_freq, iq_phases = self.choose_sideband(
-            kwargs['sideband'], kwargs['freq'], kwargs['sideband_freq']
+            cfg.sideband, cfg.freq, cfg.sideband_freq
         ) # iq_phases for y pulse by default
         pi: List[float] = []
         pi_half: List[float] = []
         for i in range(2):
-            pi_half.append(kwargs['pi'] * 1e9 / 2)
-            pi.append(kwargs['pi'] * 1e9)
+            pi_half.append(cfg.pi * 1e9 / 2)
+            pi.append(cfg.pi * 1e9)
         
-        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=kwargs["rf_power"]) # configure signal generator for NV drive
+        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=cfg.rf_power) # configure signal generator for NV drive
 
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
@@ -2894,44 +2894,44 @@ class SpinMeasurements:
         fit_y = np.ones(len(fit_x))
 
         # define pulse sequence
-        sequence = ps.DEER_Rabi(kwargs['laser_init']*1e9, pi_half[0], pi_half[1], 
+        sequence = ps.DEER_Rabi(cfg.laser_init*1e9, pi_half[0], pi_half[1], 
                             pi[0], pi[1], 
-                            kwargs['tau']*1e9, kwargs['num_pts'], kwargs['laser_readout']*1e9)
+                            cfg.tau*1e9, cfg.num_pts, cfg.laser_readout*1e9)
         dig_cfg = self.digitizer_configure(
             exp_type="DEER",
-            num_pts=kwargs['num_pts'],
-            iters=kwargs["iters"],
-            segment_size=kwargs["segment_size"],
-            sampling_freq=kwargs["dig_sampling_freq"],
-            dig_amplitude=kwargs["dig_amplitude"],
-            read_channel=kwargs["read_channel"],
-            coupling=kwargs["dig_coupling"],
-            termination=kwargs["dig_termination"],
-            pretrig_size=kwargs["pretrig_size"],
-            dig_timeout=kwargs["dig_timeout"],
-            runs=kwargs["runs"],
+            num_pts=cfg.num_pts,
+            iters=cfg.iters,
+            segment_size=cfg.segment_size,
+            sampling_freq=cfg.dig_sampling_freq,
+            dig_amplitude=cfg.dig_amplitude,
+            read_channel=cfg.read_channel,
+            coupling=cfg.dig_coupling,
+            termination=cfg.dig_termination,
+            pretrig_size=cfg.pretrig_size,
+            dig_timeout=cfg.dig_timeout,
+            runs=cfg.runs,
         )
 
         ### --- Upload AWG sequence --- ###
         try:
-            hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
-            hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
+            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
+            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 'seq': 'DEER Rabi',     
-                'i_offset': kwargs['i_offset'],
-                'q_offset': kwargs['q_offset'],
-                'sideband_power': kwargs['sideband_power'],
-                'sideband_freq': kwargs['sideband_freq'], 
+                'i_offset': cfg.i_offset,
+                'q_offset': cfg.q_offset,
+                'sideband_power': cfg.sideband_power,
+                'sideband_freq': cfg.sideband_freq, 
                 'iq_phases': iq_phases,
                 'pihalf_x': pi_half[0]/1e9,
                 'pihalf_y': pi_half[1]/1e9,
                 'pi_x': pi[0]/1e9, 
                 'pi_y': pi[1]/1e9,
-                'dark_freq': kwargs['dark_freq'],
-                'mw_power': kwargs['awg_power'], 
-                'num_pts': kwargs['num_pts'],
-                'runs': kwargs['runs'], 
-                'iters': kwargs['iters'],
+                'dark_freq': cfg.dark_freq,
+                'mw_power': cfg.awg_power, 
+                'num_pts': cfg.num_pts,
+                'runs': cfg.runs, 
+                'iters': cfg.iters,
                 'pi_pulses': dark_taus/1e9
             })
         except Exception as e:
@@ -2941,7 +2941,7 @@ class SpinMeasurements:
                 fit_value=fit_value,
                 fit_error=fit_error,
                 start_time=time.perf_counter(),
-                total_iters=kwargs["iters"],
+                total_iters=cfg.iters,
                 iters_completed=0,
                 exception=type(e).__name__,
             ))
@@ -2951,7 +2951,7 @@ class SpinMeasurements:
         echo_signal_sweeps, echo_background_sweeps = StreamingList(), StreamingList()
 
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
-        laser.set_diode_current_realtime(kwargs["laser_power"]) # set laser power
+        laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
         ### --- Initialize experiment state variables --- ###
         stopped = False
@@ -2975,7 +2975,7 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=time.perf_counter(),
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=0,
                     exception=type(e).__name__,
                 ))
@@ -2984,11 +2984,11 @@ class SpinMeasurements:
             exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
             ### --- Main experiment loop --- ###
-            for i in range(kwargs['iters']):
+            for i in range(cfg.iters):
                 if experiment_widget_process_queue(self.queue_to_exp) == "stop":
                     stopped = True
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:   
@@ -2998,11 +2998,11 @@ class SpinMeasurements:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:
-                    dark_sig, dark_bg, echo_sig, echo_bg = self.analog_math(deer_result, 'DEER', kwargs['num_pts']) # partition buffer into signal and background datasets
+                    dark_sig, dark_bg, echo_sig, echo_bg = self.analog_math(deer_result, 'DEER', cfg.num_pts) # partition buffer into signal and background datasets
                 except ValueError:
                     continue
                         
@@ -3015,12 +3015,12 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
+                            fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(cfg.dataset, dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *cfg.fit_params)
                         except (RuntimeError, OptimizeWarning) as e:
-                            _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                            _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
                 iters_completed = i + 1
-                percent_completed = int(100 * iters_completed / kwargs["iters"])
+                percent_completed = int(100 * iters_completed / cfg.iters)
 
                 data.push({
                     'params': {'kwargs': kwargs, 'iters_completed': iters_completed, 'elapsed': time.perf_counter() - exp_start_time},
@@ -3038,24 +3038,24 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=exp_start_time,
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=iters_completed,
                 ))
 
         ### --- Experiment complete: final save and status update --- ###
         if not stopped and not failed:
-            iters_completed, percent_completed = kwargs["iters"], 100
+            iters_completed, percent_completed = cfg.iters, 100
       
         if kwargs.get("fit", False):
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
+                    fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(cfg.dataset, dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *cfg.fit_params)
                 except (RuntimeError, OptimizeWarning) as e:
-                    _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                    _logger.warning(f"For {cfg.dataset} measurement, {e}")
         
         if kwargs.get("save", False):
-            run_save(kwargs["dataset"], kwargs["filename"], [kwargs["directory"]])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory])
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -3064,7 +3064,7 @@ class SpinMeasurements:
             fit_value=fit_value,
             fit_error=fit_error,
             start_time=exp_start_time,
-            total_iters=kwargs["iters"],
+            total_iters=cfg.iters,
             iters_completed=iters_completed,
             exception=exception_type if failed else None,
         ))
@@ -3082,24 +3082,24 @@ class SpinMeasurements:
         hdawg = mgr.awg
             
         ### --- Default parameter array for sweep --- ###
-        match kwargs['array_type']:
+        match cfg.array_type:
             case 'geomspace':
-                tau_times = np.geomspace(kwargs['start'], kwargs['stop'], kwargs['num_pts']) * 1e9
+                tau_times = np.geomspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
             case 'linspace':
-                tau_times = np.linspace(kwargs['start'], kwargs['stop'], kwargs['num_pts']) * 1e9
+                tau_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
 
         ### --- Define NV drive parameters --- ###
         sig_gen_freq, iq_phases = self.choose_sideband(
-            kwargs['sideband'], kwargs['freq'], kwargs['sideband_freq']
+            cfg.sideband, cfg.freq, cfg.sideband_freq
         ) # iq_phases for y pulse by default
         pi: List[float] = []
         pi_half: List[float] = []
-        dark_pi = kwargs['dark_pi']
+        dark_pi = cfg.dark_pi
         for i in range(2):
-            pi_half.append(kwargs['pi']*1e9/2)
-            pi.append(kwargs['pi']*1e9)
+            pi_half.append(cfg.pi*1e9/2)
+            pi.append(cfg.pi*1e9)
         
-        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=kwargs["rf_power"]) # configure signal generator for NV drive
+        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=cfg.rf_power) # configure signal generator for NV drive
 
         ### --- Define fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
@@ -3107,45 +3107,45 @@ class SpinMeasurements:
         fit_y = np.ones(len(fit_x))
 
         ### --- Set up pulse streamer and digitizer for experiment --- ###
-        sequence = ps.DEER_FID(kwargs['laser_init']*1e9, tau_times, pi_half[0], pi_half[1], 
-                            pi[0], pi[1], kwargs['n'], kwargs['laser_readout']*1e9)
+        sequence = ps.DEER_FID(cfg.laser_init*1e9, tau_times, pi_half[0], pi_half[1], 
+                            pi[0], pi[1], cfg.n, cfg.laser_readout*1e9)
         dig_cfg = self.digitizer_configure(
             exp_type="DEER",
-            num_pts=kwargs['num_pts'],
-            iters=kwargs["iters"],
-            segment_size=kwargs["segment_size"],
-            sampling_freq=kwargs["dig_sampling_freq"],
-            dig_amplitude=kwargs["dig_amplitude"],
-            read_channel=kwargs["read_channel"],
-            coupling=kwargs["dig_coupling"],
-            termination=kwargs["dig_termination"],
-            pretrig_size=kwargs["pretrig_size"],
-            dig_timeout=kwargs["dig_timeout"],
-            runs=kwargs["runs"],
+            num_pts=cfg.num_pts,
+            iters=cfg.iters,
+            segment_size=cfg.segment_size,
+            sampling_freq=cfg.dig_sampling_freq,
+            dig_amplitude=cfg.dig_amplitude,
+            read_channel=cfg.read_channel,
+            coupling=cfg.dig_coupling,
+            termination=cfg.dig_termination,
+            pretrig_size=cfg.pretrig_size,
+            dig_timeout=cfg.dig_timeout,
+            runs=cfg.runs,
         )
 
         ### --- Upload AWG sequence --- ###
         try:
-            hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
-            hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
+            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
+            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 'seq': 'DEER FID',
-                'i_offset': kwargs['i_offset'],
-                'q_offset': kwargs['q_offset'],
-                'sideband_power': kwargs['sideband_power'],
-                'sideband_freq': kwargs['sideband_freq'], 
+                'i_offset': cfg.i_offset,
+                'q_offset': cfg.q_offset,
+                'sideband_power': cfg.sideband_power,
+                'sideband_freq': cfg.sideband_freq, 
                 'iq_phases': iq_phases,
                 'pihalf_x': pi_half[0]/1e9,
                 'pihalf_y': pi_half[1]/1e9,
                 'pi_x': pi[0]/1e9, 
                 'pi_y': pi[1]/1e9,  
                 'pi_pulse': dark_pi, 
-                'dark_freq': kwargs['dark_freq'],
-                'mw_power': kwargs['awg_power'], 
-                'num_pts': kwargs['num_pts'],
-                'n': kwargs['n'],
-                'runs': kwargs['runs'], 
-                'iters': kwargs['iters']
+                'dark_freq': cfg.dark_freq,
+                'mw_power': cfg.awg_power, 
+                'num_pts': cfg.num_pts,
+                'n': cfg.n,
+                'runs': cfg.runs, 
+                'iters': cfg.iters
             })
         except Exception as e:
             self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -3154,7 +3154,7 @@ class SpinMeasurements:
                 fit_value=fit_value,
                 fit_error=fit_error,
                 start_time=time.perf_counter(),
-                total_iters=kwargs["iters"],
+                total_iters=cfg.iters,
                 iters_completed=0,
                 exception=type(e).__name__,
             ))
@@ -3164,7 +3164,7 @@ class SpinMeasurements:
         echo_signal_sweeps, echo_background_sweeps = StreamingList(), StreamingList()
 
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
-        laser.set_diode_current_realtime(kwargs["laser_power"]) # set laser power
+        laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
         ### --- Initialize experiment state variables --- ###
         stopped = False
@@ -3188,7 +3188,7 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=time.perf_counter(),
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=0,
                     exception=type(e).__name__,
                 ))
@@ -3197,11 +3197,11 @@ class SpinMeasurements:
             exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
             ### --- Main experiment loop --- ###
-            for i in range(kwargs['iters']):
+            for i in range(cfg.iters):
                 if experiment_widget_process_queue(self.queue_to_exp) == "stop":
                     stopped = True
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:   
@@ -3211,11 +3211,11 @@ class SpinMeasurements:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:
-                    dark_sig, dark_bg, echo_sig, echo_bg = self.analog_math(deer_result, 'DEER', kwargs['num_pts']) # partition buffer into signal and background datasets
+                    dark_sig, dark_bg, echo_sig, echo_bg = self.analog_math(deer_result, 'DEER', cfg.num_pts) # partition buffer into signal and background datasets
                 except ValueError:
                     continue
                         
@@ -3229,12 +3229,12 @@ class SpinMeasurements:
                 #     with warnings.catch_warnings():
                 #         warnings.simplefilter("error", OptimizeWarning)
                 #         try:
-                #             fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
+                #             fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(cfg.dataset, dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *cfg.fit_params)
                 #         except (RuntimeError, OptimizeWarning) as e:
-                #             _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
                 iters_completed = i + 1
-                percent_completed = int(100 * iters_completed / kwargs["iters"])
+                percent_completed = int(100 * iters_completed / cfg.iters)
 
                 # save the current data to the data server
                 data.push({
@@ -3254,24 +3254,24 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=exp_start_time,
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=iters_completed,
                 ))
 
         ### --- Experiment complete: final save and status update --- ###
         if not stopped and not failed:
-            iters_completed, percent_completed = kwargs["iters"], 100
+            iters_completed, percent_completed = cfg.iters, 100
 
         # if kwargs.get("fit", False):
         #     with warnings.catch_warnings():
         #         warnings.simplefilter("error", OptimizeWarning)
         #         try:
-        #             fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
+        #             fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(cfg.dataset, dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *cfg.fit_params)
         #         except (RuntimeError, OptimizeWarning) as e:
-        #             _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+        #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
         
         if kwargs.get("save", False):
-            run_save(kwargs["dataset"], kwargs["filename"], [kwargs["directory"]])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory])
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -3280,7 +3280,7 @@ class SpinMeasurements:
             fit_value=fit_value,
             fit_error=fit_error,
             start_time=exp_start_time,
-            total_iters=kwargs["iters"],
+            total_iters=cfg.iters,
             iters_completed=iters_completed,
             exception=exception_type if failed else None,
         ))
@@ -3298,22 +3298,22 @@ class SpinMeasurements:
         hdawg = mgr.awg
            
         ### --- Default parameter array for sweep --- ###
-        match kwargs['array_type']:
+        match cfg.array_type:
             case 'geomspace':
-                tau_times = np.geomspace(kwargs['start'], kwargs['stop'], kwargs['num_pts']) * 1e9
+                tau_times = np.geomspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
             case 'linspace':
-                tau_times = np.linspace(kwargs['start'], kwargs['stop'], kwargs['num_pts']) * 1e9
+                tau_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
 
         ### --- Define NV drive parameters --- ###
-        sig_gen_freq, iq_phases = self.choose_sideband(kwargs['sideband'], kwargs['freq'], kwargs['sideband_freq']) # iq_phases for y pulse by default
+        sig_gen_freq, iq_phases = self.choose_sideband(cfg.sideband, cfg.freq, cfg.sideband_freq) # iq_phases for y pulse by default
         pi: List[float] = []
         pi_half: List[float] = []
-        dark_pi = kwargs['dark_pi']
+        dark_pi = cfg.dark_pi
         for i in range(2):
-            pi_half.append(kwargs['pi']*1e9/2)
-            pi.append(kwargs['pi']*1e9)
+            pi_half.append(cfg.pi*1e9/2)
+            pi.append(cfg.pi*1e9)
         
-        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=kwargs["rf_power"]) # configure signal generator for NV drive
+        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=cfg.rf_power) # configure signal generator for NV drive
 
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
@@ -3321,49 +3321,49 @@ class SpinMeasurements:
         fit_y = np.ones(len(fit_x))
 
         ### --- Set up pulse streamer and digitizer for experiment --- ###
-        sequence = ps.DEER_FID_CD(kwargs['laser_init']*1e9, tau_times, pi_half[0], pi_half[1], 
-                                pi[0], pi[1], kwargs['n'], kwargs['laser_readout']*1e9)
-        # dark_pulses = kwargs['pi']/2 + tau_times/1e9 + (kwargs['pi'] + 2*tau_times/1e9)*(kwargs['n']-1) + kwargs['pi'] + tau_times/1e9 + kwargs['pi']/2 
+        sequence = ps.DEER_FID_CD(cfg.laser_init*1e9, tau_times, pi_half[0], pi_half[1], 
+                                pi[0], pi[1], cfg.n, cfg.laser_readout*1e9)
+        # dark_pulses = cfg.pi/2 + tau_times/1e9 + (cfg.pi + 2*tau_times/1e9)*(cfg.n-1) + cfg.pi + tau_times/1e9 + cfg.pi/2 
         
         dig_cfg = self.digitizer_configure(
             exp_type="CD",
-            num_pts=kwargs['num_pts'],
-            iters=kwargs["iters"],
-            segment_size=kwargs["segment_size"],
-            sampling_freq=kwargs["dig_sampling_freq"],
-            dig_amplitude=kwargs["dig_amplitude"],
-            read_channel=kwargs["read_channel"],
-            coupling=kwargs["dig_coupling"],
-            termination=kwargs["dig_termination"],
-            pretrig_size=kwargs["pretrig_size"],
-            dig_timeout=kwargs["dig_timeout"],
-            runs=kwargs["runs"],
+            num_pts=cfg.num_pts,
+            iters=cfg.iters,
+            segment_size=cfg.segment_size,
+            sampling_freq=cfg.dig_sampling_freq,
+            dig_amplitude=cfg.dig_amplitude,
+            read_channel=cfg.read_channel,
+            coupling=cfg.dig_coupling,
+            termination=cfg.dig_termination,
+            pretrig_size=cfg.pretrig_size,
+            dig_timeout=cfg.dig_timeout,
+            runs=cfg.runs,
         )
 
         ### --- Upload AWG sequence --- ###
         try:
-            hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
-            hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
+            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
+            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 'seq': 'DEER FID CD',                
-                'i_offset': kwargs['i_offset'],
-                'q_offset': kwargs['q_offset'],
-                'sideband_power': kwargs['sideband_power'],
-                'sideband_freq': kwargs['sideband_freq'], 
+                'i_offset': cfg.i_offset,
+                'q_offset': cfg.q_offset,
+                'sideband_power': cfg.sideband_power,
+                'sideband_freq': cfg.sideband_freq, 
                 'iq_phases': iq_phases,
                 'pihalf_x': pi_half[0]/1e9,
                 'pihalf_y': pi_half[1]/1e9,
                 'pi_x': pi[0]/1e9, 
                 'pi_y': pi[1]/1e9,
-                'dark_freq': kwargs['dark_freq'],
+                'dark_freq': cfg.dark_freq,
                 'pi_pulse': dark_pi,
                 'taus': tau_times/1e9,
-                'mw_power': kwargs['awg_power'],
-                'cd_mw_power': kwargs['awg_cd_power'], 
-                'num_pts': kwargs['num_pts'],
-                'n': kwargs['n'],
-                'runs': kwargs['runs'], 
-                'iters': kwargs['iters']
+                'mw_power': cfg.awg_power,
+                'cd_mw_power': cfg.awg_cd_power, 
+                'num_pts': cfg.num_pts,
+                'n': cfg.n,
+                'runs': cfg.runs, 
+                'iters': cfg.iters
             })
         except Exception as e:
             self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -3372,7 +3372,7 @@ class SpinMeasurements:
                 fit_value=fit_value,
                 fit_error=fit_error,
                 start_time=time.perf_counter(),
-                total_iters=kwargs["iters"],
+                total_iters=cfg.iters,
                 iters_completed=0,
                 exception=type(e).__name__,
             ))
@@ -3383,7 +3383,7 @@ class SpinMeasurements:
         cd_signal_sweeps, cd_background_sweeps = StreamingList(), StreamingList()
 
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
-        laser.set_diode_current_realtime(kwargs["laser_power"]) # set laser power
+        laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
         ### --- Initialize experiment state variables --- ###
         stopped = False
@@ -3407,7 +3407,7 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=time.perf_counter(),
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=0,
                     exception=type(e).__name__,
                 ))
@@ -3416,11 +3416,11 @@ class SpinMeasurements:
             exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
             ### --- Main experiment loop --- ###
-            for i in range(kwargs['iters']):
+            for i in range(cfg.iters):
                 if experiment_widget_process_queue(self.queue_to_exp) == "stop":
                     stopped = True
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:    
@@ -3430,11 +3430,11 @@ class SpinMeasurements:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:
-                    dark_sig, dark_bg, echo_sig, echo_bg, cd_sig, cd_bg = self.analog_math(cd_result, 'CD', kwargs['num_pts']) # partition buffer into signal and background datasets
+                    dark_sig, dark_bg, echo_sig, echo_bg, cd_sig, cd_bg = self.analog_math(cd_result, 'CD', cfg.num_pts) # partition buffer into signal and background datasets
                 except ValueError:
                     continue
 
@@ -3449,12 +3449,12 @@ class SpinMeasurements:
                 #     with warnings.catch_warnings():
                 #         warnings.simplefilter("error", OptimizeWarning)
                 #         try:
-                #             fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
+                #             fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(cfg.dataset, dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *cfg.fit_params)
                 #         except (RuntimeError, OptimizeWarning) as e:
-                #             _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
                 iters_completed = i + 1
-                percent_completed = int(100 * iters_completed / kwargs["iters"])
+                percent_completed = int(100 * iters_completed / cfg.iters)
 
                 data.push({
                     'params': {'kwargs': kwargs, 'iters_completed': iters_completed, 'elapsed': time.perf_counter() - exp_start_time},
@@ -3475,24 +3475,24 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=exp_start_time,
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=iters_completed,
                 ))
 
         ### --- Experiment complete: final save and status update --- ###
         if not stopped and not failed:
-            iters_completed, percent_completed = kwargs["iters"], 100
+            iters_completed, percent_completed = cfg.iters, 100
       
         # if kwargs.get("fit", False):
         #     with warnings.catch_warnings():
         #         warnings.simplefilter("error", OptimizeWarning)
         #         try:
-        #             fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
+        #             fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(cfg.dataset, dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *cfg.fit_params)
         #         except (RuntimeError, OptimizeWarning) as e:
-        #             _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+        #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
         
         if kwargs.get("save", False):
-            run_save(kwargs["dataset"], kwargs["filename"], [kwargs["directory"]])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory])
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -3501,7 +3501,7 @@ class SpinMeasurements:
             fit_value=fit_value,
             fit_error=fit_error,
             start_time=exp_start_time,
-            total_iters=kwargs["iters"],
+            total_iters=cfg.iters,
             iters_completed=iters_completed,
             exception=exception_type if failed else None,
         ))                
@@ -3519,18 +3519,18 @@ class SpinMeasurements:
         hdawg = mgr.awg
             
         ### --- Default parameter array for sweep --- ###
-        dark_taus = np.linspace(kwargs['start'], kwargs['stop'], kwargs['num_pts'])          
+        dark_taus = np.linspace(cfg.start, cfg.stop, cfg.num_pts)          
 
         ### --- Define NV drive parameters --- ###
-        sig_gen_freq, iq_phases = self.choose_sideband(kwargs['sideband'], kwargs['freq'], kwargs['sideband_freq']) # iq_phases for y pulse by default
+        sig_gen_freq, iq_phases = self.choose_sideband(cfg.sideband, cfg.freq, cfg.sideband_freq) # iq_phases for y pulse by default
         pi: List[float] = []
         pi_half: List[float] = []
-        dark_pi = kwargs['dark_pi']
+        dark_pi = cfg.dark_pi
         for i in range(2):
-            pi_half.append(kwargs['pi']*1e9/2)
-            pi.append(kwargs['pi']*1e9)
+            pi_half.append(cfg.pi*1e9/2)
+            pi.append(cfg.pi*1e9)
         
-        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=kwargs["rf_power"]) # configure signal generator for NV drive
+        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=cfg.rf_power) # configure signal generator for NV drive
 
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
@@ -3538,44 +3538,44 @@ class SpinMeasurements:
         fit_y = np.ones(len(fit_x))
 
         ### --- Set up pulse streamer and digitizer for experiment --- ###  
-        sequence = ps.DEER_Corr_Rabi(kwargs['laser_init']*1e9, dark_taus*1e9, kwargs['tau']*1e9, kwargs['t_corr']*1e9, pi_half[0], pi_half[1], 
-                            pi[0], pi[1], kwargs['laser_readout']*1e9) # send to PS in [ns] units
+        sequence = ps.DEER_Corr_Rabi(cfg.laser_init*1e9, dark_taus*1e9, cfg.tau*1e9, cfg.t_corr*1e9, pi_half[0], pi_half[1], 
+                            pi[0], pi[1], cfg.laser_readout*1e9) # send to PS in [ns] units
         dig_cfg = self.digitizer_configure(
             exp_type="Corr Rabi",
-            num_pts=kwargs['num_pts'],
-            iters=kwargs["iters"],
-            segment_size=kwargs["segment_size"],
-            sampling_freq=kwargs["dig_sampling_freq"],
-            dig_amplitude=kwargs["dig_amplitude"],
-            read_channel=kwargs["read_channel"],
-            coupling=kwargs["dig_coupling"],
-            termination=kwargs["dig_termination"],
-            pretrig_size=kwargs["pretrig_size"],
-            dig_timeout=kwargs["dig_timeout"],
-            runs=kwargs["runs"],
+            num_pts=cfg.num_pts,
+            iters=cfg.iters,
+            segment_size=cfg.segment_size,
+            sampling_freq=cfg.dig_sampling_freq,
+            dig_amplitude=cfg.dig_amplitude,
+            read_channel=cfg.read_channel,
+            coupling=cfg.dig_coupling,
+            termination=cfg.dig_termination,
+            pretrig_size=cfg.pretrig_size,
+            dig_timeout=cfg.dig_timeout,
+            runs=cfg.runs,
         )
 
         ### --- Upload AWG sequence --- ###
         try:
-            hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
-            hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
+            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
+            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 'seq': 'DEER Corr Rabi',                
-                'i_offset': kwargs['i_offset'],
-                'q_offset': kwargs['q_offset'],
-                'sideband_power': kwargs['sideband_power'],
-                'sideband_freq': kwargs['sideband_freq'], 
+                'i_offset': cfg.i_offset,
+                'q_offset': cfg.q_offset,
+                'sideband_power': cfg.sideband_power,
+                'sideband_freq': cfg.sideband_freq, 
                 'iq_phases': iq_phases,
                 'pihalf_x': pi_half[0]/1e9,
                 'pihalf_y': pi_half[1]/1e9,
                 'pi_x': pi[0]/1e9, 
                 'pi_y': pi[1]/1e9,
-                'dark_freq': kwargs['dark_freq'],
+                'dark_freq': cfg.dark_freq,
                 'dark_pulse': dark_pi,
-                'mw_power': kwargs['awg_power'], 
-                'num_pts': kwargs['num_pts'],
-                'runs': kwargs['runs'], 
-                'iters': kwargs['iters'],
+                'mw_power': cfg.awg_power, 
+                'num_pts': cfg.num_pts,
+                'runs': cfg.runs, 
+                'iters': cfg.iters,
                 'pi_pulses': dark_taus
             })
         except Exception as e:
@@ -3585,7 +3585,7 @@ class SpinMeasurements:
                 fit_value=fit_value,
                 fit_error=fit_error,
                 start_time=time.perf_counter(),
-                total_iters=kwargs["iters"],
+                total_iters=cfg.iters,
                 iters_completed=0,
                 exception=type(e).__name__,
             ))
@@ -3594,7 +3594,7 @@ class SpinMeasurements:
         signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
 
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
-        laser.set_diode_current_realtime(kwargs["laser_power"]) # set laser power
+        laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
         ### --- Initialize experiment state variables --- ###
         stopped = False
@@ -3618,7 +3618,7 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=time.perf_counter(),
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=0,
                     exception=type(e).__name__,
                 ))
@@ -3627,11 +3627,11 @@ class SpinMeasurements:
             exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
             ### --- Main experiment loop --- ###
-            for i in range(kwargs['iters']):
+            for i in range(cfg.iters):
                 if experiment_widget_process_queue(self.queue_to_exp) == "stop":
                     stopped = True
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:     
@@ -3642,11 +3642,11 @@ class SpinMeasurements:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:
-                    sig, bg = self.analog_math(corr_result, 'Corr', kwargs['num_pts']) # partition buffer into signal and background datasets
+                    sig, bg = self.analog_math(corr_result, 'Corr', cfg.num_pts) # partition buffer into signal and background datasets
                 except ValueError:
                     continue
 
@@ -3657,12 +3657,12 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
                         except (RuntimeError, OptimizeWarning) as e:
-                            _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                            _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
                 iters_completed = i + 1
-                percent_completed = int(100 * iters_completed / kwargs["iters"])
+                percent_completed = int(100 * iters_completed / cfg.iters)
 
                 data.push({
                     'params': {'kwargs': kwargs, 'iters_completed': iters_completed, 'elapsed': time.perf_counter() - exp_start_time},
@@ -3679,24 +3679,24 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=exp_start_time,
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=iters_completed,
                 ))
 
         ### --- Experiment complete: final save and status update --- ###
         if not stopped and not failed:
-            iters_completed, percent_completed = kwargs["iters"], 100
+            iters_completed, percent_completed = cfg.iters, 100
       
         if kwargs.get("fit", False):
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
                 except (RuntimeError, OptimizeWarning) as e:
-                    _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                    _logger.warning(f"For {cfg.dataset} measurement, {e}")
         
         if kwargs.get("save", False):
-            run_save(kwargs["dataset"], kwargs["filename"], [kwargs["directory"]])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory])
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -3705,7 +3705,7 @@ class SpinMeasurements:
             fit_value=fit_value,
             fit_error=fit_error,
             start_time=exp_start_time,
-            total_iters=kwargs["iters"],
+            total_iters=cfg.iters,
             iters_completed=iters_completed,
             exception=exception_type if failed else None,
         ))
@@ -3723,25 +3723,25 @@ class SpinMeasurements:
         hdawg = mgr.awg
             
         ### --- Default parameter array for sweep --- ###
-        match kwargs['array_type']:
+        match cfg.array_type:
             case 'geomspace':
-                t_corr_times = np.geomspace(kwargs['start'], kwargs['stop'], kwargs['num_pts'])     
+                t_corr_times = np.geomspace(cfg.start, cfg.stop, cfg.num_pts)     
             case 'linspace':
-                t_corr_times = np.linspace(kwargs['start'], kwargs['stop'], kwargs['num_pts'])     
+                t_corr_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts)     
 
         ### --- Define NV drive parameters --- ###
-        sig_gen_freq, iq_phases = self.choose_sideband(kwargs['sideband'], kwargs['freq'], kwargs['sideband_freq']) # iq_phases for y pulse by default
+        sig_gen_freq, iq_phases = self.choose_sideband(cfg.sideband, cfg.freq, cfg.sideband_freq) # iq_phases for y pulse by default
 
         # define pi pulses
         pi: List[float] = []
         pi_half: List[float] = []
-        dark_pi = kwargs['dark_pi']
+        dark_pi = cfg.dark_pi
 
         for i in range(2):
-            pi_half.append(kwargs['pi']*1e9/2)
-            pi.append(kwargs['pi']*1e9)
+            pi_half.append(cfg.pi*1e9/2)
+            pi.append(cfg.pi*1e9)
 
-        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=kwargs["rf_power"]) # configure signal generator for NV drive
+        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=cfg.rf_power) # configure signal generator for NV drive
 
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
@@ -3749,44 +3749,44 @@ class SpinMeasurements:
         fit_y = np.ones(len(fit_x))
 
         ### --- Set up pulse streamer and digitizer for experiment --- ###
-        sequence = ps.Electron_T1(kwargs['laser_init']*1e9, t_corr_times*1e9, kwargs['tau']*1e9, pi_half[0], pi_half[1], 
-                            pi[0], pi[1], dark_pi*1e9, kwargs['laser_readout']*1e9) # send to PS in [ns] units
+        sequence = ps.Electron_T1(cfg.laser_init*1e9, t_corr_times*1e9, cfg.tau*1e9, pi_half[0], pi_half[1], 
+                            pi[0], pi[1], dark_pi*1e9, cfg.laser_readout*1e9) # send to PS in [ns] units
         dig_cfg = self.digitizer_configure(
             exp_type="DEER",
-            num_pts=kwargs['num_pts'],
-            iters=kwargs["iters"],
-            segment_size=kwargs["segment_size"],
-            sampling_freq=kwargs["dig_sampling_freq"],
-            dig_amplitude=kwargs["dig_amplitude"],
-            read_channel=kwargs["read_channel"],
-            coupling=kwargs["dig_coupling"],
-            termination=kwargs["dig_termination"],
-            pretrig_size=kwargs["pretrig_size"],
-            dig_timeout=kwargs["dig_timeout"],
-            runs=kwargs["runs"],
+            num_pts=cfg.num_pts,
+            iters=cfg.iters,
+            segment_size=cfg.segment_size,
+            sampling_freq=cfg.dig_sampling_freq,
+            dig_amplitude=cfg.dig_amplitude,
+            read_channel=cfg.read_channel,
+            coupling=cfg.dig_coupling,
+            termination=cfg.dig_termination,
+            pretrig_size=cfg.pretrig_size,
+            dig_timeout=cfg.dig_timeout,
+            runs=cfg.runs,
         )
 
         ### --- Upload AWG sequence --- ##
         try:
-            hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
-            hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
+            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
+            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 'seq': 'DEER Corr T1',                  
-                'i_offset': kwargs['i_offset'],
-                'q_offset': kwargs['q_offset'],
-                'sideband_power': kwargs['sideband_power'],
-                'sideband_freq': kwargs['sideband_freq'], 
+                'i_offset': cfg.i_offset,
+                'q_offset': cfg.q_offset,
+                'sideband_power': cfg.sideband_power,
+                'sideband_freq': cfg.sideband_freq, 
                 'iq_phases': iq_phases,
                 'pihalf_x': pi_half[0]/1e9,
                 'pihalf_y': pi_half[1]/1e9,
                 'pi_x': pi[0]/1e9, 
                 'pi_y': pi[1]/1e9,
-                'dark_freq': kwargs['dark_freq'],
+                'dark_freq': cfg.dark_freq,
                 'dark_pulse': dark_pi,
-                'mw_power': kwargs['awg_power'], 
-                'num_pts': kwargs['num_pts'],
-                'runs': kwargs['runs'], 
-                'iters': kwargs['iters']})
+                'mw_power': cfg.awg_power, 
+                'num_pts': cfg.num_pts,
+                'runs': cfg.runs, 
+                'iters': cfg.iters})
         except Exception as e:
             self.queue_from_exp.put_nowait(self.build_status_msg(
                 status="failed",
@@ -3794,7 +3794,7 @@ class SpinMeasurements:
                 fit_value=fit_value,
                 fit_error=fit_error,
                 start_time=time.perf_counter(),
-                total_iters=kwargs["iters"],
+                total_iters=cfg.iters,
                 iters_completed=0,
                 exception=type(e).__name__,
             ))
@@ -3804,7 +3804,7 @@ class SpinMeasurements:
         with_pulse_ny_sweeps, without_pulse_ny_sweeps = StreamingList(), StreamingList()
         
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
-        laser.set_diode_current_realtime(kwargs["laser_power"]) # set laser power
+        laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
         ### --- Initialize experiment state variables --- ###
         stopped = False
@@ -3828,7 +3828,7 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=time.perf_counter(),
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=0,
                     exception=type(e).__name__,
                 ))
@@ -3837,11 +3837,11 @@ class SpinMeasurements:
             exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
             ### --- Main experiment loop --- ###
-            for i in range(kwargs['iters']):
+            for i in range(cfg.iters):
                 if experiment_widget_process_queue(self.queue_to_exp) == "stop":
                     stopped = True
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:
@@ -3851,11 +3851,11 @@ class SpinMeasurements:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:
-                    with_py, without_py, with_ny, without_ny = self.analog_math(corr_result, 'DEER', kwargs['num_pts']) # partition buffer into signal and background datasets
+                    with_py, without_py, with_ny, without_ny = self.analog_math(corr_result, 'DEER', cfg.num_pts) # partition buffer into signal and background datasets
                 except ValueError:
                     continue
 
@@ -3868,12 +3868,12 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], with_pulse_py_sweeps, without_pulse_py_sweeps, with_pulse_ny_sweeps, without_pulse_ny_sweeps, *kwargs['fit_params'])
+                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.dataset, with_pulse_py_sweeps, without_pulse_py_sweeps, with_pulse_ny_sweeps, without_pulse_ny_sweeps, *cfg.fit_params)
                         except (RuntimeError, OptimizeWarning) as e:
-                            _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                            _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
                 iters_completed = i + 1
-                percent_completed = int(100 * iters_completed / kwargs["iters"])
+                percent_completed = int(100 * iters_completed / cfg.iters)
 
                 # save the current data to the data server
                 data.push({'params': {'kwargs': kwargs, 'iters_completed': iters_completed, 'elapsed': time.perf_counter() - exp_start_time},
@@ -3892,24 +3892,24 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=exp_start_time,
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=iters_completed,
                 ))
 
         ### --- Experiment complete: final save and status update --- ###
         if not stopped and not failed:
-            iters_completed, percent_completed = kwargs["iters"], 100
+            iters_completed, percent_completed = cfg.iters, 100
       
         if kwargs.get("fit", False):
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(kwargs['dataset'], dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *kwargs['fit_params'])
+                    fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(cfg.dataset, dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *cfg.fit_params)
                 except (RuntimeError, OptimizeWarning) as e:
-                    _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                    _logger.warning(f"For {cfg.dataset} measurement, {e}")
         
         if kwargs.get("save", False):
-            run_save(kwargs["dataset"], kwargs["filename"], [kwargs["directory"]])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory])
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -3918,7 +3918,7 @@ class SpinMeasurements:
             fit_value=fit_value,
             fit_error=fit_error,
             start_time=exp_start_time,
-            total_iters=kwargs["iters"],
+            total_iters=cfg.iters,
             iters_completed=iters_completed,
             exception=exception_type if failed else None,
         ))
@@ -3936,24 +3936,24 @@ class SpinMeasurements:
         hdawg = mgr.awg
             
         ### --- Default parameter array for sweep --- ###
-        match kwargs['array_type']:
+        match cfg.array_type:
             case 'geomspace':
-                t_times = np.geomspace(kwargs['start'], kwargs['stop'], kwargs['num_pts'])     
+                t_times = np.geomspace(cfg.start, cfg.stop, cfg.num_pts)     
             case 'linspace':
-                t_times = np.linspace(kwargs['start'], kwargs['stop'], kwargs['num_pts'])     
+                t_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts)     
 
         ### --- Define NV drive parameters --- ###
-        sig_gen_freq, iq_phases = self.choose_sideband(kwargs['sideband'], kwargs['freq'], kwargs['sideband_freq']) # iq_phases for y pulse by default
+        sig_gen_freq, iq_phases = self.choose_sideband(cfg.sideband, cfg.freq, cfg.sideband_freq) # iq_phases for y pulse by default
         pi: List[float] = []
         pi_half: List[float] = []
-        dark_pi_half = kwargs['dark_pi']/2
-        dark_pi = kwargs['dark_pi']
+        dark_pi_half = cfg.dark_pi/2
+        dark_pi = cfg.dark_pi
 
         for i in range(2):
-            pi_half.append(kwargs['pi']*1e9/2)
-            pi.append(kwargs['pi']*1e9)
+            pi_half.append(cfg.pi*1e9/2)
+            pi.append(cfg.pi*1e9)
         
-        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=kwargs["rf_power"]) # configure signal generator for NV drive
+        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=cfg.rf_power) # configure signal generator for NV drive
 
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
@@ -3961,45 +3961,45 @@ class SpinMeasurements:
         fit_y = np.ones(len(fit_x))
 
         # define pulse sequence
-        sequence = ps.Electron_T2(kwargs['laser_init']*1e9, t_times*1e9, kwargs['tau']*1e9, pi_half[0], pi_half[1], 
-                            pi[0], pi[1], dark_pi_half*1e9, dark_pi*1e9, kwargs['laser_readout']*1e9, kwargs['deer_t2_buffer']*1e9) # send to PS in [ns] units
+        sequence = ps.Electron_T2(cfg.laser_init*1e9, t_times*1e9, cfg.tau*1e9, pi_half[0], pi_half[1], 
+                            pi[0], pi[1], dark_pi_half*1e9, dark_pi*1e9, cfg.laser_readout*1e9, cfg.deer_t2_buffer*1e9) # send to PS in [ns] units
         dig_cfg = self.digitizer_configure(
             exp_type="DEER T2",
-            num_pts=kwargs['num_pts'],
-            iters=kwargs["iters"],
-            segment_size=kwargs["segment_size"],
-            sampling_freq=kwargs["dig_sampling_freq"],
-            dig_amplitude=kwargs["dig_amplitude"],
-            read_channel=kwargs["read_channel"],
-            coupling=kwargs["dig_coupling"],
-            termination=kwargs["dig_termination"],
-            pretrig_size=kwargs["pretrig_size"],
-            dig_timeout=kwargs["dig_timeout"],
-            runs=kwargs["runs"],
+            num_pts=cfg.num_pts,
+            iters=cfg.iters,
+            segment_size=cfg.segment_size,
+            sampling_freq=cfg.dig_sampling_freq,
+            dig_amplitude=cfg.dig_amplitude,
+            read_channel=cfg.read_channel,
+            coupling=cfg.dig_coupling,
+            termination=cfg.dig_termination,
+            pretrig_size=cfg.pretrig_size,
+            dig_timeout=cfg.dig_timeout,
+            runs=cfg.runs,
         )
            
         ### --- Upload AWG sequence --- ##
         try:
-            hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
-            hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
+            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
+            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 'seq': 'DEER T2',                  
-                'i_offset': kwargs['i_offset'],
-                'q_offset': kwargs['q_offset'],
-                'sideband_power': kwargs['sideband_power'],
-                'sideband_freq': kwargs['sideband_freq'], 
+                'i_offset': cfg.i_offset,
+                'q_offset': cfg.q_offset,
+                'sideband_power': cfg.sideband_power,
+                'sideband_freq': cfg.sideband_freq, 
                 'iq_phases': iq_phases,
                 'pihalf_x': pi_half[0]/1e9,
                 'pihalf_y': pi_half[1]/1e9,
                 'pi_x': pi[0]/1e9, 
                 'pi_y': pi[1]/1e9,
-                'dark_freq': kwargs['dark_freq'],
+                'dark_freq': cfg.dark_freq,
                 'dark_half_pulse': dark_pi_half,
                 'dark_pulse': dark_pi,
-                'mw_power': kwargs['awg_power'], 
-                'num_pts': kwargs['num_pts'],
-                'runs': kwargs['runs'], 
-                'iters': kwargs['iters']
+                'mw_power': cfg.awg_power, 
+                'num_pts': cfg.num_pts,
+                'runs': cfg.runs, 
+                'iters': cfg.iters
             })    
         except Exception as e:
             self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -4008,7 +4008,7 @@ class SpinMeasurements:
                 fit_value=fit_value,
                 fit_error=fit_error,
                 start_time=time.perf_counter(),
-                total_iters=kwargs["iters"],
+                total_iters=cfg.iters,
                 iters_completed=0,
                 exception=type(e).__name__,
             ))
@@ -4017,7 +4017,7 @@ class SpinMeasurements:
         signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
 
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
-        laser.set_diode_current_realtime(kwargs["laser_power"]) # set laser power
+        laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
         ### --- Initialize experiment state variables --- ###
         stopped = False
@@ -4041,7 +4041,7 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=time.perf_counter(),
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=0,
                     exception=type(e).__name__,
                 ))
@@ -4050,11 +4050,11 @@ class SpinMeasurements:
             exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
             ### --- Main experiment loop --- ###
-            for i in range(kwargs['iters']):
+            for i in range(cfg.iters):
                 if experiment_widget_process_queue(self.queue_to_exp) == "stop":
                     stopped = True
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:
@@ -4064,11 +4064,11 @@ class SpinMeasurements:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:
-                    sig, bg = self.analog_math(deer_t2_result, 'DEER T2', kwargs['num_pts']) # partition buffer into signal and background datasets
+                    sig, bg = self.analog_math(deer_t2_result, 'DEER T2', cfg.num_pts) # partition buffer into signal and background datasets
                 except ValueError:
                     continue
 
@@ -4079,12 +4079,12 @@ class SpinMeasurements:
                 #     with warnings.catch_warnings():
                 #         warnings.simplefilter("error", OptimizeWarning)
                 #         try:
-                #             fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+                #             fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
                 #         except (RuntimeError, OptimizeWarning) as e:
-                #             _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
                 iters_completed = i + 1
-                percent_completed = int(100 * iters_completed / kwargs["iters"])
+                percent_completed = int(100 * iters_completed / cfg.iters)
 
                 # save the current data to the data server
                 data.push({'params': {'kwargs': kwargs, 'iters_completed': iters_completed, 'elapsed': time.perf_counter() - exp_start_time},
@@ -4101,24 +4101,24 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=exp_start_time,
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=iters_completed,
                 ))
 
         ### --- Experiment complete: final save and status update --- ###
         if not stopped and not failed:
-            iters_completed, percent_completed = kwargs["iters"], 100
+            iters_completed, percent_completed = cfg.iters, 100
       
         # if kwargs.get("fit", False):
         #     with warnings.catch_warnings():
         #         warnings.simplefilter("error", OptimizeWarning)
         #         try:
-        #             fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+        #             fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
         #         except (RuntimeError, OptimizeWarning) as e:
-        #             _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+        #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
         
         if kwargs.get("save", False):
-            run_save(kwargs["dataset"], kwargs["filename"], [kwargs["directory"]])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory])
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -4127,7 +4127,7 @@ class SpinMeasurements:
             fit_value=fit_value,
             fit_error=fit_error,
             start_time=exp_start_time,
-            total_iters=kwargs["iters"],
+            total_iters=cfg.iters,
             iters_completed=iters_completed,
             exception=exception_type if failed else None,
         ))
@@ -4144,17 +4144,17 @@ class SpinMeasurements:
         hdawg = mgr.awg
             
         ### --- Default parameter array for sweep --- ###
-        t_corr_times = np.linspace(kwargs['start'], kwargs['stop'], kwargs['num_pts']) * 1e9
+        t_corr_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
 
         ### --- Define NV drive parameters --- ###
-        sig_gen_freq, iq_phases = self.choose_sideband(kwargs['sideband'], kwargs['freq'], kwargs['sideband_freq']) # iq_phases for x pulse by default
+        sig_gen_freq, iq_phases = self.choose_sideband(cfg.sideband, cfg.freq, cfg.sideband_freq) # iq_phases for x pulse by default
         pi: List[float] = []
         pi_half: List[float] = []
         for i in range(2):
-            pi_half.append(kwargs['pi']*1e9/2)
-            pi.append(kwargs['pi']*1e9)
+            pi_half.append(cfg.pi*1e9/2)
+            pi.append(cfg.pi*1e9)
         
-        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=kwargs["rf_power"]) # configure signal generator for NV drive
+        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=cfg.rf_power) # configure signal generator for NV drive
 
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
@@ -4162,49 +4162,49 @@ class SpinMeasurements:
         fit_y = np.ones(len(fit_x))
 
         ### --- Set up pulse streamer and digitizer for experiment --- ###
-        sequence = ps.Corr_Spectroscopy_RF(kwargs['laser_init']*1e9, t_corr_times, kwargs['tau']*1e9, 
+        sequence = ps.Corr_Spectroscopy_RF(cfg.laser_init*1e9, t_corr_times, cfg.tau*1e9, 
                                     pi_half[0], pi_half[1], 
-                                    pi[0], pi[1], kwargs['n'], kwargs['laser_readout']*1e9)
+                                    pi[0], pi[1], cfg.n, cfg.laser_readout*1e9)
         dig_cfg = self.digitizer_configure(
             exp_type="Corr Spec",
-            num_pts=kwargs['num_pts'],
-            iters=kwargs["iters"],
-            segment_size=kwargs["segment_size"],
-            sampling_freq=kwargs["dig_sampling_freq"],
-            dig_amplitude=kwargs["dig_amplitude"],
-            read_channel=kwargs["read_channel"],
-            coupling=kwargs["dig_coupling"],
-            termination=kwargs["dig_termination"],
-            pretrig_size=kwargs["pretrig_size"],
-            dig_timeout=kwargs["dig_timeout"],
-            runs=kwargs["runs"],
+            num_pts=cfg.num_pts,
+            iters=cfg.iters,
+            segment_size=cfg.segment_size,
+            sampling_freq=cfg.dig_sampling_freq,
+            dig_amplitude=cfg.dig_amplitude,
+            read_channel=cfg.read_channel,
+            coupling=cfg.dig_coupling,
+            termination=cfg.dig_termination,
+            pretrig_size=cfg.pretrig_size,
+            dig_timeout=cfg.dig_timeout,
+            runs=cfg.runs,
         )
 
-        corr_spec_time = pi_half[0] + (4*pi[0] + 4*pi[1] + 8*kwargs['tau']*1e9)*kwargs['n'] + pi_half[1] + kwargs['stop']*1e9 + \
-                            pi_half[0] + (4*pi[0] + 4*pi[1] + 8*kwargs['tau']*1e9)*kwargs['n'] + pi_half[1]
+        corr_spec_time = pi_half[0] + (4*pi[0] + 4*pi[1] + 8*cfg.tau*1e9)*cfg.n + pi_half[1] + cfg.stop*1e9 + \
+                            pi_half[0] + (4*pi[0] + 4*pi[1] + 8*cfg.tau*1e9)*cfg.n + pi_half[1]
         
-        total_exp_time = 100 + kwargs['laser_init']*1e9 + 500 + corr_spec_time + 100 + kwargs['laser_readout'] + 100
+        total_exp_time = 100 + cfg.laser_init*1e9 + 500 + corr_spec_time + 100 + cfg.laser_readout + 100
 
         ### --- Upload AWG sequence --- ##
         try:
-            hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
-            hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
+            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
+            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 'seq': 'NMR',
                 'seq_nmr': 'Correlation Spectroscopy',
-                'i_offset': kwargs['i_offset'],
-                'q_offset': kwargs['q_offset'],
-                'sideband_power': kwargs['sideband_power'],
-                'sideband_freq': kwargs['sideband_freq'], 
+                'i_offset': cfg.i_offset,
+                'q_offset': cfg.q_offset,
+                'sideband_power': cfg.sideband_power,
+                'sideband_freq': cfg.sideband_freq, 
                 'iq_phases': iq_phases,
                 'pihalf_x': pi_half[0]/1e9,
                 'pihalf_y': pi_half[1]/1e9,
                 'pi_x': pi[0]/1e9, 
                 'pi_y': pi[1]/1e9,
-                'n': kwargs['n'],
-                'num_pts': kwargs['num_pts'],
-                'runs': kwargs['runs'], 
-                'iters': kwargs['iters'],
+                'n': cfg.n,
+                'num_pts': cfg.num_pts,
+                'runs': cfg.runs, 
+                'iters': cfg.iters,
                 'total_exp_time': total_exp_time*1e-9,
                 'rf_power': 0.2,
                 'rf_freq': 2.88e6,
@@ -4217,7 +4217,7 @@ class SpinMeasurements:
                 fit_value=fit_value,
                 fit_error=fit_error,
                 start_time=time.perf_counter(),
-                total_iters=kwargs["iters"],
+                total_iters=cfg.iters,
                 iters_completed=0,
                 exception=type(e).__name__,
             ))
@@ -4226,7 +4226,7 @@ class SpinMeasurements:
         signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
     
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
-        laser.set_diode_current_realtime(kwargs["laser_power"]) # set laser power
+        laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
         ### --- Initialize experiment state variables --- ###
         stopped = False
@@ -4250,7 +4250,7 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=time.perf_counter(),
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=0,
                     exception=type(e).__name__,
                 ))
@@ -4259,11 +4259,11 @@ class SpinMeasurements:
             exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
             ### --- Main experiment loop --- ###
-            for i in range(kwargs['iters']):
+            for i in range(cfg.iters):
                 if experiment_widget_process_queue(self.queue_to_exp) == "stop":
                     stopped = True
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
                 
                 try:
@@ -4273,11 +4273,11 @@ class SpinMeasurements:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:
-                    sig, bg = self.analog_math(nmr_result, 'NMR', kwargs['num_pts']) # partition buffer into signal and background datasets
+                    sig, bg = self.analog_math(nmr_result, 'NMR', cfg.num_pts) # partition buffer into signal and background datasets
                 except ValueError:
                     continue
 
@@ -4288,12 +4288,12 @@ class SpinMeasurements:
                 #     with warnings.catch_warnings():
                 #         warnings.simplefilter("error", OptimizeWarning)
                 #         try:
-                #             fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+                #             fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
                 #         except (RuntimeError, OptimizeWarning) as e:
-                #             _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
                 iters_completed = i + 1
-                percent_completed = int(100 * iters_completed / kwargs["iters"])
+                percent_completed = int(100 * iters_completed / cfg.iters)
    
                 data.push({'params': {'kwargs': kwargs, 'iters_completed': iters_completed, 'elapsed': time.perf_counter() - exp_start_time},
                                 'title': 'NMR Time Domain Data',
@@ -4309,26 +4309,26 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=exp_start_time,
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=iters_completed,
                 ))
 
         ### --- Experiment complete: final save and status update --- ###
         if not stopped and not failed:
-            iters_completed, percent_completed = kwargs["iters"], 100
+            iters_completed, percent_completed = cfg.iters, 100
 
         # if kwargs.get("fit", False):
         #     with warnings.catch_warnings():
         #         warnings.simplefilter("error", OptimizeWarning)
         #         try:
         #             fit_value, fit_error, fit_x, fit_y = self.fit_data(
-        #                 kwargs["dataset"], signal_sweeps, background_sweeps, *kwargs["fit_params"]
+        #                 cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
         #             )
         #         except (RuntimeError, OptimizeWarning) as e:
-        #             _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+        #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
         if kwargs.get("save", False):
-            run_save(kwargs["dataset"], kwargs["filename"], [kwargs["directory"]])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory])
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -4337,7 +4337,7 @@ class SpinMeasurements:
             fit_value=fit_value,
             fit_error=fit_error,
             start_time=exp_start_time,
-            total_iters=kwargs["iters"],
+            total_iters=cfg.iters,
             iters_completed=iters_completed,
             exception=exception_type if failed else None,
         ))                
@@ -4355,17 +4355,17 @@ class SpinMeasurements:
         hdawg = mgr.awg
             
         ### --- Default parameter array for sweep --- ###
-        t_corr_times = np.linspace(kwargs['start'], kwargs['stop'], kwargs['num_pts']) * 1e9
+        t_corr_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
 
         ### --- Define NV drive parameters --- ###
-        sig_gen_freq, iq_phases = self.choose_sideband(kwargs['sideband'], kwargs['freq'], kwargs['sideband_freq']) # iq_phases for x pulse by default
+        sig_gen_freq, iq_phases = self.choose_sideband(cfg.sideband, cfg.freq, cfg.sideband_freq) # iq_phases for x pulse by default
         pi: List[float] = []
         pi_half: List[float] = []
         for i in range(2):
-            pi_half.append(kwargs['pi']*1e9/2)
-            pi.append(kwargs['pi']*1e9)
+            pi_half.append(cfg.pi*1e9/2)
+            pi.append(cfg.pi*1e9)
         
-        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=kwargs["rf_power"]) # configure signal generator for NV drive
+        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=cfg.rf_power) # configure signal generator for NV drive
 
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
@@ -4373,44 +4373,44 @@ class SpinMeasurements:
         fit_y = np.ones(len(fit_x))
             
         ### --- Set up pulse streamer and digitizer for experiment --- ###
-        sequence = ps.Corr_Spectroscopy(kwargs['laser_init']*1e9, t_corr_times, kwargs['tau']*1e9, 
+        sequence = ps.Corr_Spectroscopy(cfg.laser_init*1e9, t_corr_times, cfg.tau*1e9, 
                                     pi_half[0], pi_half[1], 
-                                    pi[0], pi[1], kwargs['n'], kwargs['laser_readout']*1e9)
+                                    pi[0], pi[1], cfg.n, cfg.laser_readout*1e9)
         dig_cfg = self.digitizer_configure(
             exp_type="Corr Spec",
-            num_pts=kwargs['num_pts'],
-            iters=kwargs["iters"],
-            segment_size=kwargs["segment_size"],
-            sampling_freq=kwargs["dig_sampling_freq"],
-            dig_amplitude=kwargs["dig_amplitude"],
-            read_channel=kwargs["read_channel"],
-            coupling=kwargs["dig_coupling"],
-            termination=kwargs["dig_termination"],
-            pretrig_size=kwargs["pretrig_size"],
-            dig_timeout=kwargs["dig_timeout"],
-            runs=kwargs["runs"],
+            num_pts=cfg.num_pts,
+            iters=cfg.iters,
+            segment_size=cfg.segment_size,
+            sampling_freq=cfg.dig_sampling_freq,
+            dig_amplitude=cfg.dig_amplitude,
+            read_channel=cfg.read_channel,
+            coupling=cfg.dig_coupling,
+            termination=cfg.dig_termination,
+            pretrig_size=cfg.pretrig_size,
+            dig_timeout=cfg.dig_timeout,
+            runs=cfg.runs,
         )
 
         ### --- Upload AWG sequence --- ###
         try:
-            hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
-            hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])
+            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
+            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 'seq': 'NMR',
                 'seq_nmr': 'Correlation Spectroscopy',
-                'i_offset': kwargs['i_offset'],
-                'q_offset': kwargs['q_offset'],
-                'sideband_power': kwargs['sideband_power'],
-                'sideband_freq': kwargs['sideband_freq'], 
+                'i_offset': cfg.i_offset,
+                'q_offset': cfg.q_offset,
+                'sideband_power': cfg.sideband_power,
+                'sideband_freq': cfg.sideband_freq, 
                 'iq_phases': iq_phases,
                 'pihalf_x': pi_half[0]/1e9,
                 'pihalf_y': pi_half[1]/1e9,
                 'pi_x': pi[0]/1e9, 
                 'pi_y': pi[1]/1e9,
-                'n': kwargs['n'],
-                'num_pts': kwargs['num_pts'],
-                'runs': kwargs['runs'], 
-                'iters': kwargs['iters']})
+                'n': cfg.n,
+                'num_pts': cfg.num_pts,
+                'runs': cfg.runs, 
+                'iters': cfg.iters})
         except Exception as e:
             self.queue_from_exp.put_nowait(self.build_status_msg(
                 status="failed",
@@ -4418,7 +4418,7 @@ class SpinMeasurements:
                 fit_value=fit_value,
                 fit_error=fit_error,
                 start_time=time.perf_counter(),
-                total_iters=kwargs["iters"],
+                total_iters=cfg.iters,
                 iters_completed=0,
                 exception=type(e).__name__,
             ))
@@ -4427,7 +4427,7 @@ class SpinMeasurements:
         signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
     
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
-        laser.set_diode_current_realtime(kwargs["laser_power"]) # set laser power
+        laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
         ### --- Initialize experiment state variables --- ###
         stopped = False
@@ -4451,7 +4451,7 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=time.perf_counter(),
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=0,
                     exception=type(e).__name__,
                 ))
@@ -4460,11 +4460,11 @@ class SpinMeasurements:
             exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
             ### --- Main experiment loop --- ###
-            for i in range(kwargs['iters']):
+            for i in range(cfg.iters):
                 if experiment_widget_process_queue(self.queue_to_exp) == "stop":
                     stopped = True
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
                 
                 try:
@@ -4474,11 +4474,11 @@ class SpinMeasurements:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
-                    percent_completed = int(100 * iters_completed / kwargs["iters"])
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 try:
-                    sig, bg = self.analog_math(nmr_result, 'NMR', kwargs['num_pts']) # partition buffer into signal and background datasets
+                    sig, bg = self.analog_math(nmr_result, 'NMR', cfg.num_pts) # partition buffer into signal and background datasets
                 except ValueError:
                     continue
 
@@ -4489,12 +4489,12 @@ class SpinMeasurements:
                 #     with warnings.catch_warnings():
                 #         warnings.simplefilter("error", OptimizeWarning)
                 #         try:
-                #             fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+                #             fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
                 #         except (RuntimeError, OptimizeWarning) as e:
-                #             _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
                 iters_completed = i + 1
-                percent_completed = int(100 * iters_completed / kwargs["iters"])
+                percent_completed = int(100 * iters_completed / cfg.iters)
    
                 data.push({'params': {'kwargs': kwargs, 'iters_completed': iters_completed, 'elapsed': time.perf_counter() - exp_start_time},
                                 'title': 'NMR Time Domain Data',
@@ -4510,26 +4510,26 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=exp_start_time,
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=iters_completed,
                 ))
 
         ### --- Experiment complete: final save and status update --- ###
         if not stopped and not failed:
-            iters_completed, percent_completed = kwargs["iters"], 100
+            iters_completed, percent_completed = cfg.iters, 100
 
         # if kwargs.get("fit", False):
         #     with warnings.catch_warnings():
         #         warnings.simplefilter("error", OptimizeWarning)
         #         try:
         #             fit_value, fit_error, fit_x, fit_y = self.fit_data(
-        #                 kwargs["dataset"], signal_sweeps, background_sweeps, *kwargs["fit_params"]
+        #                 cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
         #             )
         #         except (RuntimeError, OptimizeWarning) as e:
-        #             _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+        #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
         if kwargs.get("save", False):
-            run_save(kwargs["dataset"], kwargs["filename"], [kwargs["directory"]])
+            run_save(cfg.dataset, cfg.filename, [cfg.directory])
 
         status = "failed" if failed else ("stopped" if stopped else "complete")
         self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -4538,7 +4538,7 @@ class SpinMeasurements:
             fit_value=fit_value,
             fit_error=fit_error,
             start_time=exp_start_time,
-            total_iters=kwargs["iters"],
+            total_iters=cfg.iters,
             iters_completed=iters_completed,
             exception=exception_type if failed else None,
         ))    
@@ -4559,18 +4559,18 @@ class SpinMeasurements:
         
         
         ### --- Intervals in pulse sequence used to define time points on x-axis in seconds --- ###
-        laser_init_time = kwargs['laser_init']*1e9
+        laser_init_time = cfg.laser_init*1e9
         singlet_decay = 500 
-        pi = [kwargs['pi']*1e9, kwargs['pi']*1e9]
+        pi = [cfg.pi*1e9, cfg.pi*1e9]
         pi_half = [pi[0]/2, pi[1]/2]
-        tau = int(kwargs['tau']*1e9) # half period of central frequency [ns] - used in DD blocks
+        tau = int(cfg.tau*1e9) # half period of central frequency [ns] - used in DD blocks
         print(f"tau = {tau} ns")
         period = 2*tau
 
-        dd_time = pi_half[0] + (4*pi[0] + 4*pi[1] + 8*tau)*kwargs['n'] + pi_half[1]
+        dd_time = pi_half[0] + (4*pi[0] + 4*pi[1] + 8*tau)*cfg.n + pi_half[1]
 
         mw_buffer_time = 100 # buffer time between DD block and readout pulse [ns]
-        laser_read_time = kwargs['laser_readout']*1e9 # laser readout pulse [ns]
+        laser_read_time = cfg.laser_readout*1e9 # laser readout pulse [ns]
         wait_time = 100 # dead time at end of sequence before next subsequence [ns]
 
         t_seq = laser_init_time + singlet_decay + dd_time + mw_buffer_time + laser_read_time + wait_time # total time for one full CASR sequence [ns]
@@ -4591,7 +4591,7 @@ class SpinMeasurements:
                 print(f"New wait time = {wait_time}")
                 print(f"t_seq = {t_seq} ns")
                 print(f"period = {period} ns")
-                print(f"\u0394f = f - f0 = {(0.5/((tau+pi[0])*1e-9) - kwargs['rf_pulse_freq'])/1000} kHz")
+                print(f"\u0394f = f - f0 = {(0.5/((tau+pi[0])*1e-9) - cfg.rf_pulse_freq)/1000} kHz")
             except AssertionError as e:  
                 self.queue_from_exp.put_nowait(self.build_status_msg(
                     status="failed",
@@ -4599,18 +4599,18 @@ class SpinMeasurements:
                     fit_value=None,
                     fit_error=None,
                     start_time=time.perf_counter(),
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=0,
                     exception=type(e).__name__,
                 ))
             else:
                 ### --- Define time points for x-axis based on sequence parameters --- ###
-                times = np.linspace(t_seq - wait_time - laser_read_time / 2, kwargs['num_pts'] * t_seq, kwargs['num_pts']) * 1e-9
+                times = np.linspace(t_seq - wait_time - laser_read_time / 2, cfg.num_pts * t_seq, cfg.num_pts) * 1e-9
 
                 ### --- Define NV drive parameters --- ###
-                sig_gen_freq, iq_phases = self.choose_sideband(kwargs['sideband'], kwargs['freq'], kwargs['sideband_freq']) # iq_phases for x pulse by default
+                sig_gen_freq, iq_phases = self.choose_sideband(cfg.sideband, cfg.freq, cfg.sideband_freq) # iq_phases for x pulse by default
 
-                self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=kwargs["rf_pulse_power"]) # configure signal generator for NV drive
+                self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=cfg.rf_pulse_power) # configure signal generator for NV drive
 
                 ### --- Default fit parameters for live fitting --- ###
                 fit_value, fit_error = [], []
@@ -4618,56 +4618,56 @@ class SpinMeasurements:
                 fit_y = np.ones(len(fit_x))
 
                 ### --- Set up pulse streamer and digitizer for experiment --- ###
-                if kwargs['sig_opt'] == 'Coil':
+                if cfg.sig_opt == 'Coil':
                     print("Using CASR Coil sequence")
-                    rf_duration = kwargs['num_pts'] * t_seq * 1e-9 # coil on for entire sequence duration
+                    rf_duration = cfg.num_pts * t_seq * 1e-9 # coil on for entire sequence duration
                     seq_rf = ps.CASR_RF_Coil() # coil drive version
                 else:
-                    rf_duration = kwargs['rf_pi_half'] # RF pi/2 pulse duration for nuclear spin control
-                    seq_rf = ps.CASR_RF(kwargs['rf_pi_half'] * 1e9)
+                    rf_duration = cfg.rf_pi_half # RF pi/2 pulse duration for nuclear spin control
+                    seq_rf = ps.CASR_RF(cfg.rf_pi_half * 1e9)
                 
                 seq_nv = ps.CASR_NV(laser_init_time, singlet_decay, 
                                 pi_half[0], pi_half[1], pi[0], pi[1], 
-                                tau, kwargs['n'], mw_buffer_time, kwargs['laser_readout'], wait_time) # NV DD subsequence
+                                tau, cfg.n, mw_buffer_time, cfg.laser_readout, wait_time) # NV DD subsequence
                 
                 dig_cfg = self.digitizer_configure(
                     exp_type="CASR",
-                    num_pts=kwargs['num_pts'],
-                    iters=kwargs["iters"],
-                    segment_size=kwargs["segment_size"],
-                    sampling_freq=kwargs["dig_sampling_freq"],
-                    dig_amplitude=kwargs["dig_amplitude"],
-                    read_channel=kwargs["read_channel"],
-                    coupling=kwargs["dig_coupling"],
-                    termination=kwargs["dig_termination"],
-                    pretrig_size=kwargs["pretrig_size"],
-                    dig_timeout=kwargs["dig_timeout"],
-                    runs=kwargs["runs"],
+                    num_pts=cfg.num_pts,
+                    iters=cfg.iters,
+                    segment_size=cfg.segment_size,
+                    sampling_freq=cfg.dig_sampling_freq,
+                    dig_amplitude=cfg.dig_amplitude,
+                    read_channel=cfg.read_channel,
+                    coupling=cfg.dig_coupling,
+                    termination=cfg.dig_termination,
+                    pretrig_size=cfg.pretrig_size,
+                    dig_timeout=cfg.dig_timeout,
+                    runs=cfg.runs,
                 )
 
                 ### --- Upload AWG sequence --- ##
                 try:
-                    hdawg.set_sampling_rate(0, kwargs['awg_samp_rate_1'])
-                    hdawg.set_sampling_rate(1, kwargs['awg_samp_rate_2'])   
+                    hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
+                    hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)   
                     hdawg.set_sequence(**{
                         'seq': 'CASR',
-                        'i_offset': kwargs['i_offset'],
-                        'q_offset': kwargs['q_offset'],
-                        'sideband_power': kwargs['sideband_power'],
-                        'sideband_freq': kwargs['sideband_freq'], 
+                        'i_offset': cfg.i_offset,
+                        'q_offset': cfg.q_offset,
+                        'sideband_power': cfg.sideband_power,
+                        'sideband_freq': cfg.sideband_freq, 
                         'iq_phases': iq_phases,
                         'pihalf_x': pi_half[0]/1e9,
                         'pihalf_y': pi_half[1]/1e9,
                         'pi_x': pi[0]/1e9, 
                         'pi_y': pi[1]/1e9,
-                        'n_R': kwargs['num_pts'],
-                        'n': kwargs['n'],
-                        'rf_freq': kwargs['rf_pulse_freq'],
-                        'rf_power': kwargs['rf_pulse_power'],
-                        'rf_phase': kwargs['rf_pulse_phase'],
+                        'n_R': cfg.num_pts,
+                        'n': cfg.n,
+                        'rf_freq': cfg.rf_pulse_freq,
+                        'rf_power': cfg.rf_pulse_power,
+                        'rf_phase': cfg.rf_pulse_phase,
                         'rf_pihalf': rf_duration})
-                        # 'rf_pihalf': kwargs['rf_pi_half']})  
-                        # 'rf_pihalf': kwargs['num_pts']*t_seq*1e-9})
+                        # 'rf_pihalf': cfg.rf_pi_half})  
+                        # 'rf_pihalf': cfg.num_pts*t_seq*1e-9})
                 except Exception as e:
                     self.queue_from_exp.put_nowait(self.build_status_msg(
                         status="failed",
@@ -4675,7 +4675,7 @@ class SpinMeasurements:
                         fit_value=fit_value,
                         fit_error=fit_error,
                         start_time=time.perf_counter(),
-                        total_iters=kwargs["iters"],
+                        total_iters=cfg.iters,
                         iters_completed=0,
                         exception=type(e).__name__,
                     ))
@@ -4684,7 +4684,7 @@ class SpinMeasurements:
                 signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
 
                 self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
-                laser.set_diode_current_realtime(kwargs["laser_power"]) # set laser power
+                laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
                 ### --- Initialize experiment state variables --- ###
                 stopped = False
@@ -4703,7 +4703,7 @@ class SpinMeasurements:
                         # 1. CASR RF sequence -> pi/2 on nuclear spins (n_runs = 1)
                         # 2. CASR NV sequence -> pi/2 on electron spins (n_runs = num_pts x 2)
                         ps.upload(slot_nr=0, data=seq_rf, n_runs=1, next_action=NextAction.SWITCH_SLOT, when=When.IMMEDIATE, owner=token) #upload initial sequence data with n_runs=1
-                        ps.upload(slot_nr=1, data=seq_nv, n_runs=kwargs['num_pts']*2,next_action=NextAction.SWITCH_SLOT, when=When.IMMEDIATE, owner=token) #upload measurement sequence with n_runs=num_pts*2
+                        ps.upload(slot_nr=1, data=seq_nv, n_runs=cfg.num_pts*2,next_action=NextAction.SWITCH_SLOT, when=When.IMMEDIATE, owner=token) #upload measurement sequence with n_runs=num_pts*2
                         
                         ps.start(slot_nr=0, slots_to_run=PulseStreamer.REPEAT_INFINITELY, owner=token) # start on slot 0 (seq_rf) and run rf and nv sequences alternatively infinitely, switching slots automatically 
                         
@@ -4717,7 +4717,7 @@ class SpinMeasurements:
                             fit_value=fit_value,
                             fit_error=fit_error,
                             start_time=time.perf_counter(),
-                            total_iters=kwargs["iters"],
+                            total_iters=cfg.iters,
                             iters_completed=0,
                             exception=type(e).__name__,
                         ))
@@ -4726,11 +4726,11 @@ class SpinMeasurements:
                     exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
                     ### --- Main experiment loop --- ###
-                    for i in range(kwargs['iters']):
+                    for i in range(cfg.iters):
                         if experiment_widget_process_queue(self.queue_to_exp) == "stop":
                             stopped = True
                             iters_completed = i
-                            percent_completed = int(100 * iters_completed / kwargs["iters"])
+                            percent_completed = int(100 * iters_completed / cfg.iters)
                             break
 
                         try:     
@@ -4740,11 +4740,11 @@ class SpinMeasurements:
                             failed = True
                             exception_type = type(e).__name__
                             iters_completed = i
-                            percent_completed = int(100 * iters_completed / kwargs["iters"])
+                            percent_completed = int(100 * iters_completed / cfg.iters)
                             break
 
                         try:
-                            sig, bg = self.analog_math(casr_result, 'CASR', kwargs['num_pts']) # partition buffer into signal and background datasets
+                            sig, bg = self.analog_math(casr_result, 'CASR', cfg.num_pts) # partition buffer into signal and background datasets
                         except ValueError:
                             continue
 
@@ -4755,12 +4755,12 @@ class SpinMeasurements:
                             with warnings.catch_warnings():
                                 warnings.simplefilter("error", OptimizeWarning)
                                 try:
-                                    fit_value, fit_error, fit_x, fit_y = self.fit_data(kwargs['dataset'], signal_sweeps, background_sweeps, *kwargs['fit_params'])
+                                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
                                 except (RuntimeError, OptimizeWarning) as e:
-                                    _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                                    _logger.warning(f"For {cfg.dataset} measurement, {e}")
                         
                         iters_completed = i + 1
-                        percent_completed = int(100 * iters_completed / kwargs["iters"])
+                        percent_completed = int(100 * iters_completed / cfg.iters)
 
                         data.push({'params': {'kwargs': kwargs, 'iters_completed': iters_completed, 'elapsed': time.perf_counter() - exp_start_time},
                                         'title': 'CASR Time Domain Data',
@@ -4776,26 +4776,26 @@ class SpinMeasurements:
                             fit_value=fit_value,
                             fit_error=fit_error,
                             start_time=exp_start_time,
-                            total_iters=kwargs["iters"],
+                            total_iters=cfg.iters,
                             iters_completed=iters_completed,
                         ))
 
                 ### --- Experiment complete: final save and status update --- ###
                 if not stopped and not failed:
-                    iters_completed, percent_completed = kwargs["iters"], 100
+                    iters_completed, percent_completed = cfg.iters, 100
 
                 # if kwargs.get("fit", False):
                 #     with warnings.catch_warnings():
                 #         warnings.simplefilter("error", OptimizeWarning)
                 #         try:
                 #             fit_value, fit_error, fit_x, fit_y = self.fit_data(
-                #                 kwargs["dataset"], signal_sweeps, background_sweeps, *kwargs["fit_params"]
+                #                 cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                 #             )
                 #         except (RuntimeError, OptimizeWarning) as e:
-                #             _logger.warning(f"For {kwargs['dataset']} measurement, {e}")
+                #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
                 if kwargs.get("save", False):
-                    run_save(kwargs["dataset"], kwargs["filename"], [kwargs["directory"]])
+                    run_save(cfg.dataset, cfg.filename, [cfg.directory])
 
                 status = "failed" if failed else ("stopped" if stopped else "complete")
                 self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -4804,7 +4804,7 @@ class SpinMeasurements:
                     fit_value=fit_value,
                     fit_error=fit_error,
                     start_time=exp_start_time,
-                    total_iters=kwargs["iters"],
+                    total_iters=cfg.iters,
                     iters_completed=iters_completed,
                     exception=exception_type if failed else None,
                 ))                
