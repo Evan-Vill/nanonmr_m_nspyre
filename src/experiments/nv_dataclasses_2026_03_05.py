@@ -51,7 +51,7 @@ class OdmrScanCfg:
     sideband_power: float
 
 @dataclass(frozen=True)
-class OdmrSmartScanCfg:
+class ODMRSmartScanCfg:
     dataset: str
     num_pts: int
     iters: int
@@ -195,7 +195,7 @@ class PulsedOdmrRfScanCfg:
     sideband_power: float
 
 @dataclass(frozen=True)
-class MwT1ScanCfg:
+class MWT1ScanCfg:
     dataset: str
     start: float
     stop: float
@@ -685,7 +685,7 @@ class CorrSpecScanCfg:
     tau: float
 
 @dataclass(frozen=True)
-class CasrCoilScanCfg:
+class CASRCoilScanCfg:
     dataset: str
     num_pts: int
     iters: int
@@ -725,7 +725,7 @@ class CasrCoilScanCfg:
     tau: float
 
 @dataclass(frozen=True)
-class CasrOrigScanCfg:
+class CASROrigScanCfg:
     dataset: str
     num_pts: int
     iters: int
@@ -765,7 +765,7 @@ class CasrOrigScanCfg:
     tau: float
 
 @dataclass(frozen=True)
-class CasrScanCfg:
+class CASRScanCfg:
     dataset: str
     num_pts: int
     iters: int
