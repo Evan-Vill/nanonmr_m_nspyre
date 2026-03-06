@@ -1,6 +1,23 @@
 from dataclasses import dataclass
 
 @dataclass(frozen=True)
+class SignalScanCfg:
+    dataset: str
+    exp_sampling_rate: float
+    segment_size: int
+    read_channel: int
+    pretrig_size: int
+    dig_sampling_freq: float
+    dig_amplitude: float
+    dig_timeout: float
+    laser_power: float
+    save: bool
+    file_format: str
+    directory: str
+    filename: str
+    detector: str
+
+@dataclass(frozen=True)
 class OdmrScanCfg:
     dataset: str
     num_pts: int
@@ -29,6 +46,7 @@ class OdmrScanCfg:
     read_channel: int
     rf_power: float
     save: bool
+    file_format: str
     segment_size: int
     sideband_power: float
 
@@ -59,6 +77,7 @@ class OdmrSmartScanCfg:
     read_channel: int
     rf_power: float
     save: bool
+    file_format: str
     segment_size: int
     sideband_power: float
     start_angle: float
@@ -96,6 +115,7 @@ class RabiScanCfg:
     read_channel: int
     rf_power: float
     save: bool
+    file_format: str
     segment_size: int
     sideband: str
     sideband_freq: float
@@ -132,6 +152,7 @@ class PulsedOdmrScanCfg:
     read_channel: int
     rf_power: float
     save: bool
+    file_format: str
     segment_size: int
     sideband_power: float
 
@@ -169,6 +190,7 @@ class PulsedOdmrRfScanCfg:
     rf_pulse_phase: float
     rf_pulse_power: float
     save: bool
+    file_format: str
     segment_size: int
     sideband_power: float
 
@@ -206,6 +228,7 @@ class MwT1ScanCfg:
     read_channel: int
     rf_power: float
     save: bool
+    file_format: str
     segment_size: int
     sideband: str
     sideband_freq: float
@@ -246,6 +269,7 @@ class T2ScanCfg:
     read_channel: int
     rf_power: float
     save: bool
+    file_format: str
     segment_size: int
     sideband: str
     sideband_freq: float
@@ -289,6 +313,7 @@ class T2RfScanCfg:
     rf_pulse_phase: float
     rf_pulse_power: float
     save: bool
+    file_format: str
     segment_size: int
     sideband: str
     sideband_freq: float
@@ -327,6 +352,7 @@ class DqScanCfg:
     read_channel: int
     rf_power: float
     save: bool
+    file_format: str
     segment_size: int
     sideband_power: float
 
@@ -365,6 +391,7 @@ class DeerScanCfg:
     read_channel: int
     rf_power: float
     save: bool
+    file_format: str
     segment_size: int
     sideband: str
     sideband_freq: float
@@ -405,6 +432,7 @@ class DeerRabiScanCfg:
     read_channel: int
     rf_power: float
     save: bool
+    file_format: str
     segment_size: int
     sideband: str
     sideband_freq: float
@@ -445,6 +473,7 @@ class DeerFidScanCfg:
     read_channel: int
     rf_power: float
     save: bool
+    file_format: str
     segment_size: int
     sideband: str
     sideband_freq: float
@@ -485,6 +514,7 @@ class DeerFidCdScanCfg:
     read_channel: int
     rf_power: float
     save: bool
+    file_format: str
     segment_size: int
     sideband: str
     sideband_freq: float
@@ -525,6 +555,7 @@ class DeerCorrRabiScanCfg:
     read_channel: int
     rf_power: float
     save: bool
+    file_format: str
     segment_size: int
     sideband: str
     sideband_freq: float
@@ -568,6 +599,7 @@ class DeerT1ScanCfg:
     read_channel: int
     rf_power: float
     save: bool
+    file_format: str
     segment_size: int
     sideband: str
     sideband_freq: float
@@ -608,6 +640,7 @@ class DeerT2ScanCfg:
     read_channel: int
     rf_power: float
     save: bool
+    file_format: str
     segment_size: int
     sideband: str
     sideband_freq: float
@@ -644,6 +677,7 @@ class CorrSpecScanCfg:
     read_channel: int
     rf_power: float
     save: bool
+    file_format: str
     segment_size: int
     sideband: str
     sideband_freq: float
@@ -683,6 +717,7 @@ class CasrCoilScanCfg:
     rf_pulse_phase: float
     rf_pulse_power: float
     save: bool
+    file_format: str
     segment_size: int
     sideband: str
     sideband_freq: float
@@ -722,6 +757,7 @@ class CasrOrigScanCfg:
     rf_pulse_phase: float
     rf_pulse_power: float
     save: bool
+    file_format: str
     segment_size: int
     sideband: str
     sideband_freq: float
@@ -761,6 +797,7 @@ class CasrScanCfg:
     rf_pulse_phase: float
     rf_pulse_power: float
     save: bool
+    file_format: str
     segment_size: int
     sideband: str
     sideband_freq: float
