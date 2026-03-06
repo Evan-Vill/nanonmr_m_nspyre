@@ -56,10 +56,10 @@ SUBSEQ_COUNT = {
 }
 
 def format_hhmmss(seconds: float) -> str:
-        seconds = int(seconds)
-        m, s = divmod(seconds, 60)
-        h, m = divmod(m, 60)
-        return f'{h:02d}:{m:02d}:{s:02d}'
+    seconds = int(seconds)
+    m, s = divmod(seconds, 60)
+    h, m = divmod(m, 60)
+    return f'{h:02d}:{m:02d}:{s:02d}'
 
 def format_minutes_seconds(seconds: float) -> str:
     seconds = int(round(seconds))
@@ -101,13 +101,33 @@ def _exclusive_ps(ps, token: str):
             _logger.exception("ps.end_exclusive failed")
 
 @contextmanager
-def _shutter_open(shutter):
+def _shutter_open(shutter, detector="APD"):
     shutter.open_shutter()
+    if detector.lower() == "bpd":
+        daq.open_do_task("shutter")
+        daq.start_do_task()
+        bpd_shutter_state = daq.read_do_task()
+        daq.stop_do_task()
+        daq.close_do_task()
+        time.sleep(0.01)
+        if not bpd_shutter_state: # if BPD shutter is closed, open it
+            daq.open_do_task("shutter")
+            daq.start_do_task()
+            daq.write_do_task("shutter", shutter_status="open")
+            daq.stop_do_task()
+            daq.close_do_task()
+
     try:
         yield
     finally:
         try:
             shutter.close_shutter()
+            if detector.lower() == "bpd":
+                daq.open_do_task("shutter")
+                daq.start_do_task()
+                daq.write_do_task("shutter", shutter_status="close")
+                daq.stop_do_task()
+                daq.close_do_task()
         except Exception:
             _logger.exception("shutter.close_shutter failed")
 
@@ -404,6 +424,7 @@ class SpinMeasurements:
             
             laser = mgr.laser
             laser_shutter = mgr.laser_shutter
+            daq = mgr.daq
             ps = mgr.ps
 
             token = f"SIGVSTIME_{time.strftime('%Y%m%d_%H%M%S')}"  # unique token for this experiment run
@@ -510,6 +531,7 @@ class SpinMeasurements:
         ### --- Devices --- ###
         laser = mgr.laser
         laser_shutter = mgr.laser_shutter
+        daq = mgr.daq
         sig_gen = mgr.sg
         ps = mgr.ps
         hdawg = mgr.awg
@@ -588,7 +610,7 @@ class SpinMeasurements:
         percent_completed = 0
 
         ### --- Open laser shutter and emit MW for NV drive --- ###
-        with _shutter_open(laser_shutter), _rf_on(sig_gen):     
+        with _shutter_open(laser_shutter, cfg.detector), _rf_on(sig_gen):     
             try:
                 ps.set_soft_trigger() # set pulsestreamer to start on software trigger & run infinitely
                 ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # set up sequence for streaming
@@ -711,9 +733,12 @@ class SpinMeasurements:
         # connect to the instrument server & the data server.
         # create a data set, or connect to an existing one with the same name if it was created earlier.
         with InstrumentManager() as mgr, DataSource(cfg.dataset) as cw_odmr_data:
-            # load devices used in scan
+            cfg = nvcfg.ODMRSmartScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
+            
+            ### --- Devices --- ###
             laser = mgr.laser
             laser_shutter = mgr.laser_shutter
+            daq = mgr.daq
             sig_gen = mgr.sg
             ps = mgr.ps
             hdawg = mgr.awg
@@ -975,6 +1000,7 @@ class SpinMeasurements:
         ### --- Devices --- ###
         laser = mgr.laser
         laser_shutter = mgr.laser_shutter
+        daq = mgr.daq
         sig_gen = mgr.sg
         ps = mgr.ps
         hdawg = mgr.awg
@@ -1052,7 +1078,7 @@ class SpinMeasurements:
         percent_completed = 0
 
         ### --- Open laser shutter and emit MW for NV drive --- ###
-        with _shutter_open(laser_shutter), _rf_on(sig_gen):
+        with _shutter_open(laser_shutter, cfg.detector), _rf_on(sig_gen):
             try:
                 ps.set_soft_trigger() # set pulsestreamer to start on software trigger & run infinitely
                 ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # set up sequence for streaming
@@ -1169,6 +1195,7 @@ class SpinMeasurements:
         ### --- Devices --- ###            
         laser = mgr.laser
         laser_shutter = mgr.laser_shutter
+        daq = mgr.daq
         sig_gen = mgr.sg
         ps = mgr.ps
         hdawg = mgr.awg
@@ -1248,7 +1275,7 @@ class SpinMeasurements:
         percent_completed = 0
 
         ### --- Open laser shutter and emit MW for NV drive --- ###
-        with _shutter_open(laser_shutter), _rf_on(sig_gen):
+        with _shutter_open(laser_shutter, cfg.detector), _rf_on(sig_gen):
             try:
                 ps.set_soft_trigger() # set pulsestreamer to start on software trigger & run infinitely
                 ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # set up sequence for streaming
@@ -1365,6 +1392,7 @@ class SpinMeasurements:
         ### --- Devices --- ###
         laser = mgr.laser
         laser_shutter = mgr.laser_shutter
+        daq = mgr.daq
         sig_gen = mgr.sg
         ps = mgr.ps
         hdawg = mgr.awg
@@ -1463,7 +1491,7 @@ class SpinMeasurements:
         percent_completed = 0
 
         ### --- Open laser shutter and emit MW for NV drive --- ###
-        with _shutter_open(laser_shutter), _rf_on(sig_gen):
+        with _shutter_open(laser_shutter, cfg.detector), _rf_on(sig_gen):
             try:
                 ps.set_soft_trigger() # set pulsestreamer to start on software trigger & run infinitely
                 ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # set up sequence for streaming
@@ -1605,6 +1633,7 @@ class SpinMeasurements:
             print(f"Coil B field = {coil_b_field_gauss} G")
             print(f"1H pi/2 pulse = {proton_pi_half} us")
 
+    # FIXME: this experiment is currently outdated and needs to be reworked to be compatible with new equipment and experiment structure.
     def OPT_T1_scan(self, **kwargs):
         """
         Run a T1 sweep without MW over a set of precession time intervals.
@@ -1622,6 +1651,7 @@ class SpinMeasurements:
             # load devices used in scan
             laser = mgr.laser
             laser_shutter = mgr.laser_shutter
+            daq = mgr.daq
             sig_gen = mgr.sg
             ps = mgr.ps
             hdawg = mgr.awg
@@ -1746,11 +1776,12 @@ class SpinMeasurements:
     @managed_experiment(token_prefix="MWT1", dataset_key="dataset")
     def MW_T1_scan(self, *, mgr, data, token, **kwargs):
         """Run a T1 sweep with MW over a set of precession time intervals."""
-        cfg = nvcfg.MwT1ScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
+        cfg = nvcfg.MWT1ScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
 
         ### --- Devices --- ###  
         laser = mgr.laser
         laser_shutter = mgr.laser_shutter
+        daq = mgr.daq
         sig_gen = mgr.sg
         ps = mgr.ps
         hdawg = mgr.awg
@@ -1834,7 +1865,7 @@ class SpinMeasurements:
         percent_completed = 0
                 
         ### --- Open laser shutter and emit MW for NV drive --- ###
-        with _shutter_open(laser_shutter), _rf_on(sig_gen):
+        with _shutter_open(laser_shutter, cfg.detector), _rf_on(sig_gen):
             try:
                 ps.set_soft_trigger() # set pulsestreamer to start on software trigger & run infinitely
                 ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # set up sequence for streaming
@@ -1951,6 +1982,7 @@ class SpinMeasurements:
         ### --- Devices --- ###
         laser = mgr.laser
         laser_shutter = mgr.laser_shutter
+        daq = mgr.daq
         sig_gen = mgr.sg
         ps = mgr.ps
         hdawg = mgr.awg
@@ -2086,7 +2118,7 @@ class SpinMeasurements:
         percent_completed = 0
 
         ### --- Open laser shutter and emit MW for NV drive --- ###
-        with _shutter_open(laser_shutter), _rf_on(sig_gen):
+        with _shutter_open(laser_shutter, cfg.detector), _rf_on(sig_gen):
             try:
                 ps.set_soft_trigger() # set pulsestreamer to start on software trigger & run infinitely
                 ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # set up sequence for streaming
@@ -2205,6 +2237,7 @@ class SpinMeasurements:
         ### --- Devices --- ###
         laser = mgr.laser
         laser_shutter = mgr.laser_shutter
+        daq = mgr.daq
         sig_gen = mgr.sg
         ps = mgr.ps
         hdawg = mgr.awg
@@ -2314,7 +2347,7 @@ class SpinMeasurements:
         percent_completed = 0
 
         ### --- Open laser shutter and emit MW for NV drive --- ###
-        with _shutter_open(laser_shutter), _rf_on(sig_gen):
+        with _shutter_open(laser_shutter, cfg.detector), _rf_on(sig_gen):
             try:
                 ps.set_soft_trigger() # set pulsestreamer to start on software trigger & run infinitely
                 ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # set up sequence for streaming
@@ -2433,6 +2466,7 @@ class SpinMeasurements:
         ### --- Devices --- ###
         laser = mgr.laser
         laser_shutter = mgr.laser_shutter
+        daq = mgr.daq
         sig_gen = mgr.sg
         ps = mgr.ps
         hdawg = mgr.awg
@@ -2522,7 +2556,7 @@ class SpinMeasurements:
         percent_completed = 0
 
         ### --- Open laser shutter and emit MW for NV drive --- ###
-        with _shutter_open(laser_shutter), _rf_on(sig_gen):
+        with _shutter_open(laser_shutter, cfg.detector), _rf_on(sig_gen):
             try:
                 ps.set_soft_trigger() # set pulsestreamer to start on software trigger & run infinitely
                 ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # set up sequence for streaming
@@ -2635,6 +2669,7 @@ class SpinMeasurements:
         ### --- Devices --- ###
         laser = mgr.laser
         laser_shutter = mgr.laser_shutter
+        daq = mgr.daq
         sig_gen = mgr.sg
         ps = mgr.ps
         hdawg = mgr.awg
@@ -2738,7 +2773,7 @@ class SpinMeasurements:
         percent_completed = 0
 
         ### --- Open laser shutter and emit MW for NV drive --- ###
-        with _shutter_open(laser_shutter), _rf_on(sig_gen):
+        with _shutter_open(laser_shutter, cfg.detector), _rf_on(sig_gen):
             try:
                 ps.set_soft_trigger() # set pulsestreamer to start on software trigger & run infinitely
                 ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # set up sequence for streaming
@@ -2871,6 +2906,7 @@ class SpinMeasurements:
         ### --- Devices --- ###
         laser = mgr.laser
         laser_shutter = mgr.laser_shutter
+        daq = mgr.daq
         sig_gen = mgr.sg
         ps = mgr.ps
         hdawg = mgr.awg
@@ -2963,7 +2999,7 @@ class SpinMeasurements:
         percent_completed = 0
                 
         ### --- Open laser shutter and emit MW for NV drive --- ###
-        with _shutter_open(laser_shutter), _rf_on(sig_gen):
+        with _shutter_open(laser_shutter, cfg.detector), _rf_on(sig_gen):
             try:
                 ps.set_soft_trigger() # set pulsestreamer to start on software trigger & run infinitely
                 ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # set up sequence for streaming
@@ -3079,6 +3115,7 @@ class SpinMeasurements:
         ### --- Devices --- ###
         laser = mgr.laser
         laser_shutter = mgr.laser_shutter
+        daq = mgr.daq
         sig_gen = mgr.sg
         ps = mgr.ps
         hdawg = mgr.awg
@@ -3176,7 +3213,7 @@ class SpinMeasurements:
         percent_completed = 0
                 
         ### --- Open laser shutter and emit MW for NV drive --- ###
-        with _shutter_open(laser_shutter), _rf_on(sig_gen):
+        with _shutter_open(laser_shutter, cfg.detector), _rf_on(sig_gen):
             try:
                 ps.set_soft_trigger() # set pulsestreamer to start on software trigger & run infinitely
                 ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # set up sequence for streaming
@@ -3295,6 +3332,7 @@ class SpinMeasurements:
         ### --- Devices --- ###
         laser = mgr.laser
         laser_shutter = mgr.laser_shutter
+        daq = mgr.daq
         sig_gen = mgr.sg
         ps = mgr.ps
         hdawg = mgr.awg
@@ -3395,7 +3433,7 @@ class SpinMeasurements:
         percent_completed = 0
                 
         ### --- Open laser shutter and emit MW for NV drive --- ###
-        with _shutter_open(laser_shutter), _rf_on(sig_gen):
+        with _shutter_open(laser_shutter, cfg.detector), _rf_on(sig_gen):
             try:
                 ps.set_soft_trigger() # set pulsestreamer to start on software trigger & run infinitely
                 ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # set up sequence for streaming
@@ -3516,6 +3554,7 @@ class SpinMeasurements:
         ### --- Devices --- ###
         laser = mgr.laser
         laser_shutter = mgr.laser_shutter
+        daq = mgr.daq
         sig_gen = mgr.sg
         ps = mgr.ps
         hdawg = mgr.awg
@@ -3606,7 +3645,7 @@ class SpinMeasurements:
         percent_completed = 0
                 
         ### --- Open laser shutter and emit MW for NV drive --- ###
-        with _shutter_open(laser_shutter), _rf_on(sig_gen):
+        with _shutter_open(laser_shutter, cfg.detector), _rf_on(sig_gen):
             try:
                 ps.set_soft_trigger() # set pulsestreamer to start on software trigger & run infinitely
                 ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # set up sequence for streaming
@@ -3720,6 +3759,7 @@ class SpinMeasurements:
         ### --- Devices --- ###
         laser = mgr.laser
         laser_shutter = mgr.laser_shutter
+        daq = mgr.daq
         sig_gen = mgr.sg
         ps = mgr.ps
         hdawg = mgr.awg
@@ -3816,7 +3856,7 @@ class SpinMeasurements:
         percent_completed = 0
                 
         ### --- Open laser shutter and emit MW for NV drive --- ###
-        with _shutter_open(laser_shutter), _rf_on(sig_gen):
+        with _shutter_open(laser_shutter, cfg.detector), _rf_on(sig_gen):
             try:
                 ps.set_soft_trigger() # set pulsestreamer to start on software trigger & run infinitely
                 ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # set up sequence for streaming
@@ -3933,6 +3973,7 @@ class SpinMeasurements:
         ### --- Devices --- ###
         laser = mgr.laser
         laser_shutter = mgr.laser_shutter
+        daq = mgr.daq
         sig_gen = mgr.sg
         ps = mgr.ps
         hdawg = mgr.awg
@@ -4029,7 +4070,7 @@ class SpinMeasurements:
         percent_completed = 0
                 
         ### --- Open laser shutter and emit MW for NV drive --- ###
-        with _shutter_open(laser_shutter), _rf_on(sig_gen):
+        with _shutter_open(laser_shutter, cfg.detector), _rf_on(sig_gen):
             try:
                 ps.set_soft_trigger() # set pulsestreamer to start on software trigger & run infinitely
                 ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # set up sequence for streaming
@@ -4141,6 +4182,7 @@ class SpinMeasurements:
         ### --- Devices --- ###  
         laser = mgr.laser
         laser_shutter = mgr.laser_shutter
+        daq = mgr.daq
         sig_gen = mgr.sg
         ps = mgr.ps
         hdawg = mgr.awg
@@ -4238,7 +4280,7 @@ class SpinMeasurements:
         percent_completed = 0
                 
         ### --- Open laser shutter and emit MW for NV drive --- ###
-        with _shutter_open(laser_shutter), _rf_on(sig_gen):
+        with _shutter_open(laser_shutter, cfg.detector), _rf_on(sig_gen):
             try:
                 ps.set_soft_trigger() # set pulsestreamer to start on software trigger & run infinitely
                 ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # set up sequence for streaming
@@ -4352,6 +4394,7 @@ class SpinMeasurements:
         ### --- Devices --- ###  
         laser = mgr.laser
         laser_shutter = mgr.laser_shutter
+        daq = mgr.daq
         sig_gen = mgr.sg
         ps = mgr.ps
         hdawg = mgr.awg
@@ -4439,7 +4482,7 @@ class SpinMeasurements:
         percent_completed = 0
                 
         ### --- Open laser shutter and emit MW for NV drive --- ###
-        with _shutter_open(laser_shutter), _rf_on(sig_gen):
+        with _shutter_open(laser_shutter, cfg.detector), _rf_on(sig_gen):
             try:
                 ps.set_soft_trigger() # set pulsestreamer to start on software trigger & run infinitely
                 ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # set up sequence for streaming
@@ -4555,6 +4598,7 @@ class SpinMeasurements:
         ### --- Devices --- ###
         laser = mgr.laser
         laser_shutter = mgr.laser_shutter
+        daq = mgr.daq
         sig_gen = mgr.sg
         ps = mgr.ps
         hdawg = mgr.awg
@@ -4696,7 +4740,7 @@ class SpinMeasurements:
                 percent_completed = 0
 
                 ### --- Open laser shutter and emit MW for NV drive --- ###
-                with _shutter_open(laser_shutter), _rf_on(sig_gen):
+                with _shutter_open(laser_shutter, cfg.detector), _rf_on(sig_gen):
                     try:
                         ps.set_soft_trigger()
 
