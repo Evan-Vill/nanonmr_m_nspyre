@@ -49,7 +49,7 @@ class ExpWidget(QWidget):
     
     QUEUE_CHECK_TIME = 50 # ms
 
-    def __init__(self):
+    def __init__(self, status_queue=None):
         super().__init__()
 
         self.setWindowTitle('NV Experiments')
@@ -57,7 +57,9 @@ class ExpWidget(QWidget):
         self.updateTimer = QTimer() #create a timer that will try to update that widget with messages from the from_exp_queue
         self.updateTimer.timeout.connect(lambda: self.check_queue_from_exp())
         self.updateTimer.start(self.QUEUE_CHECK_TIME)
-            
+
+        self.exp_inst_queue = status_queue
+
         # parameter defaults for different experiments
         self.sideband_opts = ["Lower", "Upper"]
         self.sideband_cw_opts = ["Lower", "Upper"]
@@ -1795,7 +1797,10 @@ class ExpWidget(QWidget):
 
     def _new_run_queues(self):
         # If you want, you can try to close old queues to release handles earlier
-        for q in (getattr(self, "queue_from_exp", None), getattr(self, "queue_to_exp", None)):
+        for q in (
+            getattr(self, "queue_from_exp", None), 
+            getattr(self, "queue_to_exp", None),
+        ):
             try:
                 if q is not None:
                     q.close()
@@ -2296,7 +2301,7 @@ class ExpWidget(QWidget):
                     exp_cls = nv_experiments_2026_03_05.SpinMeasurements,
                     fun_name = self.exp_dict[self.experiments.currentText()][0],
                     constructor_args = list(),
-                    constructor_kwargs = dict(),
+                    constructor_kwargs=dict(queue_to_inst=self.exp_inst_queue),
                     queue_to_exp = self.queue_to_exp,
                     queue_from_exp = self.queue_from_exp,
                     fun_args = list(),
