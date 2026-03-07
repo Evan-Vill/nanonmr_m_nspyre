@@ -14,6 +14,7 @@ Evan Villafranca - 2022
 from importlib import reload
 import logging
 from multiprocessing import Queue
+from queue import Empty
 
 from pyqtgraph import ComboBox, SpinBox
 from PyQt6.QtCore import Qt, QTimer, QSignalBlocker
@@ -63,8 +64,9 @@ class InstWidget(QWidget):
     QUEUE_CHECK_TIME = 100  # ms
     EQUIP_STATUS_CHECK_TIME = 500  # ms
     GUI_OWNER_PREFIX = "GUI_"
+    EXP_QUEUE_CHECK_TIME = 500  # ms
 
-    def __init__(self):
+    def __init__(self, status_queue=None):
         super().__init__()
 
         self._mgr = InstrumentManager()
@@ -77,6 +79,7 @@ class InstWidget(QWidget):
         # magnet status queue handling
         self.updateTimer = QTimer(self)  # timer to update widget from queue
         self.updateTimer.timeout.connect(self.check_queue_from_mag)
+        self.updateTimer.timeout.connect(self.check_queue_from_exp_inst)
         self.updateTimer.start(self.QUEUE_CHECK_TIME)
 
         # hardware status update handling
@@ -89,6 +92,8 @@ class InstWidget(QWidget):
         self.hwTimer.start(self.EQUIP_STATUS_CHECK_TIME)
 
         self._gui_id = "GUI_Instruments"
+
+        self.exp_inst_queue = status_queue  # queue for receiving status updates from experiments that are relevant to instruments 
 
         # current stage positions
         self.curr_r = 0
@@ -182,6 +187,9 @@ class InstWidget(QWidget):
 
         # one-time immediate refresh after UI is live
         QTimer.singleShot(0, self._initial_refresh)
+
+    def set_experiment_inst_queue(self, q):
+        self.exp_inst_queue = q
 
     # for initial refresh and setting hardware state upon GUI open
     def _set_radio_safely(self, rb, checked: bool):
@@ -1946,52 +1954,62 @@ class InstWidget(QWidget):
         idx = self.nd_filter_opts.findText(self.nd_filter_choice)
         self.call_filter_wheel(lambda filter_wheel: filter_wheel.set_pos(idx + 1))
 
-    def bpd_shutter_status_changed(self):
-        self.call_daq(lambda daq: daq.open_do_task("shutter"))
-        self.call_daq(lambda daq: daq.start_do_task())
-
-        if self.bpd_shutter_button.text() == "Open BPD shutter":
+    def set_bpd_shutter_ui(self, is_open: bool):
+        if is_open:
             self.bpd_shutter_button.setText("Close BPD shutter")
-            self.call_daq(
-                lambda daq: daq.write_do_task("shutter", shutter_status="open")
-            )
             self.bpd_shutter_status_label.setStyleSheet(
                 "color: black; background-color: white; border: 4px solid black;"
             )
             self.bpd_shutter_status_label.setText("BPD Shutter: OPEN")
         else:
             self.bpd_shutter_button.setText("Open BPD shutter")
-            self.call_daq(
-                lambda daq: daq.write_do_task("shutter", shutter_status="close")
-            )
             self.bpd_shutter_status_label.setStyleSheet(
                 "color: white; background-color: black; border: 4px solid black;"
             )
             self.bpd_shutter_status_label.setText("BPD Shutter: CLOSED")
 
+    def check_queue_from_exp_inst(self):
+        if self.exp_inst_queue is None:
+            return
+
+        try:
+            while True:
+                msg = self.exp_inst_queue.get_nowait()
+                if msg is None:
+                    continue
+
+                if isinstance(msg, dict) and msg.get("type") == "bpd_shutter":
+                    self.set_bpd_shutter_ui(bool(msg.get("open", False)))
+
+        except Empty:
+            pass
+        except Exception as e:
+            logger.warning(f"Error reading experiment->instrument queue: {e}")
+
+    def bpd_shutter_status_changed(self):
+        self.call_daq(lambda daq: daq.open_do_task("shutter"))
+        self.call_daq(lambda daq: daq.start_do_task())
+
+        opening = self.bpd_shutter_button.text() == "Open BPD shutter"
+
+        if opening:
+            self.call_daq(lambda daq: daq.write_do_task("shutter", shutter_status="open"))
+        else:
+            self.call_daq(lambda daq: daq.write_do_task("shutter", shutter_status="close"))
+
         self.call_daq(lambda daq: daq.stop_do_task())
         self.call_daq(lambda daq: daq.close_do_task())
+
+        self.set_bpd_shutter_ui(opening)
 
     def bpd_shutter_status_read(self):
         self.call_daq(lambda daq: daq.open_do_task("shutter"))
         self.call_daq(lambda daq: daq.start_do_task())
         bpd_shutter_mode_is_open = self.call_daq(lambda daq: daq.read_do_task())
-
-        if bpd_shutter_mode_is_open:
-            self.bpd_shutter_button.setText("Close BPD shutter")
-            self.bpd_shutter_status_label.setStyleSheet(
-                "color: black; background-color: white; border: 4px solid black;"
-            )
-            self.bpd_shutter_status_label.setText("BPD Shutter: OPEN")
-        else:
-            self.bpd_shutter_button.setText("Open BPD shutter")
-            self.bpd_shutter_status_label.setStyleSheet(
-                "color: white; background-color: black; border: 4px solid black;"
-            )
-            self.bpd_shutter_status_label.setText("BPD Shutter: CLOSED")
-
         self.call_daq(lambda daq: daq.stop_do_task())
         self.call_daq(lambda daq: daq.close_do_task())
+
+        self.set_bpd_shutter_ui(bool(bpd_shutter_mode_is_open))
 
     def laser_power_changed(self):
         try:
