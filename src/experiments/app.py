@@ -13,6 +13,8 @@ from nspyre import MainWidgetItem
 from nspyre import nspyre_init_logger
 from nspyre import nspyreApp
 
+from multiprocessing import Queue
+
 # in order for dynamic reloading of code to work, you must pass the specifc
 # module containing your class to MainWidgetItem, since the python reload()
 # function does not recursively reload modules
@@ -34,6 +36,8 @@ def main():
         file_size=10_000_000,
     )
 
+    status_queue = Queue()
+
     with MyInstrumentManager() as insmgr:
         # Create Qt application and apply nspyre visual settings.
         app = nspyreApp()
@@ -41,8 +45,18 @@ def main():
         # Create the GUI.
         main_widget = MainWidget(
             {
-                'Instruments': MainWidgetItem(gui_all_instruments_2026_03_02, 'InstWidget', stretch = (1, 1)),
-                'Experiments': MainWidgetItem(gui_experiments_2026_03_03, 'ExpWidget', stretch = (1, 1)),
+                'Instruments': MainWidgetItem(
+                    gui_all_instruments_2026_03_02, 
+                    'InstWidget', 
+                    args=[status_queue],
+                    stretch = (1, 1),
+                ),
+                'Experiments': MainWidgetItem(
+                    gui_experiments_2026_03_03, 
+                    'ExpWidget', 
+                    args=[status_queue],
+                    stretch = (1, 1),
+                ),
                 # 'Subsystems': MainWidgetItem(nspyre.gui.widgets.subsystem, 'SubsystemsWidget', args=[insmgr.subs.subsystems], stretch=(1, 1)),
                 'Plots': {
                     'FlexLinePlot': MainWidgetItem(
@@ -61,7 +75,10 @@ def main():
 
         # Run the GUI event loop.
         app.exec()
-
+        
+        # Shut down the status queue cleanly to avoid hanging processes on Windows
+        status_queue.close()
+        status_queue.join_thread()
 
 # if using the nspyre ProcessRunner, the main code must be guarded with if __name__ == '__main__':
 # see https://docs.python.org/2/library/multiprocessing.html#windows
