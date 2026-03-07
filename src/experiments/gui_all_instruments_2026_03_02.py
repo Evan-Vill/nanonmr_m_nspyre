@@ -61,10 +61,10 @@ logger = logging.getLogger(__name__)
 class InstWidget(QWidget):
     """Qt widget subclass that generates an interface for operating magnet mount."""
 
+    EXP_QUEUE_CHECK_TIME = 200  # ms
     QUEUE_CHECK_TIME = 100  # ms
     EQUIP_STATUS_CHECK_TIME = 500  # ms
     GUI_OWNER_PREFIX = "GUI_"
-    EXP_QUEUE_CHECK_TIME = 500  # ms
 
     def __init__(self, status_queue=None):
         super().__init__()
@@ -76,13 +76,17 @@ class InstWidget(QWidget):
 
         self._last_rpc_err = {}  # keep track of last RPC errors. Context -> msg
 
-        # magnet status queue handling
+        ### --- Instrument status from experiments queue handling --- ###
+        self.expQueueTimer = QTimer(self)  # timer to check for messages from experiments that are relevant to instruments
+        self.expQueueTimer.timeout.connect(self.check_queue_from_exp_inst)
+        self.expQueueTimer.start(self.EXP_QUEUE_CHECK_TIME)
+
+        ### --- Magnet status update handling --- ###
         self.updateTimer = QTimer(self)  # timer to update widget from queue
         self.updateTimer.timeout.connect(self.check_queue_from_mag)
-        self.updateTimer.timeout.connect(self.check_queue_from_exp_inst)
         self.updateTimer.start(self.QUEUE_CHECK_TIME)
 
-        # hardware status update handling
+        ### --- Hardware status update handling --- ###
         self.hwTimer = QTimer(self)
         self.hwTimer.timeout.connect(self.get_laser_status)
         self.hwTimer.timeout.connect(self.get_interlock_status)
