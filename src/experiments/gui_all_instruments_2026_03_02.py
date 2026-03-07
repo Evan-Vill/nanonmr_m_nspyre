@@ -239,6 +239,26 @@ class InstWidget(QWidget):
         self.bpd_shutter_status_read()  # this will query hardware and update button + label accordingly
 
         # magnet state
+        self._mgr.zaber.update_positions_callback() # query current magnet stage positions and update labels
+        self._mgr.thor_polar.update_positions_callback()  
+        self._mgr.thor_azi.update_positions_callback()
+
+        z_pos_init = self._mgr.zaber.current_positions[0] # current stage positions
+        polar_pos_init = self._mgr.thor_polar.current_position
+        azi_pos_init = self._mgr.thor_azi.current_position
+
+        self.r_label.setText(f"Step 3: R = {z_pos_init:.1f} mm")
+        self.polar_label.setText(
+            f"Step 2: \u03b8 = {polar_pos_init:.1f}\N{DEGREE SIGN}"
+        )
+        self.azi_label.setText(
+            f"Step 1: \u03c6 = {azi_pos_init:.1f}\N{DEGREE SIGN}"
+        )
+
+        self.r_label.setStyleSheet("color: white;")
+        self.polar_label.setStyleSheet("color: white;")
+        self.azi_label.setStyleSheet("color: white;")     
+
         self.check_queue_from_mag()
 
     def _reset_mgr(self):
@@ -271,6 +291,34 @@ class InstWidget(QWidget):
                     self._last_rpc_err[context] = msg
                     print(f"{tag} {msg}")
                 return None
+
+
+    @property
+    def zaber(self):
+        if getattr(self, "_closing", False):
+            raise RuntimeError("GUI is closing.")
+        return self._mgr.zaber
+    
+    def call_zaber(self, fn):
+        return self._call(lambda: fn(self.zaber), context="zaber")
+    
+    @property
+    def thor_polar(self):
+        if getattr(self, "_closing", False):
+            raise RuntimeError("GUI is closing.")
+        return self._mgr.thor_polar
+    
+    def call_thor_polar(self, fn):
+        return self._call(lambda: fn(self.thor_polar), context="thor_polar")
+    
+    @property
+    def thor_azi(self):
+        if getattr(self, "_closing", False):
+            raise RuntimeError("GUI is closing.")
+        return self._mgr.thor_azi
+    
+    def call_thor_azi(self, fn):
+        return self._call(lambda: fn(self.thor_azi), context="thor_azi")
 
     @property
     def ps(self):
