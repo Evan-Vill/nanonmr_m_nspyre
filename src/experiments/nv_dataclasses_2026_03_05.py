@@ -18,7 +18,7 @@ class SignalScanCfg:
     detector: str
 
 @dataclass(frozen=True)
-class OdmrScanCfg:
+class ODMRScanCfg:
     dataset: str
     num_pts: int
     iters: int
@@ -122,7 +122,7 @@ class RabiScanCfg:
     sideband_power: float
 
 @dataclass(frozen=True)
-class PulsedOdmrScanCfg:
+class PulsedODMRScanCfg:
     dataset: str
     num_pts: int
     iters: int
@@ -157,7 +157,7 @@ class PulsedOdmrScanCfg:
     sideband_power: float
 
 @dataclass(frozen=True)
-class PulsedOdmrRfScanCfg:
+class PulsedODMRRFScanCfg:
     dataset: str
     num_pts: int
     iters: int
@@ -277,7 +277,7 @@ class T2ScanCfg:
     t2_seq: str
 
 @dataclass(frozen=True)
-class T2RfScanCfg:
+class T2RFScanCfg:
     dataset: str
     start: float
     stop: float
@@ -320,7 +320,7 @@ class T2RfScanCfg:
     sideband_power: float
 
 @dataclass(frozen=True)
-class DqScanCfg:
+class DQScanCfg:
     dataset: str
     start: float
     stop: float
@@ -357,7 +357,7 @@ class DqScanCfg:
     sideband_power: float
 
 @dataclass(frozen=True)
-class DeerScanCfg:
+class DEERScanCfg:
     dataset: str
     start: float
     stop: float
@@ -399,7 +399,7 @@ class DeerScanCfg:
     tau: float
 
 @dataclass(frozen=True)
-class DeerRabiScanCfg:
+class DEERRabiScanCfg:
     dataset: str
     start: float
     stop: float
@@ -440,7 +440,7 @@ class DeerRabiScanCfg:
     tau: float
 
 @dataclass(frozen=True)
-class DeerFidScanCfg:
+class DEERFIDScanCfg:
     dataset: str
     start: float
     stop: float
@@ -480,7 +480,7 @@ class DeerFidScanCfg:
     sideband_power: float
 
 @dataclass(frozen=True)
-class DeerFidCdScanCfg:
+class DEERFIDCDScanCfg:
     dataset: str
     start: float
     stop: float
@@ -521,7 +521,7 @@ class DeerFidCdScanCfg:
     sideband_power: float
 
 @dataclass(frozen=True)
-class DeerCorrRabiScanCfg:
+class DEERCorrRabiScanCfg:
     dataset: str
     start: float
     stop: float
@@ -564,7 +564,7 @@ class DeerCorrRabiScanCfg:
     tau: float
 
 @dataclass(frozen=True)
-class DeerT1ScanCfg:
+class DEERT1ScanCfg:
     dataset: str
     start: float
     stop: float
@@ -607,7 +607,7 @@ class DeerT1ScanCfg:
     tau: float
 
 @dataclass(frozen=True)
-class DeerT2ScanCfg:
+class DEERT2ScanCfg:
     dataset: str
     start: float
     stop: float
@@ -682,86 +682,7 @@ class CorrSpecScanCfg:
     sideband: str
     sideband_freq: float
     sideband_power: float
-    tau: float
-
-@dataclass(frozen=True)
-class CASRCoilScanCfg:
-    dataset: str
-    num_pts: int
-    iters: int
-    runs: int
-    awg_samp_rate_1: float
-    awg_samp_rate_2: float
-    central_freq: float
-    detector: str
-    dig_amplitude: float
-    dig_coupling: str
-    dig_sampling_freq: float
-    dig_termination: str
-    dig_timeout: float
-    directory: str
-    filename: str
-    freq: float
-    i_offset: float
-    laser_init: float
-    laser_power: float
-    laser_readout: float
-    n: int
-    pi: float
-    pretrig_size: int
-    q_offset: float
-    read_channel: int
-    rf_pi_half: float
-    rf_power: float
-    rf_pulse_freq: float
-    rf_pulse_phase: float
-    rf_pulse_power: float
-    save: bool
-    file_format: str
-    segment_size: int
-    sideband: str
-    sideband_freq: float
-    sideband_power: float
-    tau: float
-
-@dataclass(frozen=True)
-class CASROrigScanCfg:
-    dataset: str
-    num_pts: int
-    iters: int
-    runs: int
-    awg_samp_rate_1: float
-    awg_samp_rate_2: float
-    central_freq: float
-    detector: str
-    dig_amplitude: float
-    dig_coupling: str
-    dig_sampling_freq: float
-    dig_termination: str
-    dig_timeout: float
-    directory: str
-    filename: str
-    freq: float
-    i_offset: float
-    laser_init: float
-    laser_power: float
-    laser_readout: float
-    n: int
-    pi: float
-    pretrig_size: int
-    q_offset: float
-    read_channel: int
-    rf_pi_half: float
-    rf_power: float
-    rf_pulse_freq: float
-    rf_pulse_phase: float
-    rf_pulse_power: float
-    save: bool
-    file_format: str
-    segment_size: int
-    sideband: str
-    sideband_freq: float
-    sideband_power: float
+    sig_opt: str
     tau: float
 
 @dataclass(frozen=True)
