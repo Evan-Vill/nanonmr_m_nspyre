@@ -543,7 +543,7 @@ class SpinMeasurements:
     @managed_experiment(token_prefix="CWODMR", dataset_key="dataset")           
     def odmr_scan(self, *, mgr, data, token, **kwargs):
         """Run a CW ODMR sweep over a set of microwave frequencies."""  
-        cfg = nvcfg.OdmrScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
+        cfg = nvcfg.ODMRScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
 
         ### --- Devices --- ###
         laser = mgr.laser
@@ -2249,7 +2249,7 @@ class SpinMeasurements:
     @managed_experiment(token_prefix="T2RF", dataset_key="dataset")
     def T2_rf_scan(self, *, mgr, data, token, **kwargs):
         """Run a T2 sweep over a set of precession time intervalsb with constant RF applied."""
-        cfg = nvcfg.T2RfScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
+        cfg = nvcfg.T2RFScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
 
         ### --- Devices --- ###
         laser = mgr.laser
@@ -2478,7 +2478,7 @@ class SpinMeasurements:
     @managed_experiment(token_prefix="DQ", dataset_key="dataset")
     def DQ_scan(self, *, mgr, data, token, **kwargs):
         """Run a DQ sweep over a set of precession time intervals."""
-        cfg = nvcfg.DqScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
+        cfg = nvcfg.DQScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
 
         ### --- Devices --- ###
         laser = mgr.laser
@@ -2681,7 +2681,7 @@ class SpinMeasurements:
     @managed_experiment(token_prefix="DEER", dataset_key="dataset")
     def DEER_scan(self, *, mgr, data, token, **kwargs):
         """Run a DEER sweep over a set of MW frequencies."""
-        cfg = nvcfg.DeerScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
+        cfg = nvcfg.DEERScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
         
         ### --- Devices --- ###
         laser = mgr.laser
@@ -2918,7 +2918,7 @@ class SpinMeasurements:
     @managed_experiment(token_prefix="DEERRABI", dataset_key="dataset")
     def DEER_rabi_scan(self, *, mgr, data, token, **kwargs):
         """Run a DEER Rabi sweep over a set of MW pulse durations."""
-        cfg = nvcfg.DeerRabiScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
+        cfg = nvcfg.DEERRabiScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
 
         ### --- Devices --- ###
         laser = mgr.laser
@@ -3127,7 +3127,7 @@ class SpinMeasurements:
     @managed_experiment(token_prefix="DEERFID", dataset_key="dataset")
     def DEER_FID_scan(self, *, mgr, data, token, **kwargs):
         """Run a DEER FID sweep over a set of MW pulse durations."""
-        cfg = nvcfg.DeerFidScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
+        cfg = nvcfg.DEERFIDScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
 
         ### --- Devices --- ###
         laser = mgr.laser
@@ -3344,7 +3344,7 @@ class SpinMeasurements:
     @managed_experiment(token_prefix="DEERFIDCD", dataset_key="dataset")
     def DEER_FID_CD_scan(self, *, mgr, data, token, **kwargs):
         """Run a continuous drive DEER FID sweep over a set of free precession intervals.""" 
-        cfg = nvcfg.DeerFidCdScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
+        cfg = nvcfg.DEERFIDCDScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
         
         ### --- Devices --- ###
         laser = mgr.laser
@@ -3566,7 +3566,7 @@ class SpinMeasurements:
     @managed_experiment(token_prefix="DEERCORRRABI", dataset_key="dataset")
     def DEER_corr_rabi_scan(self, *, mgr, data, token, **kwargs):
         """Run a DEER Correlation Rabi sweep over a set of MW pulses."""
-        cfg = nvcfg.DeerCorrRabiScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
+        cfg = nvcfg.DEERCorrRabiScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
         
         ### --- Devices --- ###
         laser = mgr.laser
@@ -3771,7 +3771,7 @@ class SpinMeasurements:
     @managed_experiment(token_prefix="DEERT1", dataset_key="dataset")
     def DEER_T1_scan(self, *, mgr, data, token, **kwargs):
         """Run a DEER Correlation T1 sweep over a set of correlation intervals."""
-        cfg = nvcfg.DeerT1ScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
+        cfg = nvcfg.DEERT1ScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
 
         ### --- Devices --- ###
         laser = mgr.laser
@@ -3963,7 +3963,7 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(cfg.dataset, dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *cfg.fit_params)
+                    fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(cfg.dataset, with_pulse_py_sweeps, without_pulse_py_sweeps, with_pulse_ny_sweeps, without_pulse_ny_sweeps, *cfg.fit_params)
                 except (RuntimeError, OptimizeWarning) as e:
                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
         
@@ -3985,7 +3985,7 @@ class SpinMeasurements:
     @managed_experiment(token_prefix="DEERT2", dataset_key="dataset")
     def DEER_T2_scan(self, *, mgr, data, token, **kwargs):
         """Run a DEER Correlation T1 sweep over a set of correlation intervals."""
-        cfg = nvcfg.DeerT2ScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
+        cfg = nvcfg.DEERT2ScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
 
         ### --- Devices --- ###
         laser = mgr.laser
@@ -4251,8 +4251,7 @@ class SpinMeasurements:
             hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
             hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
-                'seq': 'NMR',
-                'seq_nmr': 'Correlation Spectroscopy',
+                'seq': 'NMR RF',
                 'i_offset': cfg.i_offset,
                 'q_offset': cfg.q_offset,
                 'sideband_power': cfg.sideband_power,
@@ -4453,26 +4452,55 @@ class SpinMeasurements:
             runs=cfg.runs,
         )
 
+        corr_spec_time = pi_half[0] + (4*pi[0] + 4*pi[1] + 8*cfg.tau*1e9)*cfg.n + pi_half[1] + cfg.stop*1e9 + \
+                            pi_half[0] + (4*pi[0] + 4*pi[1] + 8*cfg.tau*1e9)*cfg.n + pi_half[1]
+        
+        total_exp_time = 100 + cfg.laser_init*1e9 + 500 + corr_spec_time + 100 + cfg.laser_readout + 100
+
+
         ### --- Upload AWG sequence --- ###
         try:
             hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
             hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
-            hdawg.set_sequence(**{
-                'seq': 'NMR',
-                'seq_nmr': 'Correlation Spectroscopy',
-                'i_offset': cfg.i_offset,
-                'q_offset': cfg.q_offset,
-                'sideband_power': cfg.sideband_power,
-                'sideband_freq': cfg.sideband_freq, 
-                'iq_phases': iq_phases,
-                'pihalf_x': pi_half[0]/1e9,
-                'pihalf_y': pi_half[1]/1e9,
-                'pi_x': pi[0]/1e9, 
-                'pi_y': pi[1]/1e9,
-                'n': cfg.n,
-                'num_pts': cfg.num_pts,
-                'runs': cfg.runs, 
-                'iters': cfg.iters})
+            if cfg.sig_opt == "Coil":
+                hdawg.set_sequence(**{
+                    'seq': 'NMR RF',
+                    'i_offset': cfg.i_offset,
+                    'q_offset': cfg.q_offset,
+                    'sideband_power': cfg.sideband_power,
+                    'sideband_freq': cfg.sideband_freq, 
+                    'iq_phases': iq_phases,
+                    'pihalf_x': pi_half[0]/1e9,
+                    'pihalf_y': pi_half[1]/1e9,
+                    'pi_x': pi[0]/1e9, 
+                    'pi_y': pi[1]/1e9,
+                    'n': cfg.n,
+                    'num_pts': cfg.num_pts,
+                    'runs': cfg.runs, 
+                    'iters': cfg.iters,
+                    'total_exp_time': total_exp_time*1e-9,
+                    'rf_power': 0.2,
+                    'rf_freq': 2.88e6,
+                    'rf_phase': 0
+                })
+            else:
+                hdawg.set_sequence(**{
+                    'seq': 'NMR',
+                    'seq_nmr': 'Correlation Spectroscopy',
+                    'i_offset': cfg.i_offset,
+                    'q_offset': cfg.q_offset,
+                    'sideband_power': cfg.sideband_power,
+                    'sideband_freq': cfg.sideband_freq, 
+                    'iq_phases': iq_phases,
+                    'pihalf_x': pi_half[0]/1e9,
+                    'pihalf_y': pi_half[1]/1e9,
+                    'pi_x': pi[0]/1e9, 
+                    'pi_y': pi[1]/1e9,
+                    'n': cfg.n,
+                    'num_pts': cfg.num_pts,
+                    'runs': cfg.runs, 
+                    'iters': cfg.iters
+                })
         except Exception as e:
             self.queue_from_exp.put_nowait(self.build_status_msg(
                 status="failed",
