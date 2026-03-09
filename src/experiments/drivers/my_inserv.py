@@ -36,7 +36,7 @@ with InstrumentServer() as local_inserv:
                      class_name = 'FilterWheel')
                          
     local_inserv.add(name = 'laser', 
-                     class_path = _HERE / 'laser_driver_2026-02-14.py', 
+                     class_path = _HERE / 'laser_driver_2026_02_14.py', 
                      class_name = 'LaserControl',
                      args = ['LAS-08166'])
 
@@ -55,12 +55,12 @@ with InstrumentServer() as local_inserv:
     #                  args = ['68801142'])
     
     local_inserv.add(name = 'awg', 
-                     class_path = _HERE / 'hdawg_driver_current_v3.py', 
+                     class_path = _HERE / 'hdawg_driver_2026_03_09.py', 
                      class_name = 'HDAWG',
                      args = ['dev8181', '127.0.0.1', 8004])
     
     local_inserv.add(name = 'ps',
-                     class_path = _HERE / 'ps_driver_current_v4.py',
+                     class_path = _HERE / 'ps_driver_2026_03_09.py',
                      class_name = 'Pulses')
     
     # local_inserv.add(name = 'dig', 
