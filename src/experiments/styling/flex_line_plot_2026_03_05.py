@@ -7,7 +7,7 @@ from typing import List
 from typing import Tuple
 
 import numpy as np
-from numpy.fft import fft, ifft
+from numpy.fft import fft, ifft, fftfreq, rfft, rfftfreq
 from scipy.optimize import curve_fit
 
 import pyqtgraph as pg
@@ -29,6 +29,13 @@ from nspyre_colors_2026_03_05 import cyclic_colors
 
 _logger = logging.getLogger(__name__)
 
+def boxcar_complex_smooth(y: np.ndarray, width: int) -> np.ndarray:
+    """Boxcar smooth a complex 1D array in frequency space."""
+    y = np.asarray(y)
+    if width <= 1:
+        return y.copy()
+    kernel = np.ones(width, dtype=float) / width
+    return np.convolve(y, kernel, mode='same')
 
 class FitCurveDialog(QWidget):
     
@@ -351,13 +358,20 @@ class _FlexLinePlotSeriesSettings:
     """Contain the settings for a single plot."""
 
     def __init__(
-        self, series: str, scan_i: str, scan_j: str, processing: str, hidden: bool
+        self, 
+        series: str, 
+        scan_i: str, 
+        scan_j: str, 
+        processing: str, 
+        hidden: bool,
+        boxcar_width: int = 1,
     ):
         self.series: str = series
         self.scan_i: str = scan_i
         self.scan_j: str = scan_j
         self.processing: str = processing
         self.hidden = hidden
+        self.boxcar_width = boxcar_width
 
 class _FlexLinePlotSettings(QThreadSafeObject):
     """Container class to hold the plot settings for a _FlexLinePlotWidget."""
@@ -386,6 +400,7 @@ class _FlexLinePlotSettings(QThreadSafeObject):
         scan_j: str,
         processing: str,
         hidden: bool,
+        boxcar_width: int = 1,
         callback: Optional[Callable] = None,
     ):
         with QtCore.QMutexLocker(self.mutex):
@@ -401,6 +416,7 @@ class _FlexLinePlotSettings(QThreadSafeObject):
                 scan_j=scan_j,
                 processing=processing,
                 hidden=hidden,
+                boxcar_width=boxcar_width,
             )
             self.force_update = True
             if callback is not None:
@@ -434,6 +450,7 @@ class _FlexLinePlotSettings(QThreadSafeObject):
                 )
                 return
             self.series_settings[name].hidden = True
+            sekf.force_update = True
             if callback is not None:
                 self.run_main(callback, name, blocking=True)
 
@@ -451,10 +468,11 @@ class _FlexLinePlotSettings(QThreadSafeObject):
                 )
                 return
             self.series_settings[name].hidden = False
+            self.force_update = True
             if callback is not None:
                 self.run_main(callback, name, blocking=True)
 
-    def update_settings(self, name, series, scan_i, scan_j, processing):
+    def update_settings(self, name, series, scan_i, scan_j, processing, boxcar_width):
         with QtCore.QMutexLocker(self.mutex):
             if name not in self.series_settings:
                 _logger.info(
@@ -466,6 +484,7 @@ class _FlexLinePlotSettings(QThreadSafeObject):
             self.series_settings[name].scan_i = scan_i
             self.series_settings[name].scan_j = scan_j
             self.series_settings[name].processing = processing
+            self.series_settings[name].boxcar_width = boxcar_width
             self.force_update = True
 
 class FlexLinePlotWidget(QtWidgets.QWidget):
@@ -565,6 +584,19 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
         self.plot_processing_dropdown.addItem('Append')  # index 1
         # default to average
         self.plot_processing_dropdown.setCurrentIndex(0)
+
+        plot_boxcar_label = QtWidgets.QLabel('Boxcar FFT Width (Bins)')
+        plot_boxcar_label.setSizePolicy(
+            QtWidgets.QSizePolicy(
+                QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed
+            )
+        )
+
+        self.plot_boxcar_spinbox = QtWidgets.QSpinBox()
+        self.plot_boxcar_spinbox.setMinimum(1)
+        self.plot_boxcar_spinbox.setMaximum(100000)
+        self.plot_boxcar_spinbox.setValue(1)
+        self.plot_boxcar_spinbox.setSingleStep(1)
 
         # show button
         show_button = QtWidgets.QPushButton('Show')
@@ -666,6 +698,11 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
                             'label': plot_processing_label,
                             'dropdown': self.plot_processing_dropdown,
                         },
+                        'boxcar': {
+                            'type': QtWidgets.QHBoxLayout,
+                            'label': plot_boxcar_label,
+                            'edit': self.plot_boxcar_spinbox,
+                        },
                         'spacer': expanding_spacer,
                     },
                 },
@@ -753,6 +790,7 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
         self.add_plot_scan_i_textbox.setText(settings.scan_i)
         self.add_plot_scan_j_textbox.setText(settings.scan_j)
         self.plot_processing_dropdown.setCurrentText(settings.processing)
+        self.plot_boxcar_spinbox.setValue(int(settings.boxcar_width))
 
     def _get_plot_settings(self):
         """Retrieve the user-entered plot settings from the GUI and check them for
@@ -776,12 +814,13 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
         name = self.plot_name_lineedit.text()
         series = self.plot_series_lineedit.text()
         processing = self.plot_processing_dropdown.currentText()
+        boxcar_width = self.plot_boxcar_spinbox.value()
 
-        return name, series, scan_i, scan_j, processing
+        return name, series, scan_i, scan_j, processing, boxcar_width
 
     def _update_plot_clicked(self):
         """Called when the user clicks the update button."""
-        name, series, scan_i, scan_j, processing = self._get_plot_settings()
+        name, series, scan_i, scan_j, processing, boxcar_width = self._get_plot_settings()
         # set the plot settings
         self.line_plot.plot_settings.run_safe(
             self.line_plot.plot_settings.update_settings,
@@ -790,15 +829,22 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
             scan_i,
             scan_j,
             processing,
+            boxcar_width,
         )
 
     def _add_plot_clicked(self):
         """Called when the user clicks the add button."""
-        name, series, scan_i, scan_j, processing = self._get_plot_settings()
-        self.add_plot(name, series, scan_i, scan_j, processing)
+        name, series, scan_i, scan_j, processing, boxcar_width = self._get_plot_settings()
+        self.add_plot(name, series, scan_i, scan_j, processing, boxcar_width)
 
     def add_plot(
-        self, name: str, series: str, scan_i: str, scan_j: str, processing: str
+        self, 
+        name: str, 
+        series: str, 
+        scan_i: str, 
+        scan_j: str, 
+        processing: str,
+        boxcar_width: int = 1,
     ):
         """Add a new subplot. Thread safe.
 
@@ -818,15 +864,18 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
 
             processing: 'Average' to average the x and y values of scans i
                 through j, 'Append' to concatenate them.
+            boxcar_width: Integer width of the boxcar window for smoothing. 
+                Default is 1 (no smoothing).
         """
         self.line_plot.plot_settings.run_safe(
             self.line_plot.plot_settings.add_plot,
-            name,
-            series,
-            scan_i,
-            scan_j,
-            processing,
-            False,
+            name=name,
+            series=series,
+            scan_i=scan_i,
+            scan_j=scan_j,
+            processing=processing,
+            hidden=False,
+            boxcar_width=boxcar_width,
             callback=self._add_plot_callback,
         )
 
@@ -964,7 +1013,7 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
 
         self.line_plot.plot_widget.getPlotItem().setDownsampling(ds=True, auto=True, mode='mean')
         # clear previously loaded plots
-        for plot_name in self.line_plot.plot_settings.series_settings:
+        for plot_name in list(self.line_plot.plot_settings.series_settings):
             self.remove_plot(plot_name)
         
         match self.current_exp_type:
@@ -1917,6 +1966,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
     def update(self):
         """Update the plot if there is new data available."""
         with QtCore.QMutexLocker(self.plot_settings.sink_mutex):
+            datasets = self.plot_settings.sink.datasets if self.plot_settings.sink is not None else None
             if self.plot_settings.sink is None:
                 # rate limit how often update() runs if there is no sink connected
                 time.sleep(0.1)
@@ -1934,6 +1984,8 @@ class _FlexLinePlotWidget(LinePlotWidget):
             with QtCore.QMutexLocker(self.plot_settings.mutex):
                 for plot_name in self.plot_settings.series_settings:
                     settings = self.plot_settings.series_settings[plot_name]
+                    if settings.hidden:
+                        continue
                     series = settings.series
                     scan_i = settings.scan_i
                     scan_j = settings.scan_j
@@ -1942,53 +1994,53 @@ class _FlexLinePlotWidget(LinePlotWidget):
                     # pick out the particular data series
                     try:
                         if series == 'diff' or series == 'div' or series == 'contrast' or series == 'fft':
-                            data_sig = self.plot_settings.sink.datasets['signal']
-                            data_bg = self.plot_settings.sink.datasets['background']
+                            data_sig = datasets['signal']
+                            data_bg = datasets['background']
                         elif series == 'div_rf':
-                            data_sig = self.plot_settings.sink.datasets['rf_signal']
-                            data_bg = self.plot_settings.sink.datasets['rf_background']
+                            data_sig = datasets['rf_signal']
+                            data_bg = datasets['rf_background']
                         elif series == 'diff dq1':
-                            data_sig = self.plot_settings.sink.datasets['S0,-1']
-                            data_bg = self.plot_settings.sink.datasets['S0,0']
+                            data_sig = datasets['S0,-1']
+                            data_bg = datasets['S0,0']
                         elif series == 'diff dq2':
-                            data_sig = self.plot_settings.sink.datasets['S-1,+1']
-                            data_bg = self.plot_settings.sink.datasets['S-1,-1']
+                            data_sig = datasets['S-1,+1']
+                            data_bg = datasets['S-1,-1']
                         elif series == 'deer_contrast' or series == 'deer_log_contrast' or series == 'deer_diff':
-                            data_dark_sig = self.plot_settings.sink.datasets['dark_signal']
-                            data_dark_bg = self.plot_settings.sink.datasets['dark_background']
-                            data_echo_sig = self.plot_settings.sink.datasets['echo_signal']
-                            data_echo_bg = self.plot_settings.sink.datasets['echo_background']
+                            data_dark_sig = datasets['dark_signal']
+                            data_dark_bg = datasets['dark_background']
+                            data_echo_sig = datasets['echo_signal']
+                            data_echo_bg = datasets['echo_background']
                         elif series == 'dark_contrast':
-                            data_sig = self.plot_settings.sink.datasets['dark_signal']
-                            data_bg = self.plot_settings.sink.datasets['dark_background']
+                            data_sig = datasets['dark_signal']
+                            data_bg = datasets['dark_background']
                         elif series == 'echo_contrast':
-                            data_sig = self.plot_settings.sink.datasets['echo_signal']
-                            data_bg = self.plot_settings.sink.datasets['echo_background']
+                            data_sig = datasets['echo_signal']
+                            data_bg = datasets['echo_background']
                         elif series == 'cd_contrast':
-                            data_sig = self.plot_settings.sink.datasets['cd_signal']
-                            data_bg = self.plot_settings.sink.datasets['cd_background']    
+                            data_sig = datasets['cd_signal']
+                            data_bg = datasets['cd_background']    
                         elif series == 'diff_py':
-                            data_sig = self.plot_settings.sink.datasets['with_py']
-                            data_bg = self.plot_settings.sink.datasets['without_py']
+                            data_sig = datasets['with_py']
+                            data_bg = datasets['without_py']
                         elif series == 'diff_ny':
-                            data_sig = self.plot_settings.sink.datasets['with_ny']
-                            data_bg = self.plot_settings.sink.datasets['without_ny']
+                            data_sig = datasets['with_ny']
+                            data_bg = datasets['without_ny']
                         elif series == 'diff_osc_with_pulse':
-                            data_sig = self.plot_settings.sink.datasets['with_py']
-                            data_bg = self.plot_settings.sink.datasets['with_ny']
+                            data_sig = datasets['with_py']
+                            data_bg = datasets['with_ny']
                         elif series == 'diff_osc_without_pulse':
-                            data_sig = self.plot_settings.sink.datasets['without_py']
-                            data_bg = self.plot_settings.sink.datasets['without_ny']
+                            data_sig = datasets['without_py']
+                            data_bg = datasets['without_ny']
                         elif series == 'diff_overall' or series == 'sum_nuclear':
-                            data_wpy = self.plot_settings.sink.datasets['with_py']
-                            data_wny = self.plot_settings.sink.datasets['with_ny']
-                            data_nopy = self.plot_settings.sink.datasets['without_py']
-                            data_nony = self.plot_settings.sink.datasets['without_ny']
+                            data_wpy = datasets['with_py']
+                            data_wny = datasets['with_ny']
+                            data_nopy = datasets['without_py']
+                            data_nony = datasets['without_ny']
                         elif series == 'fit':
-                            data_x_fit = self.plot_settings.sink.datasets['x_fit']
-                            data_y_fit = self.plot_settings.sink.datasets['y_fit']
+                            data_x_fit = datasets['x_fit']
+                            data_y_fit = datasets['y_fit']
                         else:
-                            data = self.plot_settings.sink.datasets[series]
+                            data = datasets[series]
 
                         # print(f"x fit data: {data_x_fit}")
                         # print(f"y fit data: {data_y_fit}")
@@ -2213,13 +2265,27 @@ class _FlexLinePlotWidget(LinePlotWidget):
                         elif series == 'sum_nuclear':
                             processed_data = [processed_data_wpy[0], (processed_data_wny[1] - processed_data_wpy[1]) + (processed_data_nony[1] - processed_data_nopy[1])]
                         elif series == 'fft':
-                            time_trace = (processed_data_bg[1] - processed_data_sig[1]) # / (processed_data_bg[1] + processed_data_sig[1])
-                            ft = fft(time_trace)
-                            N = len(ft)
-                            n = np.arange(N)
-                            freqs = n/processed_data_sig[0][-1]
-                            # print("NMR freqs = ", freqs[2:int(len(freqs)/2)])
-                            processed_data = [freqs[2:int(len(freqs)/2)], np.abs(ft[2:int(len(freqs)/2)])]
+                            time_axis = np.asarray(processed_data_sig[0], dtype=float)
+                            sig = np.asarray(processed_data_sig[1], dtype=float)
+                            bg = np.asarray(processed_data_bg[1], dtype=float)
+
+                            time_trace = bg - sig # averaged time-domain signal
+                            time_trace = time_trace - np.mean(time_trace) # zero-center the time trace before FFT
+
+                            if len(time_axis) < 2:
+                                continue
+
+                            dt = time_axis[1] - time_axis[0] # sampling interval
+
+                            ### --- FFT of averaged time trace --- ###
+                            ft = rfft(time_trace)
+                            freqs = rfftfreq(len(time_trace), d=dt)
+                            
+                            ### --- Boxcar smoothing in frequency space --- ###
+                            boxcar_width = settings.boxcar_width
+                            ft_smoothed = boxcar_complex_smooth(ft, boxcar_width)
+
+                            processed_data = [freqs[1:], np.abs(ft_smoothed[1:])**2] # power spectrum - skip DC bin
                         elif series == 'fit':
                             processed_data = [processed_data_x_fit, processed_data_y_fit]
                         else:
