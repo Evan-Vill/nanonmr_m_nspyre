@@ -89,6 +89,7 @@ class ExpWidget(QWidget):
         self.fid_drive_opts = ["Pulsed", "Continuous"]
         self.corr_t1_array_opts = ["geomspace", "linspace"]
         
+        self.corr_spec_sig_opts = ["Sample", "Coil"]
         self.casr_sig_opts = ["Sample", "Coil"]
         self.dnp_opts = ["Off", "Overhauser"]
 
@@ -152,8 +153,8 @@ class ExpWidget(QWidget):
         self.deer_t2_params_defaults = [120, 10, 50e-9, 1e-6, 100, self.corr_t1_array_opts, 800e-9, 500e-9]
         self.deer_t2_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 'y', 560e6, 40e-9, 0.2] 
 
-        self.nmr_params_defaults = [120, 10, 50e-9, 100e-6, 100, 1e-6]
-        self.nmr_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 'y', 1]
+        self.corr_spec_params_defaults = [120, 10, 50e-9, 100e-6, 100, 1e-6, self.corr_spec_sig_opts]
+        self.corr_spec_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 'y', 1]
 
         self.casr_params_defaults = [120, 10, 10, 200e-9, self.casr_sig_opts, self.dnp_opts]
         self.casr_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 1e6, 0.1, 1e-6, 0, 1]
@@ -192,7 +193,7 @@ class ExpWidget(QWidget):
                     "DEER Correlation Rabi": ["DEER_corr_rabi_scan", self.deer_corr_rabi_params_defaults, self.deer_corr_rabi_mw_params_defaults, 'corr rabi', self.laser_params_defaults, self.digitizer_defaults],
                     "DEER T1": ["DEER_T1_scan", self.deer_corr_t1_params_defaults, self.deer_corr_t1_mw_params_defaults, 'deer t1', self.laser_params_defaults, self.digitizer_defaults],
                     "DEER T2": ["DEER_T2_scan", self.deer_t2_params_defaults, self.deer_t2_mw_params_defaults, 'deer t2', self.laser_params_defaults, self.digitizer_defaults],
-                    "NMR Correlation Spectroscopy": ["Corr_Spec_scan", self.nmr_params_defaults, self.nmr_mw_params_defaults, 'nmr', self.laser_params_defaults, self.digitizer_defaults],
+                    "NMR Correlation Spectroscopy": ["Corr_Spec_scan", self.corr_spec_params_defaults, self.corr_spec_mw_params_defaults, 'nmr', self.laser_params_defaults, self.digitizer_defaults],
                     "NMR CASR": ["CASR_scan", self.casr_params_defaults, self.casr_mw_params_defaults, 'casr', self.laser_params_defaults, self.digitizer_defaults]}
         
         self.experiments = QComboBox()
@@ -873,8 +874,7 @@ class ExpWidget(QWidget):
             case 'Signal vs Time':
                 params = {
                 'exp_sampling_rate': {'display_text': 'Exp. Sampling Rate: ',
-                        'widget': SpinBox(value = defaults[0], suffix = 'Hz', siPrefix = True, bounds = (10, 1e6), dec = True)}}
-            
+                        'widget': SpinBox(value = defaults[0], suffix = 'Hz', siPrefix = True, bounds = (10, 1e6), dec = True)}} 
             case 'CW ODMR':    
                 params = {
                         'runs': {'display_text': '# Averages per Iteration: ',
@@ -1112,7 +1112,9 @@ class ExpWidget(QWidget):
                 'num_pts': {'display_text': '# Frequencies: ',
                         'widget': SpinBox(value = defaults[4], int = True, bounds=(1, None), dec = True)},
                 'tau': {'display_text': 'Free Precession Interval (\u03C4): ',
-                        'widget': SpinBox(value = defaults[5], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)}}           
+                        'widget': SpinBox(value = defaults[5], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
+                'sig_opt': {'display_text': 'Signal Source: ',
+                                'widget': ComboBox(items = defaults[6])}}           
             case 'NMR CASR':
                 params = {
                 'runs': {'display_text': 'Runs (avgs. per iteration): ',
@@ -1123,7 +1125,7 @@ class ExpWidget(QWidget):
                         'widget': SpinBox(value = defaults[2], int = True, bounds=(1, None), dec = True)},
                 'tau': {'display_text': 'tau = 1/(2f_0): ',
                         'widget': SpinBox(value = defaults[3], suffix = 's', siPrefix = True, bounds = (0, 1e-3), dec = True)},
-                'sig_opt': {'display_text': 'CASR Signal Source: ',
+                'sig_opt': {'display_text': 'Signal Source: ',
                                 'widget': ComboBox(items = defaults[4])},
                 'dnp': {'display_text': 'Hyperpolarization: ',
                                 'widget': ComboBox(items = defaults[5])}}
