@@ -933,6 +933,10 @@ repeat(2){{{self.set_pulse_phases('x', kwargs['iq_phases'])}
 
                 self.control_both_groups = 2
 
+            # TODO: implement correlation DEER sequence
+            case 'DEER Corr':
+                pass
+
             case 'DEER Corr Rabi':
                 i_wave_pihalf_x = [self.create_rect_wave("I_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
                 q_wave_pihalf_x = [self.create_rect_wave("Q_pihalf_x", kwargs['pihalf_x']*self.sampling_rate[0], self.convert_mw_power(kwargs['sideband_power']))]
