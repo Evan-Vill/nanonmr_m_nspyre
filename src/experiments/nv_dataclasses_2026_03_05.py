@@ -520,6 +520,51 @@ class DEERFIDCDScanCfg:
     sideband_freq: float
     sideband_power: float
 
+# TODO: update parameters for DEER correlation scans (e.g. add t_corr, remove array_type for corr scans, etc.)
+@dataclass(frozen=True)
+class DEERCorrScanCfg:
+    dataset: str
+    start: float
+    stop: float
+    num_pts: int
+    iters: int
+    runs: int
+    array_type: str
+    awg_power: float
+    awg_samp_rate_1: float
+    awg_samp_rate_2: float
+    dark_freq: float
+    dark_pi: float
+    detector: str
+    dig_amplitude: float
+    dig_coupling: str
+    dig_sampling_freq: float
+    dig_termination: str
+    dig_timeout: float
+    directory: str
+    filename: str
+    fit: bool
+    fit_live: bool
+    fit_params: dict
+    freq: float
+    i_offset: float
+    laser_init: float
+    laser_power: float
+    laser_readout: float
+    n: int
+    pi: float
+    pretrig_size: int
+    q_offset: float
+    read_channel: int
+    rf_power: float
+    save: bool
+    file_format: str
+    segment_size: int
+    sideband: str
+    sideband_freq: float
+    sideband_power: float
+    tau: float
+
 @dataclass(frozen=True)
 class DEERCorrRabiScanCfg:
     dataset: str
