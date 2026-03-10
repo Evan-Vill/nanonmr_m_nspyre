@@ -23,8 +23,6 @@ class ODMRScanCfg:
     num_pts: int
     iters: int
     runs: int
-    awg_samp_rate_1: float
-    awg_samp_rate_2: float
     center_freq: float
     detector: str
     dig_amplitude: float
@@ -56,8 +54,6 @@ class ODMRSmartScanCfg:
     num_pts: int
     iters: int
     runs: int
-    awg_samp_rate_1: float
-    awg_samp_rate_2: float
     center_freq: float
     detector: str
     dig_amplitude: float
@@ -91,8 +87,6 @@ class RabiScanCfg:
     num_pts: int
     iters: int
     runs: int
-    awg_samp_rate_1: float
-    awg_samp_rate_2: float
     detector: str
     dig_amplitude: float
     dig_coupling: str
@@ -127,8 +121,6 @@ class PulsedODMRScanCfg:
     num_pts: int
     iters: int
     runs: int
-    awg_samp_rate_1: float
-    awg_samp_rate_2: float
     center_freq: float
     detector: str
     dig_amplitude: float
@@ -162,8 +154,6 @@ class PulsedODMRRFScanCfg:
     num_pts: int
     iters: int
     runs: int
-    awg_samp_rate_1: float
-    awg_samp_rate_2: float
     center_freq: float
     detector: str
     dig_amplitude: float
@@ -203,8 +193,6 @@ class MWT1ScanCfg:
     iters: int
     runs: int
     array_type: str
-    awg_samp_rate_1: float
-    awg_samp_rate_2: float
     detector: str
     dig_amplitude: float
     dig_coupling: str
@@ -243,8 +231,6 @@ class T2ScanCfg:
     iters: int
     runs: int
     array_type: str
-    awg_samp_rate_1: float
-    awg_samp_rate_2: float
     detector: str
     dig_amplitude: float
     dig_coupling: str
@@ -285,8 +271,6 @@ class T2RFScanCfg:
     iters: int
     runs: int
     array_type: str
-    awg_samp_rate_1: float
-    awg_samp_rate_2: float
     detector: str
     dig_amplitude: float
     dig_coupling: str
@@ -328,8 +312,6 @@ class DQScanCfg:
     iters: int
     runs: int
     array_type: str
-    awg_samp_rate_1: float
-    awg_samp_rate_2: float
     detector: str
     dig_amplitude: float
     dig_coupling: str
@@ -365,8 +347,6 @@ class DEERScanCfg:
     iters: int
     runs: int
     awg_power: float
-    awg_samp_rate_1: float
-    awg_samp_rate_2: float
     dark_pi: float
     detector: str
     dig_amplitude: float
@@ -407,8 +387,6 @@ class DEERRabiScanCfg:
     iters: int
     runs: int
     awg_power: float
-    awg_samp_rate_1: float
-    awg_samp_rate_2: float
     dark_freq: float
     detector: str
     dig_amplitude: float
@@ -449,8 +427,6 @@ class DEERFIDScanCfg:
     runs: int
     array_type: str
     awg_power: float
-    awg_samp_rate_1: float
-    awg_samp_rate_2: float
     dark_freq: float
     dark_pi: float
     detector: str
@@ -490,8 +466,6 @@ class DEERFIDCDScanCfg:
     array_type: str
     awg_cd_power: float
     awg_power: float
-    awg_samp_rate_1: float
-    awg_samp_rate_2: float
     dark_freq: float
     dark_pi: float
     detector: str
@@ -531,8 +505,6 @@ class DEERCorrScanCfg:
     runs: int
     array_type: str
     awg_power: float
-    awg_samp_rate_1: float
-    awg_samp_rate_2: float
     dark_freq: float
     dark_pi: float
     detector: str
@@ -574,8 +546,6 @@ class DEERCorrRabiScanCfg:
     iters: int
     runs: int
     awg_power: float
-    awg_samp_rate_1: float
-    awg_samp_rate_2: float
     dark_freq: float
     dark_pi: float
     detector: str
@@ -618,8 +588,6 @@ class DEERT1ScanCfg:
     runs: int
     array_type: str
     awg_power: float
-    awg_samp_rate_1: float
-    awg_samp_rate_2: float
     dark_freq: float
     dark_pi: float
     detector: str
@@ -661,8 +629,6 @@ class DEERT2ScanCfg:
     runs: int
     array_type: str
     awg_power: float
-    awg_samp_rate_1: float
-    awg_samp_rate_2: float
     dark_freq: float
     dark_pi: float
     deer_t2_buffer: float
@@ -700,8 +666,6 @@ class CorrSpecScanCfg:
     num_pts: int
     iters: int
     runs: int
-    awg_samp_rate_1: float
-    awg_samp_rate_2: float
     detector: str
     dig_amplitude: float
     dig_coupling: str
@@ -736,8 +700,6 @@ class CASRScanCfg:
     num_pts: int
     iters: int
     runs: int
-    awg_samp_rate_1: float
-    awg_samp_rate_2: float
     detector: str
     dig_amplitude: float
     dig_coupling: str

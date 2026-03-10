@@ -589,8 +589,6 @@ class SpinMeasurements:
 
         ### --- Upload AWG sequence --- ###                      
         try:
-            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
-            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 "seq": "CW ODMR",
                 "i_offset": cfg.i_offset,
@@ -814,8 +812,6 @@ class SpinMeasurements:
                                     'sideband_freqs': mod_freqs, 
                                     'iq_phases': iq_phases,
                                     'num_pts': cfg.num_pts}) 
-                hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
-                hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
                 time.sleep(2) # wait for AWG to finish setting sequence and magnet mount to get set
             except Exception as e:
                 print(e)
@@ -1055,8 +1051,6 @@ class SpinMeasurements:
 
         ### --- Upload AWG sequence --- ###
         try:
-            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
-            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 "seq": "Rabi",
                 "i_offset": cfg.i_offset,
@@ -1252,8 +1246,6 @@ class SpinMeasurements:
     
         ### --- Upload AWG sequence --- ### 
         try:
-            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
-            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 'seq': 'Pulsed ODMR',
                 'i_offset': cfg.i_offset,
@@ -1460,8 +1452,6 @@ class SpinMeasurements:
 
         ### --- Upload AWG sequence --- ### 
         try:
-            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
-            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 'seq': 'Pulsed ODMR RF',
                 'i_offset': cfg.i_offset,
@@ -1841,8 +1831,6 @@ class SpinMeasurements:
 
         ### --- Upload AWG sequence --- ###
         try:
-            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
-            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 'seq': 'T1',
                 'i_offset': cfg.i_offset,
@@ -2089,8 +2077,6 @@ class SpinMeasurements:
 
         ### --- Upload AWG sequence --- ###
         try:
-            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
-            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 'seq': 'T2',
                 'seq_dd': cfg.t2_seq,
@@ -2314,8 +2300,6 @@ class SpinMeasurements:
 
         ### --- Upload AWG sequence --- ###
         try:
-            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
-            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 'seq': 'T2 RF',
                 # 'seq_dd': cfg.t2_seq,
@@ -2531,8 +2515,6 @@ class SpinMeasurements:
 
         ### --- Upload AWG sequence --- ###            
         try:
-            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
-            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 'seq': 'DQ',
                 'i_offset': cfg.i_offset,
@@ -2742,8 +2724,6 @@ class SpinMeasurements:
         
         ### --- Upload AWG sequence --- ###
         try:
-            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
-            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**dict(
                 seq=_hdawg_seq_name(cfg.drive_type),
                 i_offset=cfg.i_offset,
@@ -2968,8 +2948,6 @@ class SpinMeasurements:
 
         ### --- Upload AWG sequence --- ###
         try:
-            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
-            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 'seq': 'DEER Rabi',     
                 'i_offset': cfg.i_offset,
@@ -3181,8 +3159,6 @@ class SpinMeasurements:
 
         ### --- Upload AWG sequence --- ###
         try:
-            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
-            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 'seq': 'DEER FID',
                 'i_offset': cfg.i_offset,
@@ -3398,8 +3374,6 @@ class SpinMeasurements:
 
         ### --- Upload AWG sequence --- ###
         try:
-            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
-            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 'seq': 'DEER FID CD',                
                 'i_offset': cfg.i_offset,
@@ -3611,8 +3585,7 @@ class SpinMeasurements:
 
         ### --- Upload AWG sequence --- ###
         try:
-            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
-            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
+            pass
             # hdawg.set_sequence(**{
             #     'seq': 'DEER Corr', # FIXME: add DEER Corr sequence to HDAWG               
             #     'i_offset': cfg.i_offset,
@@ -3818,8 +3791,6 @@ class SpinMeasurements:
 
         ### --- Upload AWG sequence --- ###
         try:
-            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
-            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 'seq': 'DEER Corr Rabi',                
                 'i_offset': cfg.i_offset,
@@ -4030,8 +4001,6 @@ class SpinMeasurements:
 
         ### --- Upload AWG sequence --- ##
         try:
-            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
-            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 'seq': 'DEER Corr T1',                  
                 'i_offset': cfg.i_offset,
@@ -4243,8 +4212,6 @@ class SpinMeasurements:
            
         ### --- Upload AWG sequence --- ##
         try:
-            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
-            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             hdawg.set_sequence(**{
                 'seq': 'DEER T2',                  
                 'i_offset': cfg.i_offset,
@@ -4453,8 +4420,6 @@ class SpinMeasurements:
 
         ### --- Upload AWG sequence --- ###
         try:
-            hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
-            hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)
             if cfg.sig_opt == "Coil":
                 hdawg.set_sequence(**{
                     'seq': 'NMR RF',
@@ -4730,8 +4695,6 @@ class SpinMeasurements:
 
                 ### --- Upload AWG sequence --- ##
                 try:
-                    hdawg.set_sampling_rate(0, cfg.awg_samp_rate_1)
-                    hdawg.set_sampling_rate(1, cfg.awg_samp_rate_2)   
                     hdawg.set_sequence(**{
                         'seq': 'CASR',
                         'i_offset': cfg.i_offset,
