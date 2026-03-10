@@ -30,13 +30,17 @@ class HDAWG:
         zhinst.utils.api_server_version_check(self.daq)
 
         self.set_channels()
+
+        self.voltage_range = 0.8
+        self.voltage_range_rf = 0.8
+        self.volt_range_opts_dict = {"0.2 V": 0.2, "0.4 V": 0.4, "0.6 V": 0.6, "0.8 V": 0.8, "1 V": 1, "2 V": 2, "3 V": 3, "4 V": 4, "5 V": 5}
+
         self.sampling_rate = [2.4e9, 2.4e9] # Hz
         self.awg_sampling_rate_opts_dict = {"2.4 GHz": [0, 2.4e9], "1.2 GHz": [1, 1.2e9], "600 MHz": [2, 600e6], "300 MHz": [3, 300e6],
                                             "150 MHz": [4, 150e6], "75 MHz": [5, 75e6], "37.5 MHz": [6, 37.5e6], "18.75 MHz": [7, 18.75e6],
                                             "9.37 MHz": [8, 9.37e6], "4.68 MHz": [9, 4.68e6], "2.34 MHz": [10, 2.34e6], "1.17 MHz": [11, 1.17e6],
                                             "585.93 kHz": [12, 585930], "292.96 kHz": [13, 292960]}
-        self.voltage_range = 0.8
-        self.voltage_range_rf = 0.8
+        
         self.control_both_groups = -1
 
         zhinst.utils.disable_everything(self.daq, self.device)
@@ -118,6 +122,16 @@ class HDAWG:
             case _:
                 self.daq.setInt(f"/{self.device}/system/awg/oscillatorcontrol", 0)
     
+    def set_voltage_range(self, ch, val):
+        print(f"setting voltage range for channel {ch} to {val} Vpp")
+        self.daq.setDouble(f"/{self.device}/sigouts/{ch}/range", self.volt_range_opts_dict[val]) # set voltage range for specific channel
+        if ch in [0, 1, 2]:
+            self.voltage_range = self.volt_range_opts_dict[val]
+        elif ch in [3]:
+            self.voltage_range_rf = self.volt_range_opts_dict[val]
+        else:
+            print("invalid channel for voltage range setting")
+
     def set_sampling_rate(self, group, val):
         try:
             print("setting sampling rate for group ", group, " to idx ", self.awg_sampling_rate_opts_dict[val][0], " which is ", self.awg_sampling_rate_opts_dict[val][1], " Hz")
@@ -1648,8 +1662,6 @@ repeat({kwargs['n']}){{
 
 
 
-    def set_voltage_range(self):
-        pass
 
     def set_sine_generators_state(self):
         # TODO:
