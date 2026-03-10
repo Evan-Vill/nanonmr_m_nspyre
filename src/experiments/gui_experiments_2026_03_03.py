@@ -63,10 +63,6 @@ class ExpWidget(QWidget):
         # parameter defaults for different experiments
         self.sideband_opts = ["Lower", "Upper"]
         self.sideband_cw_opts = ["Lower", "Upper"]
-        self.awg_sampling_group1_opts = ["2.4 GHz", "1.2 GHz", "600 MHz", "300 MHz", "150 MHz", "75 MHz", "37.5 MHz", "18.75 MHz", "9.37 MHz", "4.68 MHz",
-                                  "2.34 MHz", "1.17 MHz", "585.93 kHz", "292.96 kHz"]
-        self.awg_sampling_group2_opts = ["2.4 GHz", "1.2 GHz", "600 MHz", "300 MHz", "150 MHz", "75 MHz", "37.5 MHz", "18.75 MHz", "9.37 MHz", "4.68 MHz",
-                                  "2.34 MHz", "1.17 MHz", "585.93 kHz", "292.96 kHz"]
         self.detector_opts = ["APD", "BPD"]
 
         self.dig_ro_chan_opts = ["0", "1"]
@@ -96,8 +92,7 @@ class ExpWidget(QWidget):
         self.sigvstime_params_defaults = [1e3, self.sigvstime_detector_opts]
         self.sigvstime_mw_params_defaults = [1e3, self.sigvstime_mw_detector_opts] # not needed - hidden in GUI
 
-        # self.laser_cw_params_defaults = [0, 15e-6, 2.5e-6, 30e6, 0.15, self.sideband_opts, -0.002, -0.004, self.awg_sampling_group1_opts, self.awg_sampling_group2_opts, self.detector_opts]
-        self.laser_params_defaults = [0, 15e-6, 2.5e-6, 30e6, 0.45, self.sideband_opts, -0.002, -0.004, self.awg_sampling_group1_opts, self.awg_sampling_group2_opts, self.detector_opts]
+        self.laser_params_defaults = [0, 15e-6, 2.5e-6, 30e6, 0.45, self.sideband_opts, -0.002, -0.004, self.detector_opts]
         self.laser_params_sigvstime_defaults = [0]
         self.digitizer_defaults = [1024, 500e6, 1, self.dig_ro_chan_opts, self.dig_coupling_opts, self.dig_termination_opts, 32, 5]
 
@@ -848,11 +843,7 @@ class ExpWidget(QWidget):
                         'i_offset': {'display_text': 'MW I Offset: ',
                                         'widget': SpinBox(value = defaults[6], suffix = 'V', siPrefix = True)},
                         'q_offset': {'display_text': 'MW Q Offset: ',
-                                        'widget': SpinBox(value = defaults[7], suffix = 'V', siPrefix = True)},
-                        'awg_samp_rate_1': {'display_text': 'AWG Group 1 Samp. Rate: ',
-                                        'widget': ComboBox(items = defaults[8])},
-                        'awg_samp_rate_2': {'display_text': 'AWG Group 2 Samp. Rate: ',
-                                        'widget': ComboBox(items = defaults[9])}}                
+                                        'widget': SpinBox(value = defaults[7], suffix = 'V', siPrefix = True)}}                
             case 'Digitizer':
                 params = {
                         'segment_size': {'display_text': '# Samples (seg. size): ',
@@ -1885,10 +1876,6 @@ class ExpWidget(QWidget):
             # update laser param comboboxes
             self.sideband_opts.insert(0, self.sideband_opts.pop(self.sideband_opts.index(saved_laser_params[5])))
             saved_laser_params[5] = self.sideband_opts
-            self.awg_sampling_group1_opts.insert(0, self.awg_sampling_group1_opts.pop(self.awg_sampling_group1_opts.index(saved_laser_params[8])))
-            saved_laser_params[8] = self.awg_sampling_group1_opts
-            self.awg_sampling_group2_opts.insert(0, self.awg_sampling_group2_opts.pop(self.awg_sampling_group2_opts.index(saved_laser_params[9])))
-            saved_laser_params[9] = self.awg_sampling_group2_opts
 
             # update digitizer param comboboxes
             self.dig_ro_chan_opts.insert(0, self.dig_ro_chan_opts.pop(self.dig_ro_chan_opts.index(saved_dig_params[3])))
