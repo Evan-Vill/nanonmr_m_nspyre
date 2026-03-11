@@ -282,6 +282,7 @@ class FitParamsWidget(QtWidgets.QWidget):
                 QLabel#fitLabel {
                 color: #52E346; 
                 font-weight: bold;
+                font-family: Consolas, 'Courier New', monospace;
                 }
             """)
             layout.addWidget(fit_label, layout_row, 2)
@@ -311,6 +312,6 @@ class FitParamsWidget(QtWidgets.QWidget):
         val_list, err_list = fit_text
         for i, p in enumerate(self.params_config):
             if i < len(val_list) and i < len(err_list):
-                self.fit_labels[p].setText(f"{val_list[i]} +/- {err_list[i]}")
+                self.fit_labels[p].setText(f"{val_list[i]} ± {err_list[i]}")
             else:
-                self.fit_labels[p].setText("---")
+                self.fit_labels[p].setText("<span style='color:#888;'>---</span>")
