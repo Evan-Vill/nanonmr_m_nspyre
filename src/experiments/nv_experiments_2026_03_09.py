@@ -677,7 +677,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_data(
+                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
                                 cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                             )
                         except (RuntimeError, OptimizeWarning) as e:
@@ -713,7 +713,7 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_data(
+                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
                         cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                     )
                 except (RuntimeError, OptimizeWarning) as e:
@@ -884,7 +884,7 @@ class SpinMeasurements:
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
                             params, params_covariance = curve_fit(self.negative_lorentzian, real_freqs/1e9, sig/bg, p0=initial_guess)
-                            # fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
+                            # fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
                         except (RuntimeError, OptimizeWarning) as e:
                             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
@@ -1140,7 +1140,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_data(
+                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
                                 cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                             )
                         except (RuntimeError, OptimizeWarning) as e:
@@ -1176,7 +1176,7 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_data(
+                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
                         cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                     )
                 except (RuntimeError, OptimizeWarning) as e:
@@ -1336,7 +1336,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_data(
+                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
                                 cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                             )
                         except (RuntimeError, OptimizeWarning) as e:
@@ -1371,7 +1371,7 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_data(
+                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
                         cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                     )
                 except (RuntimeError, OptimizeWarning) as e:
@@ -1554,10 +1554,10 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_data(
+                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
                                 'odmr', rf_signal_sweeps, rf_background_sweeps, *cfg.fit_params[:4]
                             )
-                            fit_no_rf_value, fit_no_rf_error, fit_no_rf_x, fit_no_rf_y = self.fit_data(
+                            fit_no_rf_value, fit_no_rf_error, fit_no_rf_x, fit_no_rf_y = self.fit_data(cfg.fit_type, 
                                 'odmr', no_rf_signal_sweeps, no_rf_background_sweeps, *cfg.fit_params[4:]
                             )
                         except (RuntimeError, OptimizeWarning) as e:
@@ -1603,10 +1603,10 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_data(
+                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
                         'odmr', rf_signal_sweeps, rf_background_sweeps, *cfg.fit_params[:4]
                     )
-                    fit_no_rf_value, fit_no_rf_error, fit_no_rf_x, fit_no_rf_y = self.fit_data(
+                    fit_no_rf_value, fit_no_rf_error, fit_no_rf_x, fit_no_rf_y = self.fit_data(cfg.fit_type, 
                         'odmr', no_rf_signal_sweeps, no_rf_background_sweeps, *cfg.fit_params[4:]
                     )
                 except (RuntimeError, OptimizeWarning) as e:
@@ -1921,7 +1921,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_data(
+                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
                                 cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                             )
                         except (RuntimeError, OptimizeWarning) as e:
@@ -1957,7 +1957,7 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_data(
+                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
                         cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                     )
                 except (RuntimeError, OptimizeWarning) as e:
@@ -2173,7 +2173,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_data(
+                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
                                 cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                             )
                         except (RuntimeError, OptimizeWarning) as e:
@@ -2210,7 +2210,7 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_data(
+                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
                         cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                     )
                 except (RuntimeError, OptimizeWarning) as e:
@@ -2400,7 +2400,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_data(
+                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
                                 cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                             )
                         except (RuntimeError, OptimizeWarning) as e:
@@ -2437,7 +2437,7 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_data(
+                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
                         cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                     )
                 except (RuntimeError, OptimizeWarning) as e:
@@ -2638,7 +2638,7 @@ class SpinMeasurements:
         #     with warnings.catch_warnings():
         #         warnings.simplefilter("error", OptimizeWarning)
         #         try:
-        #             fit_value, fit_error, fit_x, fit_y = self.fit_data(
+        #             fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
         #                 cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
         #             )
         #         except (RuntimeError, OptimizeWarning) as e:
@@ -3684,7 +3684,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
+                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
                         except (RuntimeError, OptimizeWarning) as e:
                             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
@@ -3718,7 +3718,7 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
+                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
                 except (RuntimeError, OptimizeWarning) as e:
                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
         
@@ -3889,7 +3889,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
+                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
                         except (RuntimeError, OptimizeWarning) as e:
                             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
@@ -3923,7 +3923,7 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
+                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
                 except (RuntimeError, OptimizeWarning) as e:
                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
         
@@ -4099,7 +4099,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.dataset, with_pulse_py_sweeps, without_pulse_py_sweeps, with_pulse_ny_sweeps, without_pulse_ny_sweeps, *cfg.fit_params)
+                            fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(cfg.dataset, with_pulse_py_sweeps, without_pulse_py_sweeps, with_pulse_ny_sweeps, without_pulse_ny_sweeps, *cfg.fit_params)
                         except (RuntimeError, OptimizeWarning) as e:
                             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
@@ -4309,7 +4309,7 @@ class SpinMeasurements:
                 #     with warnings.catch_warnings():
                 #         warnings.simplefilter("error", OptimizeWarning)
                 #         try:
-                #             fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
+                #             fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
                 #         except (RuntimeError, OptimizeWarning) as e:
                 #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
@@ -4343,7 +4343,7 @@ class SpinMeasurements:
         #     with warnings.catch_warnings():
         #         warnings.simplefilter("error", OptimizeWarning)
         #         try:
-        #             fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
+        #             fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
         #         except (RuntimeError, OptimizeWarning) as e:
         #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
         
@@ -4537,7 +4537,7 @@ class SpinMeasurements:
                 #     with warnings.catch_warnings():
                 #         warnings.simplefilter("error", OptimizeWarning)
                 #         try:
-                #             fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
+                #             fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
                 #         except (RuntimeError, OptimizeWarning) as e:
                 #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
@@ -4570,7 +4570,7 @@ class SpinMeasurements:
         #     with warnings.catch_warnings():
         #         warnings.simplefilter("error", OptimizeWarning)
         #         try:
-        #             fit_value, fit_error, fit_x, fit_y = self.fit_data(
+        #             fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
         #                 cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
         #             )
         #         except (RuntimeError, OptimizeWarning) as e:
@@ -4801,7 +4801,7 @@ class SpinMeasurements:
                             with warnings.catch_warnings():
                                 warnings.simplefilter("error", OptimizeWarning)
                                 try:
-                                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
+                                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
                                 except (RuntimeError, OptimizeWarning) as e:
                                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
                         
@@ -4834,7 +4834,7 @@ class SpinMeasurements:
                 #     with warnings.catch_warnings():
                 #         warnings.simplefilter("error", OptimizeWarning)
                 #         try:
-                #             fit_value, fit_error, fit_x, fit_y = self.fit_data(
+                #             fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
                 #                 cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                 #             )
                 #         except (RuntimeError, OptimizeWarning) as e:
@@ -5065,7 +5065,7 @@ class SpinMeasurements:
                             with warnings.catch_warnings():
                                 warnings.simplefilter("error", OptimizeWarning)
                                 try:
-                                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
+                                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
                                 except (RuntimeError, OptimizeWarning) as e:
                                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
                         
@@ -5098,7 +5098,7 @@ class SpinMeasurements:
                 #     with warnings.catch_warnings():
                 #         warnings.simplefilter("error", OptimizeWarning)
                 #         try:
-                #             fit_value, fit_error, fit_x, fit_y = self.fit_data(
+                #             fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
                 #                 cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
                 #             )
                 #         except (RuntimeError, OptimizeWarning) as e:
@@ -5145,7 +5145,7 @@ class SpinMeasurements:
     def mod_stretched_exponential(x, A, T, n, a1, f1, phi1, a2, f2, phi2):
         return A*np.exp(-(x/T)**n)*(1-a1*np.sin(2*np.pi*f1*x/4 + phi1)**2)*(1-a2*np.sin(2*np.pi*f2*x/4 + phi2)**2)
 
-    def fit_data(self, exp, sig_data, back_data, *args):
+    def fit_data(self, fit_type, exp, sig_data, back_data, *args):
         # Combine all signal sweeps into a single 3D array and average
         all_signal_data = np.stack(sig_data, axis=-1)  # Shape: (2, 10, 5)
         averaged_sig = np.mean(all_signal_data[1, :, :], axis=1)  # Shape: (10,)
@@ -5168,8 +5168,82 @@ class SpinMeasurements:
         # initial_guess = [0.02, 0.001, 200, 0, 1]
         initial_guess = list(args)
 
+        
+        
+        elif exp == 'odmr rf':
+            initial_guess[1] /= 1e9 # convert [Hz] to [GHz]
+            initial_guess[2] /= 1e9 # convert [Hz] to [GHz]
+            initial_guess[5] /= 1e9 # convert [Hz] to [GHz]
+            initial_guess[6] /= 1e9 # convert [Hz] to [GHz]
+        elif exp == 't1':
+            initial_guess[1] *= 1e3 # convert [s] to [ms]
+        elif exp == 't2':
+            initial_guess[1] *= 1e6 # convert [s] to [ms]
+            initial_guess[4] /= 1e6 # convert [Hz] to [MHz]
+            initial_guess[7] /= 1e6 # convert [Hz] to [MHz]
+        elif exp == 'nmr':
+            initial_guess[1] /= 1e6 # convert [Hz] to [MHz]
+            initial_guess[2] /= 1e3 # convert [Hz] to [kHz]
+        elif exp == 'casr':
+            initial_guess[1] /= 1e3 # convert [Hz] to [kHz]
+
         # Perform curve fitting 
-        match exp:
+        """
+        "Neg. Lorentz.",
+        "Pos. Lorentz.",
+        "Two Neg. Lorentz."
+        "Decaying Cos.",
+        "Stretched Exp.",
+        "Modulated Str. Exp.",
+        "DEER T1 Str. Exp."
+        """
+        match fit_type:
+            case 'Neg. Lorentz.':
+                if exp == 'odmr':
+                    initial_guess[1] /= 1e9 # convert [Hz] to [GHz]
+                    initial_guess[2] /= 1e9 # convert [Hz] to [GHz]
+                params, covariance = curve_fit(self.negative_lorentzian, x_values, y_values, p0=initial_guess)
+                y_fit = self.negative_lorentzian(x_fit, *params)
+                param_errors = np.sqrt(np.diag(covariance))
+                fitted_values = [round(i, 4) for i in params]
+                fitted_errors = [round(i, 4) for i in param_errors]
+            
+            case 'Pos. Lorentz.':
+                params, covariance = curve_fit(self.positive_lorentzian, x_values, y_values, p0=initial_guess)
+                y_fit = self.negative_lorentzian(x_fit, *params)
+                param_errors = np.sqrt(np.diag(covariance))
+                fitted_values = [round(i, 4) for i in params]
+                fitted_errors = [round(i, 4) for i in param_errors]
+
+            case 'Two Neg. Lorentz.':
+                params, covariance = curve_fit(self.negative_lorentzian, x_values, y_values, p0=initial_guess)
+                y_fit = self.negative_lorentzian(x_fit, *params)
+                param_errors = np.sqrt(np.diag(covariance))
+                fitted_values = [round(i, 4) for i in params]
+                fitted_errors = [round(i, 4) for i in param_errors]
+
+            case 'Decaying Cos.':
+                if exp == 'rabi':
+                    initial_guess[1] /= 1e9 # convert [Hz] to [GHz]
+                    initial_guess[2] *= 1e9 # convert [s] to [ns]
+                params, covariance = curve_fit(self.decaying_cosine, x_values, y_values, p0=initial_guess)
+                y_fit = self.decaying_cosine(x_fit, *params)
+                param_errors = np.sqrt(np.diag(covariance))
+                fitted_values = [round(i, 2) for i in params]
+                fitted_errors = [round(i, 2) for i in param_errors]
+                fitted_values[2] = round(x_fit[np.argmin(y_fit)],2)
+                fitted_errors[2] = 0
+            
+            case 'Stretched Exp.':
+                params, covariance = curve_fit(self.stretched_exponential, x_values, y_values, p0=initial_guess)
+                y_fit = self.stretched_exponential(x_fit, *params)
+            case 'Modulated Str. Exp.':
+                params, covariance = curve_fit(self.mod_stretched_exponential, x_values, y_values, p0=initial_guess)
+                y_fit = self.mod_stretched_exponential(x_fit, *params)
+            case 'DEER T1 Str. Exp.':
+                pass
+
+
             case 'odmr':
                 params, covariance = curve_fit(self.negative_lorentzian, x_values, y_values, p0=initial_guess)
                 y_fit = self.negative_lorentzian(x_fit, *params)
@@ -5209,6 +5283,8 @@ class SpinMeasurements:
                 # compute fitted value of interest (resonance for ODMR, pi pulse for Rabi, etc.)
                 fitted_values = [round(i, 3) for i in params]
                 fitted_errors = [round(i, 3) for i in param_errors]
+            case _:
+                pass
 
         return fitted_values, fitted_errors, x_fit, y_fit
     
