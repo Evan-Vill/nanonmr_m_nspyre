@@ -271,13 +271,19 @@ class FitParamsWidget(QtWidgets.QWidget):
             layout.addWidget(self.widgets[p], layout_row, 1)
 
             fit_label = QtWidgets.QLabel("---")
+            fit_label.setObjectName("fitLabel")
             fit_label.setSizePolicy(
                 QtWidgets.QSizePolicy(
                     QtWidgets.QSizePolicy.Policy.Fixed,
                     QtWidgets.QSizePolicy.Policy.Fixed,
                 )
             )
-            fit_label.setStyleSheet("color: #D98BCB;")
+            fit_label.setStyleSheet("""
+                QLabel#fitLabel {
+                color: #52E346; 
+                font-weight: bold;
+                }
+            """)
             layout.addWidget(fit_label, layout_row, 2)
             self.fit_labels[p] = fit_label
 
