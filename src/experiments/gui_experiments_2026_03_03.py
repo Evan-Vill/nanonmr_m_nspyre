@@ -155,13 +155,13 @@ class ExpWidget(QWidget):
         self.casr_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 1e6, 0.1, 1e-6, 0, 1]
 
         self.fit_none_default = [0]
-        self.fit_neg_lorentz_defaults = [0.01, 1, 6e-3, 1] # defaults = 1% contrast, 2 GHz central freq, 6 MHz linewidth, 1 vertical offset
-        self.fit_decaying_cosine_defaults = [0.02, 0.001, 200, 0, 1] # defaults = 2% contrast, 0.001 decay rate, 200 ns period, 0 phase, 1 vertical offset
-        self.fit_two_neg_lorentz_defaults = [0.01, 1, 6e-3, 1, 0.01, 1, 6e-3, 1] # defaults = 1% contrast, 1 GHz central freq, 6 MHz linewidth, 1 vertical offset, 1% contrast, 1 GHz central freq, 6 MHz linewidth, 1 vertical offset for the two overlapping Lorentzians
-        self.fit_str_exp_defaults = [0.01, 1, 1, 0] # defaults = 0.01 amplitude, 1 ms T1, 1 stretching factor, 0 vertical offset
-        self.fit_mod_str_exp_defaults = [0.1, 2, 1, 1, 0.2, 0, 1, 0.2, 0] # defaults = 0.1 amplitude, 2 us T2, 1 stretching factor, 1 amp first sine wave, 0.2 MHz first sine wave, 0 phase first sine wave, 1 amp second sine wave, 0.2 MHz second sine wave, 0 phase second sine wave
-        self.fit_deer_t1_str_exp_defaults = [0.1, 1, 1, 1, 1, 0] # defaults = 0.1 amplitude, 1 ms T1_NV, 1 n_NV, 1 ms T1_e, 1 n_e, 0 vertical offset
-        self.fit_pos_lorentz_defaults = [0.01, 2, 0.1, 1] # defaults = 1% contrast, 2 MHz central freq, 100 kHz linewidth, 1 vertical offset
+        self.fit_neg_lorentz_defaults = [0.01, 1e9, 6e6, 1] # defaults = 1% contrast, 1 GHz central freq, 6 MHz linewidth, 1 vertical offset
+        self.fit_decaying_cosine_defaults = [0.02, 0.001, 200e-9, 0, 1] # defaults = 2% contrast, 0.001 decay rate, 200 ns period, 0 phase, 1 vertical offset
+        self.fit_two_neg_lorentz_defaults = [0.01, 1e9, 6e6, 1, 0.01, 1e9, 6e6, 1] # defaults = 1% contrast, 1 GHz central freq, 6 MHz linewidth, 1 vertical offset, 1% contrast, 1 GHz central freq, 6 MHz linewidth, 1 vertical offset for the two overlapping Lorentzians
+        self.fit_str_exp_defaults = [0.01, 1e-3, 1, 0] # defaults = 0.01 amplitude, 1 ms T1, 1 stretching factor, 0 vertical offset
+        self.fit_mod_str_exp_defaults = [0.1, 2e-6, 1, 1, 0.2e6, 0, 1, 0.2e6, 0] # defaults = 0.1 amplitude, 2 us T2, 1 stretching factor, 1 amp first sine wave, 0.2 MHz first sine wave, 0 phase first sine wave, 1 amp second sine wave, 0.2 MHz second sine wave, 0 phase second sine wave
+        self.fit_deer_t1_str_exp_defaults = [0.1, 1e-3, 1, 1e-3, 1, 0] # defaults = 0.1 amplitude, 1 ms T1_NV, 1 n_NV, 1 ms T1_e, 1 n_e, 0 vertical offset
+        self.fit_pos_lorentz_defaults = [0.01, 2e6, 100e3, 1] # defaults = 1% contrast, 2 MHz central freq, 100 kHz linewidth, 1 vertical offset
         # self.fit_deer_defaults = [0.1, 560, 10, 1] # defaults = 10% contrast, 560 MHz central freq, 10 MHz linewidth, 1 vertical offset
         # self.fit_deer_rabi_defaults = [0.1, 0.001, 100, 0, 1] # defaults = 10% contrast, 0.001 decay rate, 100 ns period, 0 phase, 1 vertical offset
         # self.fit_nmr_casr_defaults = [0.01, 2, 0.1, 1] # defaults = 1% contrast, 2 kHz central freq, 100 Hz linewidth, 1 vertical offset
@@ -226,7 +226,7 @@ class ExpWidget(QWidget):
         self.to_override_fit = False
         self.extra_kwarg_params: dict() = {}
 
-        self.dataset_label = QLabel("<i>Data Set Name: ---</i>")
+        self.dataset_label = QLabel("Data Set Name: ---")
         self.dataset_label.setStyleSheet("color: black; background-color: #C7C7C7; border: 4px solid black; padding: 2px; border-radius: 5px;")
         self.dataset_label.setFixedHeight(40)
         self.dataset_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -433,11 +433,7 @@ class ExpWidget(QWidget):
                                  "Modulated Str. Exp.",
                                  "DEER T1 Str. Exp."])
         self.fit_select.currentIndexChanged.connect(lambda: self.fit_selector())
-
-
-
-
-
+        self.fit_select.setEnabled(False)
 
         self.fit_params_widget = FitParamsWidget(self.create_fit_params_widget('Fit ODMR', self.fit_odmr_defaults))
         self.fit_params_widget.setEnabled(False)
@@ -1413,9 +1409,9 @@ class ExpWidget(QWidget):
                         'A': {'display_text': 'A: ',
                                 'widget': SpinBox(value = defaults[0])},
                         'x0': {'display_text': 'x0 (GHz): ',
-                                'widget': SpinBox(value = defaults[1])},
+                                'widget': SpinBox(value = defaults[1], suffix = 'Hz', siPrefix = True, dec = True)},
                         'gamma': {'display_text': '\u03B3 (GHz): ',
-                                'widget': SpinBox(value = defaults[2])},
+                                'widget': SpinBox(value = defaults[2], suffix = 'Hz', siPrefix = True, dec = True)},
                         'c': {'display_text': 'c: ',
                                 'widget': SpinBox(value = defaults[3])}}
             case 'Fit Decaying Cos': # A * exp(-gamma * x) * cos(2 * pi * x / T + phi) + c
@@ -1423,9 +1419,9 @@ class ExpWidget(QWidget):
                         'A': {'display_text': 'A: ',
                                 'widget': SpinBox(value = defaults[0])},
                         'gamma': {'display_text': '\u03B3 (GHz): ',
-                                'widget': SpinBox(value = defaults[1])},
+                                'widget': SpinBox(value = defaults[1], suffix = 'Hz', siPrefix = True, dec = True)},
                         'T': {'display_text': 'T (ns): ',
-                                'widget': SpinBox(value = defaults[2])},
+                                'widget': SpinBox(value = defaults[2], suffix = 's', siPrefix = True, dec = True)},
                         'phi': {'display_text': '\u03C6: ',
                                 'widget': SpinBox(value = defaults[3])},
                         'c': {'display_text': 'c: ',
@@ -1435,17 +1431,17 @@ class ExpWidget(QWidget):
                         'A': {'display_text': 'A: ', 
                                 'widget': SpinBox(value = defaults[0])},
                         'x0': {'display_text': 'x0 (GHz): ',
-                                'widget': SpinBox(value = defaults[1])},
+                                'widget': SpinBox(value = defaults[1], suffix = 'Hz', siPrefix = True, dec = True)},
                         'gamma': {'display_text': '\u03B3 (GHz): ',
-                                'widget': SpinBox(value = defaults[2])},
+                                'widget': SpinBox(value = defaults[2], suffix = 'Hz', siPrefix = True, dec = True)},
                         'c': {'display_text': 'c: ',
                                 'widget': SpinBox(value = defaults[3])},
                         'A_rf': {'display_text': 'A_rf: ',
                                 'widget': SpinBox(value = defaults[4])},
                         'x0_rf': {'display_text': 'x0_rf (GHz): ',
-                                'widget': SpinBox(value = defaults[5])},
+                                'widget': SpinBox(value = defaults[5], suffix = 'Hz', siPrefix = True, dec = True)},
                         'gamma_rf': {'display_text': '\u03B3_rf (GHz): ',
-                                'widget': SpinBox(value = defaults[6])},
+                                'widget': SpinBox(value = defaults[6], suffix = 'Hz', siPrefix = True, dec = True)},
                         'c_rf': {'display_text': 'c_rf: ',
                                 'widget': SpinBox(value = defaults[7])}}
             case 'Fit Stretched Exp': # A * exp(-(t / T1)**n) + c
@@ -1453,7 +1449,7 @@ class ExpWidget(QWidget):
                         'A': {'display_text': 'A: ',
                                 'widget': SpinBox(value = defaults[0])},
                         'T1': {'display_text': 'T1 (ms): ',
-                                'widget': SpinBox(value = defaults[1])},
+                                'widget': SpinBox(value = defaults[1], suffix = 's', siPrefix = True, dec = True)},
                         'n': {'display_text': 'n: ',
                                 'widget': SpinBox(value = defaults[2])},
                         'c': {'display_text': 'c: ',
@@ -1463,19 +1459,19 @@ class ExpWidget(QWidget):
                         'A': {'display_text': 'A: ',
                                 'widget': SpinBox(value = defaults[0])},
                         'T2': {'display_text': 'T2 (\u03BCs): ',
-                                'widget': SpinBox(value = defaults[1])},
+                                'widget': SpinBox(value = defaults[1], suffix = 's', siPrefix = True, dec = True)},
                         'n': {'display_text': 'n: ',
                                 'widget': SpinBox(value = defaults[2])},
                         'a1': {'display_text': 'a1: ',
                                 'widget': SpinBox(value = defaults[3])},
                         'f1': {'display_text': 'f1 (MHz): ',
-                                'widget': SpinBox(value = defaults[4])},
+                                'widget': SpinBox(value = defaults[4], suffix = 'Hz', siPrefix = True, dec = True)},
                         'phi1': {'display_text': '\u03C61: ',
                                 'widget': SpinBox(value = defaults[5])},
                         'a2': {'display_text': 'a2: ',
                                 'widget': SpinBox(value = defaults[6])}, 
                         'f2': {'display_text': 'f2 (MHz): ',
-                                'widget': SpinBox(value = defaults[7])},
+                                'widget': SpinBox(value = defaults[7], suffix = 'Hz', siPrefix = True, dec = True)},
                         'phi2': {'display_text': '\u03C62: ',
                                 'widget': SpinBox(value = defaults[8])}}
             case 'Fit DEER T1 Str Exp': # A * exp(-(t / T1_NV)**n_NV - (t / T1_e)**n_e) + c
@@ -1483,11 +1479,11 @@ class ExpWidget(QWidget):
                         'A': {'display_text': 'A: ',
                                 'widget': SpinBox(value = defaults[0])},
                         'T1_NV': {'display_text': 'T1 (ms): ',
-                                'widget': SpinBox(value = defaults[1])},
+                                'widget': SpinBox(value = defaults[1], suffix = 's', siPrefix = True, dec = True)},
                         'n_NV': {'display_text': 'n_NV: ',
                                 'widget': SpinBox(value = defaults[2])},
                         'T1_e': {'display_text': 'T1_e (ms): ',
-                                'widget': SpinBox(value = defaults[3])},
+                                'widget': SpinBox(value = defaults[3], suffix = 's', siPrefix = True, dec = True)},
                         'n_e': {'display_text': 'n_e: ',
                                 'widget': SpinBox(value = defaults[4])},
                         'c': {'display_text': 'c: ',
@@ -1497,9 +1493,9 @@ class ExpWidget(QWidget):
                         'A': {'display_text': 'A: ',
                                 'widget': SpinBox(value = defaults[0])},
                         'x0': {'display_text': 'x0 (MHz): ',
-                                'widget': SpinBox(value = defaults[1])},
+                                'widget': SpinBox(value = defaults[1], suffix = 'Hz', siPrefix = True, dec = True)},
                         'gamma': {'display_text': '\u03B3 (kHz): ',
-                                'widget': SpinBox(value = defaults[2])},
+                                'widget': SpinBox(value = defaults[2], suffix = 'Hz', siPrefix = True, dec = True)},
                         'c': {'display_text': 'c: ',
                                 'widget': SpinBox(value = defaults[3])}}                    
             case _:
@@ -1937,6 +1933,7 @@ class ExpWidget(QWidget):
     def auto_fit_changed(self):
         if self.auto_fit_checkbox.isChecked() == True:
             self.to_fit = True
+            self.fit_select.setEnabled(True)
             self.fit_params_widget.setEnabled(True)
             self.live_fit_checkbox.setEnabled(True)
             self.override_fit_checkbox.setEnabled(True)
@@ -1946,6 +1943,7 @@ class ExpWidget(QWidget):
             self.opacity_effects[20].setEnabled(False)
         else:
             self.to_fit = False
+            self.fit_select.setEnabled(False)
             self.fit_params_widget.setEnabled(False)
             self.live_fit_checkbox.setEnabled(False)
             self.live_fit_checkbox.setChecked(False)
@@ -2030,7 +2028,7 @@ class ExpWidget(QWidget):
                 self.opacity_effects[i].setEnabled(True)
 
             self.params_widget.setEnabled(False)
-            self.dataset_label.setText("<i>Data Set: N/A</i>")
+            self.dataset_label.setText("Data Set: N/A")
             self.save_params.setText("Save Experiment Parameters")
             self.save_params.setEnabled(False)
             self.mw_params_widget.setEnabled(False)
@@ -2044,11 +2042,10 @@ class ExpWidget(QWidget):
             self.fit_params_widget.setEnabled(False)
             self.auto_save_checkbox.setEnabled(False)
             self.auto_fit_checkbox.setEnabled(False)
-            self.live_fit_checkbox.setEnabled(False)
-            self.override_fit_checkbox.setEnabled(False)
+            self.auto_fit_checkbox.setChecked(False)
 
         else:
-            self.dataset_label.setText(f"<i>Data Set: '{self.exp_dict[self.experiments.currentText()][3]}'</i>")
+            self.dataset_label.setText(f"Data Set: '{self.exp_dict[self.experiments.currentText()][3]}'")
             self.daq_b1.setEnabled(True)
             self.daq_b2.setEnabled(True)
             self.detector_b1.setEnabled(True)
@@ -2182,10 +2179,12 @@ class ExpWidget(QWidget):
                 self.dig_params_widget.setEnabled(False)
             
             if self.auto_fit_checkbox.isChecked() == True:
+                self.fit_select.setEnabled(True)
                 self.fit_params_widget.setEnabled(True)
                 self.live_fit_checkbox.setEnabled(True)
                 self.override_fit_checkbox.setEnabled(True)
             else:
+                self.fit_select.setEnabled(False)
                 self.fit_params_widget.setEnabled(False)
                 self.live_fit_checkbox.setEnabled(False)
                 self.live_fit_checkbox.setChecked(False)
@@ -2197,13 +2196,13 @@ class ExpWidget(QWidget):
 
     def fit_selector(self):
         # Choose Fit Type", 
-                                #  "Neg. Lorentz.",
-                                #  "Pos. Lorentz.",
-                                #  "Two Neg. Lorentz."
-                                #  "Decaying Cosine",
-                                #  "Stretched Exp.",
-                                #  "Modulated Str. Exp.",
-                                #  "DEER T1 Str. Exp."
+        #  "Neg. Lorentz.",
+        #  "Pos. Lorentz.",
+        #  "Two Neg. Lorentz."
+        #  "Decaying Cosine",
+        #  "Stretched Exp.",
+        #  "Modulated Str. Exp.",
+        #  "DEER T1 Str. Exp."
         self.fit_params_widget.hide()
 
         match self.fit_select.currentText():
