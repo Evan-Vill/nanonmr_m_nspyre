@@ -428,7 +428,7 @@ class ExpWidget(QWidget):
                                  "Neg. Lorentz.",
                                  "Pos. Lorentz.",
                                  "Two Neg. Lorentz."
-                                 "Decaying Cosine",
+                                 "Decaying Cos.",
                                  "Stretched Exp.",
                                  "Modulated Str. Exp.",
                                  "DEER T1 Str. Exp."])
@@ -2058,7 +2058,6 @@ class ExpWidget(QWidget):
             self.auto_save_checkbox.setEnabled(True)
             self.auto_fit_checkbox.setEnabled(True)
 
-
             for i in range(12):
                 if i == 7 or i == 8:
                     if self.daq_b1.isChecked(): # digitizer settings
@@ -2199,7 +2198,7 @@ class ExpWidget(QWidget):
         #  "Neg. Lorentz.",
         #  "Pos. Lorentz.",
         #  "Two Neg. Lorentz."
-        #  "Decaying Cosine",
+        #  "Decaying Cos.",
         #  "Stretched Exp.",
         #  "Modulated Str. Exp.",
         #  "DEER T1 Str. Exp."
@@ -2263,6 +2262,10 @@ class ExpWidget(QWidget):
             self.extra_kwarg_params['seq'] = self.experiments.currentText()
             self.extra_kwarg_params['fit'] = self.to_fit
             self.extra_kwarg_params['fit_live'] = self.to_fit_live
+            if self.fit_select.currentIndex() == 0:
+                self.extra_kwarg_params['fit_type'] = "None"
+            else:
+                self.extra_kwarg_params['fit_type'] = self.fit_select.currentText()
             self.extra_kwarg_params['fit_params'] = list(self.fit_params_widget.all_params().values()) # send a list of fit parameters to experiment process 
         
             detector = self.get_selected_detector()
