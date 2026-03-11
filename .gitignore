@@ -3,3 +3,6 @@
 
 # ignore ALL files in ANY directory named temp
 logs/
+
+# ignore macOS metadata files
+.DS_Store

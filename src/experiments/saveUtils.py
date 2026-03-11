@@ -7,13 +7,14 @@ from typing import Iterable, Union
 
 from nspyre import DataSink
 from rpyc.utils.classic import obtain
-from nspyre.gui.widgets.save import save_json
+from nspyre.gui.widgets.save import save_json, save_pickle
 
 def flexSave(
     datasetName: str,
     expType: str,
     filename: str,
     dirs: Union[str, Path, Iterable[Union[str, Path]]] = r"E:\Data",
+    file_format: str = "json",
 ):
     """
     Save data from dataserv into one or more directories using a structure:
@@ -81,4 +82,7 @@ def flexSave(
             print(str(date_path), str(exp_path), str(file_path))
 
             # Save
-            save_json(str(file_path), obtain(dataSink.data))
+            if file_format == "json":
+                save_json(str(file_path), obtain(dataSink.data))
+            elif file_format == "pickle":
+                save_pickle(str(file_path), obtain(dataSink.data))

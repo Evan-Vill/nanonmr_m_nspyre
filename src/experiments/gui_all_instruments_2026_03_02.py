@@ -14,6 +14,7 @@ Evan Villafranca - 2022
 from importlib import reload
 import logging
 from multiprocessing import Queue
+from queue import Empty
 
 from pyqtgraph import ComboBox, SpinBox
 from PyQt6.QtCore import Qt, QTimer, QSignalBlocker
@@ -60,11 +61,12 @@ logger = logging.getLogger(__name__)
 class InstWidget(QWidget):
     """Qt widget subclass that generates an interface for operating magnet mount."""
 
+    EXP_QUEUE_CHECK_TIME = 200  # ms
     QUEUE_CHECK_TIME = 100  # ms
     EQUIP_STATUS_CHECK_TIME = 500  # ms
     GUI_OWNER_PREFIX = "GUI_"
 
-    def __init__(self):
+    def __init__(self, status_queue=None):
         super().__init__()
 
         self._mgr = InstrumentManager()
@@ -74,12 +76,17 @@ class InstWidget(QWidget):
 
         self._last_rpc_err = {}  # keep track of last RPC errors. Context -> msg
 
-        # magnet status queue handling
+        ### --- Instrument status from experiments queue handling --- ###
+        self.expQueueTimer = QTimer(self)  # timer to check for messages from experiments that are relevant to instruments
+        self.expQueueTimer.timeout.connect(self.check_queue_from_exp_inst)
+        self.expQueueTimer.start(self.EXP_QUEUE_CHECK_TIME)
+
+        ### --- Magnet status update handling --- ###
         self.updateTimer = QTimer(self)  # timer to update widget from queue
         self.updateTimer.timeout.connect(self.check_queue_from_mag)
         self.updateTimer.start(self.QUEUE_CHECK_TIME)
 
-        # hardware status update handling
+        ### --- Hardware status update handling --- ###
         self.hwTimer = QTimer(self)
         self.hwTimer.timeout.connect(self.get_laser_status)
         self.hwTimer.timeout.connect(self.get_interlock_status)
@@ -89,6 +96,8 @@ class InstWidget(QWidget):
         self.hwTimer.start(self.EQUIP_STATUS_CHECK_TIME)
 
         self._gui_id = "GUI_Instruments"
+
+        self.exp_inst_queue = status_queue  # queue for receiving status updates from experiments that are relevant to instruments 
 
         # current stage positions
         self.curr_r = 0
@@ -173,6 +182,7 @@ class InstWidget(QWidget):
         self.init_azi_widgets()
         self.init_sg396_widgets()
         self.init_laser_widgets()
+        self.init_awg_widgets()
         self.init_flipper_widgets()
         self.init_nd_filter_widgets()
         self.init_bpd_shutter_widgets()
@@ -182,6 +192,9 @@ class InstWidget(QWidget):
 
         # one-time immediate refresh after UI is live
         QTimer.singleShot(0, self._initial_refresh)
+
+    def set_experiment_inst_queue(self, q):
+        self.exp_inst_queue = q
 
     # for initial refresh and setting hardware state upon GUI open
     def _set_radio_safely(self, rb, checked: bool):
@@ -227,6 +240,26 @@ class InstWidget(QWidget):
         self.bpd_shutter_status_read()  # this will query hardware and update button + label accordingly
 
         # magnet state
+        self._mgr.zaber.update_positions_callback() # query current magnet stage positions and update labels
+        self._mgr.thor_polar.update_positions_callback()  
+        self._mgr.thor_azi.update_positions_callback()
+
+        z_pos_init = self._mgr.zaber.current_positions[0] # current stage positions
+        polar_pos_init = self._mgr.thor_polar.current_position
+        azi_pos_init = self._mgr.thor_azi.current_position
+
+        self.r_label.setText(f"Step 3: R = {z_pos_init:.1f} mm")
+        self.polar_label.setText(
+            f"Step 2: \u03b8 = {polar_pos_init:.1f}\N{DEGREE SIGN}"
+        )
+        self.azi_label.setText(
+            f"Step 1: \u03c6 = {azi_pos_init:.1f}\N{DEGREE SIGN}"
+        )
+
+        self.r_label.setStyleSheet("color: white;")
+        self.polar_label.setStyleSheet("color: white;")
+        self.azi_label.setStyleSheet("color: white;")     
+
         self.check_queue_from_mag()
 
     def _reset_mgr(self):
@@ -259,6 +292,34 @@ class InstWidget(QWidget):
                     self._last_rpc_err[context] = msg
                     print(f"{tag} {msg}")
                 return None
+
+
+    @property
+    def zaber(self):
+        if getattr(self, "_closing", False):
+            raise RuntimeError("GUI is closing.")
+        return self._mgr.zaber
+    
+    def call_zaber(self, fn):
+        return self._call(lambda: fn(self.zaber), context="zaber")
+    
+    @property
+    def thor_polar(self):
+        if getattr(self, "_closing", False):
+            raise RuntimeError("GUI is closing.")
+        return self._mgr.thor_polar
+    
+    def call_thor_polar(self, fn):
+        return self._call(lambda: fn(self.thor_polar), context="thor_polar")
+    
+    @property
+    def thor_azi(self):
+        if getattr(self, "_closing", False):
+            raise RuntimeError("GUI is closing.")
+        return self._mgr.thor_azi
+    
+    def call_thor_azi(self, fn):
+        return self._call(lambda: fn(self.thor_azi), context="thor_azi")
 
     @property
     def ps(self):
@@ -791,6 +852,90 @@ class InstWidget(QWidget):
         )
         self.ps_status_label.setFixedHeight(40)
 
+    def init_awg_widgets(self):
+        self.awg_label = QLabel("AWG Control")
+        self.awg_label.setFixedHeight(40)
+        self.awg_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.awg_label.setFont(QFont(self.font, 20))
+
+        self.awg_volt_range_ch3_label = QLabel("AWG Ch. 3 Volt. Range: ")
+        self.awg_volt_range_ch3_label.setFont(QFont(self.font, 15))
+        self.awg_volt_range_ch4_label = QLabel("AWG Ch. 4 Volt. Range: ")
+        self.awg_volt_range_ch4_label.setFont(QFont(self.font, 15))
+        self.awg_samp_rate_group0_label = QLabel("AWG Group 0 Samp. Rate: ")
+        self.awg_samp_rate_group0_label.setFont(QFont(self.font, 15))
+        self.awg_samp_rate_group1_label = QLabel("AWG Group 1 Samp. Rate: ")
+        self.awg_samp_rate_group1_label.setFont(QFont(self.font, 15))
+        
+        awg_stylesheet = """
+        QComboBox {
+            border: 3px solid lightblue;
+            border-radius: 3px;
+            padding: 1px 18px 1px 3px;
+            min-width: 6em;
+        }
+
+        QComboBox::drop-down {
+            subcontrol-origin: padding;
+            subcontrol-position: top right;
+            width: 15px;
+            border-left-width: 1px;
+            border-left-color: black;
+            border-left-style: solid;
+            border-top-right-radius: 5px;
+            border-bottom-right-radius: 5px;
+        }
+
+        QComboBox QAbstractItemView {
+            border: 1px solid lightblue;
+            selection-background-color: lightblue;
+        }
+        """
+        # self.awg_volt_range_ch1_opts = ["0.2 V", "0.4 V", "0.6 V", "0.8 V", "1 V", "2 V", "3 V", "4 V", "5 V"]
+        # self.awg_volt_range_ch2_opts = ["0.2 V", "0.4 V", "0.6 V", "0.8 V", "1 V", "2 V", "3 V", "4 V", "5 V"]
+        self.awg_volt_range_ch3_opts = ["0.2 V", "0.4 V", "0.6 V", "0.8 V", "1 V", "2 V", "3 V", "4 V", "5 V"]
+        self.awg_volt_range_ch4_opts = ["0.2 V", "0.4 V", "0.6 V", "0.8 V", "1 V", "2 V", "3 V", "4 V", "5 V"]
+        self.awg_volt_range_ch3_combobox = QComboBox()
+        self.awg_volt_range_ch3_combobox.setStyleSheet(awg_stylesheet)
+        self.awg_volt_range_ch3_combobox.addItems(self.awg_volt_range_ch3_opts)
+        self.awg_volt_range_ch3_combobox.currentIndexChanged.connect(self.awg_volt_range_ch3_changed)
+        self.awg_volt_range_ch4_combobox = QComboBox()
+        self.awg_volt_range_ch4_combobox.setStyleSheet(awg_stylesheet)
+        self.awg_volt_range_ch4_combobox.addItems(self.awg_volt_range_ch4_opts)
+        self.awg_volt_range_ch4_combobox.currentIndexChanged.connect(self.awg_volt_range_ch4_changed)
+
+        self.apply_awg_volts_button = QPushButton("Apply Volt Ranges")
+        self.apply_awg_volts_button.setStyleSheet(awg_stylesheet)
+        self.apply_awg_volts_button.clicked.connect(self.apply_awg_volt_ranges)
+
+        self.awg_sampling_group0_opts = ["2.4 GHz", "1.2 GHz", "600 MHz", "300 MHz", "150 MHz", "75 MHz", "37.5 MHz", "18.75 MHz", "9.37 MHz", "4.68 MHz",
+                                  "2.34 MHz", "1.17 MHz", "585.93 kHz", "292.96 kHz"]
+        self.awg_sampling_group1_opts = ["2.4 GHz", "1.2 GHz", "600 MHz", "300 MHz", "150 MHz", "75 MHz", "37.5 MHz", "18.75 MHz", "9.37 MHz", "4.68 MHz",
+                                  "2.34 MHz", "1.17 MHz", "585.93 kHz", "292.96 kHz"]
+        self.awg_samp_rate_group_0_combobox = QComboBox()
+        self.awg_samp_rate_group_0_combobox.setStyleSheet(awg_stylesheet)
+        self.awg_samp_rate_group_0_combobox.addItems(self.awg_sampling_group0_opts)
+        self.awg_samp_rate_group_0_combobox.currentIndexChanged.connect(self.awg_samp_rate_group0_changed)
+        self.awg_samp_rate_group_1_combobox = QComboBox()
+        self.awg_samp_rate_group_1_combobox.setStyleSheet(awg_stylesheet)
+        self.awg_samp_rate_group_1_combobox.addItems(self.awg_sampling_group1_opts)
+        self.awg_samp_rate_group_1_combobox.currentIndexChanged.connect(self.awg_samp_rate_group1_changed)
+
+        self.awg_samp_rate_boxes = {
+            0: self.awg_samp_rate_group_0_combobox,
+            1: self.awg_samp_rate_group_1_combobox
+        }
+
+        self.apply_awg_rates_button = QPushButton("Apply Rates")
+        self.apply_awg_rates_button.setStyleSheet(awg_stylesheet)
+        self.apply_awg_rates_button.clicked.connect(self.apply_awg_rates)
+
+        self.awg_status_label = QLabel("AWG status here")
+        self.awg_status_label.setStyleSheet(
+            "color: white; background-color: black; border: 4px solid black;"
+        )
+        self.awg_status_label.setFixedHeight(40)
+
     def init_flipper_widgets(self):
         self.flipper_label = QLabel("Detector")
         self.flipper_label.setFixedHeight(40)
@@ -1048,6 +1193,30 @@ class InstWidget(QWidget):
         self.laser_controls_layout.addWidget(self.laser_b2, 4, 2, 1, 1)
         self.laser_controls_layout.addWidget(self.laser_shutter_button, 4, 3, 1, 1)
         self.laser_controls_layout.addWidget(self.laser_alarm_reset_button, 5, 1, 1, 3)
+        
+        self.awg_control_frame = QFrame(self)
+        self.awg_control_frame.setObjectName("awgControlFrame")
+        self.awg_control_frame.setStyleSheet(
+            "QFrame#deviceStatusFrame {"
+            "background-color: #3b1f0f;"      # dark brown background
+            "border: 2px solid #c68642;"      # warm tan / copper border
+            "border-radius: 5px;"
+            "}"
+        )
+        self.awg_control_layout = QGridLayout(self.awg_control_frame)
+        self.awg_control_layout.setSpacing(0)
+        self.awg_control_layout.addWidget(self.awg_label, 1, 1, 1, 2)
+        self.awg_control_layout.addWidget(self.awg_volt_range_ch3_label, 2, 1, 1, 1)
+        self.awg_control_layout.addWidget(self.awg_volt_range_ch3_combobox, 2, 2, 1, 1)
+        self.awg_control_layout.addWidget(self.awg_volt_range_ch4_label, 3, 1, 1, 1)
+        self.awg_control_layout.addWidget(self.awg_volt_range_ch4_combobox, 3, 2, 1, 1)
+        self.awg_control_layout.addWidget(self.apply_awg_volts_button, 4, 1, 1, 2)
+        self.awg_control_layout.addWidget(self.awg_samp_rate_group0_label, 5, 1, 1, 1)
+        self.awg_control_layout.addWidget(self.awg_samp_rate_group_0_combobox, 5, 2, 1, 1)
+        self.awg_control_layout.addWidget(self.awg_samp_rate_group1_label, 6, 1, 1, 1)
+        self.awg_control_layout.addWidget(self.awg_samp_rate_group_1_combobox, 6, 2, 1, 1)
+        self.awg_control_layout.addWidget(self.apply_awg_rates_button, 7, 1, 1, 2)
+        self.awg_control_layout.addWidget(self.awg_status_label, 8, 1, 1, 2)
 
         self.device_status_frame = QFrame(self)
         self.device_status_frame.setObjectName("deviceStatusFrame")
@@ -1090,9 +1259,9 @@ class InstWidget(QWidget):
 
         self.other_widgets_layout = QGridLayout()
         self.other_widgets_layout.addWidget(self.laser_control_frame, 1, 1, 1, 1)
-        self.other_widgets_layout.addWidget(self.detector_frame, 1, 2, 2, 1)
+        self.other_widgets_layout.addWidget(self.awg_control_frame, 1, 2, 1, 1)
         self.other_widgets_layout.addWidget(self.device_status_frame, 2, 1, 1, 1)
-
+        self.other_widgets_layout.addWidget(self.detector_frame, 2, 2, 1, 1)
 
         self.gui_layout.addLayout(self.individual_cmds_layout)
         self.gui_layout.addLayout(self.status_bar_layout)
@@ -1770,6 +1939,34 @@ class InstWidget(QWidget):
         )
         self.sg396_status_label.setText("SRS SG396 Status: OFF")
 
+    def awg_volt_range_ch3_changed(self):
+        self.awg_volt_range_ch3_str = self.awg_volt_range_ch3_combobox.currentText()
+
+    def awg_volt_range_ch4_changed(self):
+        self.awg_volt_range_ch4_str = self.awg_volt_range_ch4_combobox.currentText()
+
+    def awg_samp_rate_group0_changed(self):
+        self.awg_samp_rate_group_0_str = self.awg_samp_rate_boxes[0].currentText()
+
+    def awg_samp_rate_group1_changed(self):
+        self.awg_samp_rate_group_1_str = self.awg_samp_rate_boxes[1].currentText()
+
+    def apply_awg_rates(self):
+        if hasattr(self, "awg_samp_rate_group_0_str") and hasattr(self, "awg_samp_rate_group_1_str"):
+            self.call_awg(lambda awg: awg.set_sampling_rate(0, self.awg_samp_rate_group_0_str))
+            self.call_awg(lambda awg: awg.set_sampling_rate(1, self.awg_samp_rate_group_1_str))
+            self.awg_status_label.setText(f"Applied AWG rates: Group 0 = {self.awg_samp_rate_group_0_str}, Group 1 = {self.awg_samp_rate_group_1_str}")
+        else:
+            self.awg_status_label.setText("Please select sampling rates for both groups before applying.")
+
+    def apply_awg_volt_ranges(self):
+        if hasattr(self, "awg_volt_range_ch3_str") and hasattr(self, "awg_volt_range_ch4_str"):
+            self.call_awg(lambda awg: awg.set_voltage_range(2, self.awg_volt_range_ch3_str))
+            self.call_awg(lambda awg: awg.set_voltage_range(3, self.awg_volt_range_ch4_str))
+            self.awg_status_label.setText(f"Applied AWG volt ranges: CH3 = {self.awg_volt_range_ch3_str}, CH4 = {self.awg_volt_range_ch4_str}")
+        else:
+            self.awg_status_label.setText("Please select voltage ranges for both channels before applying.")
+
     def laser_temp_clicked(self, component):
         match component:
             case "diode":
@@ -1946,52 +2143,62 @@ class InstWidget(QWidget):
         idx = self.nd_filter_opts.findText(self.nd_filter_choice)
         self.call_filter_wheel(lambda filter_wheel: filter_wheel.set_pos(idx + 1))
 
-    def bpd_shutter_status_changed(self):
-        self.call_daq(lambda daq: daq.open_do_task("shutter"))
-        self.call_daq(lambda daq: daq.start_do_task())
-
-        if self.bpd_shutter_button.text() == "Open BPD shutter":
+    def set_bpd_shutter_ui(self, is_open: bool):
+        if is_open:
             self.bpd_shutter_button.setText("Close BPD shutter")
-            self.call_daq(
-                lambda daq: daq.write_do_task("shutter", shutter_status="open")
-            )
             self.bpd_shutter_status_label.setStyleSheet(
                 "color: black; background-color: white; border: 4px solid black;"
             )
             self.bpd_shutter_status_label.setText("BPD Shutter: OPEN")
         else:
             self.bpd_shutter_button.setText("Open BPD shutter")
-            self.call_daq(
-                lambda daq: daq.write_do_task("shutter", shutter_status="close")
-            )
             self.bpd_shutter_status_label.setStyleSheet(
                 "color: white; background-color: black; border: 4px solid black;"
             )
             self.bpd_shutter_status_label.setText("BPD Shutter: CLOSED")
 
+    def check_queue_from_exp_inst(self):
+        if self.exp_inst_queue is None:
+            return
+
+        try:
+            while True:
+                msg = self.exp_inst_queue.get_nowait()
+                if msg is None:
+                    continue
+
+                if isinstance(msg, dict) and msg.get("type") == "bpd_shutter":
+                    self.set_bpd_shutter_ui(bool(msg.get("open", False)))
+
+        except Empty:
+            pass
+        except Exception as e:
+            logger.warning(f"Error reading experiment->instrument queue: {e}")
+
+    def bpd_shutter_status_changed(self):
+        self.call_daq(lambda daq: daq.open_do_task("shutter"))
+        self.call_daq(lambda daq: daq.start_do_task())
+
+        opening = self.bpd_shutter_button.text() == "Open BPD shutter"
+
+        if opening:
+            self.call_daq(lambda daq: daq.write_do_task("shutter", shutter_status="open"))
+        else:
+            self.call_daq(lambda daq: daq.write_do_task("shutter", shutter_status="close"))
+
         self.call_daq(lambda daq: daq.stop_do_task())
         self.call_daq(lambda daq: daq.close_do_task())
+
+        self.set_bpd_shutter_ui(opening)
 
     def bpd_shutter_status_read(self):
         self.call_daq(lambda daq: daq.open_do_task("shutter"))
         self.call_daq(lambda daq: daq.start_do_task())
         bpd_shutter_mode_is_open = self.call_daq(lambda daq: daq.read_do_task())
-
-        if bpd_shutter_mode_is_open:
-            self.bpd_shutter_button.setText("Close BPD shutter")
-            self.bpd_shutter_status_label.setStyleSheet(
-                "color: black; background-color: white; border: 4px solid black;"
-            )
-            self.bpd_shutter_status_label.setText("BPD Shutter: OPEN")
-        else:
-            self.bpd_shutter_button.setText("Open BPD shutter")
-            self.bpd_shutter_status_label.setStyleSheet(
-                "color: white; background-color: black; border: 4px solid black;"
-            )
-            self.bpd_shutter_status_label.setText("BPD Shutter: CLOSED")
-
         self.call_daq(lambda daq: daq.stop_do_task())
         self.call_daq(lambda daq: daq.close_do_task())
+
+        self.set_bpd_shutter_ui(bool(bpd_shutter_mode_is_open))
 
     def laser_power_changed(self):
         try:

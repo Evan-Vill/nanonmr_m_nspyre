@@ -17,8 +17,8 @@ from inspect import signature
 from scipy.optimize import curve_fit
 from rpyc.utils.classic import obtain
 
-# from nspyre import FlexLinePlotWidget, LinePlotWidget
-from nspyre.gui.widgets.flex_line_plot_4 import FlexLinePlotWidget
+from styling.flex_line_plot_2026_03_05 import FlexLinePlotWidget
+
 from nspyre import DataSink
 from pyqtgraph import SpinBox, ComboBox
 from pyqtgraph import PlotWidget
@@ -33,13 +33,11 @@ from PyQt6.QtCore import Qt, QTimer, pyqtSlot
 from nspyre.misc.misc import ProcessRunner
 from nspyre.misc.misc import run_experiment
 from nspyre import ParamsWidget
-from nspyre import FitParamsWidget
+from styling.params_2026_03_05 import FitParamsWidget
 from nspyre import experiment_widget_process_queue
 from nspyre import InstrumentManager
 
-from gui_test import Communicate 
-
-import nv_experiments_organized_2026_03_03
+import nv_experiments_2026_03_05
 import nv_experiments_daq
 
 def ellipsize(text: str, max_chars: int) -> str:
@@ -51,7 +49,7 @@ class ExpWidget(QWidget):
     
     QUEUE_CHECK_TIME = 50 # ms
 
-    def __init__(self):
+    def __init__(self, status_queue=None):
         super().__init__()
 
         self.setWindowTitle('NV Experiments')
@@ -59,14 +57,12 @@ class ExpWidget(QWidget):
         self.updateTimer = QTimer() #create a timer that will try to update that widget with messages from the from_exp_queue
         self.updateTimer.timeout.connect(lambda: self.check_queue_from_exp())
         self.updateTimer.start(self.QUEUE_CHECK_TIME)
-            
+
+        self.exp_inst_queue = status_queue
+
         # parameter defaults for different experiments
         self.sideband_opts = ["Lower", "Upper"]
         self.sideband_cw_opts = ["Lower", "Upper"]
-        self.awg_sampling_group1_opts = ["2.4 GHz", "1.2 GHz", "600 MHz", "300 MHz", "150 MHz", "75 MHz", "37.5 MHz", "18.75 MHz", "9.37 MHz", "4.68 MHz",
-                                  "2.34 MHz", "1.17 MHz", "585.93 kHz", "292.96 kHz"]
-        self.awg_sampling_group2_opts = ["2.4 GHz", "1.2 GHz", "600 MHz", "300 MHz", "150 MHz", "75 MHz", "37.5 MHz", "18.75 MHz", "9.37 MHz", "4.68 MHz",
-                                  "2.34 MHz", "1.17 MHz", "585.93 kHz", "292.96 kHz"]
         self.detector_opts = ["APD", "BPD"]
 
         self.dig_ro_chan_opts = ["0", "1"]
@@ -89,14 +85,14 @@ class ExpWidget(QWidget):
         self.fid_drive_opts = ["Pulsed", "Continuous"]
         self.corr_t1_array_opts = ["geomspace", "linspace"]
         
+        self.corr_spec_sig_opts = ["Sample", "Coil"]
         self.casr_sig_opts = ["Sample", "Coil"]
         self.dnp_opts = ["Off", "Overhauser"]
 
         self.sigvstime_params_defaults = [1e3, self.sigvstime_detector_opts]
         self.sigvstime_mw_params_defaults = [1e3, self.sigvstime_mw_detector_opts] # not needed - hidden in GUI
 
-        # self.laser_cw_params_defaults = [0, 15e-6, 2.5e-6, 30e6, 0.15, self.sideband_opts, -0.002, -0.004, self.awg_sampling_group1_opts, self.awg_sampling_group2_opts, self.detector_opts]
-        self.laser_params_defaults = [0, 15e-6, 2.5e-6, 30e6, 0.45, self.sideband_opts, -0.002, -0.004, self.awg_sampling_group1_opts, self.awg_sampling_group2_opts, self.detector_opts]
+        self.laser_params_defaults = [0, 15e-6, 2.5e-6, 30e6, 0.45, self.sideband_opts, -0.002, -0.004, self.detector_opts]
         self.laser_params_sigvstime_defaults = [0]
         self.digitizer_defaults = [1024, 500e6, 1, self.dig_ro_chan_opts, self.dig_coupling_opts, self.dig_termination_opts, 32, 5]
 
@@ -152,20 +148,20 @@ class ExpWidget(QWidget):
         self.deer_t2_params_defaults = [120, 10, 50e-9, 1e-6, 100, self.corr_t1_array_opts, 800e-9, 500e-9]
         self.deer_t2_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 'y', 560e6, 40e-9, 0.2] 
 
-        self.nmr_params_defaults = [120, 10, 50e-9, 100e-6, 100, 1e-6]
-        self.nmr_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 'y', 1]
+        self.corr_spec_params_defaults = [120, 10, 50e-9, 100e-6, 100, 1e-6, self.corr_spec_sig_opts]
+        self.corr_spec_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 'y', 1]
 
         self.casr_params_defaults = [120, 10, 10, 200e-9, self.casr_sig_opts, self.dnp_opts]
         self.casr_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 1e6, 0.1, 1e-6, 0, 1]
 
         self.fit_none_default = [0]
-        self.fit_neg_lorentz_defaults = [0.01, 1, 6e-3, 1] # defaults = 1% contrast, 2 GHz central freq, 6 MHz linewidth, 1 vertical offset
-        self.fit_decaying_cosine_defaults = [0.02, 0.001, 200, 0, 1] # defaults = 2% contrast, 0.001 decay rate, 200 ns period, 0 phase, 1 vertical offset
-        self.fit_two_neg_lorentz_defaults = [0.01, 1, 6e-3, 1, 0.01, 1, 6e-3, 1] # defaults = 1% contrast, 1 GHz central freq, 6 MHz linewidth, 1 vertical offset, 1% contrast, 1 GHz central freq, 6 MHz linewidth, 1 vertical offset for the two overlapping Lorentzians
-        self.fit_str_exp_defaults = [0.01, 1, 1, 0] # defaults = 0.01 amplitude, 1 ms T1, 1 stretching factor, 0 vertical offset
-        self.fit_mod_str_exp_defaults = [0.1, 2, 1, 1, 0.2, 0, 1, 0.2, 0] # defaults = 0.1 amplitude, 2 us T2, 1 stretching factor, 1 amp first sine wave, 0.2 MHz first sine wave, 0 phase first sine wave, 1 amp second sine wave, 0.2 MHz second sine wave, 0 phase second sine wave
-        self.fit_deer_t1_str_exp_defaults = [0.1, 1, 1, 1, 1, 0] # defaults = 0.1 amplitude, 1 ms T1_NV, 1 n_NV, 1 ms T1_e, 1 n_e, 0 vertical offset
-        self.fit_pos_lorentz_defaults = [0.01, 2, 0.1, 1] # defaults = 1% contrast, 2 MHz central freq, 100 kHz linewidth, 1 vertical offset
+        self.fit_neg_lorentz_defaults = [0.01, 1e9, 6e6, 1] # defaults = 1% contrast, 1 GHz central freq, 6 MHz linewidth, 1 vertical offset
+        self.fit_decaying_cosine_defaults = [0.02, 0.001, 200e-9, 0, 1] # defaults = 2% contrast, 0.001 decay rate, 200 ns period, 0 phase, 1 vertical offset
+        self.fit_two_neg_lorentz_defaults = [0.01, 1e9, 6e6, 1, 0.01, 1e9, 6e6, 1] # defaults = 1% contrast, 1 GHz central freq, 6 MHz linewidth, 1 vertical offset, 1% contrast, 1 GHz central freq, 6 MHz linewidth, 1 vertical offset for the two overlapping Lorentzians
+        self.fit_str_exp_defaults = [0.01, 1e-3, 1, 0] # defaults = 0.01 amplitude, 1 ms T1, 1 stretching factor, 0 vertical offset
+        self.fit_mod_str_exp_defaults = [0.1, 2e-6, 1, 1, 0.2e6, 0, 1, 0.2e6, 0] # defaults = 0.1 amplitude, 2 us T2, 1 stretching factor, 1 amp first sine wave, 0.2 MHz first sine wave, 0 phase first sine wave, 1 amp second sine wave, 0.2 MHz second sine wave, 0 phase second sine wave
+        self.fit_deer_t1_str_exp_defaults = [0.1, 1e-3, 1, 1e-3, 1, 0] # defaults = 0.1 amplitude, 1 ms T1_NV, 1 n_NV, 1 ms T1_e, 1 n_e, 0 vertical offset
+        self.fit_pos_lorentz_defaults = [0.01, 2e6, 100e3, 1] # defaults = 1% contrast, 2 MHz central freq, 100 kHz linewidth, 1 vertical offset
         # self.fit_deer_defaults = [0.1, 560, 10, 1] # defaults = 10% contrast, 560 MHz central freq, 10 MHz linewidth, 1 vertical offset
         # self.fit_deer_rabi_defaults = [0.1, 0.001, 100, 0, 1] # defaults = 10% contrast, 0.001 decay rate, 100 ns period, 0 phase, 1 vertical offset
         # self.fit_nmr_casr_defaults = [0.01, 2, 0.1, 1] # defaults = 1% contrast, 2 kHz central freq, 100 Hz linewidth, 1 vertical offset
@@ -192,7 +188,7 @@ class ExpWidget(QWidget):
                     "DEER Correlation Rabi": ["DEER_corr_rabi_scan", self.deer_corr_rabi_params_defaults, self.deer_corr_rabi_mw_params_defaults, 'corr rabi', self.laser_params_defaults, self.digitizer_defaults],
                     "DEER T1": ["DEER_T1_scan", self.deer_corr_t1_params_defaults, self.deer_corr_t1_mw_params_defaults, 'deer t1', self.laser_params_defaults, self.digitizer_defaults],
                     "DEER T2": ["DEER_T2_scan", self.deer_t2_params_defaults, self.deer_t2_mw_params_defaults, 'deer t2', self.laser_params_defaults, self.digitizer_defaults],
-                    "NMR Correlation Spectroscopy": ["Corr_Spec_scan", self.nmr_params_defaults, self.nmr_mw_params_defaults, 'nmr', self.laser_params_defaults, self.digitizer_defaults],
+                    "NMR Correlation Spectroscopy": ["Corr_Spec_scan", self.corr_spec_params_defaults, self.corr_spec_mw_params_defaults, 'nmr', self.laser_params_defaults, self.digitizer_defaults],
                     "NMR CASR": ["CASR_scan", self.casr_params_defaults, self.casr_mw_params_defaults, 'casr', self.laser_params_defaults, self.digitizer_defaults]}
         
         self.experiments = QComboBox()
@@ -224,12 +220,13 @@ class ExpWidget(QWidget):
 
         # used to send to experiment process to determine extra actions to take 
         self.to_save = False 
+        self.file_format = "json"
         self.to_fit = False
         self.to_fit_live = False
         self.to_override_fit = False
         self.extra_kwarg_params: dict() = {}
 
-        self.dataset_label = QLabel("<i>Data Set Name: ---</i>")
+        self.dataset_label = QLabel("Data Set Name: ---")
         self.dataset_label.setStyleSheet("color: black; background-color: #C7C7C7; border: 4px solid black; padding: 2px; border-radius: 5px;")
         self.dataset_label.setFixedHeight(40)
         self.dataset_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -249,12 +246,10 @@ class ExpWidget(QWidget):
         self.mw_overrides = {}
 
         self.opacity_effects = []
-        for i in range(23): # total number of GUI elements that need to be faded when no experiment is selected
+        for i in range(24): # total number of GUI elements that need to be faded when no experiment is selected
             self.opacity_effects.append(QGraphicsOpacityEffect())
             self.opacity_effects[i].setOpacity(0.3)
 
-        self.exp_label.setGraphicsEffect(self.opacity_effects[0])
-        self.params_widget.setGraphicsEffect(self.opacity_effects[1])
         self.params_widget.setEnabled(False)
         
         # save params button
@@ -281,12 +276,9 @@ class ExpWidget(QWidget):
         self.save_params.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.save_params.setMinimumWidth(440)
         self.save_params.clicked.connect(lambda: self.save_params_clicked())
-        self.save_params.setGraphicsEffect(self.opacity_effects[2])
         self.save_params.setEnabled(False)
 
         # mw params widget & label
-        self.mw_label.setGraphicsEffect(self.opacity_effects[3])        
-        self.mw_params_widget.setGraphicsEffect(self.opacity_effects[4])
         self.mw_params_widget.setEnabled(False)
 
         # laser params widget & label
@@ -294,16 +286,12 @@ class ExpWidget(QWidget):
         self.laser_label = QLabel("Laser & AWG Settings")
         self.laser_label.setFixedHeight(24)
         self.laser_label.setStyleSheet("font-weight: bold")
-        self.laser_label.setGraphicsEffect(self.opacity_effects[5])
-        self.laser_params_widget.setGraphicsEffect(self.opacity_effects[6])
         self.laser_params_widget.setEnabled(False)
 
         self.dig_params_widget = ParamsWidget(self.create_params_widget('Digitizer', self.exp_dict['Digitizer'][1]))
         self.dig_label = QLabel("Digitizer Settings")
         self.dig_label.setFixedHeight(24)
         self.dig_label.setStyleSheet("font-weight: bold")
-        self.dig_label.setGraphicsEffect(self.opacity_effects[7])
-        self.dig_params_widget.setGraphicsEffect(self.opacity_effects[8])
         self.dig_params_widget.setEnabled(False)
 
         radio_style = """
@@ -340,7 +328,6 @@ class ExpWidget(QWidget):
         self.daq_b1.setStyleSheet(radio_style)
         self.daq_b1.setFixedHeight(40)
         self.daq_b1.setFixedWidth(120)
-        self.daq_b1.setGraphicsEffect(self.opacity_effects[9])
         self.daq_b1.setEnabled(False)
 
         self.daq_b2 = QRadioButton("NI DAQ")
@@ -348,7 +335,6 @@ class ExpWidget(QWidget):
         self.daq_b2.setStyleSheet(radio_style)
         self.daq_b2.setFixedHeight(40)
         self.daq_b2.setFixedWidth(120)
-        self.daq_b2.setGraphicsEffect(self.opacity_effects[10])
         self.daq_b2.setEnabled(False)
 
         self.daq_group = QButtonGroup()
@@ -383,27 +369,31 @@ class ExpWidget(QWidget):
         self.auto_save_checkbox.setChecked(False)
         self.auto_save_checkbox.setEnabled(False)
         self.auto_save_checkbox.stateChanged.connect(lambda: self.auto_save_changed())
-        self.auto_save_checkbox.setGraphicsEffect(self.opacity_effects[11])
 
         # select directory button
         self.select_dir_button = QPushButton("Select Directory")
         self.select_dir_button.setEnabled(False)
         self.select_dir_button.setStyleSheet("color: white; background-color: #7A7A7A; border: 2px solid #964900; padding: 2px; border-radius: 5px;")
-        self.select_dir_button.setFixedWidth(250)
+        self.select_dir_button.setFixedWidth(225)
         self.select_dir_button.clicked.connect(lambda: self.select_directory())
-        self.select_dir_button.setGraphicsEffect(self.opacity_effects[12])
+        
+
+        # file type selection combobox for saving
+        self.select_file_format_combobox = QComboBox()
+        self.select_file_format_combobox.setStyleSheet("color: white; background-color: #7A7A7A; border: 2px solid #964900; padding: 2px; border-radius: 5px;")
+        self.select_file_format_combobox.addItems(["Format: JSON", "Format: Pickle"])
+        self.select_file_format_combobox.setCurrentIndex(0)
+        self.select_file_format_combobox.setEnabled(False)
+        self.select_file_format_combobox.currentIndexChanged.connect(lambda: self.file_format_selector())
 
         # selected directory display for saving
         self.chosen_dir = QLabel()
-        self.chosen_dir.setGraphicsEffect(self.opacity_effects[13])
         self.chosen_dir.setStyleSheet("color: orange")
 
         self.filename_label = QLabel("Filename: ")
-        self.filename_label.setGraphicsEffect(self.opacity_effects[14])
         self.filename_label.setFixedHeight(20)
 
         self.filename_lineedit = QLineEdit()
-        self.filename_lineedit.setGraphicsEffect(self.opacity_effects[15])
         self.filename_lineedit.setFixedHeight(30)
         self.filename_lineedit.setEnabled(False)
 
@@ -428,30 +418,24 @@ class ExpWidget(QWidget):
         self.auto_fit_checkbox.setChecked(False)
         self.auto_fit_checkbox.setEnabled(False)
         self.auto_fit_checkbox.stateChanged.connect(lambda: self.auto_fit_changed())
-        self.auto_fit_checkbox.setGraphicsEffect(self.opacity_effects[16]) 
         
         # fit type combobox
         self.fit_select = QComboBox()
         self.fit_select.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.fit_select.setStyleSheet("color: #55005F; background-color: #C2C2C2; border: 2px solid #55005F; padding: 2px; border-radius: 5px;")
-        self.fit_select.setGraphicsEffect(self.opacity_effects[17]) 
+         
         self.fit_select.addItems(["Choose Fit Type", 
                                  "Neg. Lorentz.",
                                  "Pos. Lorentz.",
                                  "Two Neg. Lorentz."
-                                 "Decaying Cosine",
+                                 "Decaying Cos.",
                                  "Stretched Exp.",
                                  "Modulated Str. Exp.",
                                  "DEER T1 Str. Exp."])
         self.fit_select.currentIndexChanged.connect(lambda: self.fit_selector())
-
-
-
-
-
+        self.fit_select.setEnabled(False)
 
         self.fit_params_widget = FitParamsWidget(self.create_fit_params_widget('Fit ODMR', self.fit_odmr_defaults))
-        self.fit_params_widget.setGraphicsEffect(self.opacity_effects[18])
         self.fit_params_widget.setEnabled(False)
 
         # live fitting checkbox
@@ -475,7 +459,6 @@ class ExpWidget(QWidget):
         
         self.live_fit_checkbox.setChecked(False)
         self.live_fit_checkbox.stateChanged.connect(lambda: self.live_fit_changed())
-        self.live_fit_checkbox.setGraphicsEffect(self.opacity_effects[19])
         self.live_fit_checkbox.setEnabled(False)
 
         self.override_fit_checkbox = QCheckBox("Apply Fits to Settings")
@@ -495,7 +478,6 @@ class ExpWidget(QWidget):
                 }""")
         self.override_fit_checkbox.setChecked(False)
         self.override_fit_checkbox.stateChanged.connect(lambda: self.override_fit_changed())
-        self.override_fit_checkbox.setGraphicsEffect(self.opacity_effects[20])
         self.override_fit_checkbox.setEnabled(False)
 
         # photodetector selection radio buttons
@@ -530,14 +512,12 @@ class ExpWidget(QWidget):
         self.detector_b1.setStyleSheet(detector_radio_style)
         self.detector_b1.setFixedHeight(40)
         self.detector_b1.setFixedWidth(90)
-        self.detector_b1.setGraphicsEffect(self.opacity_effects[21])
         self.detector_b1.setEnabled(False)
 
         self.detector_b2 = QRadioButton("BPD")
         self.detector_b2.setStyleSheet(detector_radio_style)
         self.detector_b2.setFixedHeight(40)
         self.detector_b2.setFixedWidth(90)
-        self.detector_b2.setGraphicsEffect(self.opacity_effects[22])
         self.detector_b2.setEnabled(False)
 
         self.detector_group = QButtonGroup()
@@ -661,6 +641,32 @@ class ExpWidget(QWidget):
         kill_button.setStyleSheet(kill_button_style)
         kill_button.clicked.connect(self.kill)
 
+        ### --- Set graphics effects for elements that should be faded when no experiment is selected --- ###
+        self.exp_label.setGraphicsEffect(self.opacity_effects[0])
+        self.params_widget.setGraphicsEffect(self.opacity_effects[1])
+        self.save_params.setGraphicsEffect(self.opacity_effects[2])
+        self.mw_label.setGraphicsEffect(self.opacity_effects[3])
+        self.mw_params_widget.setGraphicsEffect(self.opacity_effects[4])
+        self.laser_label.setGraphicsEffect(self.opacity_effects[5])
+        self.laser_params_widget.setGraphicsEffect(self.opacity_effects[6])
+        self.dig_label.setGraphicsEffect(self.opacity_effects[7])
+        self.dig_params_widget.setGraphicsEffect(self.opacity_effects[8])
+        self.daq_b1.setGraphicsEffect(self.opacity_effects[9])
+        self.daq_b2.setGraphicsEffect(self.opacity_effects[10])
+        self.auto_save_checkbox.setGraphicsEffect(self.opacity_effects[11])
+        self.select_dir_button.setGraphicsEffect(self.opacity_effects[12])
+        self.chosen_dir.setGraphicsEffect(self.opacity_effects[13])
+        self.filename_label.setGraphicsEffect(self.opacity_effects[14])
+        self.filename_lineedit.setGraphicsEffect(self.opacity_effects[15])
+        self.auto_fit_checkbox.setGraphicsEffect(self.opacity_effects[16]) 
+        self.fit_select.setGraphicsEffect(self.opacity_effects[17])
+        self.fit_params_widget.setGraphicsEffect(self.opacity_effects[18])
+        self.live_fit_checkbox.setGraphicsEffect(self.opacity_effects[19])
+        self.override_fit_checkbox.setGraphicsEffect(self.opacity_effects[20])
+        self.detector_b1.setGraphicsEffect(self.opacity_effects[21])
+        self.detector_b2.setGraphicsEffect(self.opacity_effects[22])
+        self.select_file_format_combobox.setGraphicsEffect(self.opacity_effects[23])
+
         self.gui_layout = QVBoxLayout()
         
         self.top_frame = QFrame(self)
@@ -721,9 +727,10 @@ class ExpWidget(QWidget):
         self.save_layout.setSpacing(0)
         self.save_layout.addWidget(self.auto_save_checkbox,1,1,1,1)
         self.save_layout.addWidget(self.select_dir_button,1,2,1,1, alignment=Qt.AlignmentFlag.AlignHCenter)
-        self.save_layout.addWidget(self.chosen_dir,2,1,1,2)
+        self.save_layout.addWidget(self.select_file_format_combobox,1,3,1,1)
+        self.save_layout.addWidget(self.chosen_dir,2,1,1,3)
         self.save_layout.addWidget(self.filename_label,3,1,1,1)
-        self.save_layout.addWidget(self.filename_lineedit,3,2,1,1)
+        self.save_layout.addWidget(self.filename_lineedit,3,2,1,2)
         
         self.fit_frame = QFrame(self)
         self.fit_frame.setObjectName("fitFrame")
@@ -832,11 +839,7 @@ class ExpWidget(QWidget):
                         'i_offset': {'display_text': 'MW I Offset: ',
                                         'widget': SpinBox(value = defaults[6], suffix = 'V', siPrefix = True)},
                         'q_offset': {'display_text': 'MW Q Offset: ',
-                                        'widget': SpinBox(value = defaults[7], suffix = 'V', siPrefix = True)},
-                        'awg_samp_rate_1': {'display_text': 'AWG Group 1 Samp. Rate: ',
-                                        'widget': ComboBox(items = defaults[8])},
-                        'awg_samp_rate_2': {'display_text': 'AWG Group 2 Samp. Rate: ',
-                                        'widget': ComboBox(items = defaults[9])}}                
+                                        'widget': SpinBox(value = defaults[7], suffix = 'V', siPrefix = True)}}                
             case 'Digitizer':
                 params = {
                         'segment_size': {'display_text': '# Samples (seg. size): ',
@@ -858,8 +861,7 @@ class ExpWidget(QWidget):
             case 'Signal vs Time':
                 params = {
                 'exp_sampling_rate': {'display_text': 'Exp. Sampling Rate: ',
-                        'widget': SpinBox(value = defaults[0], suffix = 'Hz', siPrefix = True, bounds = (10, 1e6), dec = True)}}
-            
+                        'widget': SpinBox(value = defaults[0], suffix = 'Hz', siPrefix = True, bounds = (10, 1e6), dec = True)}} 
             case 'CW ODMR':    
                 params = {
                         'runs': {'display_text': '# Averages per Iteration: ',
@@ -1097,7 +1099,9 @@ class ExpWidget(QWidget):
                 'num_pts': {'display_text': '# Frequencies: ',
                         'widget': SpinBox(value = defaults[4], int = True, bounds=(1, None), dec = True)},
                 'tau': {'display_text': 'Free Precession Interval (\u03C4): ',
-                        'widget': SpinBox(value = defaults[5], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)}}           
+                        'widget': SpinBox(value = defaults[5], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
+                'sig_opt': {'display_text': 'Signal Source: ',
+                                'widget': ComboBox(items = defaults[6])}}           
             case 'NMR CASR':
                 params = {
                 'runs': {'display_text': 'Runs (avgs. per iteration): ',
@@ -1108,7 +1112,7 @@ class ExpWidget(QWidget):
                         'widget': SpinBox(value = defaults[2], int = True, bounds=(1, None), dec = True)},
                 'tau': {'display_text': 'tau = 1/(2f_0): ',
                         'widget': SpinBox(value = defaults[3], suffix = 's', siPrefix = True, bounds = (0, 1e-3), dec = True)},
-                'sig_opt': {'display_text': 'CASR Signal Source: ',
+                'sig_opt': {'display_text': 'Signal Source: ',
                                 'widget': ComboBox(items = defaults[4])},
                 'dnp': {'display_text': 'Hyperpolarization: ',
                                 'widget': ComboBox(items = defaults[5])}}
@@ -1405,9 +1409,9 @@ class ExpWidget(QWidget):
                         'A': {'display_text': 'A: ',
                                 'widget': SpinBox(value = defaults[0])},
                         'x0': {'display_text': 'x0 (GHz): ',
-                                'widget': SpinBox(value = defaults[1])},
+                                'widget': SpinBox(value = defaults[1], suffix = 'Hz', siPrefix = True, dec = True)},
                         'gamma': {'display_text': '\u03B3 (GHz): ',
-                                'widget': SpinBox(value = defaults[2])},
+                                'widget': SpinBox(value = defaults[2], suffix = 'Hz', siPrefix = True, dec = True)},
                         'c': {'display_text': 'c: ',
                                 'widget': SpinBox(value = defaults[3])}}
             case 'Fit Decaying Cos': # A * exp(-gamma * x) * cos(2 * pi * x / T + phi) + c
@@ -1415,9 +1419,9 @@ class ExpWidget(QWidget):
                         'A': {'display_text': 'A: ',
                                 'widget': SpinBox(value = defaults[0])},
                         'gamma': {'display_text': '\u03B3 (GHz): ',
-                                'widget': SpinBox(value = defaults[1])},
+                                'widget': SpinBox(value = defaults[1], suffix = 'Hz', siPrefix = True, dec = True)},
                         'T': {'display_text': 'T (ns): ',
-                                'widget': SpinBox(value = defaults[2])},
+                                'widget': SpinBox(value = defaults[2], suffix = 's', siPrefix = True, dec = True)},
                         'phi': {'display_text': '\u03C6: ',
                                 'widget': SpinBox(value = defaults[3])},
                         'c': {'display_text': 'c: ',
@@ -1427,17 +1431,17 @@ class ExpWidget(QWidget):
                         'A': {'display_text': 'A: ', 
                                 'widget': SpinBox(value = defaults[0])},
                         'x0': {'display_text': 'x0 (GHz): ',
-                                'widget': SpinBox(value = defaults[1])},
+                                'widget': SpinBox(value = defaults[1], suffix = 'Hz', siPrefix = True, dec = True)},
                         'gamma': {'display_text': '\u03B3 (GHz): ',
-                                'widget': SpinBox(value = defaults[2])},
+                                'widget': SpinBox(value = defaults[2], suffix = 'Hz', siPrefix = True, dec = True)},
                         'c': {'display_text': 'c: ',
                                 'widget': SpinBox(value = defaults[3])},
                         'A_rf': {'display_text': 'A_rf: ',
                                 'widget': SpinBox(value = defaults[4])},
                         'x0_rf': {'display_text': 'x0_rf (GHz): ',
-                                'widget': SpinBox(value = defaults[5])},
+                                'widget': SpinBox(value = defaults[5], suffix = 'Hz', siPrefix = True, dec = True)},
                         'gamma_rf': {'display_text': '\u03B3_rf (GHz): ',
-                                'widget': SpinBox(value = defaults[6])},
+                                'widget': SpinBox(value = defaults[6], suffix = 'Hz', siPrefix = True, dec = True)},
                         'c_rf': {'display_text': 'c_rf: ',
                                 'widget': SpinBox(value = defaults[7])}}
             case 'Fit Stretched Exp': # A * exp(-(t / T1)**n) + c
@@ -1445,7 +1449,7 @@ class ExpWidget(QWidget):
                         'A': {'display_text': 'A: ',
                                 'widget': SpinBox(value = defaults[0])},
                         'T1': {'display_text': 'T1 (ms): ',
-                                'widget': SpinBox(value = defaults[1])},
+                                'widget': SpinBox(value = defaults[1], suffix = 's', siPrefix = True, dec = True)},
                         'n': {'display_text': 'n: ',
                                 'widget': SpinBox(value = defaults[2])},
                         'c': {'display_text': 'c: ',
@@ -1455,19 +1459,19 @@ class ExpWidget(QWidget):
                         'A': {'display_text': 'A: ',
                                 'widget': SpinBox(value = defaults[0])},
                         'T2': {'display_text': 'T2 (\u03BCs): ',
-                                'widget': SpinBox(value = defaults[1])},
+                                'widget': SpinBox(value = defaults[1], suffix = 's', siPrefix = True, dec = True)},
                         'n': {'display_text': 'n: ',
                                 'widget': SpinBox(value = defaults[2])},
                         'a1': {'display_text': 'a1: ',
                                 'widget': SpinBox(value = defaults[3])},
                         'f1': {'display_text': 'f1 (MHz): ',
-                                'widget': SpinBox(value = defaults[4])},
+                                'widget': SpinBox(value = defaults[4], suffix = 'Hz', siPrefix = True, dec = True)},
                         'phi1': {'display_text': '\u03C61: ',
                                 'widget': SpinBox(value = defaults[5])},
                         'a2': {'display_text': 'a2: ',
                                 'widget': SpinBox(value = defaults[6])}, 
                         'f2': {'display_text': 'f2 (MHz): ',
-                                'widget': SpinBox(value = defaults[7])},
+                                'widget': SpinBox(value = defaults[7], suffix = 'Hz', siPrefix = True, dec = True)},
                         'phi2': {'display_text': '\u03C62: ',
                                 'widget': SpinBox(value = defaults[8])}}
             case 'Fit DEER T1 Str Exp': # A * exp(-(t / T1_NV)**n_NV - (t / T1_e)**n_e) + c
@@ -1475,11 +1479,11 @@ class ExpWidget(QWidget):
                         'A': {'display_text': 'A: ',
                                 'widget': SpinBox(value = defaults[0])},
                         'T1_NV': {'display_text': 'T1 (ms): ',
-                                'widget': SpinBox(value = defaults[1])},
+                                'widget': SpinBox(value = defaults[1], suffix = 's', siPrefix = True, dec = True)},
                         'n_NV': {'display_text': 'n_NV: ',
                                 'widget': SpinBox(value = defaults[2])},
                         'T1_e': {'display_text': 'T1_e (ms): ',
-                                'widget': SpinBox(value = defaults[3])},
+                                'widget': SpinBox(value = defaults[3], suffix = 's', siPrefix = True, dec = True)},
                         'n_e': {'display_text': 'n_e: ',
                                 'widget': SpinBox(value = defaults[4])},
                         'c': {'display_text': 'c: ',
@@ -1489,9 +1493,9 @@ class ExpWidget(QWidget):
                         'A': {'display_text': 'A: ',
                                 'widget': SpinBox(value = defaults[0])},
                         'x0': {'display_text': 'x0 (MHz): ',
-                                'widget': SpinBox(value = defaults[1])},
+                                'widget': SpinBox(value = defaults[1], suffix = 'Hz', siPrefix = True, dec = True)},
                         'gamma': {'display_text': '\u03B3 (kHz): ',
-                                'widget': SpinBox(value = defaults[2])},
+                                'widget': SpinBox(value = defaults[2], suffix = 'Hz', siPrefix = True, dec = True)},
                         'c': {'display_text': 'c: ',
                                 'widget': SpinBox(value = defaults[3])}}                    
             case _:
@@ -1782,7 +1786,10 @@ class ExpWidget(QWidget):
 
     def _new_run_queues(self):
         # If you want, you can try to close old queues to release handles earlier
-        for q in (getattr(self, "queue_from_exp", None), getattr(self, "queue_to_exp", None)):
+        for q in (
+            getattr(self, "queue_from_exp", None), 
+            getattr(self, "queue_to_exp", None),
+        ):
             try:
                 if q is not None:
                     q.close()
@@ -1822,22 +1829,33 @@ class ExpWidget(QWidget):
         if self.auto_save_checkbox.isChecked() == True:
             self.to_save = True
             self.select_dir_button.setEnabled(True)
+            self.select_file_format_combobox.setEnabled(True)
             self.filename_lineedit.setEnabled(True)
             # self.opacity_effects[6].setEnabled(False) # change to 6? laser params widget
             self.opacity_effects[12].setEnabled(False)
             self.opacity_effects[13].setEnabled(False)
             self.opacity_effects[14].setEnabled(False)
             self.opacity_effects[15].setEnabled(False)
+            self.opacity_effects[23].setEnabled(False)
 
         else:
             self.to_save = False
             self.select_dir_button.setEnabled(False)
+            self.select_file_format_combobox.setEnabled(False)
             self.filename_lineedit.setEnabled(False)
             # self.opacity_effects[6].setEnabled(True) # change to 6?
             self.opacity_effects[12].setEnabled(True)
             self.opacity_effects[13].setEnabled(True)
             self.opacity_effects[14].setEnabled(True)
             self.opacity_effects[15].setEnabled(True)
+            self.opacity_effects[23].setEnabled(True)
+
+    def file_format_selector(self):
+        match self.select_file_format_combobox.currentText():
+            case 'Format: JSON':
+                self.file_format = "json"
+            case 'Format: Pickle':
+                self.file_format = "pickle"
 
     def save_params_clicked(self):
         params = dict(**self.params_widget.all_params())
@@ -1854,10 +1872,6 @@ class ExpWidget(QWidget):
             # update laser param comboboxes
             self.sideband_opts.insert(0, self.sideband_opts.pop(self.sideband_opts.index(saved_laser_params[5])))
             saved_laser_params[5] = self.sideband_opts
-            self.awg_sampling_group1_opts.insert(0, self.awg_sampling_group1_opts.pop(self.awg_sampling_group1_opts.index(saved_laser_params[8])))
-            saved_laser_params[8] = self.awg_sampling_group1_opts
-            self.awg_sampling_group2_opts.insert(0, self.awg_sampling_group2_opts.pop(self.awg_sampling_group2_opts.index(saved_laser_params[9])))
-            saved_laser_params[9] = self.awg_sampling_group2_opts
 
             # update digitizer param comboboxes
             self.dig_ro_chan_opts.insert(0, self.dig_ro_chan_opts.pop(self.dig_ro_chan_opts.index(saved_dig_params[3])))
@@ -1919,6 +1933,7 @@ class ExpWidget(QWidget):
     def auto_fit_changed(self):
         if self.auto_fit_checkbox.isChecked() == True:
             self.to_fit = True
+            self.fit_select.setEnabled(True)
             self.fit_params_widget.setEnabled(True)
             self.live_fit_checkbox.setEnabled(True)
             self.override_fit_checkbox.setEnabled(True)
@@ -1928,8 +1943,10 @@ class ExpWidget(QWidget):
             self.opacity_effects[20].setEnabled(False)
         else:
             self.to_fit = False
+            self.fit_select.setEnabled(False)
             self.fit_params_widget.setEnabled(False)
             self.live_fit_checkbox.setEnabled(False)
+            self.live_fit_checkbox.setChecked(False)
             self.override_fit_checkbox.setChecked(False)
             self.to_fit_live = False
             self.opacity_effects[17].setEnabled(True)
@@ -2007,11 +2024,11 @@ class ExpWidget(QWidget):
             self.dig_params_widget.setGraphicsEffect(self.opacity_effects[8]) # reset opacity effects
             self.fit_params_widget = FitParamsWidget(self.create_fit_params_widget('Fit None', self.fit_none_default), get_param_value_funs = {ComboBox: self.get_combobox_val})
             self.fit_params_widget.setGraphicsEffect(self.opacity_effects[18]) # reset opacity effects
-            for i in range(23):
+            for i in range(24):
                 self.opacity_effects[i].setEnabled(True)
 
             self.params_widget.setEnabled(False)
-            self.dataset_label.setText("<i>Data Set: N/A</i>")
+            self.dataset_label.setText("Data Set: N/A")
             self.save_params.setText("Save Experiment Parameters")
             self.save_params.setEnabled(False)
             self.mw_params_widget.setEnabled(False)
@@ -2025,9 +2042,10 @@ class ExpWidget(QWidget):
             self.fit_params_widget.setEnabled(False)
             self.auto_save_checkbox.setEnabled(False)
             self.auto_fit_checkbox.setEnabled(False)
+            self.auto_fit_checkbox.setChecked(False)
 
         else:
-            self.dataset_label.setText(f"<i>Data Set: '{self.exp_dict[self.experiments.currentText()][3]}'</i>")
+            self.dataset_label.setText(f"Data Set: '{self.exp_dict[self.experiments.currentText()][3]}'")
             self.daq_b1.setEnabled(True)
             self.daq_b2.setEnabled(True)
             self.detector_b1.setEnabled(True)
@@ -2160,19 +2178,30 @@ class ExpWidget(QWidget):
                 self.dig_params_widget.setEnabled(False)
             
             if self.auto_fit_checkbox.isChecked() == True:
+                self.fit_select.setEnabled(True)
                 self.fit_params_widget.setEnabled(True)
+                self.live_fit_checkbox.setEnabled(True)
+                self.override_fit_checkbox.setEnabled(True)
             else:
+                self.fit_select.setEnabled(False)
                 self.fit_params_widget.setEnabled(False)
+                self.live_fit_checkbox.setEnabled(False)
+                self.live_fit_checkbox.setChecked(False)
+                self.override_fit_checkbox.setEnabled(False)
+                self.override_fit_checkbox.setChecked(False)
+            
+            self.live_fit_changed() # to set live fit value based on current state of live fit checkbox
+            self.override_fit_changed() # to set override fit value based on current state of override fit checkbox
 
     def fit_selector(self):
         # Choose Fit Type", 
-                                #  "Neg. Lorentz.",
-                                #  "Pos. Lorentz.",
-                                #  "Two Neg. Lorentz."
-                                #  "Decaying Cosine",
-                                #  "Stretched Exp.",
-                                #  "Modulated Str. Exp.",
-                                #  "DEER T1 Str. Exp."
+        #  "Neg. Lorentz.",
+        #  "Pos. Lorentz.",
+        #  "Two Neg. Lorentz."
+        #  "Decaying Cos.",
+        #  "Stretched Exp.",
+        #  "Modulated Str. Exp.",
+        #  "DEER T1 Str. Exp."
         self.fit_params_widget.hide()
 
         match self.fit_select.currentText():
@@ -2213,11 +2242,10 @@ class ExpWidget(QWidget):
         
         self.status.setStyleSheet("color: black; background-color: gold; border: 4px solid black;")
         self.status.setText(f"{self.experiments.currentText()} scan in progress...")
-
-        # self.communicator = Communicate()
-        # self.communicator_params = self.communicator.speak.connect(self.retrieve_exp_params)
-        
+   
         self.extra_kwarg_params['save'] = self.to_save
+        self.extra_kwarg_params['file_format'] = self.file_format
+        
         try:
             self.extra_kwarg_params['dataset'] = self.exp_dict[self.experiments.currentText()][3]
         except KeyError as e:
@@ -2234,6 +2262,10 @@ class ExpWidget(QWidget):
             self.extra_kwarg_params['seq'] = self.experiments.currentText()
             self.extra_kwarg_params['fit'] = self.to_fit
             self.extra_kwarg_params['fit_live'] = self.to_fit_live
+            if self.fit_select.currentIndex() == 0:
+                self.extra_kwarg_params['fit_type'] = "None"
+            else:
+                self.extra_kwarg_params['fit_type'] = self.fit_select.currentText()
             self.extra_kwarg_params['fit_params'] = list(self.fit_params_widget.all_params().values()) # send a list of fit parameters to experiment process 
         
             detector = self.get_selected_detector()
@@ -2253,14 +2285,14 @@ class ExpWidget(QWidget):
 
             # reload the module at runtime in case any changes were made to the code
             if self.daq_b1.isChecked(): # digitizer settings
-                reload(nv_experiments_organized_2026_03_03)
+                reload(nv_experiments_2026_03_05)
                 # call the function in a new process
                 self.run_proc.run(
                     run_experiment,
-                    exp_cls = nv_experiments_organized_2026_03_03.SpinMeasurements,
+                    exp_cls = nv_experiments_2026_03_05.SpinMeasurements,
                     fun_name = self.exp_dict[self.experiments.currentText()][0],
                     constructor_args = list(),
-                    constructor_kwargs = dict(),
+                    constructor_kwargs=dict(queue_to_inst=self.exp_inst_queue),
                     queue_to_exp = self.queue_to_exp,
                     queue_from_exp = self.queue_from_exp,
                     fun_args = list(),
