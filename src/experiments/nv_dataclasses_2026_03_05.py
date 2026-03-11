@@ -32,6 +32,7 @@ class ODMRScanCfg:
     dig_timeout: float
     directory: str
     filename: str
+    fit_type: str
     fit: bool
     fit_live: bool
     fit_params: dict
@@ -95,6 +96,7 @@ class RabiScanCfg:
     dig_timeout: float
     directory: str
     filename: str
+    fit_type: str
     fit: bool
     fit_live: bool
     fit_params: dict
@@ -130,6 +132,7 @@ class PulsedODMRScanCfg:
     dig_timeout: float
     directory: str
     filename: str
+    fit_type: str
     fit: bool
     fit_live: bool
     fit_params: dict
@@ -163,6 +166,7 @@ class PulsedODMRRFScanCfg:
     dig_timeout: float
     directory: str
     filename: str
+    fit_type: str
     fit: bool
     fit_live: bool
     fit_params: dict
@@ -201,6 +205,7 @@ class MWT1ScanCfg:
     dig_timeout: float
     directory: str
     filename: str
+    fit_type: str
     fit: bool
     fit_live: bool
     fit_params: dict
@@ -239,6 +244,7 @@ class T2ScanCfg:
     dig_timeout: float
     directory: str
     filename: str
+    fit_type: str
     fit: bool
     fit_live: bool
     fit_params: dict
@@ -279,6 +285,7 @@ class T2RFScanCfg:
     dig_timeout: float
     directory: str
     filename: str
+    fit_type: str
     fit: bool
     fit_live: bool
     fit_params: dict
@@ -357,6 +364,7 @@ class DEERScanCfg:
     directory: str
     drive_type: str
     filename: str
+    fit_type: str
     fit: bool
     fit_live: bool
     fit_params: dict
@@ -396,6 +404,7 @@ class DEERRabiScanCfg:
     dig_timeout: float
     directory: str
     filename: str
+    fit_type: str
     fit: bool
     fit_live: bool
     fit_params: dict
@@ -515,6 +524,7 @@ class DEERCorrScanCfg:
     dig_timeout: float
     directory: str
     filename: str
+    fit_type: str
     fit: bool
     fit_live: bool
     fit_params: dict
@@ -556,6 +566,7 @@ class DEERCorrRabiScanCfg:
     dig_timeout: float
     directory: str
     filename: str
+    fit_type: str
     fit: bool
     fit_live: bool
     fit_params: dict
@@ -598,6 +609,7 @@ class DEERT1ScanCfg:
     dig_timeout: float
     directory: str
     filename: str
+    fit_type: str
     fit: bool
     fit_live: bool
     fit_params: dict
