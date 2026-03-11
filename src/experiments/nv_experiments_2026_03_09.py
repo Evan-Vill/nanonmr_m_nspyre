@@ -4855,6 +4855,271 @@ class SpinMeasurements:
                     exception=exception_type if failed else None,
                 ))                
     
+    @managed_experiment(token_prefix="CASRIR", dataset_key="dataset")
+    def CASRIR_scan(self, *, mgr, data, token, **kwargs):
+        """
+        Run a Coherently Averaged Synchronized Readout NMR sweep over a range of frequencies.
+        Choose either coil drive or RF pi/2 pulse for nuclear spin control."""
+        cfg = nvcfg.CASRIRScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
+
+        ### --- Devices --- ###
+        laser = mgr.laser
+        laser_shutter = mgr.laser_shutter
+        daq = mgr.daq
+        sig_gen = mgr.sg
+        ps = mgr.ps
+        hdawg = mgr.awg
+        
+        ### --- Intervals in pulse sequence used to define time points on x-axis in seconds --- ###
+        laser_init_time = cfg.laser_init*1e9
+        singlet_decay = 500 
+        pi = [cfg.pi*1e9, cfg.pi*1e9]
+        pi_half = [pi[0]/2, pi[1]/2]
+        tau = int(cfg.tau*1e9) # half period of central frequency [ns] - used in DD blocks
+        print(f"tau = {tau} ns")
+        period = 2*tau
+
+        dd_time = pi_half[0] + (4*pi[0] + 4*pi[1] + 8*tau)*cfg.n + pi_half[1]
+
+        mw_buffer_time = 100 # buffer time between DD block and readout pulse [ns]
+        laser_read_time = cfg.laser_readout*1e9 # laser readout pulse [ns]
+        wait_time = 100 # dead time at end of sequence before next subsequence [ns]
+
+        t_seq = laser_init_time + singlet_decay + dd_time + mw_buffer_time + laser_read_time + wait_time # total time for one full CASR sequence [ns]
+        print(f"initial t_seq = {t_seq}")
+        try:
+            if t_seq % period != 0:
+                nearest_integer = np.ceil(t_seq/period)
+                new_t_seq = nearest_integer * period
+                wait_time = new_t_seq - (t_seq - wait_time)
+                assert wait_time >= 0, "new wait_time is unphysical (negative)"
+                t_seq = new_t_seq
+        except AssertionError as e:
+            self.queue_from_exp.put_nowait([0, 'failed', None, e])
+        else:
+            try:
+                if t_seq % period > 1e-6:
+                    assert math.isclose(t_seq % period, period, abs_tol=1e-9), "Adjusted 't_seq' still not an integer multiple of 1/f0"
+                print(f"New wait time = {wait_time}")
+                print(f"t_seq = {t_seq} ns")
+                print(f"period = {period} ns")
+                print(f"\u0394f = f - f0 = {(0.5/((tau+pi[0])*1e-9) - cfg.rf_pulse_freq)/1000} kHz")
+            except AssertionError as e:  
+                self.queue_from_exp.put_nowait(self.build_status_msg(
+                    status="failed",
+                    percent_completed=0,
+                    fit_value=None,
+                    fit_error=None,
+                    start_time=time.perf_counter(),
+                    total_iters=cfg.iters,
+                    iters_completed=0,
+                    exception=type(e).__name__,
+                ))
+            else:
+                ### --- Define time points for x-axis based on sequence parameters --- ###
+                times = np.linspace(t_seq - wait_time - laser_read_time / 2, cfg.num_pts * t_seq, cfg.num_pts) * 1e-9
+
+                ### --- Define NV drive parameters --- ###
+                sig_gen_freq, iq_phases = self.choose_sideband(cfg.sideband, cfg.freq, cfg.sideband_freq) # iq_phases for x pulse by default
+
+                self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=cfg.rf_pulse_power) # configure signal generator for NV drive
+
+                ### --- Default fit parameters for live fitting --- ###
+                fit_value, fit_error = [], []
+                fit_x = times
+                fit_y = np.ones(len(fit_x))
+
+                ### --- Set up pulse streamer and digitizer for experiment --- ###
+                if cfg.sig_opt == 'Coil':
+                    print("Using CASR Coil sequence")
+                    rf_duration = cfg.num_pts * t_seq * 1e-9 # coil on for entire sequence duration
+                    seq_rf = ps.CASR_RF_Coil() # coil drive version
+                else:
+                    rf_duration = cfg.rf_pi_half # RF pi/2 pulse duration for nuclear spin control
+                    seq_rf = ps.CASR_RF(cfg.rf_pi_half * 1e9)
+                
+                seq_nv = ps.CASR_NV(laser_init_time, singlet_decay, 
+                                pi_half[0], pi_half[1], pi[0], pi[1], 
+                                tau, cfg.n, mw_buffer_time, cfg.laser_readout, wait_time) # NV DD subsequence
+                
+                dig_cfg = self.digitizer_configure(
+                    exp_type="CASR",
+                    num_pts=cfg.num_pts,
+                    iters=cfg.iters,
+                    segment_size=cfg.segment_size,
+                    sampling_freq=cfg.dig_sampling_freq,
+                    dig_amplitude=cfg.dig_amplitude,
+                    read_channel=cfg.read_channel,
+                    coupling=cfg.dig_coupling,
+                    termination=cfg.dig_termination,
+                    pretrig_size=cfg.pretrig_size,
+                    dig_timeout=cfg.dig_timeout,
+                    runs=cfg.runs,
+                )
+
+                ### --- Upload AWG sequence --- ##
+                try:
+                    hdawg.set_sequence(**{
+                        'seq': 'CASR',
+                        'i_offset': cfg.i_offset,
+                        'q_offset': cfg.q_offset,
+                        'sideband_power': cfg.sideband_power,
+                        'sideband_freq': cfg.sideband_freq, 
+                        'iq_phases': iq_phases,
+                        'pihalf_x': pi_half[0]/1e9,
+                        'pihalf_y': pi_half[1]/1e9,
+                        'pi_x': pi[0]/1e9, 
+                        'pi_y': pi[1]/1e9,
+                        'n_R': cfg.num_pts,
+                        'n': cfg.n,
+                        'rf_freq': cfg.rf_pulse_freq,
+                        'rf_power': cfg.rf_pulse_power,
+                        'rf_phase': cfg.rf_pulse_phase,
+                        'rf_pihalf': rf_duration})
+                        # 'rf_pihalf': cfg.rf_pi_half})  
+                        # 'rf_pihalf': cfg.num_pts*t_seq*1e-9})
+                except Exception as e:
+                    self.queue_from_exp.put_nowait(self.build_status_msg(
+                        status="failed",
+                        percent_completed=0,
+                        fit_value=fit_value,
+                        fit_error=fit_error,
+                        start_time=time.perf_counter(),
+                        total_iters=cfg.iters,
+                        iters_completed=0,
+                        exception=type(e).__name__,
+                    ))
+                    return
+                
+                signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
+
+                self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
+                laser.set_diode_current_realtime(cfg.laser_power) # set laser power
+
+                ### --- Initialize experiment state variables --- ###
+                stopped = False
+                failed = False
+                exception_type = None
+                iters_completed = 0
+                percent_completed = 0
+
+                ### --- Open laser shutter and emit MW for NV drive --- ###
+                with self._shutter_open(laser_shutter, cfg.detector), _rf_on(sig_gen):
+                    try:
+                        ps.set_soft_trigger()
+
+                        # new pulse streamer format:
+                        # upload both sequences to pulse streamer
+                        # 1. CASR RF sequence -> pi/2 on nuclear spins (n_runs = 1)
+                        # 2. CASR NV sequence -> pi/2 on electron spins (n_runs = num_pts x 2)
+                        ps.upload(slot_nr=0, data=seq_rf, n_runs=1, next_action=NextAction.SWITCH_SLOT, when=When.IMMEDIATE, owner=token) #upload initial sequence data with n_runs=1
+                        ps.upload(slot_nr=1, data=seq_nv, n_runs=cfg.num_pts*2,next_action=NextAction.SWITCH_SLOT, when=When.IMMEDIATE, owner=token) #upload measurement sequence with n_runs=num_pts*2
+                        
+                        ps.start(slot_nr=0, slots_to_run=PulseStreamer.REPEAT_INFINITELY, owner=token) # start on slot 0 (seq_rf) and run rf and nv sequences alternatively infinitely, switching slots automatically 
+                        
+                        self.dig.config()
+                        self.dig.start_buffer()
+                        ps.start_now(owner=token)
+                    except Exception as e:
+                        self.queue_from_exp.put_nowait(self.build_status_msg(
+                            status="failed",
+                            percent_completed=0,
+                            fit_value=fit_value,
+                            fit_error=fit_error,
+                            start_time=time.perf_counter(),
+                            total_iters=cfg.iters,
+                            iters_completed=0,
+                            exception=type(e).__name__,
+                        ))
+                        return
+            
+                    exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
+
+                    ### --- Main experiment loop --- ###
+                    for i in range(cfg.iters):
+                        if experiment_widget_process_queue(self.queue_to_exp) == "stop":
+                            stopped = True
+                            iters_completed = i
+                            percent_completed = int(100 * iters_completed / cfg.iters)
+                            break
+
+                        try:     
+                            casr_result_raw = self.dig.acquire() # acquire data from digitizer
+                            casr_result = np.mean(casr_result_raw,axis=1) # average all data over each trigger/segment 
+                        except Exception as e:
+                            failed = True
+                            exception_type = type(e).__name__
+                            iters_completed = i
+                            percent_completed = int(100 * iters_completed / cfg.iters)
+                            break
+
+                        try:
+                            sig, bg = self.analog_math(casr_result, 'CASR', cfg.num_pts) # partition buffer into signal and background datasets
+                        except ValueError:
+                            continue
+
+                        signal_sweeps.append(np.stack([times[:-1]*1e3, sig[:-1]])); signal_sweeps.updated_item(-1) # exclude last point (outlier)
+                        background_sweeps.append(np.stack([times[:-1]*1e3, bg[:-1]])); background_sweeps.updated_item(-1) # exclude last point (outlier)
+                        
+                        if kwargs.get("fit_live", False):  
+                            with warnings.catch_warnings():
+                                warnings.simplefilter("error", OptimizeWarning)
+                                try:
+                                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
+                                except (RuntimeError, OptimizeWarning) as e:
+                                    _logger.warning(f"For {cfg.dataset} measurement, {e}")
+                        
+                        iters_completed = i + 1
+                        percent_completed = int(100 * iters_completed / cfg.iters)
+
+                        data.push({'params': {'kwargs': kwargs, 'iters_completed': iters_completed, 'elapsed': time.perf_counter() - exp_start_time},
+                                        'title': 'CASR Time Domain Data',
+                                        'xlabel': 'Free Precession Interval (ms) or Frequency (kHz)',
+                                        'ylabel': 'Signal (V) or Norm. Signal',
+                                        'datasets': {'signal' : signal_sweeps,
+                                                    'background': background_sweeps}
+                        })
+
+                        self.queue_from_exp.put_nowait(self.build_status_msg(
+                            status="in progress",
+                            percent_completed=percent_completed,
+                            fit_value=fit_value,
+                            fit_error=fit_error,
+                            start_time=exp_start_time,
+                            total_iters=cfg.iters,
+                            iters_completed=iters_completed,
+                        ))
+
+                ### --- Experiment complete: final save and status update --- ###
+                if not stopped and not failed:
+                    iters_completed, percent_completed = cfg.iters, 100
+
+                # if kwargs.get("fit", False):
+                #     with warnings.catch_warnings():
+                #         warnings.simplefilter("error", OptimizeWarning)
+                #         try:
+                #             fit_value, fit_error, fit_x, fit_y = self.fit_data(
+                #                 cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
+                #             )
+                #         except (RuntimeError, OptimizeWarning) as e:
+                #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
+
+                if kwargs.get("save", False):
+                    run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
+
+                status = "failed" if failed else ("stopped" if stopped else "complete")
+                self.queue_from_exp.put_nowait(self.build_status_msg(
+                    status=status,
+                    percent_completed=int(percent_completed),
+                    fit_value=fit_value,
+                    fit_error=fit_error,
+                    start_time=exp_start_time,
+                    total_iters=cfg.iters,
+                    iters_completed=iters_completed,
+                    exception=exception_type if failed else None,
+                ))                
+    
+
 
     ############################
     ### --- Data Fitting --- ###
