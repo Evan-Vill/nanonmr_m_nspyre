@@ -1,10 +1,10 @@
 from nspyre import DataSink
 from pyqtgraph import SpinBox, ComboBox
-from PyQt5.QtWidgets import QLabel, QPushButton, QCheckBox, QComboBox, QLineEdit, QRadioButton, QSlider, QDoubleSpinBox
-from PyQt5.QtWidgets import QFrame, QVBoxLayout, QHBoxLayout, QGridLayout, QFormLayout, QWidget
-from PyQt5.QtWidgets import QStackedWidget, QWidget, QGraphicsOpacityEffect, QApplication
-from PyQt5.QtGui import QFont, QColor, QIcon, QPixmap
-from PyQt5.QtCore import Qt, QTimer
+from PyQt6.QtWidgets import QLabel, QPushButton, QCheckBox, QComboBox, QLineEdit, QRadioButton, QSlider, QDoubleSpinBox
+from PyQt6.QtWidgets import QFrame, QVBoxLayout, QHBoxLayout, QGridLayout, QFormLayout, QWidget
+from PyQt6.QtWidgets import QStackedWidget, QWidget, QGraphicsOpacityEffect, QApplication
+from PyQt6.QtGui import QFont, QColor, QIcon, QPixmap
+from PyQt6.QtCore import Qt, QTimer
 
 
 

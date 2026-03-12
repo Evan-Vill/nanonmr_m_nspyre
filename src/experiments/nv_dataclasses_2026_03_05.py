@@ -4,14 +4,21 @@ from dataclasses import dataclass
 class SignalScanCfg:
     dataset: str
     exp_sampling_rate: float
+    exp_sampling_rate_0: float
     segment_size: int
     read_channel: int
     pretrig_size: int
     dig_sampling_freq: float
     dig_amplitude: float
+    dig_coupling: str
+    dig_termination: str
     dig_timeout: float
     laser_power: float
     save: bool
+    fit_type: str
+    fit: bool
+    fit_live: bool
+    fit_params: dict
     file_format: str
     directory: str
     filename: str
@@ -38,7 +45,9 @@ class ODMRScanCfg:
     fit_params: dict
     half_span_sideband_freq: float
     i_offset: float
+    laser_init: float
     laser_power: float
+    laser_readout: float
     pretrig_size: int
     probe: float
     q_offset: float
@@ -47,6 +56,8 @@ class ODMRScanCfg:
     save: bool
     file_format: str
     segment_size: int
+    sideband: str
+    sideband_freq: float
     sideband_power: float
 
 @dataclass(frozen=True)
@@ -67,7 +78,9 @@ class ODMRSmartScanCfg:
     fit_params: dict
     half_span_sideband_freq: float
     i_offset: float
+    laser_init: float
     laser_power: float
+    laser_readout: float
     pretrig_size: int
     probe: float
     q_offset: float
@@ -76,6 +89,8 @@ class ODMRSmartScanCfg:
     save: bool
     file_format: str
     segment_size: int
+    sideband: str
+    sideband_freq: float
     sideband_power: float
     start_angle: float
     stop_angle: float

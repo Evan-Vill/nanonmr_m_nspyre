@@ -435,10 +435,9 @@ class SpinMeasurements:
                     )
 
     def sigvstime_scan(self, **kwargs):     
+        cfg = nvcfg.SignalScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
         with InstrumentManager() as mgr, DataSource(cfg.dataset) as sigvstime_data:
-            # run laser on continuously here from laser driver
-            cfg = nvcfg.SignalScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
-            
+            # run laser on continuously here from laser driver            
             laser = mgr.laser
             laser_shutter = mgr.laser_shutter
             daq = mgr.daq
@@ -735,21 +734,10 @@ class SpinMeasurements:
         ))
         
     def odmr_smart_scan(self, **kwargs):
-        """
-        Run a CW ODMR sweep over a set of microwave frequencies.
-
-        Keyword args:
-            dataset: name of the dataset to push data to
-            start (float): start frequency
-            stop (float): stop frequency
-            num_pts (int): number of points between start-stop (inclusive)
-            iterations: number of times to repeat the experiment
-        """
-        # connect to the instrument server & the data server.
-        # create a data set, or connect to an existing one with the same name if it was created earlier.
+        """Run a CW ODMR smart scan sweep over a set of magnet angles to determine best alignment."""
+    
+        cfg = nvcfg.ODMRSmartScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
         with InstrumentManager() as mgr, DataSource(cfg.dataset) as cw_odmr_data:
-            cfg = nvcfg.ODMRSmartScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
-            
             ### --- Devices --- ###
             laser = mgr.laser
             laser_shutter = mgr.laser_shutter
