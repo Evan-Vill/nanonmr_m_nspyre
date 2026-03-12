@@ -24,8 +24,8 @@ from PyQt6.QtWidgets import QWidget, QComboBox, QPushButton, QLabel, QInputDialo
 from nspyre.data.sink import DataSink
 from nspyre.gui.threadsafe import QThreadSafeObject
 from nspyre.gui.widgets.layout import tree_layout
-from line_plot_2026_03_05 import LinePlotWidget
-from nspyre_colors_2026_03_05 import cyclic_colors
+from styling.line_plot_2026_03_05 import LinePlotWidget
+from styling.nspyre_colors_2026_03_05 import cyclic_colors
 
 _logger = logging.getLogger(__name__)
 
@@ -2402,7 +2402,7 @@ class PlotColorManager:
             fit_color = "k" if self.mode == "light" else "w" # black fit for light mode, white fit for dark mode
             fit_pen = pg.mkPen(
                 color=fit_color,
-                width=5,
+                width=7,
                 style=Qt.PenStyle.SolidLine,
             )
             

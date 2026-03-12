@@ -6,7 +6,7 @@ from typing import Optional
 
 from pyqtgraph import SpinBox
 from pyqtgraph.Qt import QtWidgets
-
+from PyQt6 import QtCore
 
 class ParamsWidget(QtWidgets.QWidget):
     """Qt widget containing a set of GUI elements for the user to enter experiment \
@@ -257,7 +257,7 @@ class FitParamsWidget(QtWidgets.QWidget):
             )
             display_text = self.params_config[p].get("display_text", p)
             label.setText(display_text)
-            layout.addWidget(label, layout_row, 0)
+            layout.addWidget(label, layout_row, 0, alignment=QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignVCenter)
 
             if "widget" not in self.params_config[p]:
                 raise ValueError(f'parameter [{p}] does not have a "widget" key')
@@ -265,9 +265,12 @@ class FitParamsWidget(QtWidgets.QWidget):
             if not isinstance(self.widgets[p], QtWidgets.QWidget):
                 raise ValueError(f'parameter [{p}] widget is not a QWidget')
 
-            self.widgets[p].setMinimumWidth(50)
-            self.widgets[p].setMaximumWidth(75)
+            self.widgets[p].setMinimumWidth(90)
             self.widgets[p].setFixedHeight(22)
+            self.widgets[p].setSizePolicy(
+                QtWidgets.QSizePolicy.Policy.Expanding,
+                QtWidgets.QSizePolicy.Policy.Fixed,
+            )
             layout.addWidget(self.widgets[p], layout_row, 1)
 
             fit_label = QtWidgets.QLabel("---")
@@ -285,10 +288,14 @@ class FitParamsWidget(QtWidgets.QWidget):
                 font-family: Consolas, 'Courier New', monospace;
                 }
             """)
-            layout.addWidget(fit_label, layout_row, 2)
+            layout.addWidget(fit_label, layout_row, 2, alignment=QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter)
             self.fit_labels[p] = fit_label
 
             layout_row += 1
+
+        layout.setColumnStretch(0, 0)
+        layout.setColumnStretch(1, 2)
+        layout.setColumnStretch(2, 1)
 
         self.setLayout(layout)
 

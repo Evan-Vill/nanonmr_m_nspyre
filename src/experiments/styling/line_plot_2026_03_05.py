@@ -12,9 +12,8 @@ from pyqtgraph.Qt import QtCore
 from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtWidgets
 
-from nspyre_colors_2026_03_05 import colors
-from nspyre_colors_2026_03_05 import cyclic_colors
-from nspyre_style_2026_03_05 import nspyre_font
+from styling.nspyre_colors_2026_03_05 import colors, cyclic_colors
+from styling.nspyre_style_2026_03_05 import nspyre_font
 from nspyre.gui.threadsafe import QThreadSafeObject
 from nspyre.gui.widgets.update_loop import UpdateLoop
 

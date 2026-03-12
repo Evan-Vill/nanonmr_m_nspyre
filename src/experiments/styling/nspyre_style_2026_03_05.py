@@ -6,11 +6,7 @@ from pathlib import Path
 from pyqtgraph.Qt import QtCore
 from pyqtgraph.Qt import QtGui
 
-from nspyre_colors_2026_03_05 import almost_white
-from nspyre_colors_2026_03_05 import avg_colors
-from nspyre_colors_2026_03_05 import blackish
-from nspyre_colors_2026_03_05 import dark_grey
-from nspyre_colors_2026_03_05 import grey
+from styling.nspyre_colors_2026_03_05 import almost_white, avg_colors, blackish, dark_grey, grey
 
 HERE = Path(__file__).parent
 
@@ -52,4 +48,4 @@ nspyre_palette.setColor(
 
 nspyre_style_sheet = (HERE / 'style.qss').read_text()
 
-nspyre_font = QtGui.QFont('Helvetica [Cronyx]', 14)
+nspyre_font = QtGui.QFont('Segoe UI', 20)

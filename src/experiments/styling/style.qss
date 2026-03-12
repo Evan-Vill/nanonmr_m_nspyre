@@ -1,4 +1,18 @@
 /* Formatting for site-wide QToolTip objects, but written for use with the Instrument Manager */
+QWidget {
+    font-family: "Segoe UI";
+    font-size: 20pt;
+}
+
+QGroupBox {
+    font-weight: bold;
+    font-size: 11pt;
+}
+
+QDoubleSpinBox, QSpinBox {
+    font-family: "Consolas";
+}
+
 QToolTip {
     border: none;
     padding: 0.25em;
