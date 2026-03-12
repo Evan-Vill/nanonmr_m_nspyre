@@ -113,13 +113,13 @@ class InstWidget(QWidget):
         self.phi_max = 100
 
         self.white_border = "border: 1px solid white"
-        self.font = "Arial"
+        self.font = "Segoe UI"
 
         self.q = Queue()
 
         # magnet stage widgets
         self.magnet_label = QLabel("Magnet Stage Control")
-        self.magnet_label.setFixedHeight(30)
+        self.magnet_label.setFixedHeight(40)
         self.magnet_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.magnet_label.setFont(QFont(self.font, 20))
 
@@ -428,25 +428,44 @@ class InstWidget(QWidget):
     # CREATE WIDGETS
     def init_b_widgets(self):
         """B field widgets"""
-        self.b_label = QLabel("B Field (G)")
-        self.b_label.setFixedHeight(30)
+        self.b_label = QLabel("Magnetic Field")
+        self.b_label.setFixedHeight(40)
         self.b_label.setFont(QFont(self.font, 20))
 
         self.phi_label = QLabel("Set \u03c6: ")
-        self.phi_label.setFixedHeight(30)
+        self.phi_label.setFixedHeight(40)
         self.phi_label.setFont(QFont(self.font, 20))
 
         self.phi_position = QLineEdit()
         self.phi_position.setStyleSheet("QLineEdit { border: 1px solid #666666; }")
 
-        self.target_b_label = QLabel("B Field (G): ")
-        self.target_b_label.setFixedHeight(30)
+        self.target_b_label = QLabel("Field (G): ")
+        self.target_b_label.setFixedHeight(40)
         self.target_b_label.setFont(QFont(self.font, 20))
 
         self.target_b_value = QLineEdit()
         self.target_b_value.setStyleSheet("QLineEdit { border: 1px solid #666666; }")
 
+        b_field_button_style = """
+        QPushButton {
+        background-color: #7D001D;
+        color: white;
+        border: 2px solid #D70061;
+        border-radius: 5px;
+        padding: 5px;
+        }
+        
+        QPushButton:hover {
+        background-color: #4B0024;
+        border: 2px solid #D7007A;
+        }
+        
+        QPushButton:pressed {
+        background-color: #5F0047;
+        border: 2px solid #D70061;
+        }"""
         self.b_execute_button = QPushButton("Go To B Field")
+        self.b_execute_button.setStyleSheet(b_field_button_style)
         self.b_execute_button_proc = ProcessRunner()
         self.b_execute_button.clicked.connect(
             lambda: self.single_move_clicked("B_zaber")
@@ -461,7 +480,7 @@ class InstWidget(QWidget):
             self.r_opacity_effects.append(effect)
 
         self.r_label = QLabel("Step 3: R")
-        self.r_label.setFixedHeight(30)
+        self.r_label.setFixedHeight(40)
         self.r_label.setFont(QFont(self.font, 20))
 
         self.r_move_checkbox = QCheckBox("R Move Type: ")
@@ -510,7 +529,7 @@ class InstWidget(QWidget):
             self.polar_opacity_effects.append(effect)
 
         self.polar_label = QLabel("Step 2: \u03b8")
-        self.polar_label.setFixedHeight(30)
+        self.polar_label.setFixedHeight(40)
         self.polar_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.polar_label.setFont(QFont(self.font, 20))
 
@@ -559,7 +578,7 @@ class InstWidget(QWidget):
             self.azi_opacity_effects.append(effect)
 
         self.azi_label = QLabel("Step 1: \u03c6")
-        self.azi_label.setFixedHeight(30)
+        self.azi_label.setFixedHeight(40)
         self.azi_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.azi_label.setFont(QFont(self.font, 20))
 
@@ -869,7 +888,7 @@ class InstWidget(QWidget):
         
         awg_stylesheet = """
         QComboBox {
-            border: 3px solid lightblue;
+            border: 3px solid #AB5E00;
             border-radius: 3px;
             padding: 1px 18px 1px 3px;
             min-width: 6em;
@@ -887,10 +906,30 @@ class InstWidget(QWidget):
         }
 
         QComboBox QAbstractItemView {
-            border: 1px solid lightblue;
-            selection-background-color: lightblue;
+            border: 1px solid #AB5E00;
+            selection-background-color: #AB5E00;
         }
         """
+
+        awg_button_style = """
+        QPushButton {
+        background-color: #4B3700;
+        color: white;
+        border: 2px solid #D78100;
+        border-radius: 5px;
+        padding: 5px;
+        }
+        
+        QPushButton:hover {
+        background-color: #4B1200;
+        border: 2px solid #D73D00;
+        }
+        
+        QPushButton:pressed {
+        background-color: #5F3C00;
+        border: 2px solid #D78F00;
+        }"""
+
         # self.awg_volt_range_ch1_opts = ["0.2 V", "0.4 V", "0.6 V", "0.8 V", "1 V", "2 V", "3 V", "4 V", "5 V"]
         # self.awg_volt_range_ch2_opts = ["0.2 V", "0.4 V", "0.6 V", "0.8 V", "1 V", "2 V", "3 V", "4 V", "5 V"]
         self.awg_volt_range_ch3_opts = ["0.2 V", "0.4 V", "0.6 V", "0.8 V", "1 V", "2 V", "3 V", "4 V", "5 V"]
@@ -904,8 +943,11 @@ class InstWidget(QWidget):
         self.awg_volt_range_ch4_combobox.addItems(self.awg_volt_range_ch4_opts)
         self.awg_volt_range_ch4_combobox.currentIndexChanged.connect(self.awg_volt_range_ch4_changed)
 
+        self.awg_volt_range_ch3_str = self.awg_volt_range_ch3_combobox.currentText()
+        self.awg_volt_range_ch4_str = self.awg_volt_range_ch4_combobox.currentText()
+
         self.apply_awg_volts_button = QPushButton("Apply Volt Ranges")
-        self.apply_awg_volts_button.setStyleSheet(awg_stylesheet)
+        self.apply_awg_volts_button.setStyleSheet(awg_button_style)
         self.apply_awg_volts_button.clicked.connect(self.apply_awg_volt_ranges)
 
         self.awg_sampling_group0_opts = ["2.4 GHz", "1.2 GHz", "600 MHz", "300 MHz", "150 MHz", "75 MHz", "37.5 MHz", "18.75 MHz", "9.37 MHz", "4.68 MHz",
@@ -926,8 +968,11 @@ class InstWidget(QWidget):
             1: self.awg_samp_rate_group_1_combobox
         }
 
+        self.awg_samp_rate_group_0_str = self.awg_samp_rate_boxes[0].currentText()
+        self.awg_samp_rate_group_1_str = self.awg_samp_rate_boxes[1].currentText()
+
         self.apply_awg_rates_button = QPushButton("Apply Rates")
-        self.apply_awg_rates_button.setStyleSheet(awg_stylesheet)
+        self.apply_awg_rates_button.setStyleSheet(awg_button_style)
         self.apply_awg_rates_button.clicked.connect(self.apply_awg_rates)
 
         self.awg_status_label = QLabel("AWG status here")
@@ -1048,7 +1093,7 @@ class InstWidget(QWidget):
         self.magnet_frame = QFrame(self)
         self.magnet_frame.setObjectName("magFrame")
         self.magnet_frame.setStyleSheet(
-            "QFrame#magFrame {background-color: #2b2b2b; border: 2px solid #717171; "
+            "QFrame#magFrame {background-color: #331313; border: 2px solid #854141; "
             "border-radius: 5px;}"
         )
         self.magnet_layout = QGridLayout(self.magnet_frame)
@@ -1068,7 +1113,7 @@ class InstWidget(QWidget):
         self.b_frame = QFrame(self)
         self.b_frame.setObjectName("bFrame")
         self.b_frame.setStyleSheet(
-            "QFrame#bFrame {background-color: #20373b; border: 2px solid #47747c; "
+            "QFrame#bFrame {background-color: #703F3F; border: 2px solid #CF6161; "
             "border-radius: 5px;}"
         )
         self.b_layout = QGridLayout(self.b_frame)
@@ -1156,8 +1201,11 @@ class InstWidget(QWidget):
         self.sg396_frame = QFrame(self)
         self.sg396_frame.setObjectName("sgFrame")
         self.sg396_frame.setStyleSheet(
-            "QFrame#sgFrame {background-color: #2b2b2b; border: 2px solid #717171;"
-            " border-radius: 5px;}"
+            "QFrame#sgFrame {"
+            "background-color: #340F3B;"
+            "border: 2px solid #983BB3;"
+            " border-radius: 5px;"
+            "}"
         )
         self.sg396_layout = QGridLayout(self.sg396_frame)
         self.sg396_layout.setSpacing(0)
@@ -1173,7 +1221,36 @@ class InstWidget(QWidget):
         self.sig_gens_layout.setSpacing(0)
         self.sig_gens_layout.addWidget(self.sg396_frame, 1, 1, 1, 1)
 
-        # laser & detector
+        ### --- AWG Control Frame --- ### 
+        self.awg_control_frame = QFrame(self)
+        self.awg_control_frame.setObjectName("awgControlFrame")
+        self.awg_control_frame.setStyleSheet(
+            "QFrame#awgControlFrame {"
+            "background-color: #3b1f0f;"      # dark brown background
+            "border: 2px solid #c68642;"      # warm tan / copper border
+            "border-radius: 5px;"
+            "}"
+        )
+        self.awg_control_layout = QGridLayout(self.awg_control_frame)
+        self.awg_control_layout.setSpacing(0)
+        self.awg_control_layout.addWidget(self.awg_label, 1, 1, 1, 4)
+        self.awg_control_layout.addWidget(self.awg_volt_range_ch3_label, 2, 1, 1, 1)
+        self.awg_control_layout.addWidget(self.awg_volt_range_ch3_combobox, 2, 2, 1, 1)
+        self.awg_control_layout.addWidget(self.awg_samp_rate_group0_label, 2, 3, 1, 1)
+        self.awg_control_layout.addWidget(self.awg_samp_rate_group_0_combobox, 2, 4, 1, 1)
+        self.awg_control_layout.addWidget(self.awg_volt_range_ch4_label, 3, 1, 1, 1)
+        self.awg_control_layout.addWidget(self.awg_volt_range_ch4_combobox, 3, 2, 1, 1)
+        self.awg_control_layout.addWidget(self.awg_samp_rate_group1_label, 3, 3, 1, 1)
+        self.awg_control_layout.addWidget(self.awg_samp_rate_group_1_combobox, 3, 4, 1, 1)
+        self.awg_control_layout.addWidget(self.apply_awg_volts_button, 4, 1, 1, 2)
+        self.awg_control_layout.addWidget(self.apply_awg_rates_button, 4, 3, 1, 2)
+        self.awg_control_layout.addWidget(self.awg_status_label, 5, 1, 1, 4)
+        
+        self.awg_layout = QGridLayout()
+        self.awg_layout.setSpacing(0)
+        self.awg_layout.addWidget(self.awg_control_frame, 1, 1, 1, 1)
+
+        ### --- Laser Control Frame --- ###
         self.laser_control_frame = QFrame(self)
         self.laser_control_frame.setObjectName("laserControlFrame")
         self.laser_control_frame.setStyleSheet(
@@ -1193,30 +1270,6 @@ class InstWidget(QWidget):
         self.laser_controls_layout.addWidget(self.laser_b2, 4, 2, 1, 1)
         self.laser_controls_layout.addWidget(self.laser_shutter_button, 4, 3, 1, 1)
         self.laser_controls_layout.addWidget(self.laser_alarm_reset_button, 5, 1, 1, 3)
-        
-        self.awg_control_frame = QFrame(self)
-        self.awg_control_frame.setObjectName("awgControlFrame")
-        self.awg_control_frame.setStyleSheet(
-            "QFrame#deviceStatusFrame {"
-            "background-color: #3b1f0f;"      # dark brown background
-            "border: 2px solid #c68642;"      # warm tan / copper border
-            "border-radius: 5px;"
-            "}"
-        )
-        self.awg_control_layout = QGridLayout(self.awg_control_frame)
-        self.awg_control_layout.setSpacing(0)
-        self.awg_control_layout.addWidget(self.awg_label, 1, 1, 1, 2)
-        self.awg_control_layout.addWidget(self.awg_volt_range_ch3_label, 2, 1, 1, 1)
-        self.awg_control_layout.addWidget(self.awg_volt_range_ch3_combobox, 2, 2, 1, 1)
-        self.awg_control_layout.addWidget(self.awg_volt_range_ch4_label, 3, 1, 1, 1)
-        self.awg_control_layout.addWidget(self.awg_volt_range_ch4_combobox, 3, 2, 1, 1)
-        self.awg_control_layout.addWidget(self.apply_awg_volts_button, 4, 1, 1, 2)
-        self.awg_control_layout.addWidget(self.awg_samp_rate_group0_label, 5, 1, 1, 1)
-        self.awg_control_layout.addWidget(self.awg_samp_rate_group_0_combobox, 5, 2, 1, 1)
-        self.awg_control_layout.addWidget(self.awg_samp_rate_group1_label, 6, 1, 1, 1)
-        self.awg_control_layout.addWidget(self.awg_samp_rate_group_1_combobox, 6, 2, 1, 1)
-        self.awg_control_layout.addWidget(self.apply_awg_rates_button, 7, 1, 1, 2)
-        self.awg_control_layout.addWidget(self.awg_status_label, 8, 1, 1, 2)
 
         self.device_status_frame = QFrame(self)
         self.device_status_frame.setObjectName("deviceStatusFrame")
@@ -1259,13 +1312,13 @@ class InstWidget(QWidget):
 
         self.other_widgets_layout = QGridLayout()
         self.other_widgets_layout.addWidget(self.laser_control_frame, 1, 1, 1, 1)
-        self.other_widgets_layout.addWidget(self.awg_control_frame, 1, 2, 1, 1)
+        self.other_widgets_layout.addWidget(self.detector_frame, 1, 2, 2, 1)
         self.other_widgets_layout.addWidget(self.device_status_frame, 2, 1, 1, 1)
-        self.other_widgets_layout.addWidget(self.detector_frame, 2, 2, 1, 1)
 
         self.gui_layout.addLayout(self.individual_cmds_layout)
         self.gui_layout.addLayout(self.status_bar_layout)
         self.gui_layout.addLayout(self.sig_gens_layout)
+        self.gui_layout.addLayout(self.awg_layout)
         self.gui_layout.addLayout(self.other_widgets_layout)
 
         self.setLayout(self.gui_layout)
@@ -1437,6 +1490,9 @@ class InstWidget(QWidget):
                 except (TypeError, ValueError):
                     pass
                 else:
+                    # FIXME: make a more robust safety mechanism to not exceed certain B field value
+                    if b_val > 500.0:
+                        b_val = 100
                     new_position = find_mag_pos(phi_val, b_val)
 
                     self.status_label.setStyleSheet(
@@ -1960,7 +2016,9 @@ class InstWidget(QWidget):
             self.awg_status_label.setText("Please select sampling rates for both groups before applying.")
 
     def apply_awg_volt_ranges(self):
+        print("in apply awg volt range function")
         if hasattr(self, "awg_volt_range_ch3_str") and hasattr(self, "awg_volt_range_ch4_str"):
+            print("applying AWG volt ranges now")
             self.call_awg(lambda awg: awg.set_voltage_range(2, self.awg_volt_range_ch3_str))
             self.call_awg(lambda awg: awg.set_voltage_range(3, self.awg_volt_range_ch4_str))
             self.awg_status_label.setText(f"Applied AWG volt ranges: CH3 = {self.awg_volt_range_ch3_str}, CH4 = {self.awg_volt_range_ch4_str}")
