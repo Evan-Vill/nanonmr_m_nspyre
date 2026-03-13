@@ -4,5 +4,10 @@
 # ignore ALL files in ANY directory named temp
 logs/
 
+# Byte-compiled / optimized
+__pycache__/
+*.py[cod]
+*$py.class
+
 # ignore macOS metadata files
 .DS_Store
