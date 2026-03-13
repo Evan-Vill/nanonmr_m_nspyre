@@ -3239,10 +3239,10 @@ class SpinMeasurements:
                     continue
                         
                 # notify the streaminglist that this entry has updated so it will be pushed to the data server
-                dark_signal_sweeps.append(np.stack([tau_times, dark_sig])); dark_signal_sweeps.updated_item(-1) 
-                dark_background_sweeps.append(np.stack([tau_times, dark_bg])); dark_background_sweeps.updated_item(-1)
-                echo_signal_sweeps.append(np.stack([tau_times, echo_sig])); echo_signal_sweeps.updated_item(-1) 
-                echo_background_sweeps.append(np.stack([tau_times, echo_bg])); echo_background_sweeps.updated_item(-1)
+                dark_signal_sweeps.append(np.stack([tau_times[1:]/1e3, dark_sig[1:]])); dark_signal_sweeps.updated_item(-1) 
+                dark_background_sweeps.append(np.stack([tau_times[1:]/1e3, dark_bg[1:]])); dark_background_sweeps.updated_item(-1)
+                echo_signal_sweeps.append(np.stack([tau_times[1:]/1e3, echo_sig[1:]])); echo_signal_sweeps.updated_item(-1) 
+                echo_background_sweeps.append(np.stack([tau_times[1:]/1e3, echo_bg[1:]])); echo_background_sweeps.updated_item(-1)
 
                 # if kwargs.get("fit_live", False):
                 #     with warnings.catch_warnings():
@@ -3259,7 +3259,7 @@ class SpinMeasurements:
                 data.push({
                     'params': {'kwargs': kwargs, 'iters_completed': iters_completed, 'elapsed': time.perf_counter() - exp_start_time},
                     'title': 'DEER Free Induction Decay',
-                    'xlabel': 'Free Precession Interval (ns)',
+                    'xlabel': 'Free Precession Interval (\u03BCs)',
                     'ylabel': 'Signal (V) or Norm. Signal',
                     'datasets': {'dark_signal' : dark_signal_sweeps,
                                 'dark_background': dark_background_sweeps,
@@ -3456,12 +3456,12 @@ class SpinMeasurements:
                 except ValueError:
                     continue
 
-                dark_signal_sweeps.append(np.stack([tau_times, dark_sig])); dark_signal_sweeps.updated_item(-1) 
-                dark_background_sweeps.append(np.stack([tau_times, dark_bg])); dark_background_sweeps.updated_item(-1)
-                echo_signal_sweeps.append(np.stack([tau_times, echo_sig])); echo_signal_sweeps.updated_item(-1) 
-                echo_background_sweeps.append(np.stack([tau_times, echo_bg])); echo_background_sweeps.updated_item(-1)
-                cd_signal_sweeps.append(np.stack([tau_times, cd_sig])); cd_signal_sweeps.updated_item(-1) 
-                cd_background_sweeps.append(np.stack([tau_times, cd_bg])); cd_background_sweeps.updated_item(-1)
+                dark_signal_sweeps.append(np.stack([tau_times[1:]/1e3, dark_sig[1:]])); dark_signal_sweeps.updated_item(-1) 
+                dark_background_sweeps.append(np.stack([tau_times[1:]/1e3, dark_bg[1:]])); dark_background_sweeps.updated_item(-1)
+                echo_signal_sweeps.append(np.stack([tau_times[1:]/1e3, echo_sig[1:]])); echo_signal_sweeps.updated_item(-1) 
+                echo_background_sweeps.append(np.stack([tau_times[1:]/1e3, echo_bg[1:]])); echo_background_sweeps.updated_item(-1)
+                cd_signal_sweeps.append(np.stack([tau_times[1:]/1e3, cd_sig[1:]])); cd_signal_sweeps.updated_item(-1) 
+                cd_background_sweeps.append(np.stack([tau_times[1:]/1e3, cd_bg[1:]])); cd_background_sweeps.updated_item(-1)
 
                 # if kwargs.get("fit_live", False):
                 #     with warnings.catch_warnings():
@@ -3477,7 +3477,7 @@ class SpinMeasurements:
                 data.push({
                     'params': {'kwargs': kwargs, 'iters_completed': iters_completed, 'elapsed': time.perf_counter() - exp_start_time},
                     'title': 'DEER Free Induction Decay Continuous Drive',
-                    'xlabel': 'Free Precession Interval (ns)',
+                    'xlabel': 'Free Precession Interval (\u03BCs)',
                     'ylabel': 'Signal (V) or Norm. Signal',
                     'datasets': {'dark_signal' : dark_signal_sweeps,
                                 'dark_background': dark_background_sweeps,
@@ -4083,13 +4083,13 @@ class SpinMeasurements:
                 with_pulse_ny_sweeps.append(np.stack([t_corr_times[1:]*1e6, with_ny[1:]])); with_pulse_ny_sweeps.updated_item(-1) 
                 without_pulse_ny_sweeps.append(np.stack([t_corr_times[1:]*1e6, without_ny[1:]])); without_pulse_ny_sweeps.updated_item(-1)
 
-                if kwargs.get("fit_live", False):
-                    with warnings.catch_warnings():
-                        warnings.simplefilter("error", OptimizeWarning)
-                        try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_deer_t1_data(cfg.fit_type, cfg.dataset, with_pulse_py_sweeps, without_pulse_py_sweeps, with_pulse_ny_sweeps, without_pulse_ny_sweeps, *cfg.fit_params)
-                        except (RuntimeError, OptimizeWarning) as e:
-                            _logger.warning(f"For {cfg.dataset} measurement, {e}")
+                # if kwargs.get("fit_live", False):
+                #     with warnings.catch_warnings():
+                #         warnings.simplefilter("error", OptimizeWarning)
+                #         try:
+                #             fit_value, fit_error, fit_x, fit_y = self.fit_deer_t1_data(cfg.fit_type, cfg.dataset, with_pulse_py_sweeps, without_pulse_py_sweeps, with_pulse_ny_sweeps, without_pulse_ny_sweeps, *cfg.fit_params)
+                #         except (RuntimeError, OptimizeWarning) as e:
+                #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
                 iters_completed = i + 1
                 percent_completed = int(100 * iters_completed / cfg.iters)
@@ -4119,13 +4119,13 @@ class SpinMeasurements:
         if not stopped and not failed:
             iters_completed, percent_completed = cfg.iters, 100
       
-        if kwargs.get("fit", False):
-            with warnings.catch_warnings():
-                warnings.simplefilter("error", OptimizeWarning)
-                try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_deer_t1_data(cfg.fit_type, cfg.dataset, with_pulse_py_sweeps, without_pulse_py_sweeps, with_pulse_ny_sweeps, without_pulse_ny_sweeps, *cfg.fit_params)
-                except (RuntimeError, OptimizeWarning) as e:
-                    _logger.warning(f"For {cfg.dataset} measurement, {e}")
+        # if kwargs.get("fit", False):
+        #     with warnings.catch_warnings():
+        #         warnings.simplefilter("error", OptimizeWarning)
+        #         try:
+        #             fit_value, fit_error, fit_x, fit_y = self.fit_deer_t1_data(cfg.fit_type, cfg.dataset, with_pulse_py_sweeps, without_pulse_py_sweeps, with_pulse_ny_sweeps, without_pulse_ny_sweeps, *cfg.fit_params)
+        #         except (RuntimeError, OptimizeWarning) as e:
+        #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
         
         if kwargs.get("save", False):
             run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
@@ -5133,6 +5133,11 @@ class SpinMeasurements:
     def mod_stretched_exponential(x, A, T, n, a1, f1, phi1, a2, f2, phi2):
         return A*np.exp(-(x/T)**n)*(1-a1*np.sin(2*np.pi*f1*x/4 + phi1)**2)*(1-a2*np.sin(2*np.pi*f2*x/4 + phi2)**2)
 
+    # FIXME: make T1_nv and n_nv fixed parameters, not fit parameters
+    @staticmethod
+    def deer_t1_stretched_exponential(x, A, T1_nv, n_nv, T1_e, n_e, c):
+        return A * np.exp(-(x / T1_nv)**n_nv - (x / T1_e)**n_e) + c
+
     def fit_data(self, fit_type, exp, sig_data, back_data, *args):
         # Combine all signal sweeps into a single 3D array and average
         all_signal_data = np.stack(sig_data, axis=-1)  # Shape: (2, 10, 5)
@@ -5320,44 +5325,50 @@ class SpinMeasurements:
         return fitted_values, fitted_errors, x_fit, y_fit
 
     # TODO: update this function to fit DEER T1
-    def fit_deer_t1_data(self, fit_type, exp, dark_sig_data, dark_back_data, echo_sig_data, echo_back_data, *args):
+    def fit_deer_t1_data(self, fit_type, with_pulse_py_sweeps, without_pulse_py_sweeps, with_pulse_ny_sweeps, without_pulse_ny_sweeps, *args):
         # Combine all dark signal sweeps into a single 3D array and average
-        all_dark_signal_data = np.stack(dark_sig_data, axis=-1)  # Shape: (2, 10, 5)
-        averaged_dark_sig = np.mean(all_dark_signal_data[1, :, :], axis=1)  # Shape: (10,)
+        all_with_pulse_py_data = np.stack(with_pulse_py_sweeps, axis=-1)  # Shape: (2, 10, 5)
+        averaged_with_pulse_py = np.mean(all_with_pulse_py_data[1, :, :], axis=1)  # Shape: (10,)
 
         # Combine all dark background sweeps into a single 3D array and average
-        all_dark_background_data = np.stack(dark_back_data, axis=-1)  # Shape: (2, 10, 5)
-        averaged_dark_bg = np.mean(all_dark_background_data[1, :, :], axis=1)  # Shape: (10,)
+        all_without_pulse_py_data = np.stack(without_pulse_py_sweeps, axis=-1)  # Shape: (2, 10, 5)
+        averaged_without_pulse_py = np.mean(all_without_pulse_py_data[1, :, :], axis=1)  # Shape: (10,)
 
         # Combine all dark signal sweeps into a single 3D array and average
-        all_echo_signal_data = np.stack(echo_sig_data, axis=-1)  # Shape: (2, 10, 5)
-        averaged_echo_sig = np.mean(all_echo_signal_data[1, :, :], axis=1)  # Shape: (10,)
+        all_with_pulse_ny_data = np.stack(with_pulse_ny_sweeps, axis=-1)  # Shape: (2, 10, 5)
+        averaged_with_pulse_ny = np.mean(all_with_pulse_ny_data[1, :, :], axis=1)  # Shape: (10,)
 
         # Combine all dark background sweeps into a single 3D array and average
-        all_echo_background_data = np.stack(echo_back_data, axis=-1)  # Shape: (2, 10, 5)
-        averaged_echo_bg = np.mean(all_echo_background_data[1, :, :], axis=1)  # Shape: (10,)
+        all_without_pulse_ny_data = np.stack(without_pulse_ny_sweeps, axis=-1)  # Shape: (2, 10, 5)
+        averaged_without_pulse_ny = np.mean(all_without_pulse_ny_data[1, :, :], axis=1)  # Shape: (10,)
 
         # Compute the microwave_times (assumed constant across sweeps)
-        x_values = all_dark_signal_data[0, :, 0]  # Shape: (10,)
+        x_values = all_with_pulse_py_data[0, :, 0]  # Shape: (10,)
         x_fit = np.linspace(min(x_values), max(x_values), 1000) # finer resolution for fitting
 
         # Compute the ratio/difference of averaged signal and background for fitting
-        deer = (averaged_dark_bg - averaged_dark_sig) / (averaged_dark_bg + averaged_dark_sig)
-        echo = (averaged_echo_bg - averaged_echo_sig) / (averaged_echo_bg + averaged_echo_sig)
+        # deer = (averaged_dark_bg - averaged_dark_sig) / (averaged_dark_bg + averaged_dark_sig)
+        # echo = (averaged_echo_bg - averaged_echo_sig) / (averaged_echo_bg + averaged_echo_sig)
 
-        y_values = deer / echo
+        # y_values = deer / echo
+        diff_overall = (averaged_without_pulse_py - averaged_with_pulse_py) - (averaged_without_pulse_ny - averaged_with_pulse_ny)
+        y_values = diff_overall
 
         initial_guess = list(args)
 
         # Perform curve fitting 
         match fit_type:
             case 'DEER T1 Str. Exp.':
-                ### --- Perform fit --- ###
-                params, covariance = curve_fit(self.stretched_exponential, x_values, y_values, p0=initial_guess)
-                y_fit = self.stretched_exponential(x_fit, *params)
+                ### --- Perform fit --- ### 
+                params, covariance = curve_fit(self.deer_t1_stretched_exponential, x_values, y_values, p0=initial_guess)
+                y_fit = self.deer_t1_stretched_exponential(x_fit, *params)
                 param_errors = np.sqrt(np.diag(covariance))
                 fitted_values = [round(i, 3) for i in params]
                 fitted_errors = [round(i, 3) for i in param_errors]
+
+            case _:
+                print("No fit type selected.")
+                return 0, 0, 0, 0
 
         return fitted_values, fitted_errors, x_fit, y_fit
 
