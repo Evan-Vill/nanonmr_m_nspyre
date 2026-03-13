@@ -390,6 +390,7 @@ class DEERScanCfg:
     laser_readout: float
     pi: float
     pretrig_size: int
+    pulse_axis: str
     q_offset: float
     read_channel: int
     rf_power: float
@@ -430,6 +431,7 @@ class DEERRabiScanCfg:
     laser_readout: float
     pi: float
     pretrig_size: int
+    pulse_axis: str
     q_offset: float
     read_channel: int
     rf_power: float
@@ -469,6 +471,7 @@ class DEERFIDScanCfg:
     n: int
     pi: float
     pretrig_size: int
+    pulse_axis: str
     q_offset: float
     read_channel: int
     rf_power: float
@@ -508,6 +511,7 @@ class DEERFIDCDScanCfg:
     n: int
     pi: float
     pretrig_size: int
+    pulse_axis: str
     q_offset: float
     read_channel: int
     rf_power: float
@@ -551,6 +555,7 @@ class DEERCorrScanCfg:
     n: int
     pi: float
     pretrig_size: int
+    pulse_axis: str
     q_offset: float
     read_channel: int
     rf_power: float
@@ -592,6 +597,7 @@ class DEERCorrRabiScanCfg:
     laser_readout: float
     pi: float
     pretrig_size: int
+    pulse_axis: str
     q_offset: float
     read_channel: int
     rf_power: float
@@ -635,6 +641,7 @@ class DEERT1ScanCfg:
     laser_readout: float
     pi: float
     pretrig_size: int
+    pulse_axis: str
     q_offset: float
     read_channel: int
     rf_power: float
@@ -674,6 +681,7 @@ class DEERT2ScanCfg:
     laser_readout: float
     pi: float
     pretrig_size: int
+    pulse_axis: str
     q_offset: float
     read_channel: int
     rf_power: float
@@ -709,6 +717,7 @@ class CorrSpecScanCfg:
     n: int
     pi: float
     pretrig_size: int
+    pulse_axis: str
     q_offset: float
     read_channel: int
     rf_power: float
@@ -745,6 +754,7 @@ class CASRScanCfg:
     n: int
     pi: float
     pretrig_size: int
+    pulse_axis: str
     q_offset: float
     read_channel: int
     rf_pi_half: float
