@@ -463,6 +463,10 @@ class DEERFIDScanCfg:
     dig_timeout: float
     directory: str
     filename: str
+    fit_type: str
+    fit: bool
+    fit_live: bool
+    fit_params: dict
     freq: float
     i_offset: float
     laser_init: float
@@ -503,6 +507,10 @@ class DEERFIDCDScanCfg:
     dig_timeout: float
     directory: str
     filename: str
+    fit_type: str
+    fit: bool
+    fit_live: bool
+    fit_params: dict
     freq: float
     i_offset: float
     laser_init: float
@@ -674,6 +682,10 @@ class DEERT2ScanCfg:
     dig_timeout: float
     directory: str
     filename: str
+    fit_type: str
+    fit: bool
+    fit_live: bool
+    fit_params: dict
     freq: float
     i_offset: float
     laser_init: float
