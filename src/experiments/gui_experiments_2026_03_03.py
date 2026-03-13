@@ -168,7 +168,7 @@ class ExpWidget(QWidget):
         self.fit_two_neg_lorentz_defaults = [0.01, 1e9, 6e6, 1, 0.01, 1e9, 6e6, 1] # defaults = 1% contrast, 1 GHz central freq, 6 MHz linewidth, 1 vertical offset, 1% contrast, 1 GHz central freq, 6 MHz linewidth, 1 vertical offset for the two overlapping Lorentzians
         self.fit_str_exp_defaults = [0.01, 1e-3, 1, 0] # defaults = 0.01 amplitude, 1 ms T1, 1 stretching factor, 0 vertical offset
         self.fit_mod_str_exp_defaults = [0.1, 2e-6, 1, 1, 0.2e6, 0, 1, 0.2e6, 0] # defaults = 0.1 amplitude, 2 us T2, 1 stretching factor, 1 amp first sine wave, 0.2 MHz first sine wave, 0 phase first sine wave, 1 amp second sine wave, 0.2 MHz second sine wave, 0 phase second sine wave
-        self.fit_deer_t1_str_exp_defaults = [0.1, 1e-3, 1, 1e-3, 1, 0] # defaults = 0.1 amplitude, 1 ms T1_NV, 1 n_NV, 1 ms T1_e, 1 n_e, 0 vertical offset
+        self.fit_deer_t1_str_exp_defaults = [0.1, 1e-3, 1, 1e-3, 1, 0] # defaults = 0.1 amplitude, 1 ms T1_nv, 1 n_nv, 1 ms T1_e, 1 n_e, 0 vertical offset
         self.fit_pos_lorentz_defaults = [0.01, 2e6, 100e3, 1] # defaults = 1% contrast, 2 MHz central freq, 100 kHz linewidth, 1 vertical offset
         # self.fit_deer_defaults = [0.1, 560, 10, 1] # defaults = 10% contrast, 560 MHz central freq, 10 MHz linewidth, 1 vertical offset
         # self.fit_deer_rabi_defaults = [0.1, 0.001, 100, 0, 1] # defaults = 10% contrast, 0.001 decay rate, 100 ns period, 0 phase, 1 vertical offset
@@ -702,6 +702,17 @@ class ExpWidget(QWidget):
         self.exp_params_layout.addWidget(self.exp_label)
         self.exp_params_layout.addWidget(self.params_widget)
 
+        self.exp_scroll = QScrollArea(self)
+        self.exp_scroll.setWidgetResizable(True)
+        self.exp_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.exp_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.exp_scroll.setFrameShape(QFrame.Shape.NoFrame)  # cleaner
+        # self.exp_scroll.setMinimumWidth(400)
+        self.exp_scroll.setWidget(self.exp_frame)
+
+        # size policies: scroll area takes space, inner frame stays minimal
+        self.exp_scroll.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+
         self.mw_frame = QFrame(self)
         self.mw_frame.setObjectName("mwFrame")
         self.mw_frame.setStyleSheet("QFrame#mwFrame {background-color: #474b00; border: 2px solid #d7d700; border-radius: 5px;}")
@@ -711,6 +722,17 @@ class ExpWidget(QWidget):
         self.mw_params_layout.setSpacing(0)
         self.mw_params_layout.addWidget(self.mw_label)
         self.mw_params_layout.addWidget(self.mw_params_widget)
+
+        self.mw_scroll = QScrollArea(self)
+        self.mw_scroll.setWidgetResizable(True)
+        self.mw_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.mw_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.mw_scroll.setFrameShape(QFrame.Shape.NoFrame)  # cleaner
+        # self.mw_scroll.setMinimumWidth(400)
+        self.mw_scroll.setWidget(self.mw_frame)
+
+        # size policies: scroll area takes space, inner frame stays minimal
+        self.mw_scroll.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         self.detector_frame = QFrame(self)
         self.detector_frame.setObjectName("detectorFrame")
@@ -798,6 +820,17 @@ class ExpWidget(QWidget):
         self.laser_params_layout.addWidget(self.laser_label,1,1,1,2)
         self.laser_params_layout.addWidget(self.laser_params_widget,2,1,1,2)     
 
+        self.laser_scroll = QScrollArea(self)
+        self.laser_scroll.setWidgetResizable(True)
+        self.laser_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.laser_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.laser_scroll.setFrameShape(QFrame.Shape.NoFrame)  # cleaner
+        # self.laser_scroll.setMinimumWidth(400)
+        self.laser_scroll.setWidget(self.laser_frame)
+
+        # size policies: scroll area takes space, inner frame stays minimal
+        self.laser_scroll.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+
         self.dig_frame = QFrame(self)
         self.dig_frame.setObjectName("digFrame")
         self.dig_frame.setStyleSheet("QFrame#digFrame {background-color: #000b4b; border: 2px solid #1739FF; border-radius: 5px;}")
@@ -808,16 +841,28 @@ class ExpWidget(QWidget):
         self.dig_params_layout.addWidget(self.dig_label)
         self.dig_params_layout.addWidget(self.dig_params_widget)
         
+        self.dig_scroll = QScrollArea(self)
+        self.dig_scroll.setWidgetResizable(True)
+        self.dig_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.dig_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.dig_scroll.setFrameShape(QFrame.Shape.NoFrame)  # cleaner
+        # self.dig_scroll.setMinimumWidth(400)
+        self.dig_scroll.setWidget(self.dig_frame)
+
+        # size policies: scroll area takes space, inner frame stays minimal
+        self.dig_scroll.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+
+
         self.top_widgets_layout = QVBoxLayout()
         self.top_widgets_layout.addWidget(self.top_frame)
 
         self.exp_widgets_layout = QHBoxLayout()
-        self.exp_widgets_layout.addWidget(self.exp_frame)
-        self.exp_widgets_layout.addWidget(self.mw_frame)
+        self.exp_widgets_layout.addWidget(self.exp_scroll)
+        self.exp_widgets_layout.addWidget(self.mw_scroll)
 
         self.laser_widgets_layout = QHBoxLayout()
-        self.laser_widgets_layout.addWidget(self.laser_frame)
-        self.laser_widgets_layout.addWidget(self.dig_frame)
+        self.laser_widgets_layout.addWidget(self.laser_scroll)
+        self.laser_widgets_layout.addWidget(self.dig_scroll)
 
         self.save_widgets_layout = QGridLayout()
         self.save_widgets_layout.addWidget(self.detector_frame,1,1,1,1)
@@ -1283,9 +1328,9 @@ class ExpWidget(QWidget):
                         'pulse_axis': {'display_text': 'NV Pulse Axis',
                                 'widget': QtWidgets.QLineEdit(defaults[3])},
                         'awg_power': {'display_text': 'Dark (AWG) Power: ',
-                                'widget': SpinBox(value = defaults[4], suffix = 'V', siPrefix = True, bounds = (0, 0.8))},
+                                'widget': SpinBox(value = overrides.get('awg_power', defaults[4]), suffix = 'V', siPrefix = True, bounds = (0, 0.8))},
                         'dark_pi': {'display_text': 'Dark \u03C0 Pulse: ',
-                                'widget': SpinBox(value = defaults[5], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
+                                'widget': SpinBox(value = overrides.get('dark_pi', defaults[5]), suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
                         'drive_type': {'display_text': 'Dark MW Driving',
                                 'widget': ComboBox(items = defaults[6])}}
             case 'DEER Rabi':
@@ -1299,9 +1344,9 @@ class ExpWidget(QWidget):
                         'pulse_axis': {'display_text': 'NV Pulse Axis',
                                 'widget': QtWidgets.QLineEdit(defaults[3])},
                         'dark_freq': {'display_text': 'Dark Frequency: ',
-                                'widget': SpinBox(value = defaults[4], suffix = 'Hz', siPrefix = True, bounds = (350e6, 750e6), dec = True)},
+                                'widget': SpinBox(value = overrides.get('dark_freq', defaults[4]), suffix = 'Hz', siPrefix = True, bounds = (350e6, 750e6), dec = True)},
                         'awg_power': {'display_text': 'Dark (AWG) Power: ',
-                                'widget': SpinBox(value = defaults[5], suffix = 'V', siPrefix = True, bounds = (0, 0.8))}}
+                                'widget': SpinBox(value = overrides.get('awg_power', defaults[5]), suffix = 'V', siPrefix = True, bounds = (0, 0.8))}}
             case 'DEER FID':
                 params = {
                         'freq': {'display_text': 'NV Frequency: ',
@@ -1313,11 +1358,11 @@ class ExpWidget(QWidget):
                         'pulse_axis': {'display_text': 'NV Pulse Axis',
                                 'widget': QtWidgets.QLineEdit(defaults[3])},
                         'dark_freq': {'display_text': 'Dark Frequency: ',
-                                'widget': SpinBox(value = defaults[4], suffix = 'Hz', siPrefix = True, bounds = (350e6, 750e6), dec = True)},
+                                'widget': SpinBox(value = overrides.get('dark_freq', defaults[4]), suffix = 'Hz', siPrefix = True, bounds = (350e6, 750e6), dec = True)},
                         'awg_power': {'display_text': 'Dark (AWG) Power: ',
-                                'widget': SpinBox(value = defaults[5], suffix = 'V', siPrefix = True, bounds = (0, 0.8))},
+                                'widget': SpinBox(value = overrides.get('awg_power', defaults[5]), suffix = 'V', siPrefix = True, bounds = (0, 0.8))},
                         'dark_pi': {'display_text': 'Dark \u03C0 Pulse: ',
-                                'widget': SpinBox(value = defaults[6], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
+                                'widget': SpinBox(value = overrides.get('dark_pi', defaults[6]), suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
                         'n': {'display_text': '# Seqs. (n): ',
                                 'widget': SpinBox(value = defaults[7], int = True, bounds=(1, None))}}      
             case 'DEER FID Continuous Drive':
@@ -1331,11 +1376,11 @@ class ExpWidget(QWidget):
                         'pulse_axis': {'display_text': 'NV Pulse Axis',
                                 'widget': QtWidgets.QLineEdit(defaults[3])},
                         'dark_freq': {'display_text': 'Dark Frequency: ',
-                                'widget': SpinBox(value = defaults[4], suffix = 'Hz', siPrefix = True, bounds = (350e6, 750e6), dec = True)},
+                                'widget': SpinBox(value = overrides.get('dark_freq', defaults[4]), suffix = 'Hz', siPrefix = True, bounds = (350e6, 750e6), dec = True)},
                         'awg_power': {'display_text': 'Dark (AWG) Power: ',
-                                'widget': SpinBox(value = defaults[5], suffix = 'V', siPrefix = True, bounds = (0, 0.8))},
+                                'widget': SpinBox(value = overrides.get('awg_power', defaults[5]), suffix = 'V', siPrefix = True, bounds = (0, 0.8))},
                         'dark_pi': {'display_text': 'Dark \u03C0 Pulse: ',
-                                'widget': SpinBox(value = defaults[6], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
+                                'widget': SpinBox(value = overrides.get('dark_pi', defaults[6]), suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
                         'awg_cd_power': {'display_text': 'Continuous Drive (AWG) Power: ',
                                 'widget': SpinBox(value = defaults[7], suffix = 'V', siPrefix = True, bounds = (0, 0.8))},
                         'n': {'display_text': '# Seqs. (n): ',
@@ -1351,11 +1396,11 @@ class ExpWidget(QWidget):
                         'pulse_axis': {'display_text': 'NV Pulse Axis',
                                 'widget': QtWidgets.QLineEdit(defaults[3])},
                         'dark_freq': {'display_text': 'Dark Frequency: ',
-                                'widget': SpinBox(value = defaults[4], suffix = 'Hz', siPrefix = True, bounds = (350e6, 750e6), dec = True)},
+                                'widget': SpinBox(value = overrides.get('dark_freq', defaults[4]), suffix = 'Hz', siPrefix = True, bounds = (350e6, 750e6), dec = True)},
                         'dark_pi': {'display_text': 'Dark \u03C0 Pulse: ',
-                                'widget': SpinBox(value = defaults[5], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
+                                'widget': SpinBox(value = overrides.get('dark_pi', defaults[5]), suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
                         'awg_power': {'display_text': 'Dark (AWG) Power: ',
-                                'widget': SpinBox(value = defaults[6], suffix = 'V', siPrefix = True, bounds = (0, 0.8))}}
+                                'widget': SpinBox(value = overrides.get('awg_power', defaults[6]), suffix = 'V', siPrefix = True, bounds = (0, 0.8))}}
             case 'DEER T1':
                 params = {
                         'freq': {'display_text': 'NV Frequency: ',
@@ -1367,11 +1412,11 @@ class ExpWidget(QWidget):
                         'pulse_axis': {'display_text': 'NV Pulse Axis',
                                 'widget': QtWidgets.QLineEdit(defaults[3])},
                         'dark_freq': {'display_text': 'Dark Frequency: ',
-                                'widget': SpinBox(value = defaults[4], suffix = 'Hz', siPrefix = True, bounds = (350e6, 750e6), dec = True)},
+                                'widget': SpinBox(value = overrides.get('dark_freq', defaults[4]), suffix = 'Hz', siPrefix = True, bounds = (350e6, 750e6), dec = True)},
                         'dark_pi': {'display_text': 'Dark \u03C0 Pulse: ',
-                                'widget': SpinBox(value = defaults[5], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
+                                'widget': SpinBox(value = overrides.get('dark_pi', defaults[5]), suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
                         'awg_power': {'display_text': 'Dark (AWG) Power: ',
-                                'widget': SpinBox(value = defaults[6], suffix = 'V', siPrefix = True, bounds = (0, 0.8))}}
+                                'widget': SpinBox(value = overrides.get('awg_power', defaults[6]), suffix = 'V', siPrefix = True, bounds = (0, 0.8))}}
             case 'DEER T2':
                 params = {
                         'freq': {'display_text': 'NV Frequency: ',
@@ -1383,11 +1428,11 @@ class ExpWidget(QWidget):
                         'pulse_axis': {'display_text': 'NV Pulse Axis',
                                 'widget': QtWidgets.QLineEdit(defaults[3])},
                         'dark_freq': {'display_text': 'Dark Frequency: ',
-                                'widget': SpinBox(value = defaults[4], suffix = 'Hz', siPrefix = True, bounds = (350e6, 750e6), dec = True)},
+                                'widget': SpinBox(value = overrides.get('dark_freq', defaults[4]), suffix = 'Hz', siPrefix = True, bounds = (350e6, 750e6), dec = True)},
                         'dark_pi': {'display_text': 'Dark \u03C0 Pulse: ',
-                                'widget': SpinBox(value = defaults[5], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
+                                'widget': SpinBox(value = overrides.get('dark_pi', defaults[5]), suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
                         'awg_power': {'display_text': 'Dark (AWG) Power: ',
-                                'widget': SpinBox(value = defaults[6], suffix = 'V', siPrefix = True, bounds = (0, 0.8))}}
+                                'widget': SpinBox(value = overrides.get('awg_power', defaults[6]), suffix = 'V', siPrefix = True, bounds = (0, 0.8))}}
             case 'NMR Correlation Spectroscopy':    
                 params = {
                         'freq': {'display_text': 'NV Frequency: ',
@@ -1493,13 +1538,13 @@ class ExpWidget(QWidget):
                                 'widget': SpinBox(value = defaults[7], suffix = 'Hz', siPrefix = True, dec = True)},
                         'phi2': {'display_text': '\u03C62: ',
                                 'widget': SpinBox(value = defaults[8])}}
-            case 'Fit DEER T1 Str Exp': # A * exp(-(t / T1_NV)**n_NV - (t / T1_e)**n_e) + c
+            case 'Fit DEER T1 Str Exp': # A * exp(-(t / T1_nv)**n_nv - (t / T1_e)**n_e) + c
                 params = {
                         'A': {'display_text': 'A: ',
                                 'widget': SpinBox(value = defaults[0])},
-                        'T1_NV': {'display_text': 'T1: ',
+                        'T1_nv': {'display_text': 'T1: ',
                                 'widget': SpinBox(value = defaults[1], suffix = 's', siPrefix = True, dec = True)},
-                        'n_NV': {'display_text': 'n_NV: ',
+                        'n_nv': {'display_text': 'n_nv: ',
                                 'widget': SpinBox(value = defaults[2])},
                         'T1_e': {'display_text': 'T1_e: ',
                                 'widget': SpinBox(value = defaults[3], suffix = 's', siPrefix = True, dec = True)},
@@ -1523,6 +1568,54 @@ class ExpWidget(QWidget):
                                 'widget': SpinBox(value = defaults[0])}}
                 
         return params
+
+    def _apply_fit_overrides(self, fit_value):
+        if not self.to_override_fit or fit_value is None:
+            return
+
+        exp_name = self.experiments.currentText()
+
+        if exp_name in ("CW ODMR", "Pulsed ODMR") and len(fit_value) > 1:
+            odmr_freq_hz = fit_value[1] * 1e9
+            if 100e3 <= odmr_freq_hz <= 6e9:
+                self.mw_overrides['center_freq'] = odmr_freq_hz
+                self.mw_overrides['freq'] = odmr_freq_hz
+            else:
+                print(f"Fitted ODMR frequency {odmr_freq_hz} Hz is out of bounds.")
+
+        elif exp_name == "Rabi" and len(fit_value) > 2:
+            rabi_pi_pulse_s = fit_value[2] * 1e-9
+            if 1e-9 <= rabi_pi_pulse_s <= 10e-6:
+                self.mw_overrides['pi'] = rabi_pi_pulse_s
+                mw_params = dict(self.mw_params_widget.all_params())
+                mw_power = mw_params.get('rf_power', None)
+                if mw_power is not None:
+                    self.mw_overrides['rf_power'] = mw_power
+            else:
+                print(f"Fitted Rabi π pulse {rabi_pi_pulse_s} s is out of bounds.")
+
+        elif exp_name == "DEER" and len(fit_value) > 1:
+            deer_freq_hz = fit_value[1] * 1e6   # if fit output is MHz
+            print(f"Fitted DEER frequency: {deer_freq_hz} Hz")
+            if 350e6 <= deer_freq_hz <= 750e6:
+                self.mw_overrides['dark_freq'] = deer_freq_hz
+                mw_params = dict(self.mw_params_widget.all_params())
+                awg_power = mw_params.get('awg_power', None)
+                if awg_power is not None:
+                    self.mw_overrides['awg_power'] = awg_power
+            else:
+                print(f"Fitted DEER frequency {deer_freq_hz} Hz is out of bounds.")
+
+        elif exp_name == "DEER Rabi" and len(fit_value) > 2:
+            deer_rabi_pi_pulse_s = fit_value[2] * 1e-9
+            if 1e-9 <= deer_rabi_pi_pulse_s <= 10e-6:
+                self.mw_overrides['dark_pi'] = deer_rabi_pi_pulse_s
+                mw_params = dict(self.mw_params_widget.all_params())
+                awg_power = mw_params.get('awg_power', None)
+                if awg_power is not None:
+                    self.mw_overrides['awg_power'] = awg_power
+            else:
+                print(f"Fitted DEER Rabi π pulse {deer_rabi_pi_pulse_s} s is out of bounds.")
 
     def _handle_exp_message(self, msg):
         percent = int(msg.get("percent", 0))
@@ -1572,82 +1665,13 @@ class ExpWidget(QWidget):
             self.laser_params_widget.setEnabled(True)
             self.dig_params_widget.setEnabled(True)
             
-            # if desired, populate fitted ODMR resonance frequency or Rabi period back into the params for all relevant experiments
             if (
                 self.to_override_fit
-                and self.experiments.currentText() in ("CW ODMR", "Pulsed ODMR")
+                and self.experiments.currentText() in ("CW ODMR", "Pulsed ODMR", "Rabi", "DEER", "DEER Rabi")
                 and fit_value is not None
                 and len(fit_value) > 1
             ):
-                odmr_freq_hz = fit_value[1] * 1e9  # Convert GHz back to Hz
-
-                if odmr_freq_hz < 100e3 or odmr_freq_hz > 6e9:
-                    print(f"Fitted ODMR frequency {odmr_freq_hz} Hz is out of bounds. Not applying override.")
-                else:
-                    # override in all relevant experiments' defaults
-                    self.mw_overrides['center_freq'] = odmr_freq_hz  # Store override for future use
-                    self.mw_overrides['freq'] = odmr_freq_hz  # Store override for future use
-
-            if (
-                self.to_override_fit 
-                and self.experiments.currentText() == "Rabi"
-                and fit_value is not None
-                and len(fit_value) > 2
-            ):
-                rabi_pi_pulse_s = fit_value[2] * 1e-9  # Convert ns back to s
-
-                if rabi_pi_pulse_s < 1e-9 or rabi_pi_pulse_s > 10e-6:
-                    print(f"Fitted Rabi \u03C0 pulse {rabi_pi_pulse_s} s is out of bounds. Not applying override.")
-                else:
-                    # Update pi pulse duration for all relevant experiments
-                    self.mw_overrides['pi'] = rabi_pi_pulse_s  # Store override for future use
-
-                    mw_params = dict(**self.mw_params_widget.all_params())
-                    mw_power = mw_params.get('rf_power', None)
-
-                    if mw_power is not None:
-                        self.mw_overrides['rf_power'] = mw_power  # Also override power based on current setting
-            
-            if (
-                self.to_override_fit 
-                and self.experiments.currentText() == "DEER"
-                and fit_value is not None
-                and len(fit_value) > 1
-            ):
-                deer_freq_hz = fit_value[1] * 1e6  # Convert GHz back to Hz
-
-                if deer_freq_hz < 350e6 or deer_freq_hz > 750e6:
-                    print(f"Fitted DEER frequency {deer_freq_hz} Hz is out of bounds. Not applying override.")
-                else:
-                    # override in all relevant experiments' defaults
-                    self.mw_overrides['dark_freq'] = deer_freq_hz  # Store override for future use
-
-                    mw_params = dict(**self.mw_params_widget.all_params())
-                    awg_power = mw_params.get('awg_power', None)
-
-                    if mw_power is not None:
-                        self.mw_overrides['awg_power'] = awg_power  # Also override power based on current setting
-                        
-            if (
-                self.to_override_fit 
-                and self.experiments.currentText() == "DEER Rabi"
-                and fit_value is not None
-                and len(fit_value) > 2
-            ):
-                deer_rabi_pi_pulse_s = fit_value[2] * 1e-9  # Convert ns back to s
-
-                if deer_rabi_pi_pulse_s < 1e-9 or deer_rabi_pi_pulse_s > 10e-6:
-                    print(f"Fitted DEER Rabi \u03C0 pulse {deer_rabi_pi_pulse_s} s is out of bounds. Not applying override.")
-                else:
-                    # Update pi pulse duration for all relevant experiments
-                    self.mw_overrides['dark_pi'] = deer_rabi_pi_pulse_s  # Store override for future use
-
-                    mw_params = dict(**self.mw_params_widget.all_params())
-                    awg_power = mw_params.get('awg_power', None)
-
-                    if mw_power is not None:
-                        self.mw_overrides['awg_power'] = awg_power  # Also override power based on current setting
-
+                self._apply_fit_overrides(fit_value)
 
         elif status == 'failed':
             self.status.setStyleSheet("color: black; background-color: red; border: 4px solid black;")
@@ -1670,81 +1694,13 @@ class ExpWidget(QWidget):
             self.laser_params_widget.setEnabled(True)
             self.dig_params_widget.setEnabled(True)
 
-            # if desired, populate fitted ODMR resonance frequency or Rabi period back into the params for all relevant experiments
             if (
                 self.to_override_fit
-                and self.experiments.currentText() in ("CW ODMR", "Pulsed ODMR")
+                and self.experiments.currentText() in ("CW ODMR", "Pulsed ODMR", "Rabi", "DEER", "DEER Rabi")
                 and fit_value is not None
                 and len(fit_value) > 1
             ):
-                odmr_freq_hz = fit_value[1] * 1e9  # Convert GHz back to Hz
-
-                if odmr_freq_hz < 100e3 or odmr_freq_hz > 6e9:
-                    print(f"Fitted ODMR frequency {odmr_freq_hz} Hz is out of bounds. Not applying override.")
-                else:
-                    # override in all relevant experiments' defaults
-                    self.mw_overrides['center_freq'] = odmr_freq_hz  # Store override for future use
-                    self.mw_overrides['freq'] = odmr_freq_hz  # Store override for future use
-
-            if (
-                self.to_override_fit 
-                and self.experiments.currentText() == "Rabi"
-                and fit_value is not None
-                and len(fit_value) > 2
-            ):
-                rabi_pi_pulse_s = fit_value[2] * 1e-9  # Convert ns back to s
-
-                if rabi_pi_pulse_s < 1e-9 or rabi_pi_pulse_s > 10e-6:
-                    print(f"Fitted Rabi \u03C0 pulse {rabi_pi_pulse_s} s is out of bounds. Not applying override.")
-                else:
-                    # Update pi pulse duration for all relevant experiments
-                    self.mw_overrides['pi'] = rabi_pi_pulse_s  # Store override for future use
-
-                    mw_params = dict(**self.mw_params_widget.all_params())
-                    mw_power = mw_params.get('rf_power', None)
-
-                    if mw_power is not None:
-                        self.mw_overrides['rf_power'] = mw_power  # Also override power based on current setting
-
-            if (
-                self.to_override_fit 
-                and self.experiments.currentText() == "DEER"
-                and fit_value is not None
-                and len(fit_value) > 1
-            ):
-                deer_freq_hz = fit_value[1] * 1e6  # Convert GHz back to Hz
-
-                if deer_freq_hz < 350e6 or deer_freq_hz > 750e6:
-                    print(f"Fitted DEER frequency {deer_freq_hz} Hz is out of bounds. Not applying override.")
-                else:
-                    # override in all relevant experiments' defaults
-                    self.mw_overrides['dark_freq'] = deer_freq_hz  # Store override for future use
-
-                    mw_params = dict(**self.mw_params_widget.all_params())
-                    awg_power = mw_params.get('awg_power', None)
-
-                    if mw_power is not None:
-                        self.mw_overrides['awg_power'] = awg_power  # Also override power based on current setting
-
-            if (
-                self.to_override_fit 
-                and self.experiments.currentText() == "DEER Rabi"
-                and fit_value is not None
-                and len(fit_value) > 2
-            ):
-                deer_rabi_pi_pulse_s = fit_value[2] * 1e-9  # Convert ns back to s
-
-                if deer_rabi_pi_pulse_s < 1e-9 or deer_rabi_pi_pulse_s > 10e-6:
-                    print(f"Fitted DEER Rabi \u03C0 pulse {deer_rabi_pi_pulse_s} s is out of bounds. Not applying override.")
-                else:
-                    # Update pi pulse duration for all relevant experiments
-                    self.mw_overrides['dark_pi'] = deer_rabi_pi_pulse_s  # Store override for future use
-
-                    mw_params = dict(**self.mw_params_widget.all_params())
-                    awg_power = mw_params.get('awg_power', None)
-
-                    if mw_power is not None:
-                        self.mw_overrides['awg_power'] = awg_power  # Also override power based on current setting
+                self._apply_fit_overrides(fit_value)
 
         # ----------------------------
         # Optional: timer labels if you have them
