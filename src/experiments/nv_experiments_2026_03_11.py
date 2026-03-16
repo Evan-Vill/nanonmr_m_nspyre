@@ -12,39 +12,30 @@ Author: Evan Villafranca
 Updated: 2026-03-02
 """
 from __future__ import annotations
+
+import functools
 import logging
 import math
 import time
-import functools
-from pathlib import Path
-from typing import List
-from typing import Optional
-from typing import Callable, Any
+import warnings
 from contextlib import contextmanager
+from typing import Any, Callable, Dict, List, Optional
 
-from typing import Any, Dict, Iterable, List, Tuple
 
 import numpy as np
-import warnings
 from scipy.optimize import OptimizeWarning, curve_fit
 
-from digitizer_driver import SpectrumDigitizer
-import daq_read_samples as nidaq
-from pulsestreamer import (
-    PulseStreamer,
-    TriggerStart,
-    NextAction,
-    When,
-    OnNoData,
+from digitizer_driver_2026_03_16 import SpectrumDigitizer
+from nspyre import (
+    DataSource, 
+    InstrumentManager,
+    StreamingList, 
+    experiment_widget_process_queue,
 )
-from nspyre import DataSource, InstrumentManager
-from nspyre import StreamingList, experiment_widget_process_queue
-
+from pulsestreamer import NextAction, PulseStreamer, When
 from saveUtils import flexSave
-
 import nv_dataclasses_2026_03_05 as nvcfg
 
-_HERE = Path(__file__).parent
 _logger = logging.getLogger(__name__)
 SUBSEQ_COUNT = {
     "DQ": 4,
@@ -81,7 +72,7 @@ def format_minutes_seconds(seconds: float) -> str:
     return f"{days} d {hours} hr"
 
 def run_save(data_name, file_name, directory, file_format="json", seq=None):
-    logging.info("Saving file with flexSave...")
+    _logger.info("Saving file with flexSave...")
     if seq is not None:
         exp_name = f"{data_name}_{seq.lower()}"
     else:
@@ -333,7 +324,7 @@ class SpinMeasurements:
                 "type": "bpd_shutter",
                 "open": bool(is_open),
             })
-        except Exception as e:
+        except Exception:
             _logger.warning(f"Could not emit BPD shutter state: {e}")
 
     @contextmanager
@@ -535,7 +526,7 @@ class SpinMeasurements:
                     # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
                     self.queue_from_exp.put_nowait(msg)
 
-                    if cfg.save == True:
+                    if cfg.save:
                         run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
                     return
 
@@ -598,7 +589,7 @@ class SpinMeasurements:
                 "iq_phases": iq_phases,
                 "num_pts": cfg.num_pts,
             })
-        except Exception as e:
+        except Exception:
             self.queue_from_exp.put_nowait(self.build_status_msg(
                 status="failed",
                 percent_completed=0,
@@ -631,7 +622,7 @@ class SpinMeasurements:
                 self.dig.config() # start digitizer --> waits for trigger from pulse sequence
                 self.dig.start_buffer() # start digitizer (enable trigger)  
                 ps.start_now(owner=token) # start pulse sequence
-            except Exception as e:
+            except Exception:
                 self.queue_from_exp.put_nowait(self.build_status_msg(
                     status="failed",
                     percent_completed=0,
@@ -657,7 +648,7 @@ class SpinMeasurements:
                 try:
                     odmr_result_raw = self.dig.acquire() # acquire data from digitizer
                     odmr_result = np.mean(odmr_result_raw,axis=1)
-                except Exception as e:
+                except Exception:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
@@ -801,7 +792,7 @@ class SpinMeasurements:
                                     'iq_phases': iq_phases,
                                     'num_pts': cfg.num_pts}) 
                 time.sleep(2) # wait for AWG to finish setting sequence and magnet mount to get set
-            except Exception as e:
+            except Exception:
                 print(e)
             
             # run the experiment
@@ -931,12 +922,12 @@ class SpinMeasurements:
                         # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
                         self.queue_from_exp.put_nowait(msg)
                         
-                        if cfg.save == True:
+                        if cfg.save:
                             run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
                         return
                     
                 # save data if requested upon completion of experiment
-                if cfg.save == True:
+                if cfg.save:
                     run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
 
                 msg = self.build_status_msg(
@@ -1050,7 +1041,7 @@ class SpinMeasurements:
                 "num_pts": cfg.num_pts,
                 "runs": cfg.runs,
             })   
-        except Exception as e:
+        except Exception:
             self.queue_from_exp.put_nowait(self.build_status_msg(
                 status="failed",
                 percent_completed=0,
@@ -1083,7 +1074,7 @@ class SpinMeasurements:
                 self.dig.config() # start digitizer --> waits for trigger from pulse sequence
                 self.dig.start_buffer() # start digitizer (enable trigger)  
                 ps.start_now(owner=token) # start pulse sequence
-            except Exception as e:
+            except Exception:
                 self.queue_from_exp.put_nowait(self.build_status_msg(
                     status="failed",
                     percent_completed=0,
@@ -1109,7 +1100,7 @@ class SpinMeasurements:
                 try:
                     rabi_result_raw = self.dig.acquire() # acquire data from digitizer
                     rabi_result = np.mean(rabi_result_raw, axis=1)
-                except Exception as e:
+                except Exception:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
@@ -1245,7 +1236,7 @@ class SpinMeasurements:
                 'num_pts': cfg.num_pts,
                 'runs': cfg.runs
             })    
-        except Exception as e:
+        except Exception:
             self.queue_from_exp.put_nowait(self.build_status_msg(
                 status="failed",
                 percent_completed=0,
@@ -1279,7 +1270,7 @@ class SpinMeasurements:
                 self.dig.start_buffer() # start digitizer (enable trigger)  
                 ps.start_now(owner=token) # start pulse sequence
 
-            except Exception as e:
+            except Exception:
                 self.queue_from_exp.put_nowait(self.build_status_msg(
                     status="failed",
                     percent_completed=0,
@@ -1305,7 +1296,7 @@ class SpinMeasurements:
                 try:
                     pulsed_odmr_result_raw = self.dig.acquire() # acquire data from digitizer   
                     pulsed_odmr_result = np.mean(pulsed_odmr_result_raw,axis=1) # average all data over each trigger/segment 
-                except Exception as e:
+                except Exception:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
@@ -1456,7 +1447,7 @@ class SpinMeasurements:
                 'runs': cfg.runs, 
                 'iters': cfg.iters
             })
-        except Exception as e:
+        except Exception:
             self.queue_from_exp.put_nowait(self.build_status_msg(
             status="failed",
             percent_completed=0,
@@ -1493,7 +1484,7 @@ class SpinMeasurements:
                 self.dig.start_buffer() # start digitizer (enable trigger)  
                 ps.start_now(owner=token) # start pulse sequence
 
-            except Exception as e:
+            except Exception:
                 self.queue_from_exp.put_nowait(self.build_status_msg(
                     status="failed",
                     percent_completed=0,
@@ -1521,7 +1512,7 @@ class SpinMeasurements:
                 try:       
                     pulsed_odmr_result_raw = self.dig.acquire() # acquire data from digitizer                
                     pulsed_odmr_result = np.mean(pulsed_odmr_result_raw,axis=1) # average all data over each trigger/segment 
-                except Exception as e:
+                except Exception:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
@@ -1730,7 +1721,7 @@ class SpinMeasurements:
                 
                 if experiment_widget_process_queue(self.queue_to_exp) == 'stop':
                     # the GUI has asked us nicely to exit
-                    if cfg.save == True:
+                    if cfg.save:
                         run_save(cfg.dataset, cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
                     
                     self.equipment_off()
@@ -1756,11 +1747,11 @@ class SpinMeasurements:
                     # self.queue_from_exp.put_nowait([percent_completed, 'stopped', [fit_value, fit_error]])
                     self.queue_from_exp.put_nowait(msg)
 
-                    if cfg.save == True:
+                    if cfg.save:
                         run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
                     return
                     
-            if cfg.save == True:
+            if cfg.save:
                 run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
 
             self.queue_from_exp.put_nowait([percent_completed, 'complete', None])
@@ -1831,7 +1822,7 @@ class SpinMeasurements:
                 'runs': cfg.runs, 
                 'iters': cfg.iters}
             )    
-        except Exception as e:
+        except Exception:
             self.queue_from_exp.put_nowait(self.build_status_msg(
                 status="failed",
                 percent_completed=0,
@@ -1864,7 +1855,7 @@ class SpinMeasurements:
                 self.dig.config() # start digitizer --> waits for trigger from pulse sequence
                 self.dig.start_buffer() # start digitizer (enable trigger)  
                 ps.start_now(owner=token) # start pulse sequence
-            except Exception as e:
+            except Exception:
                 self.queue_from_exp.put_nowait(self.build_status_msg(
                     status="failed",
                     percent_completed=0,
@@ -1890,7 +1881,7 @@ class SpinMeasurements:
                 try:     
                     t1_result_raw = self.dig.acquire() # acquire data from digitizer
                     t1_result = np.mean(t1_result_raw,axis=1)
-                except Exception as e:
+                except Exception:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
@@ -2082,7 +2073,7 @@ class SpinMeasurements:
                 'runs': cfg.runs, 
                 'iters': cfg.iters
             }) 
-        except Exception as e:
+        except Exception:
             self.queue_from_exp.put_nowait(self.build_status_msg(
                 status="failed",
                 percent_completed=0,
@@ -2115,7 +2106,7 @@ class SpinMeasurements:
                 self.dig.config() # start digitizer --> waits for trigger from pulse sequence
                 self.dig.start_buffer() # start digitizer (enable trigger)  
                 ps.start_now(owner=token) # start pulse sequence
-            except Exception as e:
+            except Exception:
                 self.queue_from_exp.put_nowait(self.build_status_msg(
                     status="failed",
                     percent_completed=0,
@@ -2142,7 +2133,7 @@ class SpinMeasurements:
                     t2_result_raw = self.dig.acquire() # acquire data from digitizer
                     # t2_result_raw = t2_result_raw[:,50:]
                     t2_result = np.mean(t2_result_raw, axis=1)
-                except Exception as e:
+                except Exception:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
@@ -2309,7 +2300,7 @@ class SpinMeasurements:
                 'runs': cfg.runs, 
                 'iters': cfg.iters
             }) 
-        except Exception as e:
+        except Exception:
             self.queue_from_exp.put_nowait(self.build_status_msg(
                 status="failed",
                 percent_completed=0,
@@ -2342,7 +2333,7 @@ class SpinMeasurements:
                 self.dig.config() # start digitizer --> waits for trigger from pulse sequence
                 self.dig.start_buffer() # start digitizer (enable trigger)  
                 ps.start_now(owner=token) # start pulse sequence
-            except Exception as e:
+            except Exception:
                 self.queue_from_exp.put_nowait(self.build_status_msg(
                     status="failed",
                     percent_completed=0,
@@ -2369,7 +2360,7 @@ class SpinMeasurements:
                     t2_result_raw = self.dig.acquire() # acquire data from digitizer
                     # t2_result_raw = t2_result_raw[:,50:]
                     t2_result = np.mean(t2_result_raw, axis=1)
-                except Exception as e:
+                except Exception:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
@@ -2516,7 +2507,7 @@ class SpinMeasurements:
                 'runs': cfg.runs, 
                 'iters': cfg.iters
             })
-        except Exception as e:
+        except Exception:
             self.queue_from_exp.put_nowait(self.build_status_msg(
                 status="failed",
                 percent_completed=0,
@@ -2549,7 +2540,7 @@ class SpinMeasurements:
                 self.dig.config() # start digitizer --> waits for trigger from pulse sequence
                 self.dig.start_buffer() # start digitizer (enable trigger)  
                 ps.start_now(owner=token) # start pulse sequence
-            except Exception as e:
+            except Exception:
                 self.queue_from_exp.put_nowait(self.build_status_msg(
                     status="failed",
                     percent_completed=0,
@@ -2575,7 +2566,7 @@ class SpinMeasurements:
                 try:        
                     dq_result_raw = self.dig.acquire() # acquire data from digitizer
                     dq_result = np.mean(dq_result_raw,axis=1) # average all data over each trigger/segment 
-                except Exception as e:
+                except Exception:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
@@ -2730,7 +2721,7 @@ class SpinMeasurements:
                 iters=cfg.iters,
                 freqs=frequencies,
             ))
-        except Exception as e:
+        except Exception:
             self.queue_from_exp.put_nowait(self.build_status_msg(
                 status="failed",
                 percent_completed=0,
@@ -2764,7 +2755,7 @@ class SpinMeasurements:
                 self.dig.config() # start digitizer --> waits for trigger from pulse sequence
                 self.dig.start_buffer() # start digitizer (enable trigger)  
                 ps.start_now(owner=token) # start pulse sequence
-            except Exception as e:
+            except Exception:
                 self.queue_from_exp.put_nowait(self.build_status_msg(
                     status="failed",
                     percent_completed=0,
@@ -2790,7 +2781,7 @@ class SpinMeasurements:
                 try:
                     deer_result_raw = self.dig.acquire()
                     deer_result = np.mean(deer_result_raw, axis=1)
-                except Exception as e:
+                except Exception:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
@@ -2954,7 +2945,7 @@ class SpinMeasurements:
                 'iters': cfg.iters,
                 'pi_pulses': dark_taus/1e9
             })
-        except Exception as e:
+        except Exception:
             self.queue_from_exp.put_nowait(self.build_status_msg(
                 status="failed",
                 percent_completed=0,
@@ -2988,7 +2979,7 @@ class SpinMeasurements:
                 self.dig.config() # start digitizer --> waits for trigger from pulse sequence
                 self.dig.start_buffer() # start digitizer (enable trigger)  
                 ps.start_now(owner=token) # start pulse sequence
-            except Exception as e:
+            except Exception:
                 self.queue_from_exp.put_nowait(self.build_status_msg(
                     status="failed",
                     percent_completed=0,
@@ -3014,7 +3005,7 @@ class SpinMeasurements:
                 try:   
                     deer_result_raw = self.dig.acquire() # acquire data from digitizer
                     deer_result = np.mean(deer_result_raw,axis=1) # average all data over each trigger/segment
-                except Exception as e:
+                except Exception:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
@@ -3166,7 +3157,7 @@ class SpinMeasurements:
                 'runs': cfg.runs, 
                 'iters': cfg.iters
             })
-        except Exception as e:
+        except Exception:
             self.queue_from_exp.put_nowait(self.build_status_msg(
                 status="failed",
                 percent_completed=0,
@@ -3200,7 +3191,7 @@ class SpinMeasurements:
                 self.dig.config() # start digitizer --> waits for trigger from pulse sequence
                 self.dig.start_buffer() # start digitizer (enable trigger)  
                 ps.start_now(owner=token) # start pulse sequence
-            except Exception as e:
+            except Exception:
                 self.queue_from_exp.put_nowait(self.build_status_msg(
                     status="failed",
                     percent_completed=0,
@@ -3226,7 +3217,7 @@ class SpinMeasurements:
                 try:   
                     deer_result_raw = self.dig.acquire() # acquire data from digitizer
                     deer_result = np.mean(deer_result_raw,axis=1) # average all data over each trigger/segment
-                except Exception as e:
+                except Exception:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
@@ -3383,7 +3374,7 @@ class SpinMeasurements:
                 'runs': cfg.runs, 
                 'iters': cfg.iters
             })
-        except Exception as e:
+        except Exception:
             self.queue_from_exp.put_nowait(self.build_status_msg(
                 status="failed",
                 percent_completed=0,
@@ -3418,7 +3409,7 @@ class SpinMeasurements:
                 self.dig.config() # start digitizer --> waits for trigger from pulse sequence
                 self.dig.start_buffer() # start digitizer (enable trigger)  
                 ps.start_now(owner=token) # start pulse sequence
-            except Exception as e:
+            except Exception:
                 self.queue_from_exp.put_nowait(self.build_status_msg(
                     status="failed",
                     percent_completed=0,
@@ -3444,7 +3435,7 @@ class SpinMeasurements:
                 try:    
                     cd_result_raw = self.dig.acquire() # acquire data from digitizer
                     cd_result = np.mean(cd_result_raw,axis=1) # average all data over each trigger/segment 
-                except Exception as e:
+                except Exception:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
@@ -3593,7 +3584,7 @@ class SpinMeasurements:
             #     'iters': cfg.iters,
             #     'pi_pulses': dark_taus
             # })
-        except Exception as e:
+        except Exception:
             self.queue_from_exp.put_nowait(self.build_status_msg(
                 status="failed",
                 percent_completed=0,
@@ -3626,7 +3617,7 @@ class SpinMeasurements:
                 self.dig.config() # start digitizer --> waits for trigger from pulse sequence
                 self.dig.start_buffer() # start digitizer (enable trigger)  
                 ps.start_now(owner=token) # start pulse sequence
-            except Exception as e:
+            except Exception:
                 self.queue_from_exp.put_nowait(self.build_status_msg(
                     status="failed",
                     percent_completed=0,
@@ -3653,7 +3644,7 @@ class SpinMeasurements:
                     corr_result_raw = self.dig.acquire() # acquire data from digitizer
                     corr_result=np.mean(corr_result_raw,axis=1) # average all data over each trigger/segment
                     # segments=(np.shape(corr_result))[0]
-                except Exception as e:
+                except Exception:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
@@ -3798,7 +3789,7 @@ class SpinMeasurements:
                 'iters': cfg.iters,
                 'pi_pulses': dark_taus
             })
-        except Exception as e:
+        except Exception:
             self.queue_from_exp.put_nowait(self.build_status_msg(
                 status="failed",
                 percent_completed=0,
@@ -3831,7 +3822,7 @@ class SpinMeasurements:
                 self.dig.config() # start digitizer --> waits for trigger from pulse sequence
                 self.dig.start_buffer() # start digitizer (enable trigger)  
                 ps.start_now(owner=token) # start pulse sequence
-            except Exception as e:
+            except Exception:
                 self.queue_from_exp.put_nowait(self.build_status_msg(
                     status="failed",
                     percent_completed=0,
@@ -3858,7 +3849,7 @@ class SpinMeasurements:
                     corr_result_raw = self.dig.acquire() # acquire data from digitizer
                     corr_result=np.mean(corr_result_raw,axis=1) # average all data over each trigger/segment
                     # segments=(np.shape(corr_result))[0]
-                except Exception as e:
+                except Exception:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
@@ -4006,7 +3997,7 @@ class SpinMeasurements:
                 'num_pts': cfg.num_pts,
                 'runs': cfg.runs, 
                 'iters': cfg.iters})
-        except Exception as e:
+        except Exception:
             self.queue_from_exp.put_nowait(self.build_status_msg(
                 status="failed",
                 percent_completed=0,
@@ -4040,7 +4031,7 @@ class SpinMeasurements:
                 self.dig.config() # start digitizer --> waits for trigger from pulse sequence
                 self.dig.start_buffer() # start digitizer (enable trigger)  
                 ps.start_now(owner=token) # start pulse sequence
-            except Exception as e:
+            except Exception:
                 self.queue_from_exp.put_nowait(self.build_status_msg(
                     status="failed",
                     percent_completed=0,
@@ -4066,7 +4057,7 @@ class SpinMeasurements:
                 try:
                     corr_result_raw = self.dig.acquire() # acquire data from digitizer
                     corr_result = np.mean(corr_result_raw,axis=1) # average all data over each trigger/segment 
-                except Exception as e:
+                except Exception:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
@@ -4219,7 +4210,7 @@ class SpinMeasurements:
                 'runs': cfg.runs, 
                 'iters': cfg.iters
             })    
-        except Exception as e:
+        except Exception:
             self.queue_from_exp.put_nowait(self.build_status_msg(
                 status="failed",
                 percent_completed=0,
@@ -4252,7 +4243,7 @@ class SpinMeasurements:
                 self.dig.config() # start digitizer --> waits for trigger from pulse sequence
                 self.dig.start_buffer() # start digitizer (enable trigger)  
                 ps.start_now(owner=token) # start pulse sequence
-            except Exception as e:
+            except Exception:
                 self.queue_from_exp.put_nowait(self.build_status_msg(
                     status="failed",
                     percent_completed=0,
@@ -4278,7 +4269,7 @@ class SpinMeasurements:
                 try:
                     deer_t2_result_raw = self.dig.acquire() # acquire data from digitizer
                     deer_t2_result = np.mean(deer_t2_result_raw, axis=1) # average all data over each trigger/segment
-                except Exception as e:
+                except Exception:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
@@ -4447,7 +4438,7 @@ class SpinMeasurements:
                     'runs': cfg.runs, 
                     'iters': cfg.iters
                 })
-        except Exception as e:
+        except Exception:
             self.queue_from_exp.put_nowait(self.build_status_msg(
                 status="failed",
                 percent_completed=0,
@@ -4480,7 +4471,7 @@ class SpinMeasurements:
                 self.dig.config() # start digitizer --> waits for trigger from pulse sequence
                 self.dig.start_buffer() # start digitizer (enable trigger)  
                 ps.start_now(owner=token) # start pulse sequence
-            except Exception as e:
+            except Exception:
                 self.queue_from_exp.put_nowait(self.build_status_msg(
                     status="failed",
                     percent_completed=0,
@@ -4506,7 +4497,7 @@ class SpinMeasurements:
                 try:
                     nmr_result_raw = self.dig.acquire() # acquire data from digitizer
                     nmr_result = np.mean(nmr_result_raw,axis=1) # average all data over each trigger/segment 
-                except Exception as e:
+                except Exception:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
@@ -4702,7 +4693,7 @@ class SpinMeasurements:
                         'rf_pihalf': rf_duration})
                         # 'rf_pihalf': cfg.rf_pi_half})  
                         # 'rf_pihalf': cfg.num_pts*t_seq*1e-9})
-                except Exception as e:
+                except Exception:
                     self.queue_from_exp.put_nowait(self.build_status_msg(
                         status="failed",
                         percent_completed=0,
@@ -4744,7 +4735,7 @@ class SpinMeasurements:
                         self.dig.config()
                         self.dig.start_buffer()
                         ps.start_now(owner=token)
-                    except Exception as e:
+                    except Exception:
                         self.queue_from_exp.put_nowait(self.build_status_msg(
                             status="failed",
                             percent_completed=0,
@@ -4770,7 +4761,7 @@ class SpinMeasurements:
                         try:     
                             casr_result_raw = self.dig.acquire() # acquire data from digitizer
                             casr_result = np.mean(casr_result_raw,axis=1) # average all data over each trigger/segment 
-                        except Exception as e:
+                        except Exception:
                             failed = True
                             exception_type = type(e).__name__
                             iters_completed = i
@@ -4966,7 +4957,7 @@ class SpinMeasurements:
                         'rf_pihalf': rf_duration})
                         # 'rf_pihalf': cfg.rf_pi_half})  
                         # 'rf_pihalf': cfg.num_pts*t_seq*1e-9})
-                except Exception as e:
+                except Exception:
                     self.queue_from_exp.put_nowait(self.build_status_msg(
                         status="failed",
                         percent_completed=0,
@@ -5008,7 +4999,7 @@ class SpinMeasurements:
                         self.dig.config()
                         self.dig.start_buffer()
                         ps.start_now(owner=token)
-                    except Exception as e:
+                    except Exception:
                         self.queue_from_exp.put_nowait(self.build_status_msg(
                             status="failed",
                             percent_completed=0,
@@ -5034,7 +5025,7 @@ class SpinMeasurements:
                         try:     
                             casr_result_raw = self.dig.acquire() # acquire data from digitizer
                             casr_result = np.mean(casr_result_raw,axis=1) # average all data over each trigger/segment 
-                        except Exception as e:
+                        except Exception:
                             failed = True
                             exception_type = type(e).__name__
                             iters_completed = i
