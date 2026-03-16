@@ -5122,8 +5122,8 @@ class SpinMeasurements:
         return A / (1 + ((x - x0) / gamma)**2) + c
     
     @staticmethod
-    def decaying_cosine(x, A, gamma, T, phi, c):
-        return A * np.exp(-gamma * x) * np.cos(2 * np.pi * x / T + phi) + c
+    def decaying_cosine(x, A, t_decay, T, phi, c):
+        return A * np.exp(-x / t_decay) * np.cos(2 * np.pi * x / T + phi) + c
     
     @staticmethod
     def stretched_exponential(x, A, T, n, c):
@@ -5131,7 +5131,7 @@ class SpinMeasurements:
 
     @staticmethod
     def mod_stretched_exponential(x, A, T, n, a1, f1, phi1, a2, f2, phi2):
-        return A*np.exp(-(x/T)**n)*(1-a1*np.sin(2*np.pi*f1*x/4 + phi1)**2)*(1-a2*np.sin(2*np.pi*f2*x/4 + phi2)**2)
+        return A * np.exp(-(x / T)**n) * (1 - a1 * np.sin(2 * np.pi * f1 * x / 4 + phi1)**2) * (1 - a2 * np.sin(2 * np.pi * f2 * x / 4 + phi2)**2)
 
     # FIXME: make T1_nv and n_nv fixed parameters, not fit parameters
     @staticmethod
@@ -5213,10 +5213,10 @@ class SpinMeasurements:
                 fitted_errors = [round(i, 4) for i in param_errors]
 
             case 'Decaying Cos.':
-                if exp == 'rabi':
-                    initial_guess[1] /= 1e9 # convert [Hz] to [GHz]
+                if exp in ('rabi', 't2'):
+                    initial_guess[1] *= 1e9 # convert [s] to [us]
                     initial_guess[2] *= 1e9 # convert [s] to [ns]
-                
+
                 ### --- Perform fit --- ###
                 params, covariance = curve_fit(self.decaying_cosine, x_values, y_values, p0=initial_guess)
                 y_fit = self.decaying_cosine(x_fit, *params)
