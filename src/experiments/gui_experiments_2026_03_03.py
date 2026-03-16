@@ -164,7 +164,7 @@ class ExpWidget(QWidget):
 
         self.fit_none_default = [0]
         self.fit_neg_lorentz_defaults = [0.01, 1e9, 6e6, 1] # defaults = 1% contrast, 1 GHz central freq, 6 MHz linewidth, 1 vertical offset
-        self.fit_decaying_cosine_defaults = [0.02, 0.001e9, 200e-9, 0, 1] # defaults = 2% contrast, 0.001 decay rate, 200 ns period, 0 phase, 1 vertical offset
+        self.fit_decaying_cosine_defaults = [0.02, 1e-6, 200e-9, 0, 1] # defaults = 2% contrast, 1 us decay time, 200 ns period, 0 phase, 1 vertical offset
         self.fit_two_neg_lorentz_defaults = [0.01, 1e9, 6e6, 1, 0.01, 1e9, 6e6, 1] # defaults = 1% contrast, 1 GHz central freq, 6 MHz linewidth, 1 vertical offset, 1% contrast, 1 GHz central freq, 6 MHz linewidth, 1 vertical offset for the two overlapping Lorentzians
         self.fit_str_exp_defaults = [0.01, 1e-3, 1, 0] # defaults = 0.01 amplitude, 1 ms T1, 1 stretching factor, 0 vertical offset
         self.fit_mod_str_exp_defaults = [0.1, 2e-6, 1, 1, 0.2e6, 0, 1, 0.2e6, 0] # defaults = 0.1 amplitude, 2 us T2, 1 stretching factor, 1 amp first sine wave, 0.2 MHz first sine wave, 0 phase first sine wave, 1 amp second sine wave, 0.2 MHz second sine wave, 0 phase second sine wave
@@ -1478,11 +1478,11 @@ class ExpWidget(QWidget):
                                 'widget': SpinBox(value = defaults[2], suffix = 'Hz', siPrefix = True, dec = True)},
                         'c': {'display_text': 'c: ',
                                 'widget': SpinBox(value = defaults[3])}}
-            case 'Fit Decaying Cos': # A * exp(-gamma * x) * cos(2 * pi * x / T + phi) + c
+            case 'Fit Decaying Cos': # A * exp(-x / t_decay) * cos(2 * pi * x / T + phi) + c
                 params = {
                         'A': {'display_text': 'A: ',
                                 'widget': SpinBox(value = defaults[0])},
-                        'gamma': {'display_text': '\u03B3: ',
+                        't_decay': {'display_text': 't<sub>decay</sub>: ',
                                 'widget': SpinBox(value = defaults[1], suffix = 'Hz', siPrefix = True, dec = True)},
                         'T': {'display_text': 'T: ',
                                 'widget': SpinBox(value = defaults[2], suffix = 's', siPrefix = True, dec = True)},
