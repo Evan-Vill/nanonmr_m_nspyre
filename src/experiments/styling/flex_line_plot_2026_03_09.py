@@ -1055,20 +1055,20 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
 
             case 'odmr pl':                
                 # create some default signal plots
-                self.add_plot('sig_pl_avg',        series='signal_pl',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('sig_pl_latest',     series='signal_pl',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('sig_pl_latest')
+                self.add_plot('sig_avg_pl',        series='signal_pl',   scan_i='',     scan_j='',  processing='Average')
+                self.add_plot('sig_latest_pl',     series='signal_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                self.hide_plot('sig_latest_pl')
 
                 # create some default background plots
-                self.add_plot('bg_pl_avg',         series='background_pl',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('bg_pl_latest',      series='background_pl',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('bg_pl_latest')
+                self.add_plot('bg_avg_pl',         series='background_pl',   scan_i='',     scan_j='',  processing='Average')
+                self.add_plot('bg_latest_pl',      series='background_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                self.hide_plot('bg_latest_pl')
 
                 # create some default diff plots
-                self.add_plot('diff_pl_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('diff_pl_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('diff_pl_avg')
-                self.hide_plot('diff_pl_latest')
+                self.add_plot('diff_avg_pl',       series='diff_pl',  scan_i='',      scan_j='',  processing='Average')
+                self.add_plot('diff_latest_pl',    series='diff_pl',  scan_i='-1',    scan_j='',  processing='Average')
+                self.hide_plot('diff_avg_pl')
+                self.hide_plot('diff_latest_pl')
 
             case 'odmr rf':
                 # # create default fit plot
@@ -1135,20 +1135,20 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
 
             case 'rabi pl':                
                 # create some default signal plots
-                self.add_plot('sig_pl_avg',        series='signal_pl',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('sig_pl_latest',     series='signal_pl',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('sig_pl_latest')
+                self.add_plot('sig_avg_pl',        series='signal_pl',   scan_i='',     scan_j='',  processing='Average')
+                self.add_plot('sig_latest_pl',     series='signal_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                self.hide_plot('sig_latest_pl')
 
                 # create some default background plots
-                self.add_plot('bg_pl_avg',         series='background_pl',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('bg_pl_latest',      series='background_pl',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('bg_pl_latest')
+                self.add_plot('bg_avg_pl',         series='background_pl',   scan_i='',     scan_j='',  processing='Average')
+                self.add_plot('bg_latest_pl',      series='background_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                self.hide_plot('bg_latest_pl')
 
                 # create some default diff plots
-                self.add_plot('diff_pl_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('diff_pl_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('diff_pl_avg')
-                self.hide_plot('diff_pl_latest')
+                self.add_plot('diff_avg_pl',       series='diff_pl',  scan_i='',      scan_j='',  processing='Average')
+                self.add_plot('diff_latest_pl',    series='diff_pl',  scan_i='-1',    scan_j='',  processing='Average')
+                self.hide_plot('diff_avg_pl')
+                self.hide_plot('diff_latest_pl')
 
             case 't1':
                 # create default fit plot
@@ -1183,20 +1183,20 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
 
             case 't1 pl':                
                 # create some default signal plots
-                self.add_plot('sig_pl_avg',        series='signal_pl',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('sig_pl_latest',     series='signal_pl',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('sig_pl_latest')
+                self.add_plot('sig_avg_pl',        series='signal_pl',   scan_i='',     scan_j='',  processing='Average')
+                self.add_plot('sig_latest_pl',     series='signal_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                self.hide_plot('sig_latest_pl')
 
                 # create some default background plots
-                self.add_plot('bg_pl_avg',         series='background_pl',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('bg_pl_latest',      series='background_pl',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('bg_pl_latest')
+                self.add_plot('bg_avg_pl',         series='background_pl',   scan_i='',     scan_j='',  processing='Average')
+                self.add_plot('bg_latest_pl',      series='background_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                self.hide_plot('bg_latest_pl')
 
                 # create some default diff plots
-                self.add_plot('diff_pl_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('diff_pl_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('diff_pl_avg')
-                self.hide_plot('diff_pl_latest')
+                self.add_plot('diff_avg_pl',       series='diff_pl',  scan_i='',      scan_j='',  processing='Average')
+                self.add_plot('diff_latest_pl',    series='diff_pl',  scan_i='-1',    scan_j='',  processing='Average')
+                self.hide_plot('diff_avg_pl')
+                self.hide_plot('diff_latest_pl')
 
             case 't2':
                 # create default fit plot
@@ -1237,20 +1237,20 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
 
             case 't2 pl':                
                 # create some default signal plots
-                self.add_plot('sig_pl_avg',        series='signal_pl',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('sig_pl_latest',     series='signal_pl',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('sig_pl_latest')
+                self.add_plot('sig_avg_pl',        series='signal_pl',   scan_i='',     scan_j='',  processing='Average')
+                self.add_plot('sig_latest_pl',     series='signal_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                self.hide_plot('sig_latest_pl')
 
                 # create some default background plots
-                self.add_plot('bg_pl_avg',         series='background_pl',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('bg_pl_latest',      series='background_pl',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('bg_pl_latest')
+                self.add_plot('bg_avg_pl',         series='background_pl',   scan_i='',     scan_j='',  processing='Average')
+                self.add_plot('bg_latest_pl',      series='background_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                self.hide_plot('bg_latest_pl')
 
                 # create some default diff plots
-                self.add_plot('diff_pl_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('diff_pl_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('diff_pl_avg')
-                self.hide_plot('diff_pl_latest')
+                self.add_plot('diff_avg_pl',       series='diff_pl',  scan_i='',      scan_j='',  processing='Average')
+                self.add_plot('diff_latest_pl',    series='diff_pl',  scan_i='-1',    scan_j='',  processing='Average')
+                self.hide_plot('diff_avg_pl')
+                self.hide_plot('diff_latest_pl')
 
             case 'dq':
                 # create some default diff plots
@@ -1651,20 +1651,20 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
 
             case 'nmr pl':                
                 # create some default signal plots
-                self.add_plot('sig_pl_avg',        series='signal_pl',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('sig_pl_latest',     series='signal_pl',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('sig_pl_latest')
+                self.add_plot('sig_avg_pl',        series='signal_pl',   scan_i='',     scan_j='',  processing='Average')
+                self.add_plot('sig_latest_pl',     series='signal_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                self.hide_plot('sig_latest_pl')
 
                 # create some default background plots
-                self.add_plot('bg_pl_avg',         series='background_pl',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('bg_pl_latest',      series='background_pl',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('bg_pl_latest')
+                self.add_plot('bg_avg_pl',         series='background_pl',   scan_i='',     scan_j='',  processing='Average')
+                self.add_plot('bg_latest_pl',      series='background_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                self.hide_plot('bg_latest_pl')
 
                 # create some default diff plots
-                self.add_plot('diff_pl_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('diff_pl_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('diff_pl_avg')
-                self.hide_plot('diff_pl_latest')
+                self.add_plot('diff_avg_pl',       series='diff_pl',  scan_i='',      scan_j='',  processing='Average')
+                self.add_plot('diff_latest_pl',    series='diff_pl',  scan_i='-1',    scan_j='',  processing='Average')
+                self.hide_plot('diff_avg_pl')
+                self.hide_plot('diff_latest_pl')
 
             case 'casr':
                 self.line_plot.plot_widget.getPlotItem().setDownsampling(ds=10, auto=False, mode='mean')
@@ -2087,6 +2087,11 @@ class _FlexLinePlotWidget(LinePlotWidget):
                             bg_name = 'background'
                             data_sig = datasets[sig_name]
                             data_bg = datasets[bg_name]
+                        elif series == 'diff_pl':
+                            sig_name = 'signal_pl'
+                            bg_name = 'background_pl'
+                            data_sig = datasets[sig_name]
+                            data_bg = datasets[bg_name]
                         elif series == 'div_rf':
                             sig_name = 'rf_signal'
                             bg_name = 'rf_background'
@@ -2173,7 +2178,11 @@ class _FlexLinePlotWidget(LinePlotWidget):
                         #     )
 
                         try:
-                            if series == 'diff' or series == 'diff dq1' or series == 'diff dq2' or series == 'div' or series == 'div_rf' or series == 'contrast' or series == 'dark_contrast' or series == 'echo_contrast' or series == 'cd_contrast' or series == 'fft' or series == 'diff_py' or series == 'diff_ny' or series == 'diff_osc_with_pulse' or series == 'diff_osc_without_pulse':
+                            if series in (
+                                    'diff', 'diff_pl', 'diff dq1', 'diff dq2', 
+                                    'div', 'div_rf', 'contrast', 
+                                    'dark_contrast', 'echo_contrast', 'cd_contrast', 
+                                    'fft', 'diff_py', 'diff_ny', 'diff_osc_with_pulse', 'diff_osc_without_pulse'):
                                 if scan_i == '' and scan_j == '':
                                     data_subset_sig = data_sig[:]
                                     data_subset_bg = data_bg[:]
@@ -2186,7 +2195,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                                 else:
                                     data_subset_sig = data_sig[int(scan_i) : int(scan_j)]
                                     data_subset_bg = data_bg[int(scan_i) : int(scan_j)]
-                            elif series == 'deer_contrast' or series == 'deer_log_contrast' or series == 'deer_diff':
+                            elif series in ('deer_contrast', 'deer_log_contrast', 'deer_diff'):
                                 if scan_i == '' and scan_j == '':
                                     data_subset_dark_sig = data_dark_sig[:]
                                     data_subset_dark_bg = data_dark_bg[:]
@@ -2207,7 +2216,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                                     data_subset_dark_bg = data_dark_bg[int(scan_i) : int(scan_j)]
                                     data_subset_echo_sig = data_echo_sig[int(scan_i) : int(scan_j)]
                                     data_subset_echo_bg = data_echo_bg[int(scan_i) : int(scan_j)]
-                            elif series == 'diff_overall' or series == 'sum_nuclear':
+                            elif series in ('diff_overall', 'sum_nuclear'):
                                 if scan_i == '' and scan_j == '':
                                     data_subset_wpy = data_wpy[:]
                                     data_subset_wny = data_wny[:]
@@ -2253,7 +2262,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
 
                         elif processing == 'Average':
                             if series in (
-                                'diff', 'diff dq1', 'diff dq2', 'div', 'div_rf', 'contrast', 
+                                'diff', 'diff_pl', 'diff dq1', 'diff dq2', 'div', 'div_rf', 'contrast', 
                                 'dark_contrast', 'echo_contrast', 'cd_contrast', 'fft', 
                                 'diff_py', 'diff_ny', 'diff_osc_with_pulse', 'diff_osc_without_pulse'
                             ):
@@ -2317,7 +2326,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
 
                     # update the plot
                     try:
-                        if series == 'diff' or series == 'diff dq1' or series == 'diff dq2' or series == 'diff_py' or series == 'diff_ny' or series == 'diff_osc_with_pulse' or series == 'diff_osc_without_pulse':
+                        if series in ('diff', 'diff_pl', 'diff dq1', 'diff dq2', 'diff_py', 'diff_ny', 'diff_osc_with_pulse', 'diff_osc_without_pulse'):
                             processed_data = [processed_data_sig[0], processed_data_bg[1] - processed_data_sig[1]]                        
                         elif series == 'div' or series == 'div_rf':
                             processed_data = [processed_data_sig[0], processed_data_sig[1] / processed_data_bg[1]]
@@ -2478,6 +2487,7 @@ class PlotColorManager:
 
         plot_name = item.name() or item.opts.get("name", "")
         is_fit = (plot_name == "fit")
+        is_pl = str(plot_name).lower().endswith("_pl")
 
         # keep existing pen color unless caller provides a color
         pen = pg.mkPen(item.opts.get("pen", None))
@@ -2504,6 +2514,23 @@ class PlotColorManager:
         if color is not None:
             pen.setColor(color)
 
+        if is_pl:
+            if self.mode == "light":
+                pen.setWidth(6) 
+            else:
+                pen.setWidth(6) 
+
+            item.setPen(pen)
+
+            # no data point markers for PL traces
+            item.setSymbol(None)
+            item.setSymbolBrush(None)
+            item.setSymbolPen(None)
+
+            if getattr(item, "scatter", None) is not None:
+                item.scatter.setVisible(False)
+            return
+
         if self.mode == "light":
             pen.setWidth(8)
             item.setPen(pen)
@@ -2513,7 +2540,7 @@ class PlotColorManager:
             item.setSymbolBrush(None)
             item.setSymbolPen(None)
 
-            # IMPORTANT: also hide the internal scatter item if it exists
+            # hide the internal scatter item if it exists
             if getattr(item, "scatter", None) is not None:
                 item.scatter.setVisible(False)
 
