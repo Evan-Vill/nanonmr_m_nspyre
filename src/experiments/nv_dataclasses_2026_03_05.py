@@ -25,43 +25,6 @@ class SignalScanCfg:
     detector: str
 
 @dataclass(frozen=True)
-class ReadoutCalScanCfg:
-    dataset: str
-    start: float
-    stop: float
-    num_pts: int
-    iters: int
-    runs: int
-    detector: str
-    dig_amplitude: float
-    dig_coupling: str
-    dig_sampling_freq: float
-    dig_termination: str
-    dig_timeout: float
-    directory: str
-    filename: str
-    fit_type: str
-    fit: bool
-    fit_live: bool
-    fit_params: dict
-    freq: float
-    i_offset: float
-    laser_init: float
-    laser_power: float
-    laser_readout: float
-    pretrig_size: int
-    pulse_axis: str
-    q_offset: float
-    read_channel: int
-    rf_power: float
-    save: bool
-    file_format: str
-    segment_size: int
-    sideband: str
-    sideband_freq: float
-    sideband_power: float
-
-@dataclass(frozen=True)
 class ODMRScanCfg:
     dataset: str
     num_pts: int
@@ -92,6 +55,7 @@ class ODMRScanCfg:
     rf_power: float
     save: bool
     file_format: str
+    pl_pt: int
     segment_size: int
     sideband: str
     sideband_freq: float
@@ -164,6 +128,7 @@ class RabiScanCfg:
     rf_power: float
     save: bool
     file_format: str
+    pl_pt: int
     segment_size: int
     sideband: str
     sideband_freq: float
@@ -200,6 +165,7 @@ class PulsedODMRScanCfg:
     rf_power: float
     save: bool
     file_format: str
+    pl_pt: int
     segment_size: int
     sideband_power: float
 
@@ -304,6 +270,7 @@ class MWT1ScanCfg:
     rf_power: float
     save: bool
     file_format: str
+    pl_pt: int
     segment_size: int
     sideband: str
     sideband_freq: float
@@ -344,6 +311,7 @@ class T2ScanCfg:
     rf_power: float
     save: bool
     file_format: str
+    pl_pt: int
     segment_size: int
     sideband: str
     sideband_freq: float
@@ -802,6 +770,7 @@ class CorrSpecScanCfg:
     rf_power: float
     save: bool
     file_format: str
+    pl_pt: int
     segment_size: int
     sideband: str
     sideband_freq: float
@@ -842,6 +811,7 @@ class CASRScanCfg:
     rf_pulse_power: float
     save: bool
     file_format: str
+    pl_pt: int
     segment_size: int
     sideband: str
     sideband_freq: float
