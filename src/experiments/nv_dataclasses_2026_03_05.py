@@ -7,6 +7,7 @@ class SignalScanCfg:
     exp_sampling_rate_0: float
     segment_size: int
     read_channel: int
+    both_channels: bool
     pretrig_size: int
     dig_sampling_freq: float
     dig_amplitude: float
@@ -52,6 +53,7 @@ class ODMRScanCfg:
     probe: float
     q_offset: float
     read_channel: int
+    both_channels: bool
     rf_power: float
     save: bool
     file_format: str
@@ -86,6 +88,7 @@ class ODMRSmartScanCfg:
     probe: float
     q_offset: float
     read_channel: int
+    both_channels: bool
     rf_power: float
     save: bool
     file_format: str
@@ -125,6 +128,7 @@ class RabiScanCfg:
     pulse_axis: str
     q_offset: float
     read_channel: int
+    both_channels: bool
     rf_power: float
     save: bool
     file_format: str
@@ -162,6 +166,7 @@ class PulsedODMRScanCfg:
     pretrig_size: int
     q_offset: float
     read_channel: int
+    both_channels: bool
     rf_power: float
     save: bool
     file_format: str
@@ -197,6 +202,7 @@ class PulsedODMRRFScanCfg:
     pretrig_size: int
     q_offset: float
     read_channel: int
+    both_channels: bool
     rf_power: float
     rf_pulse_freq: float
     rf_pulse_phase: float
@@ -232,6 +238,7 @@ class OptT1ScanCfg:
     laser_readout: float
     pretrig_size: int
     read_channel: int
+    both_channels: bool
     save: bool
     file_format: str
     segment_size: int
@@ -267,6 +274,7 @@ class MWT1ScanCfg:
     pulse_axis: str
     q_offset: float
     read_channel: int
+    both_channels: bool
     rf_power: float
     save: bool
     file_format: str
@@ -308,6 +316,7 @@ class T2ScanCfg:
     pulse_axis: str
     q_offset: float
     read_channel: int
+    both_channels: bool
     rf_power: float
     save: bool
     file_format: str
@@ -349,6 +358,7 @@ class T2RFScanCfg:
     pretrig_size: int
     q_offset: float
     read_channel: int
+    both_channels: bool
     rf_power: float
     rf_pulse_freq: float
     rf_pulse_phase: float
@@ -389,6 +399,7 @@ class DQScanCfg:
     pulse_axis: str
     q_offset: float
     read_channel: int
+    both_channels: bool
     rf_power: float
     save: bool
     file_format: str
@@ -428,6 +439,7 @@ class DEERScanCfg:
     pulse_axis: str
     q_offset: float
     read_channel: int
+    both_channels: bool
     rf_power: float
     save: bool
     file_format: str
@@ -469,6 +481,7 @@ class DEERRabiScanCfg:
     pulse_axis: str
     q_offset: float
     read_channel: int
+    both_channels: bool
     rf_power: float
     save: bool
     file_format: str
@@ -513,6 +526,7 @@ class DEERFIDScanCfg:
     pulse_axis: str
     q_offset: float
     read_channel: int
+    both_channels: bool
     rf_power: float
     save: bool
     file_format: str
@@ -557,6 +571,7 @@ class DEERFIDCDScanCfg:
     pulse_axis: str
     q_offset: float
     read_channel: int
+    both_channels: bool
     rf_power: float
     save: bool
     file_format: str
@@ -601,6 +616,7 @@ class DEERCorrScanCfg:
     pulse_axis: str
     q_offset: float
     read_channel: int
+    both_channels: bool
     rf_power: float
     save: bool
     file_format: str
@@ -643,6 +659,7 @@ class DEERCorrRabiScanCfg:
     pulse_axis: str
     q_offset: float
     read_channel: int
+    both_channels: bool
     rf_power: float
     save: bool
     file_format: str
@@ -687,6 +704,7 @@ class DEERT1ScanCfg:
     pulse_axis: str
     q_offset: float
     read_channel: int
+    both_channels: bool
     rf_power: float
     save: bool
     file_format: str
@@ -731,6 +749,7 @@ class DEERT2ScanCfg:
     pulse_axis: str
     q_offset: float
     read_channel: int
+    both_channels: bool
     rf_power: float
     save: bool
     file_format: str
@@ -767,6 +786,7 @@ class CorrSpecScanCfg:
     pulse_axis: str
     q_offset: float
     read_channel: int
+    both_channels: bool
     rf_power: float
     save: bool
     file_format: str
@@ -805,6 +825,7 @@ class CASRScanCfg:
     pulse_axis: str
     q_offset: float
     read_channel: int
+    both_channels: bool
     rf_pi_half: float
     rf_pulse_freq: float
     rf_pulse_phase: float
