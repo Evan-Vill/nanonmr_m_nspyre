@@ -38,7 +38,7 @@ from styling.params_2026_03_05 import FitParamsWidget
 from nspyre import experiment_widget_process_queue
 from nspyre import InstrumentManager
 
-import nv_experiments_2026_03_11
+import nv_experiments_2026_03_18
 import nv_experiments_daq
 
 def ellipsize(text: str, max_chars: int) -> str:
@@ -2405,11 +2405,11 @@ class ExpWidget(QWidget):
 
             # reload the module at runtime in case any changes were made to the code
             if self.daq_b1.isChecked(): # digitizer settings
-                reload(nv_experiments_2026_03_11)
+                reload(nv_experiments_2026_03_18)
                 # call the function in a new process
                 self.run_proc.run(
                     run_experiment,
-                    exp_cls = nv_experiments_2026_03_11.SpinMeasurements,
+                    exp_cls = nv_experiments_2026_03_18.SpinMeasurements,
                     fun_name = self.exp_dict[self.experiments.currentText()][0],
                     constructor_args = list(),
                     constructor_kwargs=dict(queue_to_inst=self.exp_inst_queue),
