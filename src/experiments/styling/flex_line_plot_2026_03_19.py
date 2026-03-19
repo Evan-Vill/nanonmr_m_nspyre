@@ -634,6 +634,15 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
         self.h_line = InfiniteLine(angle = 0, label = 'y={value:0.2f}', pen = (46,204,113), labelOpts={'position': 0.1, 'color': (46,204,113), 'fill': (29,131,72,50), 'movable': False})
         self.vb = self.line_plot.plot_widget.plotItem.vb
  
+        self.cursor_point = pg.ScatterPlotItem(
+            size=14,
+            pen=pg.mkPen(255, 255, 255, 220, width=2),
+            brush=pg.mkBrush(255, 80, 80, 220),
+            symbol='o',
+        )
+        
+
+
         # fit window
         self.fit_button = QPushButton("Fit")
         self.fit_button.clicked.connect(self._fit_clicked)
@@ -1702,6 +1711,34 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
                 self.hide_plot('bg_latest')
 
     def _cursor_clicked(self):
+        def _get_cursor_data():
+            """
+            Return x-data for whichever plot should drive the cursor index.
+            Priority:
+            1. currently selected plot in the list, if valid
+            2. curvefit_lineedit text, if valid
+            3. first available processed dataset
+            """
+            # 1) selected list item
+            selected_item = self.plots_list_widget.currentItem()
+            if selected_item is not None:
+                plot_name = selected_item.text()
+                if plot_name in self.line_plot.processed_data_dict:
+                    xs, ys = self.line_plot.processed_data_dict[plot_name]
+                    return plot_name, np.asarray(xs), np.asarray(ys)
+
+            # 2) curvefit lineedit
+            plot_name = self.curvefit_lineedit.text().strip()
+            if plot_name in self.line_plot.processed_data_dict:
+                xs, ys = self.line_plot.processed_data_dict[plot_name]
+                return plot_name, np.asarray(xs), np.asarray(ys)
+
+            # 3) first available processed dataset
+            for plot_name, (xs, ys) in self.line_plot.processed_data_dict.items():
+                return plot_name, np.asarray(xs), np.asarray(ys)
+
+            return None, None, None
+
         def mouse_moved(evt):
             pos = evt[0]
             if not self.line_plot.plot_widget.sceneBoundingRect().contains(pos):
@@ -1711,69 +1748,79 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
             x_pos = mouse_point.x()
             y_pos = mouse_point.y()
 
-            # keep the crosshair continuous
+            # keep cursor continuous
             self.v_line.setPos(x_pos)
             self.h_line.setPos(y_pos)
 
-            # keep x/y labels continuous
+            # continuous GUI labels
             self.cursor_label2.setText(f"{x_pos:.3f}")
             self.cursor_label4.setText(f"{y_pos:.3f}")
 
-            # get the currently selected plotted dataset
-            selected_item = self.plots_list_widget.currentItem()
-            if selected_item is None:
+            plot_name, xs, ys = _get_cursor_data()
+
+            if xs is None or ys is None or xs.size == 0:
                 self.cursor_label6.setText("")
+                self.v_line.label.setFormat("x={value:0.3f}")
+                self.h_line.label.setFormat("y={value:0.3f}")
+                self.cursor_point.setData([], [])
                 return
 
-            plot_name = selected_item.text()
+            # nearest x-data index
+            index0 = int(np.argmin(np.abs(xs - x_pos)))
+            index1 = index0 + 1
 
-            try:
-                xs, ys = self.line_plot.processed_data_dict[plot_name]
-            except KeyError:
-                self.cursor_label6.setText("")
-                return
+            x_nearest = xs[index0]
+            y_nearest = ys[index0]
 
-            xs = np.asarray(xs)
-            if xs.size == 0:
-                self.cursor_label6.setText("")
-                return
+            self.cursor_label6.setText(str(index1))
 
-            # nearest array index to the hovered x-position
-            index = int(np.argmin(np.abs(xs - x_pos)))
+            # keep line labels
+            self.v_line.label.setFormat(f"x={{value:0.3f}}, i={index1}")
+            self.h_line.label.setFormat("y={value:0.3f}")
 
-            # display 0-based index:
-            self.cursor_label6.setText(str(index))
+            # highlight nearest actual data point
+            self.cursor_point.setData([x_nearest], [y_nearest])
 
-            # if you want human-readable 1-based indexing instead, use:
-            # self.cursor_label6.setText(str(index + 1))
+            # force redraw by nudging position to same value
+            self.v_line.setPos(x_pos)
+            self.h_line.setPos(y_pos)
 
         if self.cursor_button.text() == "Cursor":
             self.cursor_button.setText("Delete Cursor")
 
-            if self.datasource_lineedit.text() == 'odmr':
+            if self.datasource_lineedit.text() in ("odmr", "odmr rf"):
                 self.cursor_label1 = QLabel("Frequency [GHz] = ")
+            elif self.datasource_lineedit.text() in ("rabi", "deer rabi", "corr rabi"):
+                self.cursor_label1 = QLabel("t [ns] = ")
+            elif self.datasource_lineedit.text() == "t1":
+                self.cursor_label1 = QLabel("Tau [ms] = ")    
+            elif self.datasource_lineedit.text() in ("t2", "t2 rf"):
+                self.cursor_label1 = QLabel("Tau [\u03BCs] = ") 
+            elif self.datasource_lineedit.text() == "deer":
+                self.cursor_label1 = QLabel("Frequency [MHz] = ")
             else:
-                self.cursor_label1 = QLabel("Tau [\u03BCs] = ")
-
-            self.cursor_label3 = QLabel("PL Voltage or Contrast = ")
+                self.cursor_label1 = QLabel("Tau [\u03BCs] = ") 
+            
+            self.cursor_label3 = QLabel("Signal (V) or Norm. Signal = ")
             self.cursor_label5 = QLabel("Index = ")
 
             self.cursor_label2 = QLabel()
             self.cursor_label4 = QLabel()
             self.cursor_label6 = QLabel()
 
-            # add these wherever you want in your layout
-            # example:
-            # self.layout_tree.cursor_source.layout.addWidget(self.cursor_label1)
-            # self.layout_tree.cursor_source.layout.addWidget(self.cursor_label2)
-            # self.layout_tree.cursor_source.layout.addWidget(self.cursor_label5)
-            # self.layout_tree.cursor_source.layout.addWidget(self.cursor_label6)
-            # self.layout_tree.cursor_source.layout.addWidget(self.cursor_label3)
-            # self.layout_tree.cursor_source.layout.addWidget(self.cursor_label4)
+            self.layout_tree.cursor_source.layout.addWidget(self.cursor_label1)
+            self.layout_tree.cursor_source.layout.addWidget(self.cursor_label2)
+            self.layout_tree.cursor_source.layout.addWidget(self.cursor_label5)
+            self.layout_tree.cursor_source.layout.addWidget(self.cursor_label6)
+            self.layout_tree.cursor_source.layout.addWidget(self.cursor_label3)
+            self.layout_tree.cursor_source.layout.addWidget(self.cursor_label4)
 
             self.line_plot.plot_widget.addItem(self.v_line, ignoreBounds=True)
             self.line_plot.plot_widget.addItem(self.h_line, ignoreBounds=True)
-
+            self.line_plot.plot_widget.addItem(self.cursor_point)
+            self.cursor_point.setZValue(1000)
+            self.cursor_point.setData([], [])
+            
             self.proxy = SignalProxy(
                 self.line_plot.plot_widget.scene().sigMouseMoved,
                 rateLimit=60,
@@ -1782,8 +1829,17 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
 
         else:
             self.cursor_button.setText("Cursor")
+
             self.line_plot.plot_widget.removeItem(self.v_line)
             self.line_plot.plot_widget.removeItem(self.h_line)
+            self.line_plot.plot_widget.removeItem(self.cursor_point)
+
+            self.layout_tree.cursor_source.layout.removeWidget(self.cursor_label1)
+            self.layout_tree.cursor_source.layout.removeWidget(self.cursor_label2)
+            self.layout_tree.cursor_source.layout.removeWidget(self.cursor_label3)
+            self.layout_tree.cursor_source.layout.removeWidget(self.cursor_label4)
+            self.layout_tree.cursor_source.layout.removeWidget(self.cursor_label5)
+            self.layout_tree.cursor_source.layout.removeWidget(self.cursor_label6)
 
             self.cursor_label1.deleteLater()
             self.cursor_label2.deleteLater()
@@ -1791,6 +1847,9 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
             self.cursor_label4.deleteLater()
             self.cursor_label5.deleteLater()
             self.cursor_label6.deleteLater()
+
+            self.v_line.label.setFormat("x={value:0.2f}")
+            self.h_line.label.setFormat("y={value:0.2f}")
 
             del self.proxy
 
