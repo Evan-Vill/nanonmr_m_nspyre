@@ -17,7 +17,7 @@ from inspect import signature
 from scipy.optimize import curve_fit
 from rpyc.utils.classic import obtain
 
-from styling.flex_line_plot_2026_03_09 import FlexLinePlotWidget
+from styling.flex_line_plot_2026_03_19 import FlexLinePlotWidget
 
 from nspyre import DataSink
 from pyqtgraph import SpinBox, ComboBox
@@ -902,10 +902,9 @@ class ExpWidget(QWidget):
 
         # --- update bounds ---
         def update_pl_pt_bounds():
-            num_pts = int(num_pts_widget.value())
-            pl_pt_widget.setBounds(0, num_pts - 1)
+            num_pts = max(1, int(num_pts_widget.value()))
+            pl_pt_widget.setOpts(bounds=(0, num_pts - 1))
 
-            # clamp if needed
             if pl_pt_widget.value() >= num_pts:
                 pl_pt_widget.setValue(num_pts - 1)
 
@@ -957,6 +956,8 @@ class ExpWidget(QWidget):
                                 'widget': SpinBox(value = defaults[2], suffix = 'V', siPrefix = True)},
                         'read_channel': {'display_text': 'Readout Channel: ',
                                 'widget': ComboBox(items = defaults[3])},
+                        'both_channels': {'display_text': 'Both Channels: ',
+                                'widget': QCheckBox()},
                         'dig_coupling': {'display_text': 'Coupling: ',
                                 'widget': ComboBox(items = defaults[4])},
                         'dig_termination': {'display_text': 'Termination (\u03A9): ',
@@ -965,6 +966,7 @@ class ExpWidget(QWidget):
                                 'widget': SpinBox(value = defaults[6], int = True, bounds=(0, 1024), dec = True)},
                         'dig_timeout': {'display_text': 'Card Timeout: ',
                                 'widget': SpinBox(value = defaults[7], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)}}
+                params['both_channels']['widget'].setChecked(False)
             case 'Signal vs Time':
                 params = {
                 'exp_sampling_rate': {'display_text': 'Exp. Sampling Rate: ',
