@@ -55,6 +55,7 @@ class ODMRScanCfg:
     rf_power: float
     save: bool
     file_format: str
+    pl_pt: int
     segment_size: int
     sideband: str
     sideband_freq: float
@@ -127,6 +128,7 @@ class RabiScanCfg:
     rf_power: float
     save: bool
     file_format: str
+    pl_pt: int
     segment_size: int
     sideband: str
     sideband_freq: float
@@ -163,6 +165,7 @@ class PulsedODMRScanCfg:
     rf_power: float
     save: bool
     file_format: str
+    pl_pt: int
     segment_size: int
     sideband_power: float
 
@@ -204,6 +207,36 @@ class PulsedODMRRFScanCfg:
     sideband_power: float
 
 @dataclass(frozen=True)
+class OptT1ScanCfg:
+    dataset: str
+    start: float
+    stop: float
+    num_pts: int
+    iters: int
+    runs: int
+    array_type: str
+    detector: str
+    dig_amplitude: float
+    dig_coupling: str
+    dig_sampling_freq: float
+    dig_termination: str
+    dig_timeout: float
+    directory: str
+    filename: str
+    fit_type: str
+    fit: bool
+    fit_live: bool
+    fit_params: dict
+    laser_init: float
+    laser_power: float
+    laser_readout: float
+    pretrig_size: int
+    read_channel: int
+    save: bool
+    file_format: str
+    segment_size: int
+
+@dataclass(frozen=True)
 class MWT1ScanCfg:
     dataset: str
     start: float
@@ -237,6 +270,7 @@ class MWT1ScanCfg:
     rf_power: float
     save: bool
     file_format: str
+    pl_pt: int
     segment_size: int
     sideband: str
     sideband_freq: float
@@ -277,6 +311,7 @@ class T2ScanCfg:
     rf_power: float
     save: bool
     file_format: str
+    pl_pt: int
     segment_size: int
     sideband: str
     sideband_freq: float
@@ -735,6 +770,7 @@ class CorrSpecScanCfg:
     rf_power: float
     save: bool
     file_format: str
+    pl_pt: int
     segment_size: int
     sideband: str
     sideband_freq: float
@@ -775,6 +811,7 @@ class CASRScanCfg:
     rf_pulse_power: float
     save: bool
     file_format: str
+    pl_pt: int
     segment_size: int
     sideband: str
     sideband_freq: float

@@ -9,7 +9,7 @@ Added lifecycle management via the @managed_experiment decorator, which standard
 the setup and teardown of instruments, as well as error handling and status reporting.
 
 Author: Evan Villafranca
-Updated: 2026-03-02
+Updated: 2026-03-18
 """
 from __future__ import annotations
 
@@ -18,9 +18,8 @@ import logging
 import math
 import time
 import warnings
-from contextlib import contextmanager
+from contextlib import contextmanager, ExitStack
 from typing import Any, Callable, Dict, List, Optional
-
 
 import numpy as np
 from scipy.optimize import OptimizeWarning, curve_fit
@@ -109,7 +108,7 @@ def managed_experiment(*, token_prefix: str, dataset_key: str = "dataset"):
     """Decorator to run an experiment inside the standard lifecycle.
 
     Decorated methods should accept injected handles:
-        def scan(self, *, mgr, data, token, **kwargs): ...
+        def scan(self, *, mgr, data, pl_data, token, **kwargs): ...
 
     Public call remains: scan(**kwargs)
     """
@@ -118,12 +117,20 @@ def managed_experiment(*, token_prefix: str, dataset_key: str = "dataset"):
         def wrapped(self, *args, **kwargs):
             if dataset_key not in kwargs:
                 raise KeyError(f"Missing required kwarg '{dataset_key}' for {fn.__name__}")
+            
             dataset = kwargs[dataset_key]
 
-            def body(*, mgr, data, token):
-                return fn(self, mgr=mgr, data=data, token=token, **kwargs)
+            def body(*, mgr, data, pl_data, token):
+                return fn(self, mgr=mgr, data=data, pl_data=pl_data, token=token, **kwargs)
 
-            return self.run_experiment(dataset=dataset, token_prefix=token_prefix, body=body)
+            enable_pl_trace = kwargs.pop("enable_pl_trace", False)
+
+            return self.run_experiment(
+                        dataset=dataset, 
+                        token_prefix=token_prefix, 
+                        body=body,
+                        enable_pl_trace=enable_pl_trace,
+            )
 
         return wrapped
     return decorator
@@ -238,7 +245,7 @@ class SpinMeasurements:
         arr = np.asarray(self._mag(array)).ravel()
 
         n = SUBSEQ_COUNT.get(exp_type, 2)
-        block = n * pts
+        block = n * pts # per run
         size = arr.size
 
         if size % block != 0:
@@ -259,7 +266,23 @@ class SpinMeasurements:
             return out_pts_n[:, 0]
 
         return [out_pts_n[:, j] for j in range(n)]
-  
+
+    def analog_pl_math(self, array, exp_type, time_pt, pts) -> np.ndarray:
+        """ Analog math for extracting PL time traces from digitizer acquired data.
+        """
+        arr = np.asarray(self._mag(array)) # dim (n * runs * pts, dig samples)
+
+        n = SUBSEQ_COUNT.get(exp_type, 2)
+
+        total_rows, num_dig_samples = arr.shape
+        runs = total_rows // (n * pts)
+
+        arr = arr.reshape(runs, pts, n, num_dig_samples) # dim (runs, pts, n, dig samples)
+
+        traces = arr[:, time_pt, :, :].mean(axis=0) # dim (n, dig samples)
+
+        return traces
+
     @staticmethod
     def build_status_msg(
         *,
@@ -398,7 +421,16 @@ class SpinMeasurements:
            self._safe("laser_shutter.close_shutter", laser_shutter.close_shutter)
 
     """ Experiment logic """
-    def run_experiment(self, *, dataset: str, token_prefix: str, body: Callable[..., Any]) -> Any:
+    def run_experiment(
+        self, 
+        *, 
+        dataset: str, 
+        token_prefix: str, 
+        body: Callable[..., Any],
+        enable_pl_trace: bool = False,
+        pl_dataset: Optional[str] = None,
+    ) -> Any:
+        
         """Run an experiment with a standardized lifecycle.
 
         This wrapper:
@@ -408,7 +440,17 @@ class SpinMeasurements:
           - always shuts equipment down using existing handles
         """
         token = f"{token_prefix}_{time.strftime('%Y%m%d_%H%M%S')}"
-        with InstrumentManager() as mgr, DataSource(dataset) as data:
+
+        with ExitStack() as stack:
+            mgr = stack.enter_context(InstrumentManager())
+            data = stack.enter_context(DataSource(dataset))
+
+            pl_data = None
+            if enable_pl_trace:
+                if pl_dataset is None:
+                    pl_dataset = f"{dataset} pl"
+                pl_data = stack.enter_context(DataSource(pl_dataset))
+
             laser_shutter = mgr.laser_shutter
             sig_gen = mgr.sg
             ps = mgr.ps
@@ -416,7 +458,7 @@ class SpinMeasurements:
 
             with _exclusive_ps(ps, token):
                 try:
-                    return body(mgr=mgr, data=data, token=token)
+                    return body(mgr=mgr, data=data, pl_data=pl_data, token=token)
                 finally:
                     self.equipment_off_handles(
                         laser_shutter=laser_shutter,
@@ -530,201 +572,8 @@ class SpinMeasurements:
                         run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
                     return
 
-    @managed_experiment(token_prefix="READOUTCAL", dataset_key="dataset")
-    def readout_cal_scan(self, *, mgr, data, token, **kwargs):
-        """Run a Rabi sweep over MW pulse durations."""
-        cfg = nvcfg.ReadoutCalScanCfg(**kwargs)  # validate and parse kwargs into a dataclass for easier access and type safety
-
-        ### --- Devices --- ###
-        laser = mgr.laser
-        laser_shutter = mgr.laser_shutter
-        daq = mgr.daq
-        sig_gen = mgr.sg
-        ps = mgr.ps
-        hdawg = mgr.awg
-
-        ### --- Default parameter array for sweep --- ###
-        mw_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
-
-        ### --- Define NV drive parameters --- ###  
-        sig_gen_freq, iq_phases = self.choose_sideband(
-            cfg.sideband, cfg.freq, cfg.sideband_freq, cfg.pulse_axis
-        )
-
-        self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=cfg.rf_power)
-    
-        ### --- Default fit parameters for live fitting --- ###
-        fit_value, fit_error = [], []
-        fit_x = mw_times.copy()
-        fit_y = np.ones(len(fit_x))
-
-        ### --- Set up pulse streamer and digitizer for experiment --- ###
-        sequence = ps.Rabi(cfg.laser_init * 1e9, mw_times, cfg.laser_readout * 1e9)
-        dig_cfg = self.digitizer_configure(
-            exp_type="Rabi",
-            num_pts=cfg.num_pts,
-            iters=cfg.iters,
-            segment_size=cfg.segment_size,
-            sampling_freq=cfg.dig_sampling_freq,
-            dig_amplitude=cfg.dig_amplitude,
-            read_channel=cfg.read_channel,
-            coupling=cfg.dig_coupling,
-            termination=cfg.dig_termination,
-            pretrig_size=cfg.pretrig_size,
-            dig_timeout=cfg.dig_timeout,
-            runs=cfg.runs,
-        )
-
-        ### --- Upload AWG sequence --- ###
-        try:
-            hdawg.set_sequence(**{
-                "seq": "Rabi",
-                "i_offset": cfg.i_offset,
-                "q_offset": cfg.q_offset,
-                "sideband_power": cfg.sideband_power,
-                "sideband_freq": cfg.sideband_freq,
-                "iq_phases": iq_phases,
-                "pi_pulses": mw_times / 1e9,
-                "num_pts": cfg.num_pts,
-                "runs": cfg.runs,
-            })   
-        except Exception as e:
-            self.queue_from_exp.put_nowait(self.build_status_msg(
-                status="failed",
-                percent_completed=0,
-                fit_value=fit_value,
-                fit_error=fit_error,
-                start_time=time.perf_counter(),
-                total_iters=cfg.iters,
-                iters_completed=0,
-                exception=type(e).__name__,
-            ))
-            return
-
-        signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
-        
-        self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
-        laser.set_diode_current_realtime(cfg.laser_power) # set laser power
-
-        ### --- Initialize experiment state variables --- ###
-        stopped = False
-        failed = False
-        exception_type = None
-        iters_completed = 0
-        percent_completed = 0
-
-        ### --- Open laser shutter and emit MW for NV drive --- ###
-        with self._shutter_open(laser_shutter, daq, cfg.detector), _rf_on(sig_gen):
-            try:
-                ps.set_soft_trigger() # set pulsestreamer to start on software trigger & run infinitely
-                ps.stream(sequence, PulseStreamer.REPEAT_INFINITELY, owner=token) # set up sequence for streaming
-                self.dig.config() # start digitizer --> waits for trigger from pulse sequence
-                self.dig.start_buffer() # start digitizer (enable trigger)  
-                ps.start_now(owner=token) # start pulse sequence
-            except Exception as e:
-                self.queue_from_exp.put_nowait(self.build_status_msg(
-                    status="failed",
-                    percent_completed=0,
-                    fit_value=fit_value,
-                    fit_error=fit_error,
-                    start_time=time.perf_counter(),
-                    total_iters=cfg.iters,
-                    iters_completed=0,
-                    exception=type(e).__name__,
-                ))
-                return
-
-            exp_start_time = time.perf_counter()
-
-            ### --- Main experiment loop --- ###
-            for i in range(cfg.iters):
-                if experiment_widget_process_queue(self.queue_to_exp) == "stop":
-                    stopped = True
-                    iters_completed = i
-                    percent_completed = int(100 * iters_completed / cfg.iters)
-                    break
-
-                try:
-                    rabi_result_raw = self.dig.acquire() # acquire data from digitizer
-                    rabi_result = np.mean(rabi_result_raw, axis=1)
-                except Exception as e:
-                    failed = True
-                    exception_type = type(e).__name__
-                    iters_completed = i
-                    percent_completed = int(100 * iters_completed / cfg.iters)
-                    break
-
-                try:
-                    sig, bg = self.analog_math(rabi_result, "Rabi", cfg.num_pts) # partition buffer into signal and background datasets
-                except ValueError:
-                    continue
-
-                signal_sweeps.append(np.stack([mw_times, sig])); signal_sweeps.updated_item(-1)
-                background_sweeps.append(np.stack([mw_times, bg])); background_sweeps.updated_item(-1)
-
-                if kwargs.get("fit_live", False):
-                    with warnings.catch_warnings():
-                        warnings.simplefilter("error", OptimizeWarning)
-                        try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
-                                cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
-                            )
-                        except (RuntimeError, OptimizeWarning) as e:
-                            _logger.warning(f"For {cfg.dataset} measurement, {e}")
-
-                iters_completed = i + 1
-                percent_completed = int(100 * iters_completed / cfg.iters)
-
-                # save the current data to the data server
-                data.push({
-                    "params": {"kwargs": kwargs, "iters_completed": iters_completed, "elapsed": time.perf_counter() - exp_start_time},
-                    "title": "Rabi Oscillation",
-                    "xlabel": "MW Pulse Duration (ns)",
-                    "ylabel": "Signal (V) or Norm. Signal",
-                    "datasets": {"signal": signal_sweeps, "background": background_sweeps, "x_fit": fit_x, "y_fit": fit_y, "fit_value": fit_value, "fit_error": fit_error},
-                })
-
-                self.queue_from_exp.put_nowait(self.build_status_msg(
-                    status="in progress",
-                    percent_completed=percent_completed,
-                    fit_value=fit_value,
-                    fit_error=fit_error,
-                    start_time=exp_start_time,
-                    total_iters=cfg.iters,
-                    iters_completed=iters_completed,
-                ))
-
-        ### --- Experiment complete: final save and status update --- ###
-        if not stopped and not failed:
-            iters_completed, percent_completed = cfg.iters, 100
-
-        if kwargs.get("fit", False):
-            with warnings.catch_warnings():
-                warnings.simplefilter("error", OptimizeWarning)
-                try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
-                        cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
-                    )
-                except (RuntimeError, OptimizeWarning) as e:
-                    _logger.warning(f"For {cfg.dataset} measurement, {e}")
-
-        if kwargs.get("save", False):
-            run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
-
-        status = "failed" if failed else ("stopped" if stopped else "complete")
-        self.queue_from_exp.put_nowait(self.build_status_msg(
-            status=status,
-            percent_completed=int(percent_completed),
-            fit_value=fit_value,
-            fit_error=fit_error,
-            start_time=exp_start_time,
-            total_iters=cfg.iters,
-            iters_completed=iters_completed,
-            exception=exception_type if failed else None,
-        ))
-
     @managed_experiment(token_prefix="CWODMR", dataset_key="dataset")           
-    def odmr_scan(self, *, mgr, data, token, **kwargs):
+    def odmr_scan(self, *, mgr, data, pl_data, token, **kwargs):
         """Run a CW ODMR sweep over a set of microwave frequencies."""  
         cfg = nvcfg.ODMRScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
 
@@ -796,6 +645,8 @@ class SpinMeasurements:
             return
             
         signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
+        if pl_data is not None:
+            signal_pl_sweeps, background_pl_sweeps = StreamingList(), StreamingList() # for storing optional PL data --> list of numpy arrays of shape (2, dig segment_size)
 
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
@@ -831,6 +682,13 @@ class SpinMeasurements:
             exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
             ### --- Main experiment loop --- ###
+            if pl_data is not None:
+                if not (0 <= cfg.pl_pt < cfg.num_pts):
+                    raise ValueError(
+                        f"cfg.pl_pt ({cfg.pl_pt}) must be between 0 and {cfg.num_pts - 1} "
+                        f"(num_pts={cfg.num_pts})"
+                    )
+            
             for i in range(cfg.iters):
                 if experiment_widget_process_queue(self.queue_to_exp) == "stop":
                     stopped = True
@@ -849,13 +707,13 @@ class SpinMeasurements:
                     break
    
                 try:
-                    sig, bg = self.analog_math(odmr_result, 'CW ODMR', cfg.num_pts) # partition buffer into signal and background datasets
+                    sig, bg = self.analog_math(odmr_result, "CW ODMR", cfg.num_pts) # partition buffer into signal and background datasets
                 except ValueError:
                     continue
-
+                
                 signal_sweeps.append(np.stack([real_freqs / 1e9, sig])); signal_sweeps.updated_item(-1)
                 background_sweeps.append(np.stack([real_freqs / 1e9, bg])); background_sweeps.updated_item(-1)
-       
+
                 if kwargs.get("fit_live", False):
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
@@ -877,6 +735,22 @@ class SpinMeasurements:
                     "ylabel": "Signal (V) or Norm. Signal",
                     "datasets": {"signal": signal_sweeps, "background": background_sweeps, "x_fit": fit_x, "y_fit": fit_y, "fit_value": fit_value, "fit_error": fit_error},
                 })
+
+                if pl_data is not None:
+                    sig_pl, bg_pl = self.analog_pl_math(odmr_result_raw, "CW ODMR", cfg.pl_pt, cfg.num_pts)
+
+                    pl_trace_times = np.linspace(0, cfg.segment_size / cfg.dig_sampling_freq, cfg.segment_size) * 1e9 # [ns]
+
+                    signal_pl_sweeps.append(np.stack([pl_trace_times, sig_pl])); signal_pl_sweeps.updated_item(-1)
+                    background_pl_sweeps.append(np.stack([pl_trace_times, bg_pl])); background_pl_sweeps.updated_item(-1)
+
+                    pl_data.push({
+                        "params": {"kwargs": kwargs, "iters_completed": iters_completed, "elapsed": time.perf_counter() - exp_start_time},
+                        "title": "CW ODMR PL Time Trace",
+                        "xlabel": "Readout Window (ns)",
+                        "ylabel": "Signal (V)",
+                        "datasets": {"signal_pl": signal_pl_sweeps, "background_pl": background_pl_sweeps},
+                    })
 
                 self.queue_from_exp.put_nowait(self.build_status_msg(
                     status="in progress",
@@ -1177,7 +1051,7 @@ class SpinMeasurements:
                     print("Min azi angle is None. Not moving stage.")
     
     @managed_experiment(token_prefix="RABI", dataset_key="dataset")
-    def rabi_scan(self, *, mgr, data, token, **kwargs):
+    def rabi_scan(self, *, mgr, data, pl_data, token, **kwargs):
         """Run a Rabi sweep over MW pulse durations."""
         cfg = nvcfg.RabiScanCfg(**kwargs)  # validate and parse kwargs into a dataclass for easier access and type safety
 
@@ -1248,7 +1122,9 @@ class SpinMeasurements:
             return
 
         signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
-        
+        if pl_data is not None:
+            signal_pl_sweeps, background_pl_sweeps = StreamingList(), StreamingList() # for storing optional PL data --> list of numpy arrays of shape (2, dig segment_size)
+
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
@@ -1283,6 +1159,13 @@ class SpinMeasurements:
             exp_start_time = time.perf_counter()
 
             ### --- Main experiment loop --- ###
+            if pl_data is not None:
+                if not (0 <= cfg.pl_pt < cfg.num_pts):
+                    raise ValueError(
+                        f"cfg.pl_pt ({cfg.pl_pt}) must be between 0 and {cfg.num_pts - 1} "
+                        f"(num_pts={cfg.num_pts})"
+                    )
+            
             for i in range(cfg.iters):
                 if experiment_widget_process_queue(self.queue_to_exp) == "stop":
                     stopped = True
@@ -1330,6 +1213,22 @@ class SpinMeasurements:
                     "datasets": {"signal": signal_sweeps, "background": background_sweeps, "x_fit": fit_x, "y_fit": fit_y, "fit_value": fit_value, "fit_error": fit_error},
                 })
 
+                if pl_data is not None:
+                    sig_pl, bg_pl = self.analog_pl_math(rabi_result_raw, "Rabi", cfg.pl_pt, cfg.num_pts)
+
+                    pl_trace_times = np.linspace(0, cfg.segment_size / cfg.dig_sampling_freq, cfg.segment_size) * 1e9 # [ns]
+
+                    signal_pl_sweeps.append(np.stack([pl_trace_times, sig_pl])); signal_pl_sweeps.updated_item(-1)
+                    background_pl_sweeps.append(np.stack([pl_trace_times, bg_pl])); background_pl_sweeps.updated_item(-1)
+
+                    pl_data.push({
+                        "params": {"kwargs": kwargs, "iters_completed": iters_completed, "elapsed": time.perf_counter() - exp_start_time},
+                        "title": "Rabi PL Time Trace",
+                        "xlabel": "Readout Window (ns)",
+                        "ylabel": "Signal (V)",
+                        "datasets": {"signal_pl": signal_pl_sweeps, "background_pl": background_pl_sweeps},
+                    })
+
                 self.queue_from_exp.put_nowait(self.build_status_msg(
                     status="in progress",
                     percent_completed=percent_completed,
@@ -1370,7 +1269,7 @@ class SpinMeasurements:
         ))
 
     @managed_experiment(token_prefix="PLSDODMR", dataset_key="dataset")
-    def pulsed_odmr_scan(self, *, mgr, data, token, **kwargs):
+    def pulsed_odmr_scan(self, *, mgr, data, pl_data, token, **kwargs):
         """Run a Pulsed ODMR sweep over a set of microwave frequencies."""
         cfg = nvcfg.PulsedODMRScanCfg(**kwargs)  # validate and parse kwargs into a dataclass for easier access and type safety
 
@@ -1443,6 +1342,8 @@ class SpinMeasurements:
             return
             
         signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
+        if pl_data is not None:
+            signal_pl_sweeps, background_pl_sweeps = StreamingList(), StreamingList() # for storing optional PL data --> list of numpy arrays of shape (2, dig segment_size)
 
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
@@ -1479,6 +1380,13 @@ class SpinMeasurements:
             exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
             ### --- Main experiment loop --- ###
+            if pl_data is not None:
+                if not (0 <= cfg.pl_pt < cfg.num_pts):
+                    raise ValueError(
+                        f"cfg.pl_pt ({cfg.pl_pt}) must be between 0 and {cfg.num_pts - 1} "
+                        f"(num_pts={cfg.num_pts})"
+                    )
+            
             for i in range(cfg.iters):
                 if experiment_widget_process_queue(self.queue_to_exp) == "stop":
                     stopped = True
@@ -1497,7 +1405,7 @@ class SpinMeasurements:
                     break
 
                 try:
-                    sig, bg = self.analog_math(pulsed_odmr_result, 'Pulsed ODMR', cfg.num_pts) # partition buffer into signal and background datasets
+                    sig, bg = self.analog_math(pulsed_odmr_result, "Pulsed ODMR", cfg.num_pts) # partition buffer into signal and background datasets
                 except ValueError:
                     continue
 
@@ -1524,6 +1432,22 @@ class SpinMeasurements:
                     "ylabel": "Signal (V) or Norm. Signal",
                     "datasets": {"signal": signal_sweeps, "background": background_sweeps, "x_fit": fit_x, "y_fit": fit_y, "fit_value": fit_value, "fit_error": fit_error},
                 })
+                
+                if pl_data is not None:
+                    sig_pl, bg_pl = self.analog_pl_math(pulsed_odmr_result_raw, "Pulsed ODMR", cfg.pl_pt, cfg.num_pts)
+
+                    pl_trace_times = np.linspace(0, cfg.segment_size / cfg.dig_sampling_freq, cfg.segment_size) * 1e9 # [ns]
+
+                    signal_pl_sweeps.append(np.stack([pl_trace_times, sig_pl])); signal_pl_sweeps.updated_item(-1)
+                    background_pl_sweeps.append(np.stack([pl_trace_times, bg_pl])); background_pl_sweeps.updated_item(-1)
+
+                    pl_data.push({
+                        "params": {"kwargs": kwargs, "iters_completed": iters_completed, "elapsed": time.perf_counter() - exp_start_time},
+                        "title": "Pulsed ODMR PL Time Trace",
+                        "xlabel": "Readout Window (ns)",
+                        "ylabel": "Signal (V)",
+                        "datasets": {"signal_pl": signal_pl_sweeps, "background_pl": background_pl_sweeps},
+                    })
 
                 self.queue_from_exp.put_nowait(self.build_status_msg(
                     status="in progress",
@@ -1565,7 +1489,7 @@ class SpinMeasurements:
         ))
 
     @managed_experiment(token_prefix="PLSDODMRRF", dataset_key="dataset")
-    def pulsed_odmr_rf_scan(self, *, mgr, data, token, **kwargs):
+    def pulsed_odmr_rf_scan(self, *, mgr, data, pl_data, token, **kwargs):
         """Run a Pulsed ODMR sweep over a set of microwave frequencies with coil RF tone for coil B field calibration."""
         cfg = nvcfg.PulsedODMRRFScanCfg(**kwargs)  # validate and parse kwargs into a dataclass for easier access and type safety
 
@@ -1657,7 +1581,7 @@ class SpinMeasurements:
             
         rf_signal_sweeps, rf_background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
         no_rf_signal_sweeps, no_rf_background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
-
+        
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
@@ -1812,7 +1736,7 @@ class SpinMeasurements:
             print(f"1H pi/2 pulse = {proton_pi_half} us")
 
     @managed_experiment(token_prefix="OPTT1", dataset_key="dataset")
-    def OPT_T1_scan(self, *, mgr, data, token, **kwargs):
+    def OPT_T1_scan(self, *, mgr, data, pl_data, token, **kwargs):
         """Run a T1 sweep without MW over a set of precession time intervals.
         """
         cfg = nvcfg.OptT1ScanCfg(**kwargs)
@@ -1975,7 +1899,7 @@ class SpinMeasurements:
         ))
 
     @managed_experiment(token_prefix="MWT1", dataset_key="dataset")
-    def MW_T1_scan(self, *, mgr, data, token, **kwargs):
+    def MW_T1_scan(self, *, mgr, data, pl_data, token, **kwargs):
         """Run a T1 sweep with MW over a set of precession time intervals."""
         cfg = nvcfg.MWT1ScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
 
@@ -2052,7 +1976,9 @@ class SpinMeasurements:
             return
             
         signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
-        
+        if pl_data is not None:
+            signal_pl_sweeps, background_pl_sweeps = StreamingList(), StreamingList() # for storing optional PL data --> list of numpy arrays of shape (2, dig segment_size)
+
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
@@ -2087,6 +2013,13 @@ class SpinMeasurements:
             exp_start_time = time.perf_counter()
 
             ### --- Main experiment loop --- ###
+            if pl_data is not None:
+                if not (0 <= cfg.pl_pt < cfg.num_pts):
+                    raise ValueError(
+                        f"cfg.pl_pt ({cfg.pl_pt}) must be between 0 and {cfg.num_pts - 1} "
+                        f"(num_pts={cfg.num_pts})"
+                    )
+            
             for i in range(cfg.iters):
                 if experiment_widget_process_queue(self.queue_to_exp) == "stop":
                     stopped = True
@@ -2105,7 +2038,7 @@ class SpinMeasurements:
                     break
                      
                 try:
-                    sig, bg = self.analog_math(t1_result, 'MW_T1', cfg.num_pts) # partition buffer into signal and background datasets
+                    sig, bg = self.analog_math(t1_result, "MW_T1", cfg.num_pts) # partition buffer into signal and background datasets
                 except ValueError:
                     continue
                     
@@ -2133,6 +2066,22 @@ class SpinMeasurements:
                     'ylabel': 'Signal (V) or Norm. Signal',
                     'datasets': {'signal' : signal_sweeps, 'background': background_sweeps, 'x_fit': fit_x, 'y_fit': fit_y, 'fit_value': fit_value, 'fit_error': fit_error}
                 })
+
+                if pl_data is not None:
+                    sig_pl, bg_pl = self.analog_pl_math(t1_result_raw, "MW_T1", cfg.pl_pt, cfg.num_pts)
+
+                    pl_trace_times = np.linspace(0, cfg.segment_size / cfg.dig_sampling_freq, cfg.segment_size) * 1e9 # [ns]
+
+                    signal_pl_sweeps.append(np.stack([pl_trace_times, sig_pl])); signal_pl_sweeps.updated_item(-1)
+                    background_pl_sweeps.append(np.stack([pl_trace_times, bg_pl])); background_pl_sweeps.updated_item(-1)
+
+                    pl_data.push({
+                        "params": {"kwargs": kwargs, "iters_completed": iters_completed, "elapsed": time.perf_counter() - exp_start_time},
+                        "title": "T1 PL Time Trace",
+                        "xlabel": "Readout Window (ns)",
+                        "ylabel": "Signal (V)",
+                        "datasets": {"signal_pl": signal_pl_sweeps, "background_pl": background_pl_sweeps},
+                    })
 
                 self.queue_from_exp.put_nowait(self.build_status_msg(
                     status="in progress",
@@ -2174,7 +2123,7 @@ class SpinMeasurements:
         ))
 
     @managed_experiment(token_prefix="T2", dataset_key="dataset")
-    def T2_scan(self, *, mgr, data, token, **kwargs):
+    def T2_scan(self, *, mgr, data, pl_data, token, **kwargs):
         """Run a T2 sweep over a set of precession time intervals."""
         cfg = nvcfg.T2ScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
 
@@ -2303,6 +2252,8 @@ class SpinMeasurements:
             return
         
         signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points) 
+        if pl_data is not None:
+            signal_pl_sweeps, background_pl_sweeps = StreamingList(), StreamingList() # for storing optional PL data --> list of numpy arrays of shape (2, dig segment_size)
 
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
@@ -2338,6 +2289,13 @@ class SpinMeasurements:
             exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
             ### --- Main experiment loop --- ###
+            if pl_data is not None:
+                if not (0 <= cfg.pl_pt < cfg.num_pts):
+                    raise ValueError(
+                        f"cfg.pl_pt ({cfg.pl_pt}) must be between 0 and {cfg.num_pts - 1} "
+                        f"(num_pts={cfg.num_pts})"
+                    )
+            
             for i in range(cfg.iters):
                 if experiment_widget_process_queue(self.queue_to_exp) == "stop":
                     stopped = True
@@ -2357,7 +2315,7 @@ class SpinMeasurements:
                     break
 
                 try:
-                    sig, bg = self.analog_math(t2_result, 'T2', cfg.num_pts) # partition buffer into signal and background datasets
+                    sig, bg = self.analog_math(t2_result, "T2", cfg.num_pts) # partition buffer into signal and background datasets
                 except ValueError:
                     continue
 
@@ -2386,6 +2344,22 @@ class SpinMeasurements:
                     'datasets': {'signal' : signal_sweeps, 'background': background_sweeps, 
                                 'x_fit': fit_x, 'y_fit': fit_y, 'fit_value': fit_value, 'fit_error': fit_error}
                 })
+
+                if pl_data is not None:
+                    sig_pl, bg_pl = self.analog_pl_math(t2_result_raw, "T2", cfg.pl_pt, cfg.num_pts)
+
+                    pl_trace_times = np.linspace(0, cfg.segment_size / cfg.dig_sampling_freq, cfg.segment_size) * 1e9 # [ns]
+
+                    signal_pl_sweeps.append(np.stack([pl_trace_times, sig_pl])); signal_pl_sweeps.updated_item(-1)
+                    background_pl_sweeps.append(np.stack([pl_trace_times, bg_pl])); background_pl_sweeps.updated_item(-1)
+
+                    pl_data.push({
+                        "params": {"kwargs": kwargs, "iters_completed": iters_completed, "elapsed": time.perf_counter() - exp_start_time},
+                        "title": "T2 PL Time Trace",
+                        "xlabel": "Readout Window (ns)",
+                        "ylabel": "Signal (V)",
+                        "datasets": {"signal_pl": signal_pl_sweeps, "background_pl": background_pl_sweeps},
+                    })
 
                 self.queue_from_exp.put_nowait(self.build_status_msg(
                     status="in progress",
@@ -2427,7 +2401,7 @@ class SpinMeasurements:
         ))
     
     @managed_experiment(token_prefix="T2RF", dataset_key="dataset")
-    def T2_rf_scan(self, *, mgr, data, token, **kwargs):
+    def T2_rf_scan(self, *, mgr, data, pl_data, token, **kwargs):
         """Run a T2 sweep over a set of precession time intervalsb with constant RF applied."""
         cfg = nvcfg.T2RFScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
 
@@ -2654,7 +2628,7 @@ class SpinMeasurements:
         ))
     
     @managed_experiment(token_prefix="DQ", dataset_key="dataset")
-    def DQ_scan(self, *, mgr, data, token, **kwargs):
+    def DQ_scan(self, *, mgr, data, pl_data, token, **kwargs):
         """Run a DQ sweep over a set of precession time intervals."""
         cfg = nvcfg.DQScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
 
@@ -2855,7 +2829,7 @@ class SpinMeasurements:
         ))
                     
     @managed_experiment(token_prefix="DEER", dataset_key="dataset")
-    def DEER_scan(self, *, mgr, data, token, **kwargs):
+    def DEER_scan(self, *, mgr, data, pl_data, token, **kwargs):
         """Run a DEER sweep over a set of MW frequencies."""
         cfg = nvcfg.DEERScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
         
@@ -3090,7 +3064,7 @@ class SpinMeasurements:
         ))
 
     @managed_experiment(token_prefix="DEERRABI", dataset_key="dataset")
-    def DEER_rabi_scan(self, *, mgr, data, token, **kwargs):
+    def DEER_rabi_scan(self, *, mgr, data, pl_data, token, **kwargs):
         """Run a DEER Rabi sweep over a set of MW pulse durations."""
         cfg = nvcfg.DEERRabiScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
 
@@ -3297,7 +3271,7 @@ class SpinMeasurements:
         ))
 
     @managed_experiment(token_prefix="DEERFID", dataset_key="dataset")
-    def DEER_FID_scan(self, *, mgr, data, token, **kwargs):
+    def DEER_FID_scan(self, *, mgr, data, pl_data, token, **kwargs):
         """Run a DEER FID sweep over a set of MW pulse durations."""
         cfg = nvcfg.DEERFIDScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
 
@@ -3512,7 +3486,7 @@ class SpinMeasurements:
         ))
 
     @managed_experiment(token_prefix="DEERFIDCD", dataset_key="dataset")
-    def DEER_FID_CD_scan(self, *, mgr, data, token, **kwargs):
+    def DEER_FID_CD_scan(self, *, mgr, data, pl_data, token, **kwargs):
         """Run a continuous drive DEER FID sweep over a set of free precession intervals.""" 
         cfg = nvcfg.DEERFIDCDScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
         
@@ -3733,7 +3707,7 @@ class SpinMeasurements:
 
     # TODO: update implementation of DEER correlation scan and add sequence to PS/AWG driver
     @managed_experiment(token_prefix="DEERCORR", dataset_key="dataset")
-    def DEER_corr_scan(self, *, mgr, data, token, **kwargs):
+    def DEER_corr_scan(self, *, mgr, data, pl_data, token, **kwargs):
         """Run a DEER Correlation sweep over a set of frequencies.""" 
         cfg = nvcfg.DEERCorrScanCfg(**kwargs)
 
@@ -3933,7 +3907,7 @@ class SpinMeasurements:
         ))
 
     @managed_experiment(token_prefix="DEERCORRRABI", dataset_key="dataset")
-    def DEER_corr_rabi_scan(self, *, mgr, data, token, **kwargs):
+    def DEER_corr_rabi_scan(self, *, mgr, data, pl_data, token, **kwargs):
         """Run a DEER Correlation Rabi sweep over a set of MW pulses."""
         cfg = nvcfg.DEERCorrRabiScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
         
@@ -4064,7 +4038,6 @@ class SpinMeasurements:
                 try:     
                     corr_result_raw = self.dig.acquire() # acquire data from digitizer
                     corr_result=np.mean(corr_result_raw,axis=1) # average all data over each trigger/segment
-                    # segments=(np.shape(corr_result))[0]
                 except Exception as e:
                     failed = True
                     exception_type = type(e).__name__
@@ -4138,7 +4111,7 @@ class SpinMeasurements:
         ))
 
     @managed_experiment(token_prefix="DEERT1", dataset_key="dataset")
-    def DEER_T1_scan(self, *, mgr, data, token, **kwargs):
+    def DEER_T1_scan(self, *, mgr, data, pl_data, token, **kwargs):
         """Run a DEER Correlation T1 sweep over a set of correlation intervals."""
         cfg = nvcfg.DEERT1ScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
 
@@ -4350,7 +4323,7 @@ class SpinMeasurements:
         ))
 
     @managed_experiment(token_prefix="DEERT2", dataset_key="dataset")
-    def DEER_T2_scan(self, *, mgr, data, token, **kwargs):
+    def DEER_T2_scan(self, *, mgr, data, pl_data, token, **kwargs):
         """Run a DEER Correlation T1 sweep over a set of correlation intervals."""
         cfg = nvcfg.DEERT2ScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
 
@@ -4558,7 +4531,7 @@ class SpinMeasurements:
         ))
 
     @managed_experiment(token_prefix="CORRSPEC", dataset_key="dataset")
-    def Corr_Spec_scan(self, *, mgr, data, token, **kwargs):
+    def Corr_Spec_scan(self, *, mgr, data, pl_data, token, **kwargs):
         """Run a Correlation Spectroscopy NMR sweep over a set of precession time intervals."""
         cfg = nvcfg.CorrSpecScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
 
@@ -4668,7 +4641,9 @@ class SpinMeasurements:
             return
             
         signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
-    
+        if pl_data is not None:
+            signal_pl_sweeps, background_pl_sweeps = StreamingList(), StreamingList() # for storing optional PL data --> list of numpy arrays of shape (2, dig segment_size)
+
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
@@ -4703,6 +4678,13 @@ class SpinMeasurements:
             exp_start_time = time.perf_counter()  # start timer for experiment (used for time remaining estimate)
 
             ### --- Main experiment loop --- ###
+            if pl_data is not None:
+                if not (0 <= cfg.pl_pt < cfg.num_pts):
+                    raise ValueError(
+                        f"cfg.pl_pt ({cfg.pl_pt}) must be between 0 and {cfg.num_pts - 1} "
+                        f"(num_pts={cfg.num_pts})"
+                    )
+            
             for i in range(cfg.iters):
                 if experiment_widget_process_queue(self.queue_to_exp) == "stop":
                     stopped = True
@@ -4721,7 +4703,7 @@ class SpinMeasurements:
                     break
 
                 try:
-                    sig, bg = self.analog_math(nmr_result, 'NMR', cfg.num_pts) # partition buffer into signal and background datasets
+                    sig, bg = self.analog_math(nmr_result, "NMR", cfg.num_pts) # partition buffer into signal and background datasets
                 except ValueError:
                     continue
 
@@ -4746,7 +4728,23 @@ class SpinMeasurements:
                                 'datasets': {'signal' : signal_sweeps,
                                             'background': background_sweeps}
                 })
-                        
+
+                if pl_data is not None:
+                    sig_pl, bg_pl = self.analog_pl_math(nmr_result_raw, "NMR", cfg.pl_pt, cfg.num_pts)
+
+                    pl_trace_times = np.linspace(0, cfg.segment_size / cfg.dig_sampling_freq, cfg.segment_size) * 1e9 # [ns]
+
+                    signal_pl_sweeps.append(np.stack([pl_trace_times, sig_pl])); signal_pl_sweeps.updated_item(-1)
+                    background_pl_sweeps.append(np.stack([pl_trace_times, bg_pl])); background_pl_sweeps.updated_item(-1)
+
+                    pl_data.push({
+                        "params": {"kwargs": kwargs, "iters_completed": iters_completed, "elapsed": time.perf_counter() - exp_start_time},
+                        "title": "Corr. Spec. PL Time Trace",
+                        "xlabel": "Readout Window (ns)",
+                        "ylabel": "Signal (V)",
+                        "datasets": {"signal_pl": signal_pl_sweeps, "background_pl": background_pl_sweeps},
+                    })
+
                 self.queue_from_exp.put_nowait(self.build_status_msg(
                     status="in progress",
                     percent_completed=percent_completed,
@@ -4787,7 +4785,7 @@ class SpinMeasurements:
         ))    
 
     @managed_experiment(token_prefix="CASR", dataset_key="dataset")
-    def CASR_scan(self, *, mgr, data, token, **kwargs):
+    def CASR_scan(self, *, mgr, data, pl_data, token, **kwargs):
         """
         Run a Coherently Averaged Synchronized Readout NMR sweep over a range of frequencies.
         Choose either coil drive or RF pi/2 pulse for nuclear spin control."""
@@ -4923,7 +4921,7 @@ class SpinMeasurements:
                     return
                 
                 signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
-
+                
                 self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
                 laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
@@ -4985,7 +4983,7 @@ class SpinMeasurements:
                             break
 
                         try:
-                            sig, bg = self.analog_math(casr_result, 'CASR', cfg.num_pts) # partition buffer into signal and background datasets
+                            sig, bg = self.analog_math(casr_result, "CASR", cfg.num_pts) # partition buffer into signal and background datasets
                         except ValueError:
                             continue
 
@@ -5051,7 +5049,7 @@ class SpinMeasurements:
                 ))                
     
     @managed_experiment(token_prefix="CASRIR", dataset_key="dataset")
-    def CASRIR_scan(self, *, mgr, data, token, **kwargs):
+    def CASRIR_scan(self, *, mgr, data, pl_data, token, **kwargs):
         """
         Run a Coherently Averaged Synchronized Readout NMR sweep over a range of frequencies.
         Choose either coil drive or RF pi/2 pulse for nuclear spin control."""
@@ -5578,6 +5576,7 @@ class SpinMeasurements:
                 return 0, 0, 0, 0
 
         return fitted_values, fitted_errors, x_fit, y_fit
+    
 
 
     # def __enter__(self):

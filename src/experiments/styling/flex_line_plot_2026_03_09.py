@@ -1053,6 +1053,23 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
                 self.hide_plot('bg_avg')
                 self.hide_plot('bg_latest')
 
+            case 'odmr pl':                
+                # create some default signal plots
+                self.add_plot('sig_pl_avg',        series='signal_pl',   scan_i='',     scan_j='',  processing='Average')
+                self.add_plot('sig_pl_latest',     series='signal_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                self.hide_plot('sig_pl_latest')
+
+                # create some default background plots
+                self.add_plot('bg_pl_avg',         series='background_pl',   scan_i='',     scan_j='',  processing='Average')
+                self.add_plot('bg_pl_latest',      series='background_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                self.hide_plot('bg_pl_latest')
+
+                # create some default diff plots
+                self.add_plot('diff_pl_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
+                self.add_plot('diff_pl_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
+                self.hide_plot('diff_pl_avg')
+                self.hide_plot('diff_pl_latest')
+
             case 'odmr rf':
                 # # create default fit plot
                 # self.add_plot('fit',            series='fit',   scan_i='',      scan_j='',  processing='Average')
@@ -1116,6 +1133,23 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
                 self.hide_plot('bg_avg')
                 self.hide_plot('bg_latest')
 
+            case 'rabi pl':                
+                # create some default signal plots
+                self.add_plot('sig_pl_avg',        series='signal_pl',   scan_i='',     scan_j='',  processing='Average')
+                self.add_plot('sig_pl_latest',     series='signal_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                self.hide_plot('sig_pl_latest')
+
+                # create some default background plots
+                self.add_plot('bg_pl_avg',         series='background_pl',   scan_i='',     scan_j='',  processing='Average')
+                self.add_plot('bg_pl_latest',      series='background_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                self.hide_plot('bg_pl_latest')
+
+                # create some default diff plots
+                self.add_plot('diff_pl_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
+                self.add_plot('diff_pl_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
+                self.hide_plot('diff_pl_avg')
+                self.hide_plot('diff_pl_latest')
+
             case 't1':
                 # create default fit plot
                 self.add_plot('fit',            series='fit',   scan_i='',      scan_j='',  processing='Average')
@@ -1146,6 +1180,23 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
                 self.add_plot('bg_latest',      series='background',   scan_i='-1',   scan_j='',  processing='Average')
                 self.hide_plot('bg_avg')
                 self.hide_plot('bg_latest')
+
+            case 't1 pl':                
+                # create some default signal plots
+                self.add_plot('sig_pl_avg',        series='signal_pl',   scan_i='',     scan_j='',  processing='Average')
+                self.add_plot('sig_pl_latest',     series='signal_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                self.hide_plot('sig_pl_latest')
+
+                # create some default background plots
+                self.add_plot('bg_pl_avg',         series='background_pl',   scan_i='',     scan_j='',  processing='Average')
+                self.add_plot('bg_pl_latest',      series='background_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                self.hide_plot('bg_pl_latest')
+
+                # create some default diff plots
+                self.add_plot('diff_pl_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
+                self.add_plot('diff_pl_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
+                self.hide_plot('diff_pl_avg')
+                self.hide_plot('diff_pl_latest')
 
             case 't2':
                 # create default fit plot
@@ -1183,6 +1234,23 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
                 self.add_plot('fft_latest',    series='fft',  scan_i='-1',    scan_j='',  processing='Average')
                 self.hide_plot('fft_avg')
                 self.hide_plot('fft_latest')
+
+            case 't2 pl':                
+                # create some default signal plots
+                self.add_plot('sig_pl_avg',        series='signal_pl',   scan_i='',     scan_j='',  processing='Average')
+                self.add_plot('sig_pl_latest',     series='signal_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                self.hide_plot('sig_pl_latest')
+
+                # create some default background plots
+                self.add_plot('bg_pl_avg',         series='background_pl',   scan_i='',     scan_j='',  processing='Average')
+                self.add_plot('bg_pl_latest',      series='background_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                self.hide_plot('bg_pl_latest')
+
+                # create some default diff plots
+                self.add_plot('diff_pl_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
+                self.add_plot('diff_pl_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
+                self.hide_plot('diff_pl_avg')
+                self.hide_plot('diff_pl_latest')
 
             case 'dq':
                 # create some default diff plots
@@ -1580,6 +1648,23 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
                 self.add_plot('bg_latest',      series='background',   scan_i='-1',   scan_j='',  processing='Average')
                 self.hide_plot('bg_avg')
                 self.hide_plot('bg_latest')
+
+            case 'nmr pl':                
+                # create some default signal plots
+                self.add_plot('sig_pl_avg',        series='signal_pl',   scan_i='',     scan_j='',  processing='Average')
+                self.add_plot('sig_pl_latest',     series='signal_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                self.hide_plot('sig_pl_latest')
+
+                # create some default background plots
+                self.add_plot('bg_pl_avg',         series='background_pl',   scan_i='',     scan_j='',  processing='Average')
+                self.add_plot('bg_pl_latest',      series='background_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                self.hide_plot('bg_pl_latest')
+
+                # create some default diff plots
+                self.add_plot('diff_pl_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
+                self.add_plot('diff_pl_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
+                self.hide_plot('diff_pl_avg')
+                self.hide_plot('diff_pl_latest')
 
             case 'casr':
                 self.line_plot.plot_widget.getPlotItem().setDownsampling(ds=10, auto=False, mode='mean')

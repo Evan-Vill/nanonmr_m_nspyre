@@ -38,7 +38,7 @@ from styling.params_2026_03_05 import FitParamsWidget
 from nspyre import experiment_widget_process_queue
 from nspyre import InstrumentManager
 
-import nv_experiments_2026_03_11
+import nv_experiments_2026_03_18
 import nv_experiments_daq
 
 def ellipsize(text: str, max_chars: int) -> str:
@@ -105,16 +105,16 @@ class ExpWidget(QWidget):
         self.digitizer_defaults = [1024, 500e6, 1, self.dig_ro_chan_opts, self.dig_coupling_opts, self.dig_termination_opts, 32, 5]
 
         # split up defaults into the non-MW and MW settings to save vertical space in GUI
-        self.odmr_params_defaults = [120, 10, 50]
+        self.odmr_params_defaults = [120, 10, 50, 25]
         self.odmr_mw_params_defaults = [2.87e9, 100e6, 1e-9, 25e-6]
 
         self.odmr_smart_params_defaults = [120, 50, 45, 60, 20]
         self.odmr_smart_mw_params_defaults = [2.87e9, 100e6, 1e-9, 25e-6]
 
-        self.rabi_params_defaults = [120, 10, 0, 500e-9, 50]   
+        self.rabi_params_defaults = [120, 10, 0, 500e-9, 50, 25]   
         self.rabi_mw_params_defaults = [2.87e9, 1e-9, self.rabi_axis_opts]
 
-        self.pulsed_odmr_params_defaults = [120, 10, 50]
+        self.pulsed_odmr_params_defaults = [120, 10, 50, 25]
         self.pulsed_odmr_mw_params_defaults = [2.87e9, 100e6, 1e-9, 100e-9]
         
         self.pulsed_odmr_rf_params_defaults = [120, 10, 50]
@@ -123,10 +123,10 @@ class ExpWidget(QWidget):
         self.opt_t1_params_defaults = [120, 10, 50e-9, 100e-6, 50, self.opt_t1_array_opts]
         self.opt_t1_mw_params_defaults = [12, 10, 50e-9, 100e-6, 50, self.opt_t1_array_opts] # not needed - hidden in GUI
 
-        self.mw_t1_params_defaults = [120, 10, 50e-9, 100e-6, 50, self.mw_t1_array_opts]
+        self.mw_t1_params_defaults = [120, 10, 50e-9, 100e-6, 50, self.mw_t1_array_opts, 25]
         self.mw_t1_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 'y']
 
-        self.t2_params_defaults = [120, 10, 50e-9, 20e-6, 50, self.t2_array_opts]
+        self.t2_params_defaults = [120, 10, 50e-9, 20e-6, 50, self.t2_array_opts, 25]
         self.t2_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 'y', self.t2_seq_opts, 1]
 
         self.t2_rf_params_defaults = [120, 10, 50e-9, 20e-6, 50, self.t2_rf_array_opts]
@@ -156,7 +156,7 @@ class ExpWidget(QWidget):
         self.deer_t2_params_defaults = [120, 10, 50e-9, 1e-6, 100, self.corr_t1_array_opts, 800e-9, 500e-9]
         self.deer_t2_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 'y', 560e6, 40e-9, 0.2] 
 
-        self.corr_spec_params_defaults = [120, 10, 50e-9, 100e-6, 100, 1e-6, self.corr_spec_sig_opts]
+        self.corr_spec_params_defaults = [120, 10, 50e-9, 100e-6, 100, 1e-6, self.corr_spec_sig_opts, 50]
         self.corr_spec_mw_params_defaults = [2.87e9, 1e-9, 20e-9, 'y', 1]
 
         self.casr_params_defaults = [120, 10, 10, 200e-9, self.casr_sig_opts, self.dnp_opts]
@@ -880,6 +880,49 @@ class ExpWidget(QWidget):
 
         self.setLayout(self.gui_layout)
 
+    def create_pl_widgets(self, num_pts_widget, defaults, pl_pt_index):
+        """
+        Create PL trace checkbox + pl_pt widget with dynamic bounds.
+
+        Args:
+            num_pts_widget: SpinBox controlling number of points
+            defaults: defaults list for this experiment
+            pl_pt_index: index in defaults list for pl_pt
+
+        Returns:
+            enable_pl_widget, pl_pt_widget
+        """
+
+        # --- safe default ---
+        pl_pt_default = defaults[pl_pt_index] if len(defaults) > pl_pt_index else 0
+
+        pl_pt_widget = SpinBox(value=pl_pt_default, int=True, bounds=(0, None), dec=True)
+        enable_pl_widget = QCheckBox()
+        enable_pl_widget.setChecked(False)
+
+        # --- update bounds ---
+        def update_pl_pt_bounds():
+            num_pts = int(num_pts_widget.value())
+            pl_pt_widget.setBounds(0, num_pts - 1)
+
+            # clamp if needed
+            if pl_pt_widget.value() >= num_pts:
+                pl_pt_widget.setValue(num_pts - 1)
+
+        # --- toggle enable ---
+        def toggle_pl_widgets():
+            pl_pt_widget.setEnabled(enable_pl_widget.isChecked())
+
+        # --- connect ---
+        num_pts_widget.sigValueChanged.connect(update_pl_pt_bounds)
+        enable_pl_widget.toggled.connect(toggle_pl_widgets)
+
+        # --- initialize ---
+        update_pl_pt_bounds()
+        toggle_pl_widgets()
+
+        return enable_pl_widget, pl_pt_widget
+
     def create_params_widget(self, tag, defaults): 
         match tag:
             case 'Sig Laser':    
@@ -926,17 +969,35 @@ class ExpWidget(QWidget):
                 params = {
                 'exp_sampling_rate': {'display_text': 'Exp. Sampling Rate: ',
                         'widget': SpinBox(value = defaults[0], suffix = 'Hz', siPrefix = True, bounds = (10, 1e6), dec = True)}} 
-            case 'CW ODMR':    
+            case 'CW ODMR':  
+                num_pts_widget = SpinBox(value=defaults[2], int=True, bounds=(1, None), dec=True)
+
+                enable_pl_widget, pl_pt_widget = self.create_pl_widgets(
+                    num_pts_widget, defaults, pl_pt_index=3
+                )
+
                 params = {
-                        'runs': {'display_text': '# Averages per Iteration: ',
-                                'widget': SpinBox(value = defaults[0], int = True, bounds=(1, None))},
-                        'iters': {'display_text': '# Experiment Iterations: ',
-                                'widget': SpinBox(value = defaults[1], int = True, bounds=(1, None))},
-                        'num_pts': {'display_text': '# Frequencies: ',
-                                'widget': SpinBox(value = defaults[2], int = True, bounds=(1, None), dec = True)},
-                        'enable_pl_trace': {'display_text': 'Enable PL Trace: ',
-                                'widget': QCheckBox()}}
-                params['enable_pl_trace']['widget'].setChecked(False)
+                    'runs': {
+                        'display_text': '# Averages per Iteration: ',
+                        'widget': SpinBox(value=defaults[0], int=True, bounds=(1, None))
+                    },
+                    'iters': {
+                        'display_text': '# Experiment Iterations: ',
+                        'widget': SpinBox(value=defaults[1], int=True, bounds=(1, None))
+                    },
+                    'num_pts': {
+                        'display_text': '# Frequencies: ',
+                        'widget': num_pts_widget
+                    },
+                    'enable_pl_trace': {
+                        'display_text': 'Enable PL Trace: ',
+                        'widget': enable_pl_widget
+                    },
+                    'pl_pt': {
+                        'display_text': 'Data Pt. for PL Trace: ',
+                        'widget': pl_pt_widget
+                    }
+                }
             case 'ODMR Smart Scan':
                 params = {
                         'runs': {'display_text': '# Averages per Iteration: ',
@@ -949,17 +1010,25 @@ class ExpWidget(QWidget):
                                 'widget': SpinBox(value = defaults[3], bounds=(1, 115), dec = True)},
                         'iters': {'display_text': '# Angles to Sweep: ',
                                 'widget': SpinBox(value = defaults[4], int = True, bounds=(1, 100))}}                    
-            case 'Pulsed ODMR':    
+            case 'Pulsed ODMR':
+                num_pts_widget = SpinBox(value=defaults[2], int=True, bounds=(1, None), dec=True)
+
+                enable_pl_widget, pl_pt_widget = self.create_pl_widgets(
+                    num_pts_widget, defaults, pl_pt_index=3
+                )
+
                 params = {
-                        'runs': {'display_text': '# Averages per Iteration: ',
-                                'widget': SpinBox(value = defaults[0], int = True, bounds=(1, None))},
-                        'iters': {'display_text': '# Experiment Iterations: ',
-                                'widget': SpinBox(value = defaults[1], int = True, bounds=(1, None))},
-                        'num_pts': {'display_text': '# Frequencies: ',
-                                'widget': SpinBox(value = defaults[2], int = True, bounds=(1, None), dec = True)},
-                        'enable_pl_trace': {'display_text': 'Enable PL Trace: ',
-                                'widget': QCheckBox()}}
-                params['enable_pl_trace']['widget'].setChecked(False)          
+                    'runs': {'display_text': '# Averages per Iteration: ',
+                            'widget': SpinBox(value=defaults[0], int=True, bounds=(1, None))},
+                    'iters': {'display_text': '# Experiment Iterations: ',
+                            'widget': SpinBox(value=defaults[1], int=True, bounds=(1, None))},
+                    'num_pts': {'display_text': '# Frequencies: ',
+                                'widget': num_pts_widget},
+                    'enable_pl_trace': {'display_text': 'Enable PL Trace: ',
+                                        'widget': enable_pl_widget},
+                    'pl_pt': {'display_text': 'Data Pt. for PL Trace: ',
+                            'widget': pl_pt_widget},
+                }         
             case 'RF Coil: Pulsed ODMR':    
                 params = {
                         'runs': {'display_text': '# Averages per Iteration: ',
@@ -968,21 +1037,29 @@ class ExpWidget(QWidget):
                                 'widget': SpinBox(value = defaults[1], int = True, bounds=(1, None))},
                         'num_pts': {'display_text': '# Frequencies: ',
                                 'widget': SpinBox(value = defaults[2], int = True, bounds=(1, None), dec = True)}}         
-            case 'Rabi':    
+            case 'Rabi':
+                num_pts_widget = SpinBox(value=defaults[4], int=True, bounds=(1, None), dec=True)
+
+                enable_pl_widget, pl_pt_widget = self.create_pl_widgets(
+                    num_pts_widget, defaults, pl_pt_index=5
+                )
+
                 params = {
-                        'runs': {'display_text': '# Averages per Iteration: ',
-                                'widget': SpinBox(value = defaults[0], int = True, bounds=(1, None))},
-                        'iters': {'display_text': '# Experiment Iterations: ',
-                                'widget': SpinBox(value = defaults[1], int = True, bounds=(1, None))},
-                        'start': {'display_text': 'Start MW Pulse Time: ',
-                                'widget': SpinBox(value = defaults[2], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
-                        'stop': {'display_text': 'End MW Pulse Time: ',
-                                'widget': SpinBox(value = defaults[3], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
-                        'num_pts': {'display_text': '# Pulse Durations: ',
-                                'widget': SpinBox(value = defaults[4], int = True, bounds=(1, None), dec = True)},
-                        'enable_pl_trace': {'display_text': 'Enable PL Trace: ',
-                                'widget': QCheckBox()}}
-                params['enable_pl_trace']['widget'].setChecked(False)                
+                    'runs': {'display_text': '# Averages per Iteration: ',
+                            'widget': SpinBox(value=defaults[0], int=True, bounds=(1, None))},
+                    'iters': {'display_text': '# Experiment Iterations: ',
+                            'widget': SpinBox(value=defaults[1], int=True, bounds=(1, None))},
+                    'start': {'display_text': 'Start MW Pulse Time: ',
+                            'widget': SpinBox(value=defaults[2], suffix='s', siPrefix=True, bounds=(0, None), dec=True)},
+                    'stop': {'display_text': 'End MW Pulse Time: ',
+                            'widget': SpinBox(value=defaults[3], suffix='s', siPrefix=True, bounds=(0, None), dec=True)},
+                    'num_pts': {'display_text': '# Pulse Durations: ',
+                                'widget': num_pts_widget},
+                    'enable_pl_trace': {'display_text': 'Enable PL Trace: ',
+                                        'widget': enable_pl_widget},
+                    'pl_pt': {'display_text': 'Data Pt. for PL Trace: ',
+                            'widget': pl_pt_widget},
+                }           
             case 'Optical T1':
                 params = {
                         'runs': {'display_text': '# Averages per Iteration: ',
@@ -998,22 +1075,30 @@ class ExpWidget(QWidget):
                         'array_type': {'display_text': 'Array Type: ',
                                 'widget': ComboBox(items = defaults[5])}}
             case 'MW T1':
+                num_pts_widget = SpinBox(value=defaults[4], int=True, bounds=(1, None), dec=True)
+
+                enable_pl_widget, pl_pt_widget = self.create_pl_widgets(
+                    num_pts_widget, defaults, pl_pt_index=6
+                )
+
                 params = {
-                        'runs': {'display_text': '# Averages per Iteration: ',
-                                'widget': SpinBox(value = defaults[0], int = True, bounds=(1, None))},
-                        'iters': {'display_text': '# Experiment Iterations: ',
-                                'widget': SpinBox(value = defaults[1], int = True, bounds=(1, None))},
-                        'start': {'display_text': 'Start \u03C4 Time: ',
-                                'widget': SpinBox(value = defaults[2], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
-                        'stop': {'display_text': 'Stop \u03C4 Time: ',
-                                'widget': SpinBox(value = defaults[3], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
-                        'num_pts': {'display_text': '# \u03C4: ',
-                                'widget': SpinBox(value = defaults[4], int = True, bounds=(1, None), dec = True)},
-                        'array_type': {'display_text': 'Array Type: ',
-                                'widget': ComboBox(items = defaults[5])},
-                        'enable_pl_trace': {'display_text': 'Enable PL Trace: ',
-                                'widget': QCheckBox()}}
-                params['enable_pl_trace']['widget'].setChecked(False)
+                    'runs': {'display_text': '# Averages per Iteration: ',
+                            'widget': SpinBox(value=defaults[0], int=True, bounds=(1, None))},
+                    'iters': {'display_text': '# Experiment Iterations: ',
+                            'widget': SpinBox(value=defaults[1], int=True, bounds=(1, None))},
+                    'start': {'display_text': 'Start \u03C4 Time: ',
+                            'widget': SpinBox(value=defaults[2], suffix='s', siPrefix=True, bounds=(0, None), dec=True)},
+                    'stop': {'display_text': 'Stop \u03C4 Time: ',
+                            'widget': SpinBox(value=defaults[3], suffix='s', siPrefix=True, bounds=(0, None), dec=True)},
+                    'num_pts': {'display_text': '# \u03C4: ',
+                                'widget': num_pts_widget},
+                    'array_type': {'display_text': 'Array Type: ',
+                                'widget': ComboBox(items=defaults[5])},
+                    'enable_pl_trace': {'display_text': 'Enable PL Trace: ',
+                                        'widget': enable_pl_widget},
+                    'pl_pt': {'display_text': 'Data Pt. for PL Trace: ',
+                            'widget': pl_pt_widget},
+                }
             case 'RF Coil: T2':
                 params = {
                         'runs': {'display_text': '# Averages per Iteration: ',
@@ -1029,22 +1114,30 @@ class ExpWidget(QWidget):
                         'array_type': {'display_text': 'Array Type: ',
                                 'widget': ComboBox(items = defaults[5])}}   
             case 'T2':
+                num_pts_widget = SpinBox(value=defaults[4], int=True, bounds=(1, None), dec=True)
+
+                enable_pl_widget, pl_pt_widget = self.create_pl_widgets(
+                    num_pts_widget, defaults, pl_pt_index=6
+                )
+
                 params = {
-                        'runs': {'display_text': '# Averages per Iteration: ',
-                                'widget': SpinBox(value = defaults[0], int = True, bounds=(1, None))},
-                        'iters': {'display_text': '# Experiment Iterations: ',
-                                'widget': SpinBox(value = defaults[1], int = True, bounds=(1, None))},
-                        'start': {'display_text': 'Start \u03C4 Time: ',
-                                'widget': SpinBox(value = defaults[2], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
-                        'stop': {'display_text': 'Stop \u03C4 Time: ',
-                                'widget': SpinBox(value = defaults[3], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
-                        'num_pts': {'display_text': '# \u03C4: ',
-                                'widget': SpinBox(value = defaults[4], int = True, bounds=(1, None), dec = True)},
-                        'array_type': {'display_text': 'Array Type: ',
-                                'widget': ComboBox(items = defaults[5])},
-                        'enable_pl_trace': {'display_text': 'Enable PL Trace: ',
-                                'widget': QCheckBox()}}
-                params['enable_pl_trace']['widget'].setChecked(False)
+                    'runs': {'display_text': '# Averages per Iteration: ',
+                            'widget': SpinBox(value=defaults[0], int=True, bounds=(1, None))},
+                    'iters': {'display_text': '# Experiment Iterations: ',
+                            'widget': SpinBox(value=defaults[1], int=True, bounds=(1, None))},
+                    'start': {'display_text': 'Start \u03C4 Time: ',
+                            'widget': SpinBox(value=defaults[2], suffix='s', siPrefix=True, bounds=(0, None), dec=True)},
+                    'stop': {'display_text': 'Stop \u03C4 Time: ',
+                            'widget': SpinBox(value=defaults[3], suffix='s', siPrefix=True, bounds=(0, None), dec=True)},
+                    'num_pts': {'display_text': '# \u03C4: ',
+                                'widget': num_pts_widget},
+                    'array_type': {'display_text': 'Array Type: ',
+                                'widget': ComboBox(items=defaults[5])},
+                    'enable_pl_trace': {'display_text': 'Enable PL Trace: ',
+                                        'widget': enable_pl_widget},
+                    'pl_pt': {'display_text': 'Data Pt. for PL Trace: ',
+                            'widget': pl_pt_widget},
+                }
             case 'DQ Relaxation':
                 params = {
                         'runs': {'display_text': '# Averages per Iteration: ',
@@ -1165,25 +1258,33 @@ class ExpWidget(QWidget):
                                 'widget': SpinBox(value = defaults[6], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
                         'deer_t2_buffer': {'display_text': 't Buffer Time: ',
                                 'widget': SpinBox(value = defaults[7], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)}}       
-            case 'NMR Correlation Spectroscopy':    
+            case 'NMR Correlation Spectroscopy':
+                num_pts_widget = SpinBox(value=defaults[4], int=True, bounds=(1, None), dec=True)
+
+                enable_pl_widget, pl_pt_widget = self.create_pl_widgets(
+                    num_pts_widget, defaults, pl_pt_index=7
+                )
+
                 params = {
-                        'runs': {'display_text': '# Averages per Iteration: ',
-                                'widget': SpinBox(value = defaults[0], int = True, bounds=(1, None))},
-                        'iters': {'display_text': '# Experiment Iterations: ',
-                                'widget': SpinBox(value = defaults[1], int = True, bounds=(1, None))},
-                        'start': {'display_text': 'Start \u03C4 Time: ',
-                                'widget': SpinBox(value = defaults[2], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
-                        'stop': {'display_text': 'Stop \u03C4 Time: ',
-                                'widget': SpinBox(value = defaults[3], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
-                        'num_pts': {'display_text': '# Frequencies: ',
-                                'widget': SpinBox(value = defaults[4], int = True, bounds=(1, None), dec = True)},
-                        'tau': {'display_text': 'Free Precession Interval (\u03C4): ',
-                                'widget': SpinBox(value = defaults[5], suffix = 's', siPrefix = True, bounds = (0, None), dec = True)},
-                        'sig_opt': {'display_text': 'Signal Source: ',
-                                        'widget': ComboBox(items = defaults[6])},
-                        'enable_pl_trace': {'display_text': 'Enable PL Trace: ',
-                                        'widget': QCheckBox()}}
-                params['enable_pl_trace']['widget'].setChecked(False)           
+                    'runs': {'display_text': '# Averages per Iteration: ',
+                            'widget': SpinBox(value=defaults[0], int=True, bounds=(1, None))},
+                    'iters': {'display_text': '# Experiment Iterations: ',
+                            'widget': SpinBox(value=defaults[1], int=True, bounds=(1, None))},
+                    'start': {'display_text': 'Start \u03C4 Time: ',
+                            'widget': SpinBox(value=defaults[2], suffix='s', siPrefix=True, bounds=(0, None), dec=True)},
+                    'stop': {'display_text': 'Stop \u03C4 Time: ',
+                            'widget': SpinBox(value=defaults[3], suffix='s', siPrefix=True, bounds=(0, None), dec=True)},
+                    'num_pts': {'display_text': '# Frequencies: ',
+                                'widget': num_pts_widget},
+                    'tau': {'display_text': 'Free Precession Interval (\u03C4): ',
+                            'widget': SpinBox(value=defaults[5], suffix='s', siPrefix=True, bounds=(0, None), dec=True)},
+                    'sig_opt': {'display_text': 'Signal Source: ',
+                                'widget': ComboBox(items=defaults[6])},
+                    'enable_pl_trace': {'display_text': 'Enable PL Trace: ',
+                                        'widget': enable_pl_widget},
+                    'pl_pt': {'display_text': 'Data Pt. for PL Trace: ',
+                            'widget': pl_pt_widget},
+                }
             case 'NMR CASR':
                 params = {
                         'runs': {'display_text': 'Runs (avgs. per iteration): ',
@@ -1197,10 +1298,7 @@ class ExpWidget(QWidget):
                         'sig_opt': {'display_text': 'Signal Source: ',
                                         'widget': ComboBox(items = defaults[4])},
                         'dnp': {'display_text': 'Hyperpolarization: ',
-                                        'widget': ComboBox(items = defaults[5])},
-                        'enable_pl_trace': {'display_text': 'Enable PL Trace: ',
-                                'widget': QCheckBox()}}
-                params['enable_pl_trace']['widget'].setChecked(False)
+                                        'widget': ComboBox(items = defaults[5])}}
                 
         return params
 
@@ -2307,11 +2405,11 @@ class ExpWidget(QWidget):
 
             # reload the module at runtime in case any changes were made to the code
             if self.daq_b1.isChecked(): # digitizer settings
-                reload(nv_experiments_2026_03_11)
+                reload(nv_experiments_2026_03_18)
                 # call the function in a new process
                 self.run_proc.run(
                     run_experiment,
-                    exp_cls = nv_experiments_2026_03_11.SpinMeasurements,
+                    exp_cls = nv_experiments_2026_03_18.SpinMeasurements,
                     fun_name = self.exp_dict[self.experiments.currentText()][0],
                     constructor_args = list(),
                     constructor_kwargs=dict(queue_to_inst=self.exp_inst_queue),
