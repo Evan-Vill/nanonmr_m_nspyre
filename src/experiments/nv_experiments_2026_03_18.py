@@ -448,7 +448,7 @@ class SpinMeasurements:
             pl_data = None
             if enable_pl_trace:
                 if pl_dataset is None:
-                    pl_dataset = f"{dataset}_pl"
+                    pl_dataset = f"{dataset} pl"
                 pl_data = stack.enter_context(DataSource(pl_dataset))
 
             laser_shutter = mgr.laser_shutter
