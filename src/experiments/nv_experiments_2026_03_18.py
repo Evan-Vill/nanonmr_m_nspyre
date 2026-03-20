@@ -287,48 +287,63 @@ class SpinMeasurements:
 
         return traces
 
-    def analog_both_ch_math(self, arr_ch0, arr_ch1, exp_type, pts) -> np.ndarray | list[np.ndarray]:
-        """Fast subsequence averaging for 2 digitizer channel point-interleaved data.
+    def analog_both_ch_math(self, array, exp_type, pts):
+        """Average point-interleaved two-channel digitizer data across runs.
 
-        Expected ordering (legacy): for each point -> [sub0, sub1, ..., sub(n-1)]
-        repeated for pts points, repeated for runs.
+        Parameters
+        ----------
+        array : tuple | list
+            (arr_ch0, arr_ch1), each shaped as a 1D stream for one channel.
+        exp_type : str
+            Experiment type used to determine subsequence count.
+        pts : int
+            Number of experiment points per run.
 
-        Arguments:
-        - arr_ch0: ndarray (mem_size / 4 * segment_size) where mem_size = runs * num_pts
-        - arr_ch1: ndarray (mem_size / 4 * segment_size) where mem_size = runs * num_pts
-
-        Returns:
-        - n==1: ndarray (pts,)
-        - n>1 : list of n ndarrays, each (pts,)
+        Returns
+        -------
+        If n == 1:
+            [ch0_avg, ch1_avg], each shape (pts,)
+        If n > 1:
+            [
+                [ch0_sub0_avg, ch0_sub1_avg, ..., ch0_sub(n-1)_avg],
+                [ch1_sub0_avg, ch1_sub1_avg, ..., ch1_sub(n-1)_avg]
+            ]
+            where each averaged subsequence has shape (pts,)
         """
-        # Strip pint units early and explicitly (avoids UnitStrippedWarning)
+        arr_ch0, arr_ch1 = np.asarray(self._mag(array))
 
         n = SUBSEQ_COUNT.get(exp_type, 2)
-        block = n * pts # per run
+        block = n * pts
+
+        if arr_ch0.size != arr_ch1.size:
+            raise ValueError(
+                f"Channel lengths do not match: ch0={arr_ch0.size}, ch1={arr_ch1.size}"
+            )
+
         size = arr_ch0.size
 
         if size % block != 0:
-            raise ValueError(f"Input length {size} not divisible by n*pts={block} (n={n}, pts={pts})")
+            raise ValueError(
+                f"Input length {size} not divisible by n*pts={block} "
+                f"(n={n}, pts={pts})"
+            )
 
         runs = size // block
 
-        # Each row is one "point", columns are subseqs: (runs*pts, n)
+        # Shape: (runs*pts, n)
         per_point_ch0 = arr_ch0.reshape(runs * pts, n)
         per_point_ch1 = arr_ch1.reshape(runs * pts, n)
 
-        # Compute (pts, n) by averaging across runs for each subseq column
-        out_pts_n_ch0 = np.empty((pts, n), dtype=per_point_ch0.dtype)
-        out_pts_n_ch1 = np.empty((pts, n), dtype=per_point_ch1.dtype)
-        
+        ch0_out = []
+        ch1_out = []
+
         for j in range(n):
-            out_pts_n_ch0[:, j] = per_point_ch0[:, j].reshape(runs, pts).mean(axis=0)
-            out_pts_n_ch1[:, j] = per_point_ch1[:, j].reshape(runs, pts).mean(axis=0)
+            ch0_avg = per_point_ch0[:, j].reshape(runs, pts).mean(axis=0)
+            ch1_avg = per_point_ch1[:, j].reshape(runs, pts).mean(axis=0)
+            ch0_out.append(ch0_avg)
+            ch1_out.append(ch1_avg)
 
-        # Return legacy shape/format
-        if n == 1:
-            return [out_pts_n_ch0[:, 0], out_pts_n_ch1[:, 0]]
-
-        return [[out_pts_n_ch0[:, j] for j in range(n)], [out_pts_n_ch1[:, j] for j in range(n)]]
+        return [ch0_out, ch1_out]
 
 
     @staticmethod
