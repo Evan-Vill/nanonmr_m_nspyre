@@ -288,6 +288,10 @@ class SpinMeasurements:
             # strip units, convert to ndarray
             arr = np.asarray(self._mag(ch), dtype=float)
 
+            # Handle digitizer single-channel raw shape: (segments, samples, 1)
+            if arr.ndim == 3 and arr.shape[-1] == 1:
+                arr = arr[..., 0]
+    
             # if waveform data, reduce each segment to one scalar
             if arr.ndim == 2:
                 arr = arr.mean(axis=1)
@@ -1256,8 +1260,8 @@ class SpinMeasurements:
                 else:
                     sig, bg = parsed
 
-                signal_sweeps.append(np.stack([mw_times, sig])); signal_sweeps.updated_item(-1)
-                background_sweeps.append(np.stack([mw_times, bg])); background_sweeps.updated_item(-1)
+                signal_sweeps.append(np.stack([mw_times, sig_ch1])); signal_sweeps.updated_item(-1)
+                background_sweeps.append(np.stack([mw_times, bg_ch1])); background_sweeps.updated_item(-1)
 
                 if kwargs.get("fit_live", False):
                     with warnings.catch_warnings():
