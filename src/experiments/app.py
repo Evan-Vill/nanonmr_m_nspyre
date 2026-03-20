@@ -19,7 +19,7 @@ from multiprocessing import Queue
 # module containing your class to MainWidgetItem, since the python reload()
 # function does not recursively reload modules
 import gui_all_instruments_2026_03_02
-import gui_experiments_2026_03_19
+import gui_experiments_2026_03_20
 import gui_calculations_2026_03_06
 
 from drivers.insmgr import MyInstrumentManager
@@ -52,7 +52,7 @@ def main():
                     stretch = (1, 1),
                 ),
                 'Experiments': MainWidgetItem(
-                    gui_experiments_2026_03_19, 
+                    gui_experiments_2026_03_20, 
                     'ExpWidget', 
                     args=[status_queue],
                     stretch = (1, 1),
@@ -60,7 +60,7 @@ def main():
                 # 'Subsystems': MainWidgetItem(nspyre.gui.widgets.subsystem, 'SubsystemsWidget', args=[insmgr.subs.subsystems], stretch=(1, 1)),
                 'Plots': {
                     'FlexLinePlot': MainWidgetItem(
-                        gui_experiments_2026_03_19,
+                        gui_experiments_2026_03_20,
                         'FlexLinePlotWidgetAllDefaults',
                         stretch=(100, 100),
                     ),
