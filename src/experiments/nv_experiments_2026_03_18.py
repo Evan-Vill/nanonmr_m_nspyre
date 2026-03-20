@@ -287,6 +287,50 @@ class SpinMeasurements:
 
         return traces
 
+    def analog_both_ch_math(self, arr_ch0, arr_ch1, exp_type, pts) -> np.ndarray | list[np.ndarray]:
+        """Fast subsequence averaging for 2 digitizer channel point-interleaved data.
+
+        Expected ordering (legacy): for each point -> [sub0, sub1, ..., sub(n-1)]
+        repeated for pts points, repeated for runs.
+
+        Arguments:
+        - arr_ch0: ndarray (mem_size / 4 * segment_size) where mem_size = runs * num_pts
+        - arr_ch1: ndarray (mem_size / 4 * segment_size) where mem_size = runs * num_pts
+
+        Returns:
+        - n==1: ndarray (pts,)
+        - n>1 : list of n ndarrays, each (pts,)
+        """
+        # Strip pint units early and explicitly (avoids UnitStrippedWarning)
+
+        n = SUBSEQ_COUNT.get(exp_type, 2)
+        block = n * pts # per run
+        size = arr_ch0.size
+
+        if size % block != 0:
+            raise ValueError(f"Input length {size} not divisible by n*pts={block} (n={n}, pts={pts})")
+
+        runs = size // block
+
+        # Each row is one "point", columns are subseqs: (runs*pts, n)
+        per_point_ch0 = arr_ch0.reshape(runs * pts, n)
+        per_point_ch1 = arr_ch1.reshape(runs * pts, n)
+
+        # Compute (pts, n) by averaging across runs for each subseq column
+        out_pts_n_ch0 = np.empty((pts, n), dtype=per_point_ch0.dtype)
+        out_pts_n_ch1 = np.empty((pts, n), dtype=per_point_ch1.dtype)
+        
+        for j in range(n):
+            out_pts_n_ch0[:, j] = per_point_ch0[:, j].reshape(runs, pts).mean(axis=0)
+            out_pts_n_ch1[:, j] = per_point_ch1[:, j].reshape(runs, pts).mean(axis=0)
+
+        # Return legacy shape/format
+        if n == 1:
+            return [out_pts_n_ch0[:, 0], out_pts_n_ch1[:, 0]]
+
+        return [[out_pts_n_ch0[:, j] for j in range(n)], [out_pts_n_ch1[:, j] for j in range(n)]]
+
+
     @staticmethod
     def build_status_msg(
         *,
