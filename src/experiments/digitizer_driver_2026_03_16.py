@@ -179,23 +179,23 @@ class SpectrumDigitizer():
     # TODO: check dual channel functionality and array interleaving to confirm correct processing   
     def acquire(self):
         try:
-            data_block = next(self.multiple_recording)
-                    
+            data_block = next(self.multiple_recording) # dim (mem_size/4, segment_size, 1)
+            print(f"shape of dig data block: {np.shape(data_block)}")  
+            print(f"ravel shape: {np.shape(np.asarray(data_block).ravel())}")      
+
         except spcm.SpcmTimeout:
             self.card.stop(spcm.M2CMD_DATA_STOPDMA)
             self.card.__exit__()
             self.card.__enter__()
             return None
 
+        raw_data = np.asarray(data_block).copy()
         scale = (self.AMP / 1000) / np.abs(self.card.max_sample_value())
 
-        if not self.both_ch:
-            self.raw_data = np.asarray(data_block).copy()
-            return self.raw_data * scale * units.V
+        if not self.both_ch:    
+            return raw_data * scale * units.V
         
-        raw = np.asarray(data_block).ravel()
-        raw_interleaved = raw.reshape(-1, 2)
-        ch0_data = raw_interleaved[:, 0].copy()
-        ch1_data = raw_interleaved[:, 1].copy()
-
+        ch0_data = raw_data[:, :, 0]
+        ch1_data = raw_data[:, :, 1]
+        print(f"shape of ch0_data: {np.shape(ch0_data)}")
         return ch0_data * scale * units.V, ch1_data * scale * units.V
