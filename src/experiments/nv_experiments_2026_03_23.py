@@ -526,10 +526,6 @@ class SpinMeasurements:
         fit_value,
         fit_error,
         pl_data=None,
-        signal_sweeps=None,
-        background_sweeps=None,
-        signal_2_sweeps=None,
-        background_2_sweeps=None,
         subseq_sweeps=None,
         subseq_2_sweeps=None,
         signal_pl_sweeps=None,
@@ -581,72 +577,92 @@ class SpinMeasurements:
             "fit_error": fit_error,
         }
 
-        def append_series(name, value, container=None):
+        def append_series(name, x_axis, value, container):
             if container is None:
-                container = StreamingList()
-            container.append(np.stack([x_data, value]))
+                raise ValueError(
+                    f"Container for '{name}' must be pre-created by the experiment function"
+                )
+            container.append(np.stack([x_axis, value]))
             container.updated_item(-1)
             datasets[name] = container
             return container
 
-        if cfg.both_channels:
-            if subseq_2_sweeps is None:
-                subseq_2_sweeps = {}
+        if subseq_sweeps is None:
+            raise ValueError("subseq_sweeps must be provided by the calling experiment function")
 
+        if cfg.both_channels and subseq_2_sweeps is None:
+            raise ValueError("subseq_2_sweeps must be provided for both_channels experiments")
+
+        if cfg.both_channels:
             if not (isinstance(parsed, (list, tuple)) and len(parsed) == 2):
                 raise ValueError("Expected two-channel parsed data for both_channels")
 
             ch0, ch1 = parsed
             n = len(ch0)
-            names = subseq_name_map.get(n, [f"subseq_{i}" for i in range(n)])
 
-            # Choose explicit container mapping if provided, else fallback to generic one
+            if len(subseq_sweeps) != n:
+                raise ValueError(
+                    f"subseq_sweeps length {len(subseq_sweeps)} does not match channel count {n}"
+                )
+
+            names = list(subseq_sweeps.keys())
+            if len(names) != n:
+                raise ValueError("subseq_sweeps must have exactly one container per subsequence")
+
             for idx, name in enumerate(names):
                 value0 = ch0[idx]
                 value1 = ch1[idx]
 
-                c0 = (subseq_sweeps or {}).get(name)
-                c1 = subseq_2_sweeps.get(name) if subseq_2_sweeps else None
+                c0 = subseq_sweeps.get(name)
+                if c0 is None:
+                    raise ValueError(f"Missing subseq_sweeps container for '{name}'")
+                append_series(name, x_data, value0, c0)
 
-                c0 = append_series(name, value0, c0)
-                c1 = append_series(f"{name}_ch2", value1, c1)
+                c2 = subseq_2_sweeps.get(name) if subseq_2_sweeps is not None else None
+                if c2 is None:
+                    raise ValueError(f"Missing subseq_2_sweeps container for '{name}'")
+                append_series(f"{name}_ch2", x_data, value1, c2)
 
-                if subseq_sweeps is not None:
-                    subseq_sweeps[name] = c0
-                if subseq_2_sweeps is not None:
-                    subseq_2_sweeps[name] = c1
         else:
-            if isinstance(parsed, (list, tuple)) and len(parsed) != 2:
-                names = subseq_name_map.get(len(parsed), [f"subseq_{i}" for i in range(len(parsed))])
+            if isinstance(parsed, (list, tuple)) and len(parsed) != 2:  # one channel, num_sub_seqs != 2
+                n = len(parsed)
+                if len(subseq_sweeps) != n:
+                    raise ValueError(
+                        f"subseq_sweeps length {len(subseq_sweeps)} does not match extracted subsequences {n}"
+                    )
+
+                names = list(subseq_sweeps.keys())
                 for idx, name in enumerate(names):
                     data_arr = parsed[idx]
                     if slice_start is not None or slice_end is not None:
                         data_arr = data_arr[slice_start:slice_end]
-                    c = (subseq_sweeps or {}).get(name)
-                    c = append_series(name, data_arr, c)
-                    if subseq_sweeps is not None:
-                        subseq_sweeps[name] = c
+                    c = subseq_sweeps.get(name)
+                    append_series(name, x_data, data_arr, c)
             else:
                 sig, bg = parsed
                 if slice_start is not None or slice_end is not None:
                     sig = sig[slice_start:slice_end]
                     bg = bg[slice_start:slice_end]
 
-                if signal_sweeps is None:
-                    signal_sweeps = StreamingList()
-                if background_sweeps is None:
-                    background_sweeps = StreamingList()
+                if "signal" in subseq_sweeps and "background" in subseq_sweeps:
+                    sig_name = "signal"
+                    bg_name = "background"
+                else:
+                    keys = list(subseq_sweeps.keys())
+                    if len(keys) < 2:
+                        raise ValueError("subseq_sweeps must include at least two containers for 2-subsequence data")
+                    sig_name, bg_name = keys[0], keys[1]
 
-                signal_sweeps = append_series("signal", sig, signal_sweeps)
-                background_sweeps = append_series("background", bg, background_sweeps)
+                append_series(sig_name, x_data, sig, subseq_sweeps[sig_name])
+                append_series(bg_name, x_data, bg, subseq_sweeps[bg_name])
 
         if pl_data is not None:
             if signal_pl_sweeps is None or background_pl_sweeps is None:
                 raise ValueError("pl_data requires signal_pl_sweeps and background_pl_sweeps")
             sig_pl, bg_pl = self.analog_pl_math(result_raw, exp_type, cfg.pl_pt, cfg.num_pts)
             pl_trace_times = np.linspace(0, cfg.segment_size / cfg.dig_sampling_freq, cfg.segment_size) * 1e9
-            signal_pl_sweeps.append(np.stack([pl_trace_times, sig_pl])); signal_pl_sweeps.updated_item(-1)
-            background_pl_sweeps.append(np.stack([pl_trace_times, bg_pl])); background_pl_sweeps.updated_item(-1)
+            signal_pl_sweeps = append_series("signal_pl", pl_trace_times, sig_pl, signal_pl_sweeps)
+            background_pl_sweeps = append_series("background_pl", pl_trace_times, bg_pl, background_pl_sweeps)
             pl_data.push({
                 "params": {"kwargs": kwargs, "iters_completed": iters_completed, "elapsed": time.perf_counter() - exp_start_time},
                 "title": metadata['pl_title'],
@@ -1025,7 +1041,10 @@ class SpinMeasurements:
             ))
             return
             
-        signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
+        subseq_sweeps = {"signal": StreamingList(), "background": StreamingList()}
+        if cfg.both_channels:
+            subseq_2_sweeps = {"signal": StreamingList(), "background": StreamingList()}
+        signal_pl_sweeps = background_pl_sweeps = None
         if pl_data is not None:
             signal_pl_sweeps, background_pl_sweeps = StreamingList(), StreamingList() # for storing optional PL data --> list of numpy arrays of shape (2, dig segment_size)
 
@@ -1078,7 +1097,24 @@ class SpinMeasurements:
                     break
 
                 try:
-                    self.acquire_data(cfg, "CW ODMR", real_freqs / 1e9, signal_sweeps, background_sweeps, data, fit_x, fit_y, fit_value, fit_error, pl_data, None, None, signal_pl_sweeps, background_pl_sweeps, i + 1, exp_start_time, **kwargs)
+                    self.acquire_data(
+                        cfg=cfg,
+                        exp_type="CW ODMR",
+                        x_data=real_freqs / 1e9,
+                        data=data,
+                        fit_x=fit_x,
+                        fit_y=fit_y,
+                        fit_value=fit_value,
+                        fit_error=fit_error,
+                        pl_data=pl_data,
+                        subseq_sweeps=subseq_sweeps,
+                        subseq_2_sweeps=subseq_2_sweeps if cfg.both_channels else None,
+                        signal_pl_sweeps=signal_pl_sweeps,
+                        background_pl_sweeps=background_pl_sweeps,
+                        iters_completed=i + 1,
+                        exp_start_time=exp_start_time,
+                        **kwargs,
+                    )
                 except Exception as e:
                     failed = True
                     exception_type = type(e).__name__
@@ -1091,7 +1127,7 @@ class SpinMeasurements:
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
                             fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
-                                cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
+                                cfg.dataset, subseq_sweeps["signal"], subseq_sweeps["background"], *cfg.fit_params
                             )
                         except (RuntimeError, OptimizeWarning) as e:
                             _logger.warning(f"For {cfg.dataset} measurement, {e}")
@@ -1118,7 +1154,7 @@ class SpinMeasurements:
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
                     fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
-                        cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
+                        cfg.dataset, subseq_sweeps["signal"], subseq_sweeps["background"], *cfg.fit_params
                     )
                 except (RuntimeError, OptimizeWarning) as e:
                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
@@ -1469,9 +1505,10 @@ class SpinMeasurements:
             ))
             return
 
-        signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
+        subseq_sweeps = {"signal": StreamingList(), "background": StreamingList()}
         if cfg.both_channels:
-            signal_2_sweeps, background_2_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
+            subseq_2_sweeps = {"signal": StreamingList(), "background": StreamingList()}
+        signal_pl_sweeps = background_pl_sweeps = None
         if pl_data is not None:
             signal_pl_sweeps, background_pl_sweeps = StreamingList(), StreamingList() # for storing optional PL data --> list of numpy arrays of shape (2, dig segment_size)
 
@@ -1524,7 +1561,24 @@ class SpinMeasurements:
                     break
 
                 try:
-                    self.acquire_data(cfg, "Rabi", mw_times, signal_sweeps, background_sweeps, data, fit_x, fit_y, fit_value, fit_error, pl_data, signal_2_sweeps, background_2_sweeps, signal_pl_sweeps, background_pl_sweeps, i + 1, exp_start_time, **kwargs)
+                    self.acquire_data(
+                        cfg=cfg,
+                        exp_type="Rabi",
+                        x_data=mw_times,
+                        data=data,
+                        fit_x=fit_x,
+                        fit_y=fit_y,
+                        fit_value=fit_value,
+                        fit_error=fit_error,
+                        pl_data=pl_data,
+                        subseq_sweeps=subseq_sweeps,
+                        subseq_2_sweeps=subseq_2_sweeps if cfg.both_channels else None,
+                        signal_pl_sweeps=signal_pl_sweeps,
+                        background_pl_sweeps=background_pl_sweeps,
+                        iters_completed=i + 1,
+                        exp_start_time=exp_start_time,
+                        **kwargs,
+                    )
                 except Exception as e:
                     failed = True
                     exception_type = type(e).__name__
@@ -1537,7 +1591,7 @@ class SpinMeasurements:
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
                             fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
-                                cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
+                                cfg.dataset, subseq_sweeps["signal"], subseq_sweeps["background"], *cfg.fit_params
                             )
                         except (RuntimeError, OptimizeWarning) as e:
                             _logger.warning(f"For {cfg.dataset} measurement, {e}")
@@ -1564,7 +1618,7 @@ class SpinMeasurements:
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
                     fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
-                        cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
+                        cfg.dataset, subseq_sweeps["signal"], subseq_sweeps["background"], *cfg.fit_params
                     )
                 except (RuntimeError, OptimizeWarning) as e:
                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
@@ -1658,7 +1712,12 @@ class SpinMeasurements:
             ))
             return
             
-        signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
+        subseq_sweeps = {"signal": StreamingList(), "background": StreamingList()}
+        if cfg.both_channels:
+            subseq_2_sweeps = {"signal": StreamingList(), "background": StreamingList()}
+        else:
+            subseq_2_sweeps = None
+        signal_pl_sweeps = background_pl_sweeps = None
         if pl_data is not None:
             signal_pl_sweeps, background_pl_sweeps = StreamingList(), StreamingList() # for storing optional PL data --> list of numpy arrays of shape (2, dig segment_size)
 
@@ -1712,7 +1771,24 @@ class SpinMeasurements:
                     break
                 
                 try:
-                    self.acquire_data(cfg, "Pulsed ODMR", real_freqs / 1e9, signal_sweeps, background_sweeps, data, fit_x, fit_y, fit_value, fit_error, pl_data, None, None, signal_pl_sweeps, background_pl_sweeps, i + 1, exp_start_time, **kwargs)
+                    self.acquire_data(
+                        cfg=cfg,
+                        exp_type="Pulsed ODMR",
+                        x_data=real_freqs / 1e9,
+                        data=data,
+                        fit_x=fit_x,
+                        fit_y=fit_y,
+                        fit_value=fit_value,
+                        fit_error=fit_error,
+                        pl_data=pl_data,
+                        subseq_sweeps=subseq_sweeps,
+                        subseq_2_sweeps=subseq_2_sweeps,
+                        signal_pl_sweeps=signal_pl_sweeps if pl_data is not None else None,
+                        background_pl_sweeps=background_pl_sweeps if pl_data is not None else None,
+                        iters_completed=i + 1,
+                        exp_start_time=exp_start_time,
+                        **kwargs,
+                    )
                 except Exception as e:
                     failed = True
                     exception_type = type(e).__name__
@@ -1864,8 +1940,16 @@ class SpinMeasurements:
         ))
             return
             
-        rf_signal_sweeps, rf_background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
-        no_rf_signal_sweeps, no_rf_background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
+        subseq_sweeps = {
+            "rf_signal": StreamingList(),
+            "rf_background": StreamingList(),
+            "no_rf_signal": StreamingList(),
+            "no_rf_background": StreamingList(),
+        }
+        subseq_2_sweeps = None
+        signal_pl_sweeps = background_pl_sweeps = None
+        if pl_data is not None:
+            signal_pl_sweeps, background_pl_sweeps = StreamingList(), StreamingList()
         
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
@@ -1922,12 +2006,8 @@ class SpinMeasurements:
                         fit_value=fit_value,
                         fit_error=fit_error,
                         pl_data=pl_data,
-                        subseq_sweeps={
-                            "rf_signal": rf_signal_sweeps,
-                            "rf_background": rf_background_sweeps,
-                            "no_rf_signal": no_rf_signal_sweeps,
-                            "no_rf_background": no_rf_background_sweeps,
-                        },
+                        subseq_sweeps=subseq_sweeps,
+                        subseq_2_sweeps=subseq_2_sweeps,
                         signal_pl_sweeps=signal_pl_sweeps if pl_data is not None else None,
                         background_pl_sweeps=background_pl_sweeps if pl_data is not None else None,
                         iters_completed=i + 1,
@@ -2067,10 +2147,11 @@ class SpinMeasurements:
             runs=cfg.runs,
         )
 
-        signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
-        
-        self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
-        laser.set_diode_current_realtime(cfg.laser_power) # set laser power
+        opt_t1_sweeps = StreamingList()  # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
+        subseq_sweeps = {"opt_t1": opt_t1_sweeps}
+
+        self.dig.assign_param(dig_cfg)  # upload digitizer parameters for experiment
+        laser.set_diode_current_realtime(cfg.laser_power)  # set laser power
 
         ### --- Initialize experiment state variables --- ###
         stopped = False
@@ -2109,46 +2190,34 @@ class SpinMeasurements:
                     iters_completed = i
                     percent_completed = int(100 * iters_completed / cfg.iters)
                     break
-                
-                try:     
-                    t1_result_raw = self.dig.acquire() # acquire data from digitizer
-                    t1_result = np.mean(t1_result_raw,axis=1)
+
+                try:
+                    self.acquire_data(
+                        cfg=cfg,
+                        exp_type="Opt T1",
+                        x_data=tau_times[1:] / 1e6,
+                        data=data,
+                        fit_x=fit_x,
+                        fit_y=fit_y,
+                        fit_value=fit_value,
+                        fit_error=fit_error,
+                        subseq_sweeps=subseq_sweeps,
+                        iters_completed=i + 1,
+                        exp_start_time=exp_start_time,
+                        slice_start=1,
+                        **kwargs,
+                    )
                 except Exception as e:
                     failed = True
                     exception_type = type(e).__name__
                     iters_completed = i
                     percent_completed = int(100 * iters_completed / cfg.iters)
                     break
-                        
-                try:
-                    sig, bg = self.parse_analog_math(t1_result, 'MW_T1', cfg.num_pts) # partition buffer into signal and background datasets
-                except ValueError:
-                    continue
-                
-                signal_sweeps.append(np.stack([tau_times[1:] / 1e6, sig[1:]])); signal_sweeps.updated_item(-1)
-                background_sweeps.append(np.stack([tau_times[1:] / 1e6, bg[1:]])); background_sweeps.updated_item(-1)  
 
-                if kwargs.get("fit_live", False):
-                    with warnings.catch_warnings():
-                        warnings.simplefilter("error", OptimizeWarning)
-                        try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
-                                cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
-                            )
-                        except (RuntimeError, OptimizeWarning) as e:
-                            _logger.warning(f"For {cfg.dataset} measurement, {e}")
-
+                # OPT_T1 does not support fit_live via existing signal/background fit_data path.
+                # If fit_live is requested, user should switch to a custom T1 fitter.
                 iters_completed = i + 1
                 percent_completed = int(100 * iters_completed / cfg.iters)
-
-                # save the current data to the data server
-                data.push({
-                    'params': {'kwargs': kwargs, 'iters_completed': iters_completed, 'elapsed': time.perf_counter() - exp_start_time},
-                    'title': 'Optical T1 Relaxation',
-                    'xlabel': 'Free Precession Interval (ms)',
-                    'ylabel': 'Signal (V) or Norm. Signal',
-                    'datasets': {'signal' : signal_sweeps, 'background': background_sweeps, 'x_fit': fit_x, 'y_fit': fit_y, 'fit_value': fit_value, 'fit_error': fit_error}
-                })
 
                 self.queue_from_exp.put_nowait(self.build_status_msg(
                     status="in progress",
@@ -2165,14 +2234,7 @@ class SpinMeasurements:
             iters_completed, percent_completed = cfg.iters, 100
 
         if kwargs.get("fit", False):
-            with warnings.catch_warnings():
-                warnings.simplefilter("error", OptimizeWarning)
-                try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
-                        cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
-                    )
-                except (RuntimeError, OptimizeWarning) as e:
-                    _logger.warning(f"For {cfg.dataset} measurement, {e}")
+            _logger.warning("OPT_T1_scan: `fit` is not available for single-subsequence data using current fit_data (signal/background required).")
 
         if kwargs.get("save", False):
             run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
@@ -2267,7 +2329,12 @@ class SpinMeasurements:
             ))
             return
             
-        signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
+        subseq_sweeps = {"signal": StreamingList(), "background": StreamingList()}
+        if cfg.both_channels:
+            subseq_2_sweeps = {"signal": StreamingList(), "background": StreamingList()}
+        else:
+            subseq_2_sweeps = None
+        signal_pl_sweeps = background_pl_sweeps = None
         if pl_data is not None:
             signal_pl_sweeps, background_pl_sweeps = StreamingList(), StreamingList() # for storing optional PL data --> list of numpy arrays of shape (2, dig segment_size)
 
@@ -2319,34 +2386,19 @@ class SpinMeasurements:
                     percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
-                try:     
-                    t1_result_raw = self.dig.acquire() # acquire data from digitizer
-                    t1_result = np.mean(t1_result_raw,axis=1)
-                except Exception as e:
-                    failed = True
-                    exception_type = type(e).__name__
-                    iters_completed = i
-                    percent_completed = int(100 * iters_completed / cfg.iters)
-                    break
-                     
-                try:
-                    sig, bg = self.parse_analog_math(t1_result, "MW_T1", cfg.num_pts) # partition buffer into signal and background datasets
-                except ValueError:
-                    continue
-                    
                 try:
                     self.acquire_data(
                         cfg=cfg,
                         exp_type="MW T1",
-                        x_data=tau_times[1:] / 1e6,
+                        x_data=tau_times[1:]/1e6,
                         data=data,
                         fit_x=fit_x,
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
                         pl_data=pl_data,
-                        signal_sweeps=signal_sweeps,
-                        background_sweeps=background_sweeps,
+                        subseq_sweeps=subseq_sweeps,
+                        subseq_2_sweeps=subseq_2_sweeps if cfg.both_channels else None,
                         signal_pl_sweeps=signal_pl_sweeps if pl_data is not None else None,
                         background_pl_sweeps=background_pl_sweeps if pl_data is not None else None,
                         iters_completed=i + 1,
@@ -2543,7 +2595,14 @@ class SpinMeasurements:
             ))
             return
         
-        signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points) 
+        signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
+        if cfg.both_channels:
+            signal_2_sweeps, background_2_sweeps = StreamingList(), StreamingList()
+            subseq_2_sweeps = {"signal": signal_2_sweeps, "background": background_2_sweeps}
+        else:
+            signal_2_sweeps = background_2_sweeps = None
+            subseq_2_sweeps = None
+        signal_pl_sweeps = background_pl_sweeps = None
         if pl_data is not None:
             signal_pl_sweeps, background_pl_sweeps = StreamingList(), StreamingList() # for storing optional PL data --> list of numpy arrays of shape (2, dig segment_size)
 
@@ -2595,22 +2654,6 @@ class SpinMeasurements:
                     percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
-                try:      
-                    t2_result_raw = self.dig.acquire() # acquire data from digitizer
-                    # t2_result_raw = t2_result_raw[:,50:]
-                    t2_result = np.mean(t2_result_raw, axis=1)
-                except Exception as e:
-                    failed = True
-                    exception_type = type(e).__name__
-                    iters_completed = i
-                    percent_completed = int(100 * iters_completed / cfg.iters)
-                    break
-
-                try:
-                    sig, bg = self.parse_analog_math(t2_result, "T2", cfg.num_pts) # partition buffer into signal and background datasets
-                except ValueError:
-                    continue
-
                 try:
                     self.acquire_data(
                         cfg=cfg,
@@ -2622,8 +2665,8 @@ class SpinMeasurements:
                         fit_value=fit_value,
                         fit_error=fit_error,
                         pl_data=pl_data,
-                        signal_sweeps=signal_sweeps,
-                        background_sweeps=background_sweeps,
+                        subseq_sweeps=subseq_sweeps,
+                        subseq_2_sweeps=subseq_2_sweeps,
                         signal_pl_sweeps=signal_pl_sweeps if pl_data is not None else None,
                         background_pl_sweeps=background_pl_sweeps if pl_data is not None else None,
                         iters_completed=i + 1,
@@ -2794,7 +2837,16 @@ class SpinMeasurements:
             ))
             return
 
-        signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points) 
+        signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
+        if cfg.both_channels:
+            signal_2_sweeps, background_2_sweeps = StreamingList(), StreamingList()
+            subseq_2_sweeps = {"signal": signal_2_sweeps, "background": background_2_sweeps}
+        else:
+            signal_2_sweeps = background_2_sweeps = None
+            subseq_2_sweeps = None
+        signal_pl_sweeps = background_pl_sweeps = None
+        if pl_data is not None:
+            signal_pl_sweeps, background_pl_sweeps = StreamingList(), StreamingList()
 
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
@@ -2837,22 +2889,6 @@ class SpinMeasurements:
                     percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
-                try:      
-                    t2_result_raw = self.dig.acquire() # acquire data from digitizer
-                    # t2_result_raw = t2_result_raw[:,50:]
-                    t2_result = np.mean(t2_result_raw, axis=1)
-                except Exception as e:
-                    failed = True
-                    exception_type = type(e).__name__
-                    iters_completed = i
-                    percent_completed = int(100 * iters_completed / cfg.iters)
-                    break
-
-                try:
-                    sig, bg = self.parse_analog_math(t2_result, 'T2', cfg.num_pts) # partition buffer into signal and background datasets
-                except ValueError:
-                    continue
-
                 try:
                     self.acquire_data(
                         cfg=cfg,
@@ -2864,8 +2900,8 @@ class SpinMeasurements:
                         fit_value=fit_value,
                         fit_error=fit_error,
                         pl_data=pl_data,
-                        signal_sweeps=signal_sweeps,
-                        background_sweeps=background_sweeps,
+                        subseq_sweeps=subseq_sweeps,
+                        subseq_2_sweeps=subseq_2_sweeps,
                         signal_pl_sweeps=signal_pl_sweeps if pl_data is not None else None,
                         background_pl_sweeps=background_pl_sweeps if pl_data is not None else None,
                         iters_completed=i + 1,
@@ -3016,7 +3052,25 @@ class SpinMeasurements:
             ))
             return
 
-        s00_sweeps, s0m_sweeps, smm_sweeps, smp_sweeps = StreamingList(), StreamingList(), StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points) 
+        subseq_sweeps = {
+            'S0,0': StreamingList(),
+            'S0,-1': StreamingList(),
+            'S-1,-1': StreamingList(),
+            'S-1,+1': StreamingList(),
+        }
+        if cfg.both_channels:
+            subseq_2_sweeps = {
+                'S0,0': StreamingList(),
+                'S0,-1': StreamingList(),
+                'S-1,-1': StreamingList(),
+                'S-1,+1': StreamingList(),
+            }
+        else:
+            subseq_2_sweeps = None
+
+        signal_pl_sweeps = background_pl_sweeps = None
+        if pl_data is not None:
+            signal_pl_sweeps, background_pl_sweeps = StreamingList(), StreamingList()
 
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
@@ -3059,22 +3113,6 @@ class SpinMeasurements:
                     percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
-                try:        
-                    dq_result_raw = self.dig.acquire() # acquire data from digitizer
-                    dq_result = np.mean(dq_result_raw,axis=1) # average all data over each trigger/segment 
-                except Exception as e:
-                    failed = True
-                    exception_type = type(e).__name__
-                    iters_completed = i
-                    percent_completed = int(100 * iters_completed / cfg.iters)
-                    break
-
-                try:
-                    # partition buffer into signal and background datasets FIXME: maybe need to use DEER option for 4 pts in analog math
-                    s00, s0m, smm, smp = self.parse_analog_math(dq_result, 'DQ', cfg.num_pts) # data for S0,0, S0,-1, S-1,-1, and S-1,+1 sequence
-                except ValueError:
-                    continue
-                        
                 try:
                     self.acquire_data(
                         cfg=cfg,
@@ -3085,12 +3123,11 @@ class SpinMeasurements:
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
-                        subseq_sweeps={
-                            'S0,0': s00_sweeps,
-                            'S0,-1': s0m_sweeps,
-                            'S-1,-1': smm_sweeps,
-                            'S-1,+1': smp_sweeps,
-                        },
+                        pl_data=pl_data,
+                        subseq_sweeps=subseq_sweeps,
+                        subseq_2_sweeps=subseq_2_sweeps,
+                        signal_pl_sweeps=signal_pl_sweeps if pl_data is not None else None,
+                        background_pl_sweeps=background_pl_sweeps if pl_data is not None else None,
                         iters_completed=i + 1,
                         exp_start_time=exp_start_time,
                         **kwargs,
@@ -3251,8 +3288,13 @@ class SpinMeasurements:
             ))
             return
         
-        dark_signal_sweeps, dark_background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
-        echo_signal_sweeps, echo_background_sweeps = StreamingList(), StreamingList()
+        subseq_sweeps = {
+            "dark_signal": StreamingList(),
+            "dark_background": StreamingList(),
+            "echo_signal": StreamingList(),
+            "echo_background": StreamingList(),
+        }
+        subseq_2_sweeps = None
 
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
@@ -3305,12 +3347,8 @@ class SpinMeasurements:
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
-                        subseq_sweeps={
-                            "dark_signal": dark_signal_sweeps,
-                            "dark_background": dark_background_sweeps,
-                            "echo_signal": echo_signal_sweeps,
-                            "echo_background": echo_background_sweeps,
-                        },
+                        subseq_sweeps=subseq_sweeps,
+                        subseq_2_sweeps=subseq_2_sweeps,
                         iters_completed=i + 1,
                         exp_start_time=exp_start_time,
                         **kwargs,
@@ -3469,8 +3507,13 @@ class SpinMeasurements:
             ))
             return
             
-        dark_signal_sweeps, dark_background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
-        echo_signal_sweeps, echo_background_sweeps = StreamingList(), StreamingList()
+        subseq_sweeps = {
+            "dark_signal": StreamingList(),
+            "dark_background": StreamingList(),
+            "echo_signal": StreamingList(),
+            "echo_background": StreamingList(),
+        }
+        subseq_2_sweeps = None
 
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
@@ -3523,12 +3566,8 @@ class SpinMeasurements:
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
-                        subseq_sweeps={
-                            "dark_signal": dark_signal_sweeps,
-                            "dark_background": dark_background_sweeps,
-                            "echo_signal": echo_signal_sweeps,
-                            "echo_background": echo_background_sweeps,
-                        },
+                        subseq_sweeps=subseq_sweeps,
+                        subseq_2_sweeps=subseq_2_sweeps,
                         iters_completed=i + 1,
                         exp_start_time=exp_start_time,
                         **kwargs,
@@ -3687,8 +3726,13 @@ class SpinMeasurements:
             ))
             return
             
-        dark_signal_sweeps, dark_background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
-        echo_signal_sweeps, echo_background_sweeps = StreamingList(), StreamingList()
+        subseq_sweeps = {
+            "dark_signal": StreamingList(),
+            "dark_background": StreamingList(),
+            "echo_signal": StreamingList(),
+            "echo_background": StreamingList(),
+        }
+        subseq_2_sweeps = None
 
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
@@ -3741,12 +3785,8 @@ class SpinMeasurements:
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
-                        subseq_sweeps={
-                            "dark_signal": dark_signal_sweeps,
-                            "dark_background": dark_background_sweeps,
-                            "echo_signal": echo_signal_sweeps,
-                            "echo_background": echo_background_sweeps,
-                        },
+                        subseq_sweeps=subseq_sweeps,
+                        subseq_2_sweeps=subseq_2_sweeps,
                         iters_completed=i + 1,
                         exp_start_time=exp_start_time,
                         slice_start=1,
@@ -3910,9 +3950,15 @@ class SpinMeasurements:
             ))
             return
             
-        dark_signal_sweeps, dark_background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
-        echo_signal_sweeps, echo_background_sweeps = StreamingList(), StreamingList()
-        cd_signal_sweeps, cd_background_sweeps = StreamingList(), StreamingList()
+        subseq_sweeps = {
+            "dark_signal": StreamingList(),
+            "dark_background": StreamingList(),
+            "echo_signal": StreamingList(),
+            "echo_background": StreamingList(),
+            "cd_signal": StreamingList(),
+            "cd_background": StreamingList(),
+        }
+        subseq_2_sweeps = None
 
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
@@ -3965,14 +4011,8 @@ class SpinMeasurements:
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
-                        subseq_sweeps={
-                            "dark_signal": dark_signal_sweeps,
-                            "dark_background": dark_background_sweeps,
-                            "echo_signal": echo_signal_sweeps,
-                            "echo_background": echo_background_sweeps,
-                            "cd_signal": cd_signal_sweeps,
-                            "cd_background": cd_background_sweeps,
-                        },
+                        subseq_sweeps=subseq_sweeps,
+                        subseq_2_sweeps=subseq_2_sweeps,
                         iters_completed=i + 1,
                         exp_start_time=exp_start_time,
                         slice_start=1,
@@ -4128,6 +4168,8 @@ class SpinMeasurements:
 
         signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
 
+        subseq_sweeps = {"signal": StreamingList(), "background": StreamingList()}
+        subseq_2_sweeps = None
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
@@ -4179,10 +4221,10 @@ class SpinMeasurements:
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
-                        subseq_sweeps={
-                            "signal": signal_sweeps,
-                            "background": background_sweeps,
-                        },
+                        subseq_sweeps=subseq_sweeps,
+
+
+
                         iters_completed=i + 1,
                         exp_start_time=exp_start_time,
                         **kwargs,
@@ -4341,6 +4383,8 @@ class SpinMeasurements:
             
         signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
 
+        subseq_sweeps = {"signal": StreamingList(), "background": StreamingList()}
+        subseq_2_sweeps = None
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
@@ -4392,10 +4436,10 @@ class SpinMeasurements:
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
-                        subseq_sweeps={
-                            "signal": signal_sweeps,
-                            "background": background_sweeps,
-                        },
+                        subseq_sweeps=subseq_sweeps,
+
+
+
                         iters_completed=i + 1,
                         exp_start_time=exp_start_time,
                         **kwargs,
@@ -4558,6 +4602,8 @@ class SpinMeasurements:
         with_pulse_py_sweeps, without_pulse_py_sweeps = StreamingList(), StreamingList()
         with_pulse_ny_sweeps, without_pulse_ny_sweeps = StreamingList(), StreamingList()
         
+        subseq_sweeps = {"with_py": with_pulse_py_sweeps, "without_py": without_pulse_py_sweeps, "with_ny": with_pulse_ny_sweeps, "without_ny": without_ny_sweeps}
+        subseq_2_sweeps = None
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
@@ -4600,16 +4646,6 @@ class SpinMeasurements:
                     break
 
                 try:
-                    corr_result_raw = self.dig.acquire() # acquire data from digitizer
-                    corr_result = np.mean(corr_result_raw,axis=1) # average all data over each trigger/segment 
-                except Exception as e:
-                    failed = True
-                    exception_type = type(e).__name__
-                    iters_completed = i
-                    percent_completed = int(100 * iters_completed / cfg.iters)
-                    break
-
-                try:
                     self.acquire_data(
                         cfg=cfg,
                         exp_type="DEER T1",
@@ -4620,12 +4656,12 @@ class SpinMeasurements:
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
-                        subseq_sweeps={
-                            "with_py": with_pulse_py_sweeps,
-                            "without_py": without_pulse_py_sweeps,
-                            "with_ny": with_pulse_ny_sweeps,
-                            "without_ny": without_pulse_ny_sweeps,
-                        },
+                        subseq_sweeps=subseq_sweeps,
+
+
+
+
+
                         iters_completed=i + 1,
                         exp_start_time=exp_start_time,
                         slice_start=1,
@@ -4779,6 +4815,8 @@ class SpinMeasurements:
         
         signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
 
+        subseq_sweeps = {"signal": StreamingList(), "background": StreamingList()}
+        subseq_2_sweeps = None
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
@@ -4830,10 +4868,10 @@ class SpinMeasurements:
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
-                        subseq_sweeps={
-                            "signal": signal_sweeps,
-                            "background": background_sweeps,
-                        },
+                        subseq_sweeps=subseq_sweeps,
+
+
+
                         iters_completed=i + 1,
                         exp_start_time=exp_start_time,
                         **kwargs,
@@ -5015,9 +5053,18 @@ class SpinMeasurements:
             return
             
         signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
+        if cfg.both_channels:
+            signal_2_sweeps, background_2_sweeps = StreamingList(), StreamingList()
+            subseq_2_sweeps = {"signal": signal_2_sweeps, "background": background_2_sweeps}
+        else:
+            signal_2_sweeps = background_2_sweeps = None
+            subseq_2_sweeps = None
+        signal_pl_sweeps = background_pl_sweeps = None
         if pl_data is not None:
             signal_pl_sweeps, background_pl_sweeps = StreamingList(), StreamingList() # for storing optional PL data --> list of numpy arrays of shape (2, dig segment_size)
 
+        subseq_sweeps = {"signal": StreamingList(), "background": StreamingList()}
+        subseq_2_sweeps = None
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
@@ -5065,21 +5112,6 @@ class SpinMeasurements:
                     iters_completed = i
                     percent_completed = int(100 * iters_completed / cfg.iters)
                     break
-                
-                try:
-                    nmr_result_raw = self.dig.acquire() # acquire data from digitizer
-                    nmr_result = np.mean(nmr_result_raw,axis=1) # average all data over each trigger/segment 
-                except Exception as e:
-                    failed = True
-                    exception_type = type(e).__name__
-                    iters_completed = i
-                    percent_completed = int(100 * iters_completed / cfg.iters)
-                    break
-
-                try:
-                    sig, bg = self.parse_analog_math(nmr_result, "NMR", cfg.num_pts) # partition buffer into signal and background datasets
-                except ValueError:
-                    continue
 
                 try:
                     self.acquire_data(
@@ -5092,10 +5124,11 @@ class SpinMeasurements:
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
-                        subseq_sweeps={
-                            "signal": signal_sweeps,
-                            "background": background_sweeps,
-                        },
+                        subseq_sweeps=subseq_sweeps,
+
+
+
+                        subseq_2_sweeps=subseq_2_sweeps,
                         signal_pl_sweeps=signal_pl_sweeps if pl_data is not None else None,
                         background_pl_sweeps=background_pl_sweeps if pl_data is not None else None,
                         iters_completed=i + 1,
@@ -5105,8 +5138,8 @@ class SpinMeasurements:
                 except Exception as e:
                     failed = True
                     exception_type = type(e).__name__
-                    iters_completed=i
-                    percent_completed=int(100*iters_completed/cfg.iters)
+                    iters_completed = i
+                    percent_completed = int(100 * iters_completed / cfg.iters)
                     break
 
                 if kwargs.get("fit_live", False):
@@ -5307,7 +5340,18 @@ class SpinMeasurements:
                     return
                 
                 signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
-                
+                if cfg.both_channels:
+                    signal_2_sweeps, background_2_sweeps = StreamingList(), StreamingList()
+                    subseq_2_sweeps = {
+                        "signal": signal_2_sweeps,
+                        "background": background_2_sweeps,
+                    }
+                else:
+                    signal_2_sweeps = background_2_sweeps = None
+                    subseq_2_sweeps = None
+
+                subseq_sweeps = {"signal": signal_sweeps, "background": background_sweeps}
+
                 self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
                 laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
@@ -5358,30 +5402,26 @@ class SpinMeasurements:
                             percent_completed = int(100 * iters_completed / cfg.iters)
                             break
 
-                        try:     
-                            casr_result_raw = self.dig.acquire() # acquire data from digitizer
-                            casr_result = np.mean(casr_result_raw,axis=1) # average all data over each trigger/segment 
-                        except Exception as e:
-                            failed = True
-                            exception_type = type(e).__name__
-                            iters_completed = i
-                            percent_completed = int(100 * iters_completed / cfg.iters)
-                            break
-
                         try:
+                            subseq_2_sweeps = {
+                                "signal": signal_2_sweeps,
+                                "background": background_2_sweeps,
+                            } if cfg.both_channels else None
+
                             self.acquire_data(
                                 cfg=cfg,
                                 exp_type="CASR",
-                                x_data=times*1e3,
+                                x_data=times * 1e3,
                                 data=data,
                                 fit_x=fit_x,
                                 fit_y=fit_y,
                                 fit_value=fit_value,
                                 fit_error=fit_error,
-                                subseq_sweeps={
-                                    "signal": signal_sweeps,
-                                    "background": background_sweeps,
-                                },
+                                subseq_sweeps=subseq_sweeps,
+
+
+
+                                subseq_2_sweeps=subseq_2_sweeps,
                                 iters_completed=i + 1,
                                 exp_start_time=exp_start_time,
                                 slice_end=-1,
@@ -5582,7 +5622,17 @@ class SpinMeasurements:
                     return
                 
                 signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
+                if cfg.both_channels:
+                    signal_2_sweeps, background_2_sweeps = StreamingList(), StreamingList()
+                    subseq_2_sweeps = {"signal": signal_2_sweeps, "background": background_2_sweeps}
+                else:
+                    signal_2_sweeps = background_2_sweeps = None
+                    subseq_2_sweeps = None
+                signal_pl_sweeps = background_pl_sweeps = None
+                if pl_data is not None:
+                    signal_pl_sweeps, background_pl_sweeps = StreamingList(), StreamingList()
 
+                subseq_sweeps = {"signal": signal_sweeps, "background": background_sweeps}
                 self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
                 laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
@@ -5633,30 +5683,26 @@ class SpinMeasurements:
                             percent_completed = int(100 * iters_completed / cfg.iters)
                             break
 
-                        try:     
-                            casr_result_raw = self.dig.acquire() # acquire data from digitizer
-                            casr_result = np.mean(casr_result_raw,axis=1) # average all data over each trigger/segment 
-                        except Exception as e:
-                            failed = True
-                            exception_type = type(e).__name__
-                            iters_completed = i
-                            percent_completed = int(100 * iters_completed / cfg.iters)
-                            break
-
                         try:
+                            subseq_2_sweeps = {
+                                "signal": signal_2_sweeps,
+                                "background": background_2_sweeps,
+                            } if cfg.both_channels else None
+
                             self.acquire_data(
                                 cfg=cfg,
                                 exp_type="CASR",
-                                x_data=times*1e3,
+                                x_data=times * 1e3,
                                 data=data,
                                 fit_x=fit_x,
                                 fit_y=fit_y,
                                 fit_value=fit_value,
                                 fit_error=fit_error,
-                                subseq_sweeps={
-                                    "signal": signal_sweeps,
-                                    "background": background_sweeps,
-                                },
+                                subseq_sweeps=subseq_sweeps,
+
+
+
+                                subseq_2_sweeps=subseq_2_sweeps,
                                 iters_completed=i + 1,
                                 exp_start_time=exp_start_time,
                                 slice_end=-1,
