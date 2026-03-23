@@ -392,7 +392,7 @@ class SpinMeasurements:
 
             "exception": exception,
         }
-    
+
     @staticmethod
     def _safe(label: str, fn):
         """Run fn() and log exceptions, never raising."""
