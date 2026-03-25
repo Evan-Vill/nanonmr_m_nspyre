@@ -556,6 +556,23 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
         connect_button = QtWidgets.QPushButton('Connect')
         connect_button.clicked.connect(self._update_source_clicked)
 
+        # channel-2 plot visibility toggle
+        self.show_ch2_checkbox = QtWidgets.QCheckBox('Show Ch2 Plots')
+        self.show_ch2_checkbox.setChecked(False)
+        self.show_ch2_checkbox.setEnabled(False)
+        self.show_ch2_checkbox.stateChanged.connect(self._ch2_toggle_changed)
+        # Remember the user's latest manual Ch2 checkbox choice.
+        self._ch2_manual_preference = True
+        self._ch2_visibility_memory = {}
+        self._ch2_default_hidden = {}
+        self._twoch_derived_visibility_memory = {}
+
+        # Poll ch2 availability so the checkbox updates without reconnecting.
+        self._ch2_poll_timer = QtCore.QTimer(self)
+        self._ch2_poll_timer.setInterval(750)
+        self._ch2_poll_timer.timeout.connect(self._refresh_ch2_checkbox_for_source)
+        self._ch2_poll_timer.start()
+
         # plot settings label
         plot_settings_label = QtWidgets.QLabel('Plot Settings')
         plot_settings_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
@@ -756,6 +773,7 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
         self.layout_tree = tree_layout(settings_layout_config)
         # make the plots list (index=2) take up all extra space (stretch=1)
         self.layout_tree.config.layout.setStretch(2, 1)
+        self.layout_tree.data_source.layout.addWidget(self.show_ch2_checkbox)
 
         # splitter
         splitter = QtWidgets.QSplitter()
@@ -1012,6 +1030,145 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
         self.plots_list_widget.item(idx).setForeground(normal_text_color)
         self.plots_list_widget.item(idx).setBackground(normal_bg_color)
 
+    @staticmethod
+    def _supports_ch2_series(series: str) -> bool:
+        """Return True for series that can have a `_ch2` counterpart."""
+        if series == 'fit':
+            return False
+        if series == 'div_2ch':
+            return False
+        if series.endswith('_ch2'):
+            return False
+        # PL datasets are currently only pushed as single-channel datasets.
+        if series.endswith('_pl') or series == 'diff_pl':
+            return False
+        return True
+
+    def _add_default_ch2_plots(self):
+        """Mirror existing defaults as `_ch2` plots for dual-channel datasets."""
+        with QtCore.QMutexLocker(self.line_plot.plot_settings.mutex):
+            existing_settings = [
+                (
+                    plot_name,
+                    settings.series,
+                    settings.scan_i,
+                    settings.scan_j,
+                    settings.processing,
+                    settings.hidden,
+                    settings.boxcar_width,
+                )
+                for plot_name, settings in self.line_plot.plot_settings.series_settings.items()
+            ]
+
+        for plot_name, series, scan_i, scan_j, processing, hidden, boxcar_width in existing_settings:
+            if not self._supports_ch2_series(series):
+                continue
+            self.add_plot(
+                f'{plot_name}_ch2',
+                series=f'{series}_ch2',
+                scan_i=scan_i,
+                scan_j=scan_j,
+                processing=processing,
+                boxcar_width=boxcar_width,
+            )
+            self._ch2_default_hidden[f'{plot_name}_ch2'] = hidden
+            if hidden:
+                self.hide_plot(f'{plot_name}_ch2')
+
+    def _set_ch2_plot_visibility(self, show_ch2: bool):
+        """Show or hide all `_ch2` plots while preserving the user's previous choice."""
+        with QtCore.QMutexLocker(self.line_plot.plot_settings.mutex):
+            ch2_states = [
+                (name, settings.hidden)
+                for name, settings in self.line_plot.plot_settings.series_settings.items()
+                if settings.series.endswith('_ch2')
+            ]
+
+        if not ch2_states:
+            return
+
+        if show_ch2:
+            for plot_name, hidden in ch2_states:
+                visible = self._ch2_visibility_memory.get(
+                    plot_name,
+                    not self._ch2_default_hidden.get(plot_name, hidden),
+                )
+                if visible:
+                    self.show_plot(plot_name)
+                else:
+                    self.hide_plot(plot_name)
+            return
+
+        # Save current visibility before hiding so it can be restored.
+        self._ch2_visibility_memory = {
+            plot_name: not hidden for plot_name, hidden in ch2_states
+        }
+        for plot_name, _ in ch2_states:
+            self.hide_plot(plot_name)
+
+    def _ch2_toggle_changed(self, state: int):
+        """Handle checkbox state changes for channel-2 plot visibility."""
+        show_ch2 = state == QtCore.Qt.CheckState.Checked.value
+        self._ch2_manual_preference = show_ch2
+        self._set_ch2_plot_visibility(show_ch2)
+
+    def _set_twoch_derived_plot_visibility(self, has_ch2: bool):
+        """Show or hide two-channel-derived plots (e.g. `div_2ch`) based on availability."""
+        with QtCore.QMutexLocker(self.line_plot.plot_settings.mutex):
+            twoch_states = [
+                (name, settings.hidden)
+                for name, settings in self.line_plot.plot_settings.series_settings.items()
+                if settings.series == 'div_2ch'
+            ]
+
+        if not twoch_states:
+            return
+
+        if has_ch2:
+            for plot_name, hidden in twoch_states:
+                visible = self._twoch_derived_visibility_memory.get(plot_name, not hidden)
+                if visible:
+                    self.show_plot(plot_name)
+                else:
+                    self.hide_plot(plot_name)
+            return
+
+        # Save current visibility before hiding so it can be restored when ch2 returns.
+        self._twoch_derived_visibility_memory = {
+            plot_name: not hidden for plot_name, hidden in twoch_states
+        }
+        for plot_name, _ in twoch_states:
+            self.hide_plot(plot_name)
+
+    def _refresh_ch2_checkbox_for_source(self):
+        """Query the connected source and auto-configure Channel 2 checkbox state."""
+        self.line_plot.plot_settings.run_safe(self._check_source_has_ch2)
+
+    def _check_source_has_ch2(self):
+        """Run on the plot settings thread to detect whether current datasets include `_ch2` entries."""
+        has_ch2 = False
+        with QtCore.QMutexLocker(self.line_plot.plot_settings.sink_mutex):
+            sink = self.line_plot.plot_settings.sink
+            if sink is not None:
+                try:
+                    datasets = sink.datasets
+                except AttributeError:
+                    datasets = {}
+                if isinstance(datasets, dict):
+                    has_ch2 = any(name.endswith('_ch2') for name in datasets)
+
+        self.line_plot.plot_settings.run_main(self._apply_ch2_source_state, has_ch2, blocking=True)
+
+    def _apply_ch2_source_state(self, has_ch2: bool):
+        """Apply auto-detected Channel 2 availability in the main thread."""
+        show_ch2 = has_ch2 and self._ch2_manual_preference
+        self.show_ch2_checkbox.blockSignals(True)
+        self.show_ch2_checkbox.setEnabled(has_ch2)
+        self.show_ch2_checkbox.setChecked(show_ch2)
+        self.show_ch2_checkbox.blockSignals(False)
+        self._set_twoch_derived_plot_visibility(has_ch2)
+        self._set_ch2_plot_visibility(show_ch2)
+
     def _update_source_clicked(self):
         """Called when the user clicks the connect button."""
         self.current_exp_type = self.datasource_lineedit.text()
@@ -1045,6 +1202,11 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
                 self.add_plot('div_avg',       series='div',  scan_i='',      scan_j='',  processing='Average')
                 self.add_plot('div_latest',    series='div',  scan_i='-1',    scan_j='',  processing='Average')
                 self.hide_plot('div_latest')
+
+                # create some default 2-channel normalization plots
+                self.add_plot('div_2ch_avg',       series='div_2ch',  scan_i='',      scan_j='',  processing='Average')
+                self.add_plot('div_2ch_latest',    series='div_2ch',  scan_i='-1',    scan_j='',  processing='Average')
+                self.hide_plot('div_2ch_latest')
                 
                 # create some default signal plots
                 self.add_plot('sig_avg',        series='signal',   scan_i='',     scan_j='',  processing='Average')
@@ -1125,6 +1287,11 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
                 self.add_plot('div_avg',       series='div',  scan_i='',      scan_j='',  processing='Average')
                 self.add_plot('div_latest',    series='div',  scan_i='-1',    scan_j='',  processing='Average')
                 self.hide_plot('div_latest')
+
+                # create some default 2-channel normalization plots
+                self.add_plot('div_2ch_avg',       series='div_2ch',  scan_i='',      scan_j='',  processing='Average')
+                self.add_plot('div_2ch_latest',    series='div_2ch',  scan_i='-1',    scan_j='',  processing='Average')
+                self.hide_plot('div_2ch_latest')
                 
                 # create some default signal plots
                 self.add_plot('sig_avg',        series='signal',   scan_i='',     scan_j='',  processing='Average')
@@ -1710,6 +1877,9 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
                 self.hide_plot('bg_avg')
                 self.hide_plot('bg_latest')
 
+        self._add_default_ch2_plots()
+        self._refresh_ch2_checkbox_for_source()
+
     def _cursor_clicked(self):
         def _get_cursor_data():
             """
@@ -2163,89 +2333,101 @@ class _FlexLinePlotWidget(LinePlotWidget):
                     if settings.hidden:
                         continue
                     series = settings.series
+                    channel_suffix = '_ch2' if series.endswith('_ch2') else ''
+                    base_series = series[:-4] if channel_suffix else series
                     scan_i = settings.scan_i
                     scan_j = settings.scan_j
                     processing = settings.processing
                     
                     scan_key = (scan_i, scan_j, processing)
+
+                    def dataset_name(base_name: str) -> str:
+                        return f'{base_name}{channel_suffix}'
                     
                     # pick out the particular data series
                     try:
-                        if series in ('diff', 'div', 'contrast', 'fft'):
+                        if base_series in ('diff', 'div', 'contrast', 'fft'):
+                            sig_name = dataset_name('signal')
+                            bg_name = dataset_name('background')
+                            data_sig = datasets[sig_name]
+                            data_bg = datasets[bg_name]
+                        elif base_series == 'div_2ch':
                             sig_name = 'signal'
                             bg_name = 'background'
+                            bg_ch2_name = 'background_ch2'
                             data_sig = datasets[sig_name]
                             data_bg = datasets[bg_name]
-                        elif series == 'diff_pl':
-                            sig_name = 'signal_pl'
-                            bg_name = 'background_pl'
+                            data_bg_ch2 = datasets[bg_ch2_name]
+                        elif base_series == 'diff_pl':
+                            sig_name = dataset_name('signal_pl')
+                            bg_name = dataset_name('background_pl')
                             data_sig = datasets[sig_name]
                             data_bg = datasets[bg_name]
-                        elif series == 'div_rf':
-                            sig_name = 'rf_signal'
-                            bg_name = 'rf_background'
+                        elif base_series == 'div_rf':
+                            sig_name = dataset_name('rf_signal')
+                            bg_name = dataset_name('rf_background')
                             data_sig = datasets[sig_name]
                             data_bg = datasets[bg_name]
-                        elif series == 'diff dq1':
-                            sig_name = 'S0,-1'
-                            bg_name = 'S0,0'
+                        elif base_series == 'diff dq1':
+                            sig_name = dataset_name('S0,-1')
+                            bg_name = dataset_name('S0,0')
                             data_sig = datasets[sig_name]
                             data_bg = datasets[bg_name]
-                        elif series == 'diff dq2':
-                            sig_name = 'S-1,+1'
-                            bg_name = 'S-1,-1'
+                        elif base_series == 'diff dq2':
+                            sig_name = dataset_name('S-1,+1')
+                            bg_name = dataset_name('S-1,-1')
                             data_sig = datasets[sig_name]
                             data_bg = datasets[bg_name]
-                        elif series in ('deer_contrast', 'deer_log_contrast', 'deer_diff'):
-                            data_dark_sig = datasets['dark_signal']
-                            data_dark_bg = datasets['dark_background']
-                            data_echo_sig = datasets['echo_signal']
-                            data_echo_bg = datasets['echo_background']
-                        elif series == 'dark_contrast':
-                            sig_name = 'dark_signal'
-                            bg_name = 'dark_background'
+                        elif base_series in ('deer_contrast', 'deer_log_contrast', 'deer_diff'):
+                            data_dark_sig = datasets[dataset_name('dark_signal')]
+                            data_dark_bg = datasets[dataset_name('dark_background')]
+                            data_echo_sig = datasets[dataset_name('echo_signal')]
+                            data_echo_bg = datasets[dataset_name('echo_background')]
+                        elif base_series == 'dark_contrast':
+                            sig_name = dataset_name('dark_signal')
+                            bg_name = dataset_name('dark_background')
                             data_sig = datasets[sig_name]
                             data_bg = datasets[bg_name]
-                        elif series == 'echo_contrast':
-                            sig_name = 'echo_signal'
-                            bg_name = 'echo_background'
+                        elif base_series == 'echo_contrast':
+                            sig_name = dataset_name('echo_signal')
+                            bg_name = dataset_name('echo_background')
                             data_sig = datasets[sig_name]
                             data_bg = datasets[bg_name]
-                        elif series == 'cd_contrast':
-                            sig_name = 'cd_signal'
-                            bg_name = 'cd_background'
+                        elif base_series == 'cd_contrast':
+                            sig_name = dataset_name('cd_signal')
+                            bg_name = dataset_name('cd_background')
                             data_sig = datasets[sig_name]
                             data_bg = datasets[bg_name]    
-                        elif series == 'diff_py':
-                            sig_name = 'with_py'
-                            bg_name = 'without_py'
+                        elif base_series == 'diff_py':
+                            sig_name = dataset_name('with_py')
+                            bg_name = dataset_name('without_py')
                             data_sig = datasets[sig_name]
                             data_bg = datasets[bg_name]
-                        elif series == 'diff_ny':
-                            sig_name = 'with_ny'
-                            bg_name = 'without_ny'
+                        elif base_series == 'diff_ny':
+                            sig_name = dataset_name('with_ny')
+                            bg_name = dataset_name('without_ny')
                             data_sig = datasets[sig_name]
                             data_bg = datasets[bg_name]
-                        elif series == 'diff_osc_with_pulse':
-                            sig_name = 'with_py'
-                            bg_name = 'with_ny'
+                        elif base_series == 'diff_osc_with_pulse':
+                            sig_name = dataset_name('with_py')
+                            bg_name = dataset_name('with_ny')
                             data_sig = datasets[sig_name]
                             data_bg = datasets[bg_name]
-                        elif series == 'diff_osc_without_pulse':
-                            sig_name = 'without_py'
-                            bg_name = 'without_ny'
+                        elif base_series == 'diff_osc_without_pulse':
+                            sig_name = dataset_name('without_py')
+                            bg_name = dataset_name('without_ny')
                             data_sig = datasets[sig_name]
                             data_bg = datasets[bg_name]
-                        elif series in ('diff_overall', 'sum_nuclear'):
-                            data_wpy = datasets['with_py']
-                            data_wny = datasets['with_ny']
-                            data_nopy = datasets['without_py']
-                            data_nony = datasets['without_ny']
-                        elif series == 'fit':
+                        elif base_series in ('diff_overall', 'sum_nuclear'):
+                            data_wpy = datasets[dataset_name('with_py')]
+                            data_wny = datasets[dataset_name('with_ny')]
+                            data_nopy = datasets[dataset_name('without_py')]
+                            data_nony = datasets[dataset_name('without_ny')]
+                        elif base_series == 'fit':
                             data_x_fit = datasets['x_fit']
                             data_y_fit = datasets['y_fit']
                         else:
-                            data = datasets[series]
+                            data = datasets[dataset_name(base_series)]
 
                     except KeyError:
                         # _logger.error(f'Data series [{series}] does not exist.')
@@ -2253,7 +2435,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
 
                     else:
                         try:
-                            if series in (
+                            if base_series in (
                                 'diff', 'diff_pl', 'diff dq1', 'diff dq2', 
                                 'div', 'div_rf', 'contrast', 
                                 'dark_contrast', 'echo_contrast', 'cd_contrast', 
@@ -2271,7 +2453,24 @@ class _FlexLinePlotWidget(LinePlotWidget):
                                 else:
                                     data_subset_sig = data_sig[int(scan_i) : int(scan_j)]
                                     data_subset_bg = data_bg[int(scan_i) : int(scan_j)]
-                            elif series in ('deer_contrast', 'deer_log_contrast', 'deer_diff'):
+                            elif base_series == 'div_2ch':
+                                if scan_i == '' and scan_j == '':
+                                    data_subset_sig = data_sig[:]
+                                    data_subset_bg = data_bg[:]
+                                    data_subset_bg_ch2 = data_bg_ch2[:]
+                                elif scan_j == '':
+                                    data_subset_sig = data_sig[int(scan_i) :]
+                                    data_subset_bg = data_bg[int(scan_i) :]
+                                    data_subset_bg_ch2 = data_bg_ch2[int(scan_i) :]
+                                elif scan_i == '':
+                                    data_subset_sig = data_sig[: int(scan_j)]
+                                    data_subset_bg = data_bg[: int(scan_j)]
+                                    data_subset_bg_ch2 = data_bg_ch2[: int(scan_j)]
+                                else:
+                                    data_subset_sig = data_sig[int(scan_i) : int(scan_j)]
+                                    data_subset_bg = data_bg[int(scan_i) : int(scan_j)]
+                                    data_subset_bg_ch2 = data_bg_ch2[int(scan_i) : int(scan_j)]
+                            elif base_series in ('deer_contrast', 'deer_log_contrast', 'deer_diff'):
                                 if scan_i == '' and scan_j == '':
                                     data_subset_dark_sig = data_dark_sig[:]
                                     data_subset_dark_bg = data_dark_bg[:]
@@ -2292,7 +2491,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                                     data_subset_dark_bg = data_dark_bg[int(scan_i) : int(scan_j)]
                                     data_subset_echo_sig = data_echo_sig[int(scan_i) : int(scan_j)]
                                     data_subset_echo_bg = data_echo_bg[int(scan_i) : int(scan_j)]
-                            elif series in ('diff_overall', 'sum_nuclear'):
+                            elif base_series in ('diff_overall', 'sum_nuclear'):
                                 if scan_i == '' and scan_j == '':
                                     data_subset_wpy = data_wpy[:]
                                     data_subset_wny = data_wny[:]
@@ -2313,7 +2512,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                                     data_subset_wny = data_wny[int(scan_i) : int(scan_j)]
                                     data_subset_nopy = data_nopy[int(scan_i) : int(scan_j)]
                                     data_subset_nony = data_nony[int(scan_i) : int(scan_j)]
-                            elif series == 'fit':
+                            elif base_series == 'fit':
                                 pass
                             else:
                                 if scan_i == '' and scan_j == '':
@@ -2337,7 +2536,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                             processed_data = np.concatenate(data_subset, axis=1)
 
                         elif processing == 'Average':
-                            if series in (
+                            if base_series in (
                                 'diff', 'diff_pl', 'diff dq1', 'diff dq2', 'div', 'div_rf', 'contrast', 
                                 'dark_contrast', 'echo_contrast', 'cd_contrast', 'fft', 
                                 'diff_py', 'diff_ny', 'diff_osc_with_pulse', 'diff_osc_without_pulse'
@@ -2357,7 +2556,25 @@ class _FlexLinePlotWidget(LinePlotWidget):
 
                                     avg_cache[cache_key] = (processed_data_sig, processed_data_bg)
 
-                            elif series in ('deer_contrast', 'deer_log_contrast', 'deer_diff'):
+                            elif base_series == 'div_2ch':
+                                cache_key = (sig_name, bg_name, bg_ch2_name, scan_key)
+
+                                if cache_key in avg_cache:
+                                    processed_data_sig, processed_data_bg, processed_data_bg_ch2 = avg_cache[cache_key]
+                                else:
+                                    # create a single numpy array
+                                    stacked_data_sig = np.stack(data_subset_sig)
+                                    stacked_data_bg = np.stack(data_subset_bg)
+                                    stacked_data_bg_ch2 = np.stack(data_subset_bg_ch2)
+
+                                    # average the numpy arrays
+                                    processed_data_sig = np.nanmean(stacked_data_sig, axis=0)
+                                    processed_data_bg = np.nanmean(stacked_data_bg, axis=0)
+                                    processed_data_bg_ch2 = np.nanmean(stacked_data_bg_ch2, axis=0)
+
+                                    avg_cache[cache_key] = (processed_data_sig, processed_data_bg, processed_data_bg_ch2)
+
+                            elif base_series in ('deer_contrast', 'deer_log_contrast', 'deer_diff'):
                                 # create a single numpy array
                                 stacked_data_dark_sig = np.stack(data_subset_dark_sig)
                                 stacked_data_dark_bg = np.stack(data_subset_dark_bg)
@@ -2369,7 +2586,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                                 processed_data_dark_bg = np.nanmean(stacked_data_dark_bg, axis=0)
                                 processed_data_echo_sig = np.nanmean(stacked_data_echo_sig, axis=0)
                                 processed_data_echo_bg = np.nanmean(stacked_data_echo_bg, axis=0)
-                            elif series in ('diff_overall', 'sum_nuclear'):
+                            elif base_series in ('diff_overall', 'sum_nuclear'):
                                 # create a single numpy array
                                 stacked_data_wpy = np.stack(data_subset_wpy)
                                 stacked_data_wny = np.stack(data_subset_wny)
@@ -2381,7 +2598,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                                 processed_data_wny = np.nanmean(stacked_data_wny, axis=0)
                                 processed_data_nopy = np.nanmean(stacked_data_nopy, axis=0)
                                 processed_data_nony = np.nanmean(stacked_data_nony, axis=0)
-                            elif series == 'fit':
+                            elif base_series == 'fit':
                                 x = np.asarray(data_x_fit)
                                 y = np.asarray(data_y_fit)
 
@@ -2402,34 +2619,39 @@ class _FlexLinePlotWidget(LinePlotWidget):
 
                     # update the plot
                     try:
-                        if series in (
+                        if base_series in (
                             'diff', 'diff_pl', 'diff dq1', 
                             'diff dq2', 'diff_py', 'diff_ny', 
                             'diff_osc_with_pulse', 'diff_osc_without_pulse'
                         ):
                             processed_data = [processed_data_sig[0], processed_data_bg[1] - processed_data_sig[1]]                        
-                        elif series in ('div', 'div_rf'):
+                        elif base_series == 'div_2ch':
+                            processed_data = [
+                                processed_data_sig[0],
+                                1 - (processed_data_bg[1] - processed_data_sig[1]) / processed_data_bg_ch2[1],
+                            ]
+                        elif base_series in ('div', 'div_rf'):
                             processed_data = [processed_data_sig[0], processed_data_sig[1] / processed_data_bg[1]]
-                        elif series in ('contrast', 'dark_contrast', 'echo_contrast', 'cd_contrast'):
+                        elif base_series in ('contrast', 'dark_contrast', 'echo_contrast', 'cd_contrast'):
                             contrast = (processed_data_bg[1] - processed_data_sig[1]) / (processed_data_bg[1] + processed_data_sig[1])
                             processed_data = [processed_data_sig[0], contrast]
-                        elif series == 'deer_contrast':
+                        elif base_series == 'deer_contrast':
                             deer = (processed_data_dark_bg[1] - processed_data_dark_sig[1]) / (processed_data_dark_bg[1] + processed_data_dark_sig[1])
                             echo = (processed_data_echo_bg[1] - processed_data_echo_sig[1]) / (processed_data_echo_bg[1] + processed_data_echo_sig[1])
                             processed_data = [processed_data_dark_sig[0], deer / echo]
-                        elif series == 'deer_log_contrast':
+                        elif base_series == 'deer_log_contrast':
                             deer = (processed_data_dark_bg[1] - processed_data_dark_sig[1]) / (processed_data_dark_bg[1] + processed_data_dark_sig[1])
                             echo = (processed_data_echo_bg[1] - processed_data_echo_sig[1]) / (processed_data_echo_bg[1] + processed_data_echo_sig[1])
                             processed_data = [processed_data_dark_sig[0], np.log(-np.log(deer / echo))]
-                        elif series == 'deer_diff':
+                        elif base_series == 'deer_diff':
                             deer = (processed_data_dark_bg[1] - processed_data_dark_sig[1]) / (processed_data_dark_bg[1] + processed_data_dark_sig[1])
                             echo = (processed_data_echo_bg[1] - processed_data_echo_sig[1]) / (processed_data_echo_bg[1] + processed_data_echo_sig[1])
                             processed_data = [processed_data_dark_sig[0], deer - echo]
-                        elif series == 'diff_overall':
+                        elif base_series == 'diff_overall':
                             processed_data = [processed_data_wpy[0], (processed_data_nopy[1] - processed_data_wpy[1]) - (processed_data_nony[1] - processed_data_wny[1])]
-                        elif series == 'sum_nuclear':
+                        elif base_series == 'sum_nuclear':
                             processed_data = [processed_data_wpy[0], (processed_data_wny[1] - processed_data_wpy[1]) + (processed_data_nony[1] - processed_data_nopy[1])]
-                        elif series == 'fft':
+                        elif base_series == 'fft':
                             time_axis = np.asarray(processed_data_sig[0], dtype=float)
                             sig = np.asarray(processed_data_sig[1], dtype=float)
                             bg = np.asarray(processed_data_bg[1], dtype=float)
@@ -2451,7 +2673,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                             ft_smoothed = boxcar_complex_smooth(ft, boxcar_width)
 
                             processed_data = [freqs[1:], np.abs(ft_smoothed[1:])**2] # power spectrum - skip DC bin
-                        elif series == 'fit':
+                        elif base_series == 'fit':
                             processed_data = [processed_fit_data[0], processed_fit_data[1]]
                         else:
                             pass
@@ -2461,7 +2683,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                         continue
 
                     else:
-                        self.set_data(plot_name, processed_data[0], processed_data[1])
+                        self.set_data(plot_name, processed_data[0], processed_data[1]) # set x and y data for the plot
                         
                         # print("updating data in dictionary...")
                         self.processed_data_dict[plot_name] = processed_data
