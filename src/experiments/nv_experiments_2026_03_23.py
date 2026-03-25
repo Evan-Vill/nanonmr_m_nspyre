@@ -34,6 +34,7 @@ from nspyre import (
 from pulsestreamer import NextAction, PulseStreamer, When
 from saveUtils import flexSave
 import nv_dataclasses_2026_03_05 as nvcfg
+import nv_data_fitting_2026_03_24 as nvfit
 
 _logger = logging.getLogger(__name__)
 SUBSEQ_COUNT = {
@@ -1126,7 +1127,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
+                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(cfg.fit_type, 
                                 cfg.dataset, subseq_sweeps["signal"], subseq_sweeps["background"], *cfg.fit_params
                             )
                         except (RuntimeError, OptimizeWarning) as e:
@@ -1153,7 +1154,7 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
+                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(cfg.fit_type, 
                         cfg.dataset, subseq_sweeps["signal"], subseq_sweeps["background"], *cfg.fit_params
                     )
                 except (RuntimeError, OptimizeWarning) as e:
@@ -1313,7 +1314,7 @@ class SpinMeasurements:
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
                             params, params_covariance = curve_fit(self.negative_lorentzian, real_freqs/1e9, sig/bg, p0=initial_guess)
-                            # fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
+                            # fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(cfg.fit_type, cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
                         except (RuntimeError, OptimizeWarning) as e:
                             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
@@ -1590,7 +1591,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
+                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(cfg.fit_type, 
                                 cfg.dataset, subseq_sweeps["signal"], subseq_sweeps["background"], *cfg.fit_params
                             )
                         except (RuntimeError, OptimizeWarning) as e:
@@ -1617,7 +1618,7 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
+                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(cfg.fit_type, 
                         cfg.dataset, subseq_sweeps["signal"], subseq_sweeps["background"], *cfg.fit_params
                     )
                 except (RuntimeError, OptimizeWarning) as e:
@@ -1715,8 +1716,6 @@ class SpinMeasurements:
         subseq_sweeps = {"signal": StreamingList(), "background": StreamingList()}
         if cfg.both_channels:
             subseq_2_sweeps = {"signal": StreamingList(), "background": StreamingList()}
-        else:
-            subseq_2_sweeps = None
         signal_pl_sweeps = background_pl_sweeps = None
         if pl_data is not None:
             signal_pl_sweeps, background_pl_sweeps = StreamingList(), StreamingList() # for storing optional PL data --> list of numpy arrays of shape (2, dig segment_size)
@@ -1782,7 +1781,7 @@ class SpinMeasurements:
                         fit_error=fit_error,
                         pl_data=pl_data,
                         subseq_sweeps=subseq_sweeps,
-                        subseq_2_sweeps=subseq_2_sweeps,
+                        subseq_2_sweeps=subseq_2_sweeps if cfg.both_channels else None,
                         signal_pl_sweeps=signal_pl_sweeps if pl_data is not None else None,
                         background_pl_sweeps=background_pl_sweeps if pl_data is not None else None,
                         iters_completed=i + 1,
@@ -1800,8 +1799,8 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
-                                cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
+                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(cfg.fit_type, 
+                                cfg.dataset, subseq_sweeps["signal"], subseq_sweeps["background"], *cfg.fit_params
                             )
                         except (RuntimeError, OptimizeWarning) as e:
                             _logger.warning(f"For {cfg.dataset} measurement, {e}")
@@ -1827,8 +1826,8 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
-                        cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
+                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(cfg.fit_type, 
+                        cfg.dataset, subseq_sweeps["signal"], subseq_sweeps["background"], *cfg.fit_params
                     )
                 except (RuntimeError, OptimizeWarning) as e:
                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
@@ -1946,7 +1945,13 @@ class SpinMeasurements:
             "no_rf_signal": StreamingList(),
             "no_rf_background": StreamingList(),
         }
-        subseq_2_sweeps = None
+        if cfg.both_channels:
+            subseq_2_sweeps = {
+                "rf_signal": StreamingList(),
+                "rf_background": StreamingList(),
+                "no_rf_signal": StreamingList(),
+                "no_rf_background": StreamingList(),
+            }
         signal_pl_sweeps = background_pl_sweeps = None
         if pl_data is not None:
             signal_pl_sweeps, background_pl_sweeps = StreamingList(), StreamingList()
@@ -2007,7 +2012,7 @@ class SpinMeasurements:
                         fit_error=fit_error,
                         pl_data=pl_data,
                         subseq_sweeps=subseq_sweeps,
-                        subseq_2_sweeps=subseq_2_sweeps,
+                        subseq_2_sweeps=subseq_2_sweeps if cfg.both_channels else None,
                         signal_pl_sweeps=signal_pl_sweeps if pl_data is not None else None,
                         background_pl_sweeps=background_pl_sweeps if pl_data is not None else None,
                         iters_completed=i + 1,
@@ -2025,18 +2030,18 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_data(
+                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
                                 cfg.fit_type,
                                 "odmr",
-                                rf_signal_sweeps,
-                                rf_background_sweeps,
+                                subseq_sweeps["rf_signal"],
+                                subseq_sweeps["rf_background"],
                                 *cfg.fit_params[:4],
                             )
-                            fit_no_rf_value, fit_no_rf_error, fit_no_rf_x, fit_no_rf_y = self.fit_data(
+                            fit_no_rf_value, fit_no_rf_error, fit_no_rf_x, fit_no_rf_y = nvfit.fit_data(
                                 cfg.fit_type,
                                 "odmr",
-                                no_rf_signal_sweeps,
-                                no_rf_background_sweeps,
+                                subseq_sweeps["no_rf_signal"],
+                                subseq_sweeps["no_rf_background"],
                                 *cfg.fit_params[4:],
                             )
                         except (RuntimeError, OptimizeWarning) as e:
@@ -2069,11 +2074,19 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
-                        'odmr', rf_signal_sweeps, rf_background_sweeps, *cfg.fit_params[:4]
+                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                        cfg.fit_type, 
+                        "odmr", 
+                        subseq_sweeps["rf_signal"], 
+                        subseq_sweeps["rf_background"], 
+                        *cfg.fit_params[:4]
                     )
-                    fit_no_rf_value, fit_no_rf_error, fit_no_rf_x, fit_no_rf_y = self.fit_data(cfg.fit_type, 
-                        'odmr', no_rf_signal_sweeps, no_rf_background_sweeps, *cfg.fit_params[4:]
+                    fit_no_rf_value, fit_no_rf_error, fit_no_rf_x, fit_no_rf_y = nvfit.fit_data(
+                        cfg.fit_type, 
+                        "odmr", 
+                        subseq_sweeps["no_rf_signal"], 
+                        subseq_sweeps["no_rf_background"], 
+                        *cfg.fit_params[4:]
                     )
                 except (RuntimeError, OptimizeWarning) as e:
                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
@@ -2332,11 +2345,10 @@ class SpinMeasurements:
         subseq_sweeps = {"signal": StreamingList(), "background": StreamingList()}
         if cfg.both_channels:
             subseq_2_sweeps = {"signal": StreamingList(), "background": StreamingList()}
-        else:
-            subseq_2_sweeps = None
         signal_pl_sweeps = background_pl_sweeps = None
         if pl_data is not None:
             signal_pl_sweeps, background_pl_sweeps = StreamingList(), StreamingList() # for storing optional PL data --> list of numpy arrays of shape (2, dig segment_size)
+
 
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
@@ -2417,8 +2429,12 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type,
-                                cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
+                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                                cfg.fit_type,
+                                cfg.dataset, 
+                                subseq_sweeps["signal"], 
+                                subseq_sweeps["background"], 
+                                *cfg.fit_params
                             )
                         except (RuntimeError, OptimizeWarning) as e:
                             _logger.warning(f"For {cfg.dataset} measurement, {e}")
@@ -2444,8 +2460,12 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
-                        cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
+                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                        cfg.fit_type, 
+                        cfg.dataset, 
+                        subseq_sweeps["signal"], 
+                        subseq_sweeps["background"], 
+                        *cfg.fit_params
                     )
                 except (RuntimeError, OptimizeWarning) as e:
                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
@@ -2595,13 +2615,9 @@ class SpinMeasurements:
             ))
             return
         
-        signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
+        subseq_sweeps = {"signal": StreamingList(), "background": StreamingList()}
         if cfg.both_channels:
-            signal_2_sweeps, background_2_sweeps = StreamingList(), StreamingList()
-            subseq_2_sweeps = {"signal": signal_2_sweeps, "background": background_2_sweeps}
-        else:
-            signal_2_sweeps = background_2_sweeps = None
-            subseq_2_sweeps = None
+            subseq_2_sweeps = {"signal": StreamingList(), "background": StreamingList()}
         signal_pl_sweeps = background_pl_sweeps = None
         if pl_data is not None:
             signal_pl_sweeps, background_pl_sweeps = StreamingList(), StreamingList() # for storing optional PL data --> list of numpy arrays of shape (2, dig segment_size)
@@ -2666,7 +2682,7 @@ class SpinMeasurements:
                         fit_error=fit_error,
                         pl_data=pl_data,
                         subseq_sweeps=subseq_sweeps,
-                        subseq_2_sweeps=subseq_2_sweeps,
+                        subseq_2_sweeps=subseq_2_sweeps if cfg.both_channels else None,
                         signal_pl_sweeps=signal_pl_sweeps if pl_data is not None else None,
                         background_pl_sweeps=background_pl_sweeps if pl_data is not None else None,
                         iters_completed=i + 1,
@@ -2685,8 +2701,12 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type,
-                                cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
+                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                                cfg.fit_type,
+                                cfg.dataset, 
+                                subseq_sweeps["signal"], 
+                                subseq_sweeps["background"], 
+                                *cfg.fit_params
                             )
                         except (RuntimeError, OptimizeWarning) as e:
                             _logger.warning(f"For {cfg.dataset} measurement, {e}")
@@ -2712,8 +2732,12 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
-                        cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
+                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                        cfg.fit_type,
+                        cfg.dataset, 
+                        subseq_sweeps["signal"], 
+                        subseq_sweeps["background"], 
+                        *cfg.fit_params
                     )
                 except (RuntimeError, OptimizeWarning) as e:
                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
@@ -2837,16 +2861,13 @@ class SpinMeasurements:
             ))
             return
 
-        signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
+        subseq_sweeps = {"signal": StreamingList(), "background": StreamingList()}
         if cfg.both_channels:
-            signal_2_sweeps, background_2_sweeps = StreamingList(), StreamingList()
-            subseq_2_sweeps = {"signal": signal_2_sweeps, "background": background_2_sweeps}
-        else:
-            signal_2_sweeps = background_2_sweeps = None
-            subseq_2_sweeps = None
+            subseq_2_sweeps = {"signal": StreamingList(), "background": StreamingList()}
         signal_pl_sweeps = background_pl_sweeps = None
         if pl_data is not None:
-            signal_pl_sweeps, background_pl_sweeps = StreamingList(), StreamingList()
+            signal_pl_sweeps, background_pl_sweeps = StreamingList(), StreamingList() # for storing optional PL data --> list of numpy arrays of shape (2, dig segment_size)
+
 
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
@@ -2901,7 +2922,7 @@ class SpinMeasurements:
                         fit_error=fit_error,
                         pl_data=pl_data,
                         subseq_sweeps=subseq_sweeps,
-                        subseq_2_sweeps=subseq_2_sweeps,
+                        subseq_2_sweeps=subseq_2_sweeps if cfg.both_channels else None,
                         signal_pl_sweeps=signal_pl_sweeps if pl_data is not None else None,
                         background_pl_sweeps=background_pl_sweeps if pl_data is not None else None,
                         iters_completed=i + 1,
@@ -2920,8 +2941,12 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type,
-                                cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
+                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                                cfg.fit_type,
+                                cfg.dataset, 
+                                subseq_sweeps["signal"], 
+                                subseq_sweeps["background"], 
+                                *cfg.fit_params
                             )
                         except (RuntimeError, OptimizeWarning) as e:
                             _logger.warning(f"For {cfg.dataset} measurement, {e}")
@@ -2947,8 +2972,12 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
-                        cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
+                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                        cfg.fit_type,
+                        cfg.dataset, 
+                        subseq_sweeps["signal"], 
+                        subseq_sweeps["background"], 
+                        *cfg.fit_params
                     )
                 except (RuntimeError, OptimizeWarning) as e:
                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
@@ -3065,9 +3094,6 @@ class SpinMeasurements:
                 'S-1,-1': StreamingList(),
                 'S-1,+1': StreamingList(),
             }
-        else:
-            subseq_2_sweeps = None
-
         signal_pl_sweeps = background_pl_sweeps = None
         if pl_data is not None:
             signal_pl_sweeps, background_pl_sweeps = StreamingList(), StreamingList()
@@ -3125,7 +3151,7 @@ class SpinMeasurements:
                         fit_error=fit_error,
                         pl_data=pl_data,
                         subseq_sweeps=subseq_sweeps,
-                        subseq_2_sweeps=subseq_2_sweeps,
+                        subseq_2_sweeps=subseq_2_sweeps if cfg.both_channels else None,
                         signal_pl_sweeps=signal_pl_sweeps if pl_data is not None else None,
                         background_pl_sweeps=background_pl_sweeps if pl_data is not None else None,
                         iters_completed=i + 1,
@@ -3143,8 +3169,12 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type,
-                                cfg.dataset, s00_sweeps, s0m_sweeps, *cfg.fit_params
+                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                                cfg.fit_type,
+                                cfg.dataset, 
+                                subseq_sweeps["S0,0"], 
+                                subseq_sweeps["S0,-1"], 
+                                *cfg.fit_params
                             )
                         except (RuntimeError, OptimizeWarning) as e:
                             _logger.warning(f"For {cfg.dataset} measurement, {e}")
@@ -3170,8 +3200,8 @@ class SpinMeasurements:
         #     with warnings.catch_warnings():
         #         warnings.simplefilter("error", OptimizeWarning)
         #         try:
-        #             fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
-        #                 cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
+        #             fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(cfg.fit_type, 
+        #                 cfg.dataset, subseq_sweeps["S0,0"], subseq_sweeps["S0,-1"], *cfg.fit_params
         #             )
         #         except (RuntimeError, OptimizeWarning) as e:
         #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
@@ -3294,8 +3324,14 @@ class SpinMeasurements:
             "echo_signal": StreamingList(),
             "echo_background": StreamingList(),
         }
-        subseq_2_sweeps = None
-
+        if cfg.both_channels:
+             subseq_2_sweeps = {
+                "dark_signal": StreamingList(),
+                "dark_background": StreamingList(),
+                "echo_signal": StreamingList(),
+                "echo_background": StreamingList(),
+            }
+        
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
@@ -3348,7 +3384,7 @@ class SpinMeasurements:
                         fit_value=fit_value,
                         fit_error=fit_error,
                         subseq_sweeps=subseq_sweeps,
-                        subseq_2_sweeps=subseq_2_sweeps,
+                        subseq_2_sweeps=subseq_2_sweeps if cfg.both_channels else None,
                         iters_completed=i + 1,
                         exp_start_time=exp_start_time,
                         **kwargs,
@@ -3364,13 +3400,13 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(
+                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_deer_data(
                                 cfg.fit_type,
                                 cfg.dataset,
-                                dark_signal_sweeps,
-                                dark_background_sweeps,
-                                echo_signal_sweeps,
-                                echo_background_sweeps,
+                                subseq_sweeps["dark_signal"],
+                                subseq_sweeps["dark_background"],
+                                subseq_sweeps["echo_signal"],
+                                subseq_sweeps["echo_background"],
                                 *cfg.fit_params,
                             )
                         except (RuntimeError, OptimizeWarning) as e:
@@ -3397,10 +3433,13 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(cfg.fit_type, 
+                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_deer_data(
+                        cfg.fit_type, 
                         cfg.dataset,
-                        dark_signal_sweeps, dark_background_sweeps,
-                        echo_signal_sweeps, echo_background_sweeps,
+                        subseq_sweeps["dark_signal"],
+                        subseq_sweeps["dark_background"],
+                        subseq_sweeps["echo_signal"],
+                        subseq_sweeps["echo_background"],
                         *cfg.fit_params,
                     )
                 except (RuntimeError, OptimizeWarning) as e:
@@ -3513,7 +3552,13 @@ class SpinMeasurements:
             "echo_signal": StreamingList(),
             "echo_background": StreamingList(),
         }
-        subseq_2_sweeps = None
+        if cfg.both_channels:
+            subseq_2_sweeps = {
+                "dark_signal": StreamingList(),
+                "dark_background": StreamingList(),
+                "echo_signal": StreamingList(),
+                "echo_background": StreamingList(),
+            }
 
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
@@ -3567,7 +3612,7 @@ class SpinMeasurements:
                         fit_value=fit_value,
                         fit_error=fit_error,
                         subseq_sweeps=subseq_sweeps,
-                        subseq_2_sweeps=subseq_2_sweeps,
+                        subseq_2_sweeps=subseq_2_sweeps if cfg.both_channels else None,
                         iters_completed=i + 1,
                         exp_start_time=exp_start_time,
                         **kwargs,
@@ -3583,13 +3628,13 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(
+                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_deer_data(
                                 cfg.fit_type,
                                 cfg.dataset,
-                                dark_signal_sweeps,
-                                dark_background_sweeps,
-                                echo_signal_sweeps,
-                                echo_background_sweeps,
+                                subseq_sweeps["dark_signal"],
+                                subseq_sweeps["dark_background"],
+                                subseq_sweeps["echo_signal"],
+                                subseq_sweeps["echo_background"],
                                 *cfg.fit_params,
                             )
                         except (RuntimeError, OptimizeWarning) as e:
@@ -3616,7 +3661,15 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(cfg.fit_type, cfg.dataset, dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *cfg.fit_params)
+                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_deer_data(
+                        cfg.fit_type, 
+                        cfg.dataset, 
+                        subseq_sweeps["dark_signal"], 
+                        subseq_sweeps["dark_background"], 
+                        subseq_sweeps["echo_signal"], 
+                        subseq_sweeps["echo_background"], 
+                        *cfg.fit_params
+                    )
                 except (RuntimeError, OptimizeWarning) as e:
                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
         
@@ -3732,7 +3785,13 @@ class SpinMeasurements:
             "echo_signal": StreamingList(),
             "echo_background": StreamingList(),
         }
-        subseq_2_sweeps = None
+        if cfg.both_channels:
+             subseq_2_sweeps = {
+                "dark_signal": StreamingList(),
+                "dark_background": StreamingList(),
+                "echo_signal": StreamingList(),
+                "echo_background": StreamingList(),
+            }
 
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
@@ -3786,7 +3845,7 @@ class SpinMeasurements:
                         fit_value=fit_value,
                         fit_error=fit_error,
                         subseq_sweeps=subseq_sweeps,
-                        subseq_2_sweeps=subseq_2_sweeps,
+                        subseq_2_sweeps=subseq_2_sweeps if cfg.both_channels else None,
                         iters_completed=i + 1,
                         exp_start_time=exp_start_time,
                         slice_start=1,
@@ -3803,7 +3862,15 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(cfg.fit_type, cfg.dataset, dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *cfg.fit_params)
+                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_deer_data(
+                                cfg.fit_type, 
+                                cfg.dataset, 
+                                subseq_sweeps["dark_signal"], 
+                                subseq_sweeps["dark_background"], 
+                                subseq_sweeps["echo_signal"], 
+                                subseq_sweeps["echo_background"], 
+                                *cfg.fit_params
+                            )
                         except (RuntimeError, OptimizeWarning) as e:
                             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
@@ -3838,7 +3905,15 @@ class SpinMeasurements:
         #     with warnings.catch_warnings():
         #         warnings.simplefilter("error", OptimizeWarning)
         #         try:
-        #             fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(cfg.fit_type, cfg.dataset, dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *cfg.fit_params)
+        #             fit_value, fit_error, fit_x, fit_y = nvfit.fit_deer_data(
+        #                 cfg.fit_type, 
+        #                 cfg.dataset, 
+        #                 subseq_sweeps["dark_signal"], 
+        #                 subseq_sweeps["dark_background"], 
+        #                 subseq_sweeps["echo_signal"], 
+        #                 subseq_sweeps["echo_background"], 
+        #                 *cfg.fit_params
+        #             )
         #         except (RuntimeError, OptimizeWarning) as e:
         #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
         
@@ -3958,7 +4033,15 @@ class SpinMeasurements:
             "cd_signal": StreamingList(),
             "cd_background": StreamingList(),
         }
-        subseq_2_sweeps = None
+        if cfg.both_channels:
+             subseq_2_sweeps = {
+                "dark_signal": StreamingList(),
+                "dark_background": StreamingList(),
+                "echo_signal": StreamingList(),
+                "echo_background": StreamingList(),
+                "cd_signal": StreamingList(),
+                "cd_background": StreamingList(),
+            }
 
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
@@ -4012,7 +4095,7 @@ class SpinMeasurements:
                         fit_value=fit_value,
                         fit_error=fit_error,
                         subseq_sweeps=subseq_sweeps,
-                        subseq_2_sweeps=subseq_2_sweeps,
+                        subseq_2_sweeps=subseq_2_sweeps if cfg.both_channels else None,
                         iters_completed=i + 1,
                         exp_start_time=exp_start_time,
                         slice_start=1,
@@ -4029,7 +4112,15 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(cfg.fit_type, cfg.dataset, dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *cfg.fit_params)
+                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_deer_data(
+                                cfg.fit_type, 
+                                cfg.dataset, 
+                                subseq_sweeps["dark_signal"], 
+                                subseq_sweeps["dark_background"], 
+                                subseq_sweeps["echo_signal"], 
+                                subseq_sweeps["echo_background"], 
+                                *cfg.fit_params
+                            )
                         except (RuntimeError, OptimizeWarning) as e:
                             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
@@ -4064,7 +4155,15 @@ class SpinMeasurements:
         #     with warnings.catch_warnings():
         #         warnings.simplefilter("error", OptimizeWarning)
         #         try:
-        #             fit_value, fit_error, fit_x, fit_y = self.fit_deer_data(cfg.fit_type, cfg.dataset, dark_signal_sweeps, dark_background_sweeps, echo_signal_sweeps, echo_background_sweeps, *cfg.fit_params)
+        #             fit_value, fit_error, fit_x, fit_y = nvfit.fit_deer_data(
+        #                 cfg.fit_type, 
+        #                 cfg.dataset, 
+        #                 subseq_sweeps["dark_signal"], 
+        #                 subseq_sweeps["dark_background"], 
+        #                 subseq_sweeps["echo_signal"], 
+        #                 subseq_sweeps["echo_background"], 
+        #                 *cfg.fit_params
+        #             )
         #         except (RuntimeError, OptimizeWarning) as e:
         #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
         
@@ -4166,10 +4265,21 @@ class SpinMeasurements:
             ))
             return
 
-        signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
+        subseq_sweeps = {
+            "dark_signal": StreamingList(),
+            "dark_background": StreamingList(),
+            "echo_signal": StreamingList(),
+            "echo_background": StreamingList(),
+        }
+        if cfg.both_channels:
+             subseq_2_sweeps = {
+                "dark_signal": StreamingList(),
+                "dark_background": StreamingList(),
+                "echo_signal": StreamingList(),
+                "echo_background": StreamingList(),
+            }
+        
 
-        subseq_sweeps = {"signal": StreamingList(), "background": StreamingList()}
-        subseq_2_sweeps = None
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
@@ -4215,16 +4325,14 @@ class SpinMeasurements:
                     self.acquire_data(
                         cfg=cfg,
                         exp_type="Corr",
-                        x_data=frequencies / 1e6,
+                        x_data=frequencies/1e6,
                         data=data,
                         fit_x=fit_x,
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
                         subseq_sweeps=subseq_sweeps,
-
-
-
+                        subseq_2_sweeps=subseq_2_sweeps if cfg.both_channels else None,
                         iters_completed=i + 1,
                         exp_start_time=exp_start_time,
                         **kwargs,
@@ -4240,7 +4348,15 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
+                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                                cfg.fit_type, 
+                                cfg.dataset,
+                                subseq_sweeps["dark_signal"], 
+                                subseq_sweeps["dark_background"], 
+                                subseq_sweeps["echo_signal"], 
+                                subseq_sweeps["echo_background"], 
+                                *cfg.fit_params
+                            )
                         except (RuntimeError, OptimizeWarning) as e:
                             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
@@ -4275,7 +4391,15 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
+                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                        cfg.fit_type, 
+                        cfg.dataset,
+                        subseq_sweeps["dark_signal"], 
+                        subseq_sweeps["dark_background"], 
+                        subseq_sweeps["echo_signal"], 
+                        subseq_sweeps["echo_background"], 
+                        *cfg.fit_params
+                    )
                 except (RuntimeError, OptimizeWarning) as e:
                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
         
@@ -4381,10 +4505,10 @@ class SpinMeasurements:
             ))
             return
             
-        signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
-
         subseq_sweeps = {"signal": StreamingList(), "background": StreamingList()}
-        subseq_2_sweeps = None
+        if cfg.both_channels:
+             subseq_2_sweeps = {"signal": StreamingList(), "background": StreamingList()}
+
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
@@ -4437,9 +4561,7 @@ class SpinMeasurements:
                         fit_value=fit_value,
                         fit_error=fit_error,
                         subseq_sweeps=subseq_sweeps,
-
-
-
+                        subseq_2_sweeps=subseq_2_sweeps if cfg.both_channels else None,
                         iters_completed=i + 1,
                         exp_start_time=exp_start_time,
                         **kwargs,
@@ -4455,7 +4577,12 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
+                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                                cfg.fit_type, 
+                                cfg.dataset, 
+                                subseq_sweeps["signal"], 
+                                subseq_sweeps["background"], 
+                                *cfg.fit_params)
                         except (RuntimeError, OptimizeWarning) as e:
                             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
@@ -4490,7 +4617,13 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
+                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                        cfg.fit_type, 
+                        cfg.dataset, 
+                        subseq_sweeps["signal"], 
+                        subseq_sweeps["background"], 
+                        *cfg.fit_params
+                    )
                 except (RuntimeError, OptimizeWarning) as e:
                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
         
@@ -4599,11 +4732,20 @@ class SpinMeasurements:
             ))
             return
                 
-        with_pulse_py_sweeps, without_pulse_py_sweeps = StreamingList(), StreamingList()
-        with_pulse_ny_sweeps, without_pulse_ny_sweeps = StreamingList(), StreamingList()
+        subseq_sweeps = {
+            "with_py": StreamingList(), 
+            "without_py": StreamingList(), 
+            "with_ny": StreamingList(), 
+            "without_ny": StreamingList()
+        }
+        if cfg.both_channels:
+            subseq_2_sweeps = {
+                "with_py": StreamingList(), 
+                "without_py": StreamingList(), 
+                "with_ny": StreamingList(), 
+                "without_ny": StreamingList()
+            }
         
-        subseq_sweeps = {"with_py": with_pulse_py_sweeps, "without_py": without_pulse_py_sweeps, "with_ny": with_pulse_ny_sweeps, "without_ny": without_ny_sweeps}
-        subseq_2_sweeps = None
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
@@ -4657,11 +4799,7 @@ class SpinMeasurements:
                         fit_value=fit_value,
                         fit_error=fit_error,
                         subseq_sweeps=subseq_sweeps,
-
-
-
-
-
+                        subseq_2_sweeps=subseq_2_sweeps if cfg.both_channels else None,
                         iters_completed=i + 1,
                         exp_start_time=exp_start_time,
                         slice_start=1,
@@ -4678,7 +4816,15 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_deer_t1_data(cfg.fit_type, cfg.dataset, with_pulse_py_sweeps, without_pulse_py_sweeps, with_pulse_ny_sweeps, without_pulse_ny_sweeps, *cfg.fit_params)
+                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_deer_t1_data(
+                                cfg.fit_type, 
+                                cfg.dataset, 
+                                subseq_sweeps["with_py"], 
+                                subseq_sweeps["without_py"], 
+                                subseq_sweeps["with_ny"], 
+                                subseq_sweeps["without_ny"], 
+                                *cfg.fit_params
+                            )
                         except (RuntimeError, OptimizeWarning) as e:
                             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
@@ -4699,13 +4845,21 @@ class SpinMeasurements:
         if not stopped and not failed:
             iters_completed, percent_completed = cfg.iters, 100
       
-        # if kwargs.get("fit", False):
-        #     with warnings.catch_warnings():
-        #         warnings.simplefilter("error", OptimizeWarning)
-        #         try:
-        #             fit_value, fit_error, fit_x, fit_y = self.fit_deer_t1_data(cfg.fit_type, cfg.dataset, with_pulse_py_sweeps, without_pulse_py_sweeps, with_pulse_ny_sweeps, without_pulse_ny_sweeps, *cfg.fit_params)
-        #         except (RuntimeError, OptimizeWarning) as e:
-        #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
+        if kwargs.get("fit", False):
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", OptimizeWarning)
+                try:
+                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_deer_t1_data(
+                        cfg.fit_type, 
+                        cfg.dataset, 
+                        subseq_sweeps["with_py"], 
+                        subseq_sweeps["without_py"], 
+                        subseq_sweeps["with_ny"], 
+                        subseq_sweeps["without_ny"], 
+                        *cfg.fit_params
+                    )
+                except (RuntimeError, OptimizeWarning) as e:
+                    _logger.warning(f"For {cfg.dataset} measurement, {e}")
         
         if kwargs.get("save", False):
             run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
@@ -4813,10 +4967,10 @@ class SpinMeasurements:
             ))
             return
         
-        signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
-
         subseq_sweeps = {"signal": StreamingList(), "background": StreamingList()}
-        subseq_2_sweeps = None
+        if cfg.both_channels:
+             subseq_2_sweeps = {"signal": StreamingList(), "background": StreamingList()}
+        
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
@@ -4869,9 +5023,7 @@ class SpinMeasurements:
                         fit_value=fit_value,
                         fit_error=fit_error,
                         subseq_sweeps=subseq_sweeps,
-
-
-
+                        subseq_2_sweeps=subseq_2_sweeps if cfg.both_channels else None,
                         iters_completed=i + 1,
                         exp_start_time=exp_start_time,
                         **kwargs,
@@ -4887,7 +5039,13 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
+                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                                cfg.fit_type, 
+                                cfg.dataset, 
+                                subseq_sweeps["signal"], 
+                                subseq_sweeps["background"], 
+                                *cfg.fit_params
+                            )
                         except (RuntimeError, OptimizeWarning) as e:
                             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
@@ -4922,7 +5080,13 @@ class SpinMeasurements:
         #     with warnings.catch_warnings():
         #         warnings.simplefilter("error", OptimizeWarning)
         #         try:
-        #             fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
+        #             fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+        #                 cfg.fit_type, 
+        #                 cfg.dataset, 
+        #                 subseq_sweeps["signal"], 
+        #                 subseq_sweeps["background"], 
+        #                 *cfg.fit_params
+        #             )
         #         except (RuntimeError, OptimizeWarning) as e:
         #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
         
@@ -4997,7 +5161,6 @@ class SpinMeasurements:
         
         total_exp_time = 100 + cfg.laser_init*1e9 + 500 + corr_spec_time + 100 + cfg.laser_readout + 100
 
-
         ### --- Upload AWG sequence --- ###
         try:
             if cfg.sig_opt == "Coil":
@@ -5052,19 +5215,13 @@ class SpinMeasurements:
             ))
             return
             
-        signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
+        subseq_sweeps = {"signal": StreamingList(), "background": StreamingList()}
         if cfg.both_channels:
-            signal_2_sweeps, background_2_sweeps = StreamingList(), StreamingList()
-            subseq_2_sweeps = {"signal": signal_2_sweeps, "background": background_2_sweeps}
-        else:
-            signal_2_sweeps = background_2_sweeps = None
-            subseq_2_sweeps = None
+            subseq_2_sweeps = {"signal": StreamingList(), "background": StreamingList()}
         signal_pl_sweeps = background_pl_sweeps = None
         if pl_data is not None:
             signal_pl_sweeps, background_pl_sweeps = StreamingList(), StreamingList() # for storing optional PL data --> list of numpy arrays of shape (2, dig segment_size)
 
-        subseq_sweeps = {"signal": StreamingList(), "background": StreamingList()}
-        subseq_2_sweeps = None
         self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
         laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
@@ -5125,10 +5282,7 @@ class SpinMeasurements:
                         fit_value=fit_value,
                         fit_error=fit_error,
                         subseq_sweeps=subseq_sweeps,
-
-
-
-                        subseq_2_sweeps=subseq_2_sweeps,
+                        subseq_2_sweeps=subseq_2_sweeps if cfg.both_channels else None,
                         signal_pl_sweeps=signal_pl_sweeps if pl_data is not None else None,
                         background_pl_sweeps=background_pl_sweeps if pl_data is not None else None,
                         iters_completed=i + 1,
@@ -5146,7 +5300,13 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
+                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                                cfg.fit_type, 
+                                cfg.dataset, 
+                                subseq_sweeps["signal"], 
+                                subseq_sweeps["background"], 
+                                *cfg.fit_params
+                            )
                         except (RuntimeError, OptimizeWarning) as e:
                             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
@@ -5177,15 +5337,19 @@ class SpinMeasurements:
         if not stopped and not failed:
             iters_completed, percent_completed = cfg.iters, 100
 
-        # if kwargs.get("fit", False):
-        #     with warnings.catch_warnings():
-        #         warnings.simplefilter("error", OptimizeWarning)
-        #         try:
-        #             fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
-        #                 cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
-        #             )
-        #         except (RuntimeError, OptimizeWarning) as e:
-        #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
+        if kwargs.get("fit", False):
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", OptimizeWarning)
+                try:
+                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                        cfg.fit_type, 
+                        cfg.dataset, 
+                        subseq_sweeps["signal"], 
+                        subseq_sweeps["background"], 
+                        *cfg.fit_params
+                    )
+                except (RuntimeError, OptimizeWarning) as e:
+                    _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
         if kwargs.get("save", False):
             run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)
@@ -5339,18 +5503,9 @@ class SpinMeasurements:
                     ))
                     return
                 
-                signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
+                subseq_sweeps = {"signal": StreamingList(), "background": StreamingList()}
                 if cfg.both_channels:
-                    signal_2_sweeps, background_2_sweeps = StreamingList(), StreamingList()
-                    subseq_2_sweeps = {
-                        "signal": signal_2_sweeps,
-                        "background": background_2_sweeps,
-                    }
-                else:
-                    signal_2_sweeps = background_2_sweeps = None
-                    subseq_2_sweeps = None
-
-                subseq_sweeps = {"signal": signal_sweeps, "background": background_sweeps}
+                    subseq_2_sweeps = {"signal": StreamingList(), "background": StreamingList()}
 
                 self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
                 laser.set_diode_current_realtime(cfg.laser_power) # set laser power
@@ -5403,11 +5558,6 @@ class SpinMeasurements:
                             break
 
                         try:
-                            subseq_2_sweeps = {
-                                "signal": signal_2_sweeps,
-                                "background": background_2_sweeps,
-                            } if cfg.both_channels else None
-
                             self.acquire_data(
                                 cfg=cfg,
                                 exp_type="CASR",
@@ -5418,10 +5568,7 @@ class SpinMeasurements:
                                 fit_value=fit_value,
                                 fit_error=fit_error,
                                 subseq_sweeps=subseq_sweeps,
-
-
-
-                                subseq_2_sweeps=subseq_2_sweeps,
+                                subseq_2_sweeps=subseq_2_sweeps if cfg.both_channels else None,
                                 iters_completed=i + 1,
                                 exp_start_time=exp_start_time,
                                 slice_end=-1,
@@ -5438,7 +5585,13 @@ class SpinMeasurements:
                             with warnings.catch_warnings():
                                 warnings.simplefilter("error", OptimizeWarning)
                                 try:
-                                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
+                                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                                        cfg.fit_type, 
+                                        cfg.dataset, 
+                                        subseq_sweeps["signal"], 
+                                        subseq_sweeps["background"], 
+                                        *cfg.fit_params
+                                    )
                                 except (RuntimeError, OptimizeWarning) as e:
                                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
                         
@@ -5463,8 +5616,12 @@ class SpinMeasurements:
                 #     with warnings.catch_warnings():
                 #         warnings.simplefilter("error", OptimizeWarning)
                 #         try:
-                #             fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
-                #                 cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
+                #             fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                #                 cfg.fit_type, 
+                #                 cfg.dataset, 
+                #                 subseq_sweeps["signal"], 
+                #                 subseq_sweeps["background"], 
+                #                 *cfg.fit_params
                 #             )
                 #         except (RuntimeError, OptimizeWarning) as e:
                 #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
@@ -5621,18 +5778,10 @@ class SpinMeasurements:
                     ))
                     return
                 
-                signal_sweeps, background_sweeps = StreamingList(), StreamingList() # for storing the experiment data --> list of numpy arrays of shape (2, num_points)
+                subseq_sweeps = {"signal": StreamingList(), "background": StreamingList()}
                 if cfg.both_channels:
-                    signal_2_sweeps, background_2_sweeps = StreamingList(), StreamingList()
-                    subseq_2_sweeps = {"signal": signal_2_sweeps, "background": background_2_sweeps}
-                else:
-                    signal_2_sweeps = background_2_sweeps = None
-                    subseq_2_sweeps = None
-                signal_pl_sweeps = background_pl_sweeps = None
-                if pl_data is not None:
-                    signal_pl_sweeps, background_pl_sweeps = StreamingList(), StreamingList()
+                    subseq_2_sweeps = {"signal": StreamingList(), "background": StreamingList()}
 
-                subseq_sweeps = {"signal": signal_sweeps, "background": background_sweeps}
                 self.dig.assign_param(dig_cfg) # upload digitizer parameters for experiment
                 laser.set_diode_current_realtime(cfg.laser_power) # set laser power
 
@@ -5684,11 +5833,6 @@ class SpinMeasurements:
                             break
 
                         try:
-                            subseq_2_sweeps = {
-                                "signal": signal_2_sweeps,
-                                "background": background_2_sweeps,
-                            } if cfg.both_channels else None
-
                             self.acquire_data(
                                 cfg=cfg,
                                 exp_type="CASR",
@@ -5699,10 +5843,7 @@ class SpinMeasurements:
                                 fit_value=fit_value,
                                 fit_error=fit_error,
                                 subseq_sweeps=subseq_sweeps,
-
-
-
-                                subseq_2_sweeps=subseq_2_sweeps,
+                                subseq_2_sweeps=subseq_2_sweeps if cfg.both_channels else None,
                                 iters_completed=i + 1,
                                 exp_start_time=exp_start_time,
                                 slice_end=-1,
@@ -5719,7 +5860,13 @@ class SpinMeasurements:
                             with warnings.catch_warnings():
                                 warnings.simplefilter("error", OptimizeWarning)
                                 try:
-                                    fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
+                                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                                        cfg.fit_type, 
+                                        cfg.dataset, 
+                                        subseq_sweeps["signal"], 
+                                        subseq_sweeps["background"], 
+                                        *cfg.fit_params
+                                    )
                                 except (RuntimeError, OptimizeWarning) as e:
                                     _logger.warning(f"For {cfg.dataset} measurement, {e}")
                         
@@ -5740,15 +5887,19 @@ class SpinMeasurements:
                 if not stopped and not failed:
                     iters_completed, percent_completed = cfg.iters, 100
 
-                # if kwargs.get("fit", False):
-                #     with warnings.catch_warnings():
-                #         warnings.simplefilter("error", OptimizeWarning)
-                #         try:
-                #             fit_value, fit_error, fit_x, fit_y = self.fit_data(cfg.fit_type, 
-                #                 cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params
-                #             )
-                #         except (RuntimeError, OptimizeWarning) as e:
-                #             _logger.warning(f"For {cfg.dataset} measurement, {e}")
+                if kwargs.get("fit", False):
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("error", OptimizeWarning)
+                        try:
+                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                                cfg.fit_type, 
+                                cfg.dataset, 
+                                subseq_sweeps["signal"], 
+                                subseq_sweeps["background"], 
+                                *cfg.fit_params
+                            )
+                        except (RuntimeError, OptimizeWarning) as e:
+                            _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
                 if kwargs.get("save", False):
                     run_save(cfg.dataset, cfg.filename, [cfg.directory], file_format=cfg.file_format)

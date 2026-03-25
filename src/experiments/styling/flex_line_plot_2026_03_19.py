@@ -2196,7 +2196,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                             bg_name = 'S-1,-1'
                             data_sig = datasets[sig_name]
                             data_bg = datasets[bg_name]
-                        elif series == 'deer_contrast' or series == 'deer_log_contrast' or series == 'deer_diff':
+                        elif series in ('deer_contrast', 'deer_log_contrast', 'deer_diff'):
                             data_dark_sig = datasets['dark_signal']
                             data_dark_bg = datasets['dark_background']
                             data_echo_sig = datasets['echo_signal']
@@ -2236,7 +2236,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                             bg_name = 'without_ny'
                             data_sig = datasets[sig_name]
                             data_bg = datasets[bg_name]
-                        elif series == 'diff_overall' or series == 'sum_nuclear':
+                        elif series in ('diff_overall', 'sum_nuclear'):
                             data_wpy = datasets['with_py']
                             data_wny = datasets['with_ny']
                             data_nopy = datasets['without_py']
@@ -2252,26 +2252,13 @@ class _FlexLinePlotWidget(LinePlotWidget):
                         continue
 
                     else:
-                        # check for numpy array
-                        # if not isinstance(data[0], np.ndarray):
-                        #     raise ValueError(
-                        #         f'Data series [{series}] must be a list of numpy '
-                        #         'arrays, but the first list element has type '
-                        #         f'[{type(data[0])}].'
-                        #     )
-                        # # check numpy array shape
-                        # if data[0].shape[0] != 2 or len(data[0].shape) != 2:
-                        #     raise ValueError(
-                        #         f'Data series [{series}] first list element has '
-                        #         f'shape {data.shape}, but should be (2, n).'
-                        #     )
-
                         try:
                             if series in (
-                                    'diff', 'diff_pl', 'diff dq1', 'diff dq2', 
-                                    'div', 'div_rf', 'contrast', 
-                                    'dark_contrast', 'echo_contrast', 'cd_contrast', 
-                                    'fft', 'diff_py', 'diff_ny', 'diff_osc_with_pulse', 'diff_osc_without_pulse'):
+                                'diff', 'diff_pl', 'diff dq1', 'diff dq2', 
+                                'div', 'div_rf', 'contrast', 
+                                'dark_contrast', 'echo_contrast', 'cd_contrast', 
+                                'fft', 'diff_py', 'diff_ny', 'diff_osc_with_pulse', 'diff_osc_without_pulse'
+                            ):
                                 if scan_i == '' and scan_j == '':
                                     data_subset_sig = data_sig[:]
                                     data_subset_bg = data_bg[:]
@@ -2370,7 +2357,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
 
                                     avg_cache[cache_key] = (processed_data_sig, processed_data_bg)
 
-                            elif series == 'deer_contrast' or series == 'deer_log_contrast' or series == 'deer_diff':
+                            elif series in ('deer_contrast', 'deer_log_contrast', 'deer_diff'):
                                 # create a single numpy array
                                 stacked_data_dark_sig = np.stack(data_subset_dark_sig)
                                 stacked_data_dark_bg = np.stack(data_subset_dark_bg)
@@ -2382,7 +2369,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                                 processed_data_dark_bg = np.nanmean(stacked_data_dark_bg, axis=0)
                                 processed_data_echo_sig = np.nanmean(stacked_data_echo_sig, axis=0)
                                 processed_data_echo_bg = np.nanmean(stacked_data_echo_bg, axis=0)
-                            elif series == 'diff_overall' or series == 'sum_nuclear':
+                            elif series in ('diff_overall', 'sum_nuclear'):
                                 # create a single numpy array
                                 stacked_data_wpy = np.stack(data_subset_wpy)
                                 stacked_data_wny = np.stack(data_subset_wny)
@@ -2415,11 +2402,15 @@ class _FlexLinePlotWidget(LinePlotWidget):
 
                     # update the plot
                     try:
-                        if series in ('diff', 'diff_pl', 'diff dq1', 'diff dq2', 'diff_py', 'diff_ny', 'diff_osc_with_pulse', 'diff_osc_without_pulse'):
+                        if series in (
+                            'diff', 'diff_pl', 'diff dq1', 
+                            'diff dq2', 'diff_py', 'diff_ny', 
+                            'diff_osc_with_pulse', 'diff_osc_without_pulse'
+                        ):
                             processed_data = [processed_data_sig[0], processed_data_bg[1] - processed_data_sig[1]]                        
-                        elif series == 'div' or series == 'div_rf':
+                        elif series in ('div', 'div_rf'):
                             processed_data = [processed_data_sig[0], processed_data_sig[1] / processed_data_bg[1]]
-                        elif series == 'contrast' or series == 'dark_contrast' or series == 'echo_contrast' or series == 'cd_contrast':
+                        elif series in ('contrast', 'dark_contrast', 'echo_contrast', 'cd_contrast'):
                             contrast = (processed_data_bg[1] - processed_data_sig[1]) / (processed_data_bg[1] + processed_data_sig[1])
                             processed_data = [processed_data_sig[0], contrast]
                         elif series == 'deer_contrast':
