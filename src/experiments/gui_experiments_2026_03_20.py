@@ -1,12 +1,11 @@
 """
 Example GUI elements.
 """
-import errno
 import logging
 from functools import partial
 from importlib import reload
 from multiprocessing import Queue
-from queue import Empty  # Import Empty exception from queue module
+from queue import Empty
 
 from pyqtgraph import ComboBox, SpinBox
 from pyqtgraph.Qt import QtGui, QtWidgets
@@ -16,6 +15,7 @@ from PyQt6.QtWidgets import (
     QButtonGroup,
     QCheckBox,
     QComboBox,
+    QFileDialog,
     QFrame,
     QGridLayout,
     QLabel,
@@ -33,11 +33,11 @@ from PyQt6.QtWidgets import (
 
 from nspyre import ParamsWidget
 from nspyre.misc.misc import ProcessRunner, run_experiment
-from styling.flex_line_plot_2026_03_19 import FlexLinePlotWidget
+from styling.flex_line_plot_2026_03_24 import FlexLinePlotWidget
 from styling.params_2026_03_05 import FitParamsWidget
 
 import experiment_defaults
-import nv_experiments_2026_03_20
+import nv_experiments_2026_03_24
 import nv_experiments_daq
 
 def ellipsize(text: str, max_chars: int) -> str:
@@ -63,6 +63,10 @@ class ExpWidget(QWidget):
             font-size: 16pt;
         }
         """)
+        
+        # Setup professional styling
+        self._setup_professional_styles()
+        
         self.updateTimer = QTimer() #create a timer that will try to update that widget with messages from the from_exp_queue
         self.updateTimer.timeout.connect(lambda: self.check_queue_from_exp())
         self.updateTimer.start(self.QUEUE_CHECK_TIME)
@@ -269,7 +273,7 @@ class ExpWidget(QWidget):
 
         self.experiments = QComboBox()
         self.experiments.setFixedHeight(40)
-        self.experiments.setStyleSheet("color: black; background-color: #C7C7C7; border: 4px solid black; padding: 2px; border-radius: 5px;")
+        self.experiments.setStyleSheet("color: black; background-color: #C7C7C7; border: 1px solid #888888; padding: 2px; border-radius: 4px; font-weight: bold;")
         self.experiments.addItems([
             "Select experiment from list",
             "Signal vs Time",
@@ -305,20 +309,20 @@ class ExpWidget(QWidget):
         self.extra_kwarg_params: dict() = {}
 
         self.dataset_label = QLabel("Data Set Name: ---")
-        self.dataset_label.setStyleSheet("color: black; background-color: #C7C7C7; border: 4px solid black; padding: 2px; border-radius: 5px;")
+        self.dataset_label.setStyleSheet("color: black; background-color: #C7C7C7; border: 1px solid #888888; padding: 2px; border-radius: 4px; font-weight: bold;")
         self.dataset_label.setFixedHeight(40)
         self.dataset_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # experiment params label
         self.exp_label = QLabel("Experiment Settings")
-        self.exp_label.setFixedHeight(24)
-        self.exp_label.setStyleSheet("font-weight: bold")
+        self.exp_label.setFixedHeight(28)
+        self.exp_label.setStyleSheet("font-weight: bold; color: #CCCCCC;")
 
         self.params_widget = ParamsWidget(self.create_params_widget('CW ODMR', self.exp_dict['CW ODMR'][1]))
 
         self.mw_label = QLabel("Microwave Settings")
-        self.mw_label.setFixedHeight(24)
-        self.mw_label.setStyleSheet("font-weight: bold")
+        self.mw_label.setFixedHeight(28)
+        self.mw_label.setStyleSheet("font-weight: bold; color: #CCCCCC;")
 
         self.mw_params_widget = ParamsWidget(self.create_mw_params_widget('CW ODMR', self.exp_dict['CW ODMR'][2]))
         self.mw_overrides = {}
@@ -331,28 +335,9 @@ class ExpWidget(QWidget):
         self.params_widget.setEnabled(False)
 
         # save params button
-        save_button_style = """
-        QPushButton {
-        background-color: #E0E0E0;
-        color: black;
-        border: 2px solid #000000;
-        border-radius: 5px;
-        padding: 5px;
-        }
-
-        QPushButton:hover {
-        background-color: #CCCCCC;
-        border: 2px solid #636363;
-        }
-
-        QPushButton:pressed {
-        background-color: #A5D4B0;
-        border: 2px solid #636363;
-        }"""
         self.save_params = QPushButton("Save Experiment Parameters")
-        self.save_params.setStyleSheet(save_button_style)
+        self.save_params.setStyleSheet(self.neutral_button_stylesheet)
         self.save_params.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.save_params.setMinimumWidth(440)
         self.save_params.clicked.connect(lambda: self.save_params_clicked())
         self.save_params.setEnabled(False)
 
@@ -362,41 +347,56 @@ class ExpWidget(QWidget):
         # laser params widget & label
         self.laser_params_widget = ParamsWidget(self.create_params_widget('Laser', self.exp_dict['Laser'][1]))
         self.laser_label = QLabel("Laser & AWG Settings")
-        self.laser_label.setFixedHeight(24)
-        self.laser_label.setStyleSheet("font-weight: bold")
+        self.laser_label.setFixedHeight(28)
+        self.laser_label.setStyleSheet("font-weight: bold; color: #CCCCCC;")
         self.laser_params_widget.setEnabled(False)
 
         self.dig_params_widget = ParamsWidget(self.create_params_widget('Digitizer', self.exp_dict['Digitizer'][1]))
         self.dig_label = QLabel("Digitizer Settings")
-        self.dig_label.setFixedHeight(24)
-        self.dig_label.setStyleSheet("font-weight: bold")
+        self.dig_label.setFixedHeight(28)
+        self.dig_label.setStyleSheet("font-weight: bold; color: #CCCCCC;")
         self.dig_params_widget.setEnabled(False)
 
         radio_style = """
         QRadioButton {
         color: white;
-        background-color: black;
-        border: 2px solid #5470FF;
+        background-color: #2D3B7D;
+        border: 2px solid #4A7FFF;
         border-radius: 6px;
-        padding: 4px 8px;
-        spacing: 12px;
+        padding: 8px 12px;
+        spacing: 10px;
+        font-weight: bold;
+        font-size: 14pt;
         }
 
-        QRadioButton::indicator {
-        width: 12px;
-        height: 12px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        background: #222;
+        QRadioButton:hover {
+        background-color: #3D4B8D;
+        border: 2px solid #6A9FFF;
         }
 
         QRadioButton:checked {
         color: #5470FF;
+        background-color: #1D2B6D;
+        border: 2px solid #5470FF;
+        }
+
+        QRadioButton::indicator {
+        width: 15px;
+        height: 15px;
+        border: 2px solid #888;
+        border-radius: 7px;
+        background-color: #1a1a1a;
+        }
+
+        QRadioButton::indicator:hover {
+        border: 2px solid #AAA;
+        background-color: #2a2a2a;
         }
 
         QRadioButton::indicator:checked {
         background-color: #5470FF;
-        border: 1px solid #5470FF;
+        border: 2px solid #5470FF;
+        image: none;
         }
         """
 
@@ -404,15 +404,15 @@ class ExpWidget(QWidget):
         self.daq_b1 = QRadioButton("Digitizer")
         self.daq_b1.toggled.connect(lambda:self.toggle_daq(self.daq_b1))
         self.daq_b1.setStyleSheet(radio_style)
-        self.daq_b1.setFixedHeight(40)
-        self.daq_b1.setFixedWidth(125)
+        self.daq_b1.setFixedHeight(45)
+        self.daq_b1.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.daq_b1.setEnabled(False)
 
         self.daq_b2 = QRadioButton("NI DAQ")
         self.daq_b2.toggled.connect(lambda:self.toggle_daq(self.daq_b2))
         self.daq_b2.setStyleSheet(radio_style)
-        self.daq_b2.setFixedHeight(40)
-        self.daq_b2.setFixedWidth(125)
+        self.daq_b2.setFixedHeight(45)
+        self.daq_b2.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.daq_b2.setEnabled(False)
 
         self.daq_group = QButtonGroup()
@@ -422,27 +422,51 @@ class ExpWidget(QWidget):
 
         # time elapsed label
         self.time_elapsed = QLabel("<i>Experiment Timer</i>: 00:00:00")
-        self.time_elapsed.setStyleSheet("color: black; background-color: #66DBE8; border: 4px solid black; padding: 2px; border-radius: 5px;")
+        self.time_elapsed.setStyleSheet("color: black; background-color: #66DBE8; border: 1px solid #4A9BA8; padding: 2px; border-radius: 4px; font-weight: bold;")
         self.time_elapsed.setFixedHeight(40)
         self.time_elapsed.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # auto save checkbox
         self.auto_save_checkbox = QCheckBox("Auto Save ")
+        self.auto_save_checkbox.setFixedHeight(40)
         self.auto_save_checkbox.setStyleSheet("""
                 QCheckBox {
                         color: white;
                         background-color: #5F3200;
-                        border: 2px solid orange;
-                        padding: 2px;
-                        border-radius: 5px;
+                        border: 1px solid #B8660D;
+                        padding: 2px 6px;
+                        border-radius: 4px;
+                        font-weight: bold;
+                        spacing: 8px;
+                }
+
+                QCheckBox::indicator {
+                        width: 18px;
+                        height: 18px;
+                        border: 2px solid #B8660D;
+                        border-radius: 3px;
+                        background-color: #3D1E00;
                 }
 
                 QCheckBox::indicator:hover {
-                        background-color: yellow;
+                        background-color: #6F4420;
+                        border: 2px solid #D48620;
+                }
+
+                QCheckBox::indicator:checked {
+                        background-color: #D48620;
+                        border: 2px solid #D48620;
+                        image: none;
+                }
+
+                QCheckBox::indicator:checked:hover {
+                        background-color: #6F4420;
+                        border: 2px solid #E8A040;
                 }
 
                 QCheckBox::indicator:pressed {
-                        background-color: lightgreen;
+                        background-color: #2D1410;
+                        border: 2px solid #B87018;
                 }""")
         self.auto_save_checkbox.setChecked(False)
         self.auto_save_checkbox.setEnabled(False)
@@ -451,13 +475,15 @@ class ExpWidget(QWidget):
         # select directory button
         self.select_dir_button = QPushButton("Select Directory")
         self.select_dir_button.setEnabled(False)
-        self.select_dir_button.setStyleSheet("color: black; background-color: #B5B5B5; border: 2px solid #964900; padding: 2px; border-radius: 5px;")
+        self.select_dir_button.setFixedHeight(40)
         self.select_dir_button.setFixedWidth(180)
+        self.select_dir_button.setStyleSheet(self.neutral_button_stylesheet)
         self.select_dir_button.clicked.connect(lambda: self.select_directory())
 
         # file type selection combobox for saving
         self.select_file_format_combobox = QComboBox()
-        self.select_file_format_combobox.setStyleSheet("color: black; background-color: #B5B5B5; border: 2px solid #964900; padding: 2px; border-radius: 5px;")
+        self.select_file_format_combobox.setFixedHeight(40)
+        self.select_file_format_combobox.setStyleSheet(self.combobox_stylesheet)
         self.select_file_format_combobox.addItems(["Form: JSON", "Form: Pickle"])
         self.select_file_format_combobox.setCurrentIndex(0)
         self.select_file_format_combobox.setEnabled(False)
@@ -469,6 +495,7 @@ class ExpWidget(QWidget):
 
         self.filename_label = QLabel("Filename: ")
         self.filename_label.setFixedHeight(20)
+        self.filename_label.setStyleSheet("font-weight: bold;")
 
         self.filename_lineedit = QLineEdit()
         self.filename_lineedit.setFixedHeight(30)
@@ -476,32 +503,55 @@ class ExpWidget(QWidget):
 
         # auto fit checkbox
         self.auto_fit_checkbox = QCheckBox("Auto Fit  ")
+        self.auto_fit_checkbox.setFixedHeight(40)
         self.auto_fit_checkbox.setStyleSheet("""
                 QCheckBox {
                         color: white;
                         background-color: #55005F;
-                        border: 2px solid #D98BCB;
-                        padding: 2px;
-                        border-radius: 5px;
+                        border: 1px solid #9955BB;
+                        padding: 2px 6px;
+                        border-radius: 4px;
+                        font-weight: bold;
+                        spacing: 8px;
+                }
+
+                QCheckBox::indicator {
+                        width: 18px;
+                        height: 18px;
+                        border: 2px solid #9955BB;
+                        border-radius: 3px;
+                        background-color: #330033;
                 }
 
                 QCheckBox::indicator:hover {
-                        background-color: yellow;
+                        background-color: #663366;
+                        border: 2px solid #BB77DD;
+                }
+
+                QCheckBox::indicator:checked {
+                        background-color: #BB77DD;
+                        border: 2px solid #BB77DD;
+                        image: none;
+                }
+
+                QCheckBox::indicator:checked:hover {
+                        background-color: #663366;
+                        border: 2px solid #DD99FF;
                 }
 
                 QCheckBox::indicator:pressed {
-                        background-color: lightgreen;
+                        background-color: #220022;
+                        border: 2px solid #9955BB;
                 }""")
-        self.auto_fit_checkbox.setMaximumWidth(125)
         self.auto_fit_checkbox.setChecked(False)
         self.auto_fit_checkbox.setEnabled(False)
         self.auto_fit_checkbox.stateChanged.connect(lambda: self.auto_fit_changed())
 
         # fit type combobox
         self.fit_select = QComboBox()
-        self.fit_select.setStyleSheet("color: #55005F; background-color: #C2C2C2; border: 2px solid #55005F; padding: 2px; border-radius: 5px;")
-        self.fit_select.setMaximumWidth(250)
+        self.fit_select.setFixedHeight(40)
         self.fit_select.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.fit_select.setStyleSheet("background-color: #C2C2C2; color: black; border: 1px solid #888888; padding: 2px; border-radius: 4px; font-weight: bold;")
         self.fit_select.addItems(["Choose Fit Type",
                                  "Neg. Lorentz.",
                                  "Pos. Lorentz.",
@@ -526,9 +576,10 @@ class ExpWidget(QWidget):
                 QCheckBox {
                         color: white;
                         background-color: #515151;
-                        border: 2px solid white;
+                        border: 1px solid #888888;
                         padding: 2px;
-                        border-radius: 5px;
+                        border-radius: 4px;
+                        font-weight: bold;
                 }
 
                 QCheckBox::indicator:hover {
@@ -548,9 +599,10 @@ class ExpWidget(QWidget):
                 QCheckBox {
                         color: white;
                         background-color: #3D3D3D;
-                        border: 2px solid #A9A9A9;
+                        border: 1px solid #888888;
                         padding: 2px;
-                        border-radius: 5px;
+                        border-radius: 4px;
+                        font-weight: bold;
                 }
                 QCheckBox::indicator:hover {
                         background-color: yellow;
@@ -566,40 +618,55 @@ class ExpWidget(QWidget):
         detector_radio_style = """
         QRadioButton {
         color: white;
-        background-color: black;
-        border: 2px solid #C4C433;
+        background-color: #6B6B1F;
+        border: 2px solid #A89933;
         border-radius: 6px;
-        padding: 4px 8px;
-        spacing: 12px;
+        padding: 8px 12px;
+        spacing: 10px;
+        font-weight: bold;
+        font-size: 14pt;
         }
 
-        QRadioButton::indicator {
-        width: 12px;
-        height: 12px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        background: #222;
+        QRadioButton:hover {
+        background-color: #7B7B2F;
+        border: 2px solid #C4B443;
         }
 
         QRadioButton:checked {
         color: #C4C433;
+        background-color: #5B5B0F;
+        border: 2px solid #C4C433;
+        }
+
+        QRadioButton::indicator {
+        width: 15px;
+        height: 15px;
+        border: 2px solid #888;
+        border-radius: 7px;
+        background-color: #1a1a1a;
+        }
+
+        QRadioButton::indicator:hover {
+        border: 2px solid #AAA;
+        background-color: #2a2a2a;
         }
 
         QRadioButton::indicator:checked {
         background-color: #C4C433;
-        border: 1px solid #C4C433;
+        border: 2px solid #C4C433;
+        image: none;
         }
         """
         self.detector_b1 = QRadioButton("APD")
         self.detector_b1.setStyleSheet(detector_radio_style)
-        self.detector_b1.setFixedHeight(40)
-        self.detector_b1.setFixedWidth(90)
+        self.detector_b1.setFixedHeight(45)
+        self.detector_b1.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.detector_b1.setEnabled(False)
 
         self.detector_b2 = QRadioButton("BPD")
         self.detector_b2.setStyleSheet(detector_radio_style)
-        self.detector_b2.setFixedHeight(40)
-        self.detector_b2.setFixedWidth(90)
+        self.detector_b2.setFixedHeight(45)
+        self.detector_b2.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.detector_b2.setEnabled(False)
 
         self.detector_group = QButtonGroup()
@@ -611,17 +678,18 @@ class ExpWidget(QWidget):
 
         # status label
         self.status = QLabel("Set parameters and press 'Run' to begin experiment.")
-        self.status.setStyleSheet("color: black; background-color: #00b8ff; border: 4px solid black; padding: 2px; border-radius: 5px;")
+        self.status.setStyleSheet("color: black; background-color: #00b8ff; padding: 2px; font-weight: bold;")
         self.status.setFixedHeight(40)
+        self.status.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # time estimate label
         self.time_estimate = QLabel("<i>Time Estimate</i>: --:--:--")
-        self.time_estimate.setStyleSheet("color: black; background-color: #EDA855; border: 4px solid black; padding: 2px; border-radius: 5px;")
+        self.time_estimate.setStyleSheet("color: black; background-color: #EDA855; border: 1px solid #D68812; padding: 2px; border-radius: 4px; font-weight: bold;")
         self.time_estimate.setFixedHeight(40)
 
         # time remaining label
         self.time_remaining = QLabel("<i>Time Remaining</i>: --:--:--")
-        self.time_remaining.setStyleSheet("color: black; background-color: #EDD155; border: 4px solid black; padding: 2px; border-radius: 5px;")
+        self.time_remaining.setStyleSheet("color: black; background-color: #EDD155; border: 1px solid #D4B835; padding: 2px; border-radius: 4px; font-weight: bold;")
         self.time_remaining.setFixedHeight(40)
 
         # progress bar
@@ -629,11 +697,12 @@ class ExpWidget(QWidget):
         self.progress_bar.setValue(0)
         self.progress_bar.setStyleSheet("""
         QProgressBar {
-                border: 2px solid black;
+                border: 1px solid #888888;
                 border-radius: 4px;
                 background-color: #2a2a2a;
                 color: white;
                 text-align: center;
+                font-weight: bold;
         }
 
         QProgressBar::chunk {
@@ -642,26 +711,8 @@ class ExpWidget(QWidget):
         """)
 
         # run button
-        run_button_style = """
-        QPushButton {
-        background-color: #003407;
-        color: white;
-        border: 2px solid limegreen;
-        border-radius: 5px;
-        padding: 5px;
-        }
-
-        QPushButton:hover {
-        background-color: #004b47;
-        border: 2px solid #00d7c9;
-        }
-
-        QPushButton:pressed {
-        background-color: #005f5f;
-        border: 2px solid #00d7c9;
-        }"""
         run_button = QPushButton('Run')
-        run_button.setStyleSheet(run_button_style)
+        run_button.setStyleSheet(self.run_button_stylesheet)
         self.run_proc = ProcessRunner()
         run_button.clicked.connect(self.run)
 
@@ -673,26 +724,8 @@ class ExpWidget(QWidget):
         for receiving messages from the subprocess."""
 
         # stop button
-        stop_button_style = """
-        QPushButton {
-        background-color: #333333;
-        color: white;
-        border: 2px solid white;
-        border-radius: 5px;
-        padding: 5px;
-        }
-
-        QPushButton:hover {
-        background-color: #444444;
-        border: 2px solid #ffffff;
-        }
-
-        QPushButton:pressed {
-        background-color: #555555;
-        border: 2px solid #ffffff;
-        }"""
         stop_button = QPushButton('Stop')
-        stop_button.setStyleSheet(stop_button_style)
+        stop_button.setStyleSheet(self.stop_button_stylesheet)
         stop_button.clicked.connect(self.stop)
         # use a partial because the stop function may already be destroyed by the time
         # this is called
@@ -700,26 +733,8 @@ class ExpWidget(QWidget):
 
         # kill button
         # this is used to kill the experiment process if it is stuck
-        kill_button_style = """
-        QPushButton {
-        background-color: #350000;
-        color: white;
-        border: 2px solid red;
-        border-radius: 5px;
-        padding: 5px;
-        }
-
-        QPushButton:hover {
-        background-color: #4b0000;
-        border: 2px solid #ff0000;
-        }
-
-        QPushButton:pressed {
-        background-color: #610000;
-        border: 2px solid #ff4d4d;
-        }"""
         kill_button = QPushButton('Kill')
-        kill_button.setStyleSheet(kill_button_style)
+        kill_button.setStyleSheet(self.kill_button_stylesheet)
         kill_button.clicked.connect(self.kill)
 
         ### --- Set graphics effects for elements that should be faded when no experiment is selected --- ###
@@ -750,9 +765,10 @@ class ExpWidget(QWidget):
 
         self.gui_layout = QVBoxLayout()
 
+        # frame styling
         self.top_frame = QFrame(self)
         self.top_frame.setObjectName("topFrame")
-        self.top_frame.setStyleSheet("QFrame#topFrame {background-color: #1e1e1e; border: 2px solid #717171; border-radius: 5px;}")
+        self.top_frame.setStyleSheet("QFrame#topFrame {background-color: #1e1e1e; border: 1px solid #666666; border-radius: 4px;}")
         self.top_frame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.top_layout = QHBoxLayout(self.top_frame)
         self.top_layout.setSpacing(0)
@@ -762,7 +778,7 @@ class ExpWidget(QWidget):
 
         self.exp_frame = QFrame(self)
         self.exp_frame.setObjectName("expFrame")
-        self.exp_frame.setStyleSheet("QFrame#expFrame {background-color: #4b0000; border: 2px solid #d70000; border-radius: 5px;}")
+        self.exp_frame.setStyleSheet("QFrame#expFrame {background-color: #4b0000; border: 1px solid #8B3333; border-radius: 4px;}")
         self.exp_frame.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         self.exp_params_layout = QVBoxLayout(self.exp_frame)
         self.exp_params_layout.setContentsMargins(6,6,6,6)
@@ -783,7 +799,7 @@ class ExpWidget(QWidget):
 
         self.mw_frame = QFrame(self)
         self.mw_frame.setObjectName("mwFrame")
-        self.mw_frame.setStyleSheet("QFrame#mwFrame {background-color: #474b00; border: 2px solid #d7d700; border-radius: 5px;}")
+        self.mw_frame.setStyleSheet("QFrame#mwFrame {background-color: #474b00; border: 1px solid #B8A600; border-radius: 4px;}")
         self.mw_frame.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         self.mw_params_layout = QVBoxLayout(self.mw_frame)
         self.mw_params_layout.setContentsMargins(6,6,6,6)
@@ -804,28 +820,27 @@ class ExpWidget(QWidget):
 
         self.detector_frame = QFrame(self)
         self.detector_frame.setObjectName("detectorFrame")
-        self.detector_frame.setStyleSheet("QFrame#detectorFrame {background-color: #262626; border: 2px solid #FFFFFF; border-radius: 5px;}")
-        self.detector_frame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.detector_frame.setStyleSheet("QFrame#detectorFrame {background-color: #262626; border: 1px solid #888888; border-radius: 4px;}")
+        self.detector_frame.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         self.detector_layout = QGridLayout(self.detector_frame)
         self.detector_layout.setSpacing(0)
+        self.detector_layout.setContentsMargins(6, 6, 6, 6)
+        self.detector_layout.setColumnStretch(0, 1)  # make column expand
         save_row = QHBoxLayout()
-        save_row.addStretch()
         save_row.addWidget(self.save_params)
-        save_row.addStretch()
         button_row = QHBoxLayout()
-        button_row.addStretch()
+        button_row.setSpacing(0)
         button_row.addWidget(self.daq_b1)
         button_row.addWidget(self.daq_b2)
-        button_row.addSpacing(20)
         button_row.addWidget(self.detector_b1)
         button_row.addWidget(self.detector_b2)
-        button_row.addStretch()
         self.detector_layout.addLayout(save_row,1,0)
         self.detector_layout.addLayout(button_row,2,0)
 
         self.save_frame = QFrame(self)
         self.save_frame.setObjectName("saveFrame")
-        self.save_frame.setStyleSheet("QFrame#saveFrame {background-color: #1e1e1e; border: 2px solid #717171; border-radius: 5px;}")
+        self.save_frame.setStyleSheet("QFrame#saveFrame {background-color: #1e1e1e; border: 1px solid #666666; border-radius: 4px;}")
+        self.save_frame.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         self.save_layout = QGridLayout(self.save_frame)
         self.save_layout.setSpacing(0)
         self.save_layout.addWidget(self.auto_save_checkbox,1,1,1,1)
@@ -837,7 +852,7 @@ class ExpWidget(QWidget):
 
         self.fit_frame = QFrame(self)
         self.fit_frame.setObjectName("fitFrame")
-        self.fit_frame.setStyleSheet("QFrame#fitFrame {background-color: #1e1e1e; border: 2px solid #717171; border-radius: 5px;}")
+        self.fit_frame.setStyleSheet("QFrame#fitFrame {background-color: #1e1e1e; border: 1px solid #666666; border-radius: 4px;}")
         self.fit_layout = QGridLayout(self.fit_frame)
         self.fit_layout.setContentsMargins(8, 8, 8, 8)
         self.fit_layout.setHorizontalSpacing(10)
@@ -857,16 +872,16 @@ class ExpWidget(QWidget):
         self.fit_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.fit_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.fit_scroll.setFrameShape(QFrame.Shape.NoFrame)  # cleaner
-        self.fit_scroll.setMinimumWidth(400)
+        self.fit_scroll.setMinimumWidth(500)
         self.fit_scroll.setWidget(self.fit_frame)
 
         # size policies: scroll area takes space, inner frame stays minimal
         self.fit_scroll.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        self.fit_frame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        self.fit_frame.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
 
         self.bottom_frame = QFrame(self)
         self.bottom_frame.setObjectName("bottomFrame")
-        self.bottom_frame.setStyleSheet("QFrame#bottomFrame {background-color: #1e1e1e; border: 2px solid #717171; border-radius: 5px;}")
+        self.bottom_frame.setStyleSheet("QFrame#bottomFrame {background-color: #1e1e1e; border: 1px solid #666666; border-radius: 4px;}")
         self.bottom_frame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.bottom_layout = QGridLayout(self.bottom_frame)
         self.bottom_layout.setSpacing(0)
@@ -880,8 +895,8 @@ class ExpWidget(QWidget):
 
         self.laser_frame = QFrame(self)
         self.laser_frame.setObjectName("laserFrame")
-        self.laser_frame.setStyleSheet("QFrame#laserFrame {background-color: #004b47; border: 2px solid #00d7c9; border-radius: 5px;}")
-        self.laser_frame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.laser_frame.setStyleSheet("QFrame#laserFrame {background-color: #004b47; border: 1px solid #009999; border-radius: 4px;}")
+        self.laser_frame.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
         self.laser_params_layout = QGridLayout(self.laser_frame)
         self.laser_params_layout.setContentsMargins(6,6,6,6)
         self.laser_params_layout.setSpacing(0)
@@ -901,8 +916,8 @@ class ExpWidget(QWidget):
 
         self.dig_frame = QFrame(self)
         self.dig_frame.setObjectName("digFrame")
-        self.dig_frame.setStyleSheet("QFrame#digFrame {background-color: #000b4b; border: 2px solid #1739FF; border-radius: 5px;}")
-        # self.dig_frame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.dig_frame.setStyleSheet("QFrame#digFrame {background-color: #000b4b; border: 1px solid #1155AA; border-radius: 4px;}")
+        self.dig_frame.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         self.dig_params_layout = QVBoxLayout(self.dig_frame)
         self.dig_params_layout.setContentsMargins(6,6,6,6)
         self.dig_params_layout.setSpacing(0)
@@ -946,6 +961,103 @@ class ExpWidget(QWidget):
         self.gui_layout.addLayout(self.bottom_widgets_layout)
 
         self.setLayout(self.gui_layout)
+
+    def _setup_professional_styles(self):
+        """Setup centralized professional styling for all widgets."""
+        # Define reusable stylesheets based on existing color scheme
+        
+        # Primary button: Green (Run)
+        self.run_button_stylesheet = """
+            QPushButton {
+                background-color: #005C3D;
+                color: white;
+                border: 1px solid #00A652;
+                border-radius: 4px;
+                padding: 8px 14px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #007A52;
+            }
+            QPushButton:pressed {
+                background-color: #003D28;
+            }
+        """
+        
+        # Secondary button: Gray (Stop)
+        self.stop_button_stylesheet = """
+            QPushButton {
+                background-color: #4A4A4A;
+                color: white;
+                border: 1px solid #666666;
+                border-radius: 4px;
+                padding: 8px 14px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #5A5A5A;
+            }
+            QPushButton:pressed {
+                background-color: #3A3A3A;
+            }
+        """
+        
+        # Danger button: Red (Kill)
+        self.kill_button_stylesheet = """
+            QPushButton {
+                background-color: #5C1F1F;
+                color: white;
+                border: 1px solid #8B3333;
+                border-radius: 4px;
+                padding: 8px 14px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #7A2828;
+            }
+            QPushButton:pressed {
+                background-color: #3D1515;
+            }
+        """
+        
+        # Neutral button: Brown/Gray (Save, Select) - lighter color
+        self.neutral_button_stylesheet = """
+            QPushButton {
+                background-color: #A0A0A0;
+                color: black;
+                border: 1px solid #888888;
+                border-radius: 4px;
+                padding: 6px 12px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #B8B8B8;
+            }
+            QPushButton:pressed {
+                background-color: #888888;
+            }
+        """
+        
+        # Standard combobox
+        self.combobox_stylesheet = """
+            QComboBox {
+                background-color: #C7C7C7;
+                color: black;
+                border: 1px solid #888888;
+                border-radius: 4px;
+                padding: 4px;
+                font-weight: bold;
+            }
+            QComboBox:focus {
+                border: 2px solid #4166F5;
+            }
+            QComboBox QAbstractItemView {
+                background-color: #C7C7C7;
+                color: black;
+                selection-background-color: #808080;
+                border: 1px solid #888888;
+            }
+        """
 
     def create_pl_widgets(self, num_pts_widget, defaults_dict, pl_pt_key):
         """
@@ -1836,7 +1948,7 @@ class ExpWidget(QWidget):
         self.progress_bar.setValue(percent)
 
         if status == 'in progress':
-            self.status.setStyleSheet("color: black; background-color: gold; border: 4px solid black;")
+            self.status.setStyleSheet("color: black; background-color: gold; padding: 2px; font-weight: bold;")
             self.status.setText(f"{self.experiments.currentText()} scan in progress...")
             self.experiments.setEnabled(False)
             self.params_widget.setEnabled(False)
@@ -1845,7 +1957,7 @@ class ExpWidget(QWidget):
             self.dig_params_widget.setEnabled(False)
 
         elif status == 'complete':
-            self.status.setStyleSheet("color: black; background-color: limegreen; border: 4px solid black;")
+            self.status.setStyleSheet("color: black; background-color: limegreen; padding: 2px; font-weight: bold;")
             self.status.setText(f"{self.experiments.currentText()} scan complete.")
             self.experiments.setEnabled(True)
             self.params_widget.setEnabled(True)
@@ -1862,7 +1974,7 @@ class ExpWidget(QWidget):
                 self._apply_fit_overrides(fit_value)
 
         elif status == 'failed':
-            self.status.setStyleSheet("color: black; background-color: red; border: 4px solid black;")
+            self.status.setStyleSheet("color: black; background-color: red; padding: 2px; font-weight: bold;")
             if exc_text is not None:
                 self.status.setText(f"{self.experiments.currentText()} scan failed. Exception: '{exc_text}'.")
             else:
@@ -1874,7 +1986,7 @@ class ExpWidget(QWidget):
             self.dig_params_widget.setEnabled(True)
 
         else:
-            self.status.setStyleSheet("color: black; background-color: white; border: 4px solid black;")
+            self.status.setStyleSheet("color: black; background-color: white; padding: 2px; font-weight: bold;")
             self.status.setText(f"{self.experiments.currentText()} scan stopped.")
             self.experiments.setEnabled(True)
             self.params_widget.setEnabled(True)
@@ -2033,122 +2145,122 @@ class ExpWidget(QWidget):
 
         if self.experiments.currentText() != 'Signal vs Time':
             # update laser param comboboxes
-            self.sideband_opts.insert(
+            self.all_defaults['sideband_opts'].insert(
                 0,
-                self.sideband_opts.pop(self.sideband_opts.index(saved_laser_params['sideband']))
+                self.all_defaults['sideband_opts'].pop(self.all_defaults['sideband_opts'].index(saved_laser_params['sideband']))
             )
-            saved_laser_params['sideband'] = self.sideband_opts
+            saved_laser_params['sideband'] = self.all_defaults['sideband_opts']
 
             # update digitizer param comboboxes
-            self.dig_ro_chan_opts.insert(
+            self.all_defaults['dig_ro_chan_opts'].insert(
                 0,
-                self.dig_ro_chan_opts.pop(self.dig_ro_chan_opts.index(saved_dig_params['read_channel']))
+                self.all_defaults['dig_ro_chan_opts'].pop(self.all_defaults['dig_ro_chan_opts'].index(saved_dig_params['read_channel']))
             )
-            saved_dig_params['read_channel'] = self.dig_ro_chan_opts
+            saved_dig_params['read_channel'] = self.all_defaults['dig_ro_chan_opts']
 
-            self.dig_coupling_opts.insert(
+            self.all_defaults['dig_coupling_opts'].insert(
                 0,
-                self.dig_coupling_opts.pop(self.dig_coupling_opts.index(saved_dig_params['dig_coupling']))
+                self.all_defaults['dig_coupling_opts'].pop(self.all_defaults['dig_coupling_opts'].index(saved_dig_params['dig_coupling']))
             )
-            saved_dig_params['dig_coupling'] = self.dig_coupling_opts
+            saved_dig_params['dig_coupling'] = self.all_defaults['dig_coupling_opts']
 
-            self.dig_termination_opts.insert(
+            self.all_defaults['dig_termination_opts'].insert(
                 0,
-                self.dig_termination_opts.pop(self.dig_termination_opts.index(saved_dig_params['dig_termination']))
+                self.all_defaults['dig_termination_opts'].pop(self.all_defaults['dig_termination_opts'].index(saved_dig_params['dig_termination']))
             )
-            saved_dig_params['dig_termination'] = self.dig_termination_opts
+            saved_dig_params['dig_termination'] = self.all_defaults['dig_termination_opts']
 
         # TODO: update which params widget each condition goes under
         # take chosen combobox parameter and place it first in the updated combobox item list
         match self.experiments.currentText():
             case 'Rabi':
-                self.rabi_axis_opts.insert(
+                self.all_defaults['rabi_axis_opts'].insert(
                     0,
-                    self.rabi_axis_opts.pop(self.rabi_axis_opts.index(saved_mw_params['pulse_axis']))
+                    self.all_defaults['rabi_axis_opts'].pop(self.all_defaults['rabi_axis_opts'].index(saved_mw_params['pulse_axis']))
                 )
-                saved_mw_params['pulse_axis'] = self.rabi_axis_opts
+                saved_mw_params['pulse_axis'] = self.all_defaults['rabi_axis_opts']
 
             case 'Optical T1':
-                self.opt_t1_array_opts.insert(
+                self.all_defaults['opt_t1_array_opts'].insert(
                     0,
-                    self.opt_t1_array_opts.pop(self.opt_t1_array_opts.index(saved_params['array_type']))
+                    self.all_defaults['opt_t1_array_opts'].pop(self.all_defaults['opt_t1_array_opts'].index(saved_params['array_type']))
                 )
-                saved_params['array_type'] = self.opt_t1_array_opts
+                saved_params['array_type'] = self.all_defaults['opt_t1_array_opts']
 
             case 'MW T1':
-                self.mw_t1_array_opts.insert(
+                self.all_defaults['mw_t1_array_opts'].insert(
                     0,
-                    self.mw_t1_array_opts.pop(self.mw_t1_array_opts.index(saved_params['array_type']))
+                    self.all_defaults['mw_t1_array_opts'].pop(self.all_defaults['mw_t1_array_opts'].index(saved_params['array_type']))
                 )
-                saved_params['array_type'] = self.mw_t1_array_opts
+                saved_params['array_type'] = self.all_defaults['mw_t1_array_opts']
 
             case 'DQ Relaxation':
-                self.dq_array_opts.insert(
+                self.all_defaults['dq_array_opts'].insert(
                     0,
-                    self.dq_array_opts.pop(self.dq_array_opts.index(saved_params['array_type']))
+                    self.all_defaults['dq_array_opts'].pop(self.all_defaults['dq_array_opts'].index(saved_params['array_type']))
                 )
-                saved_params['array_type'] = self.dq_array_opts
+                saved_params['array_type'] = self.all_defaults['dq_array_opts']
 
             case 'RF Coil: T2':
-                self.t2_rf_array_opts.insert(
+                self.all_defaults['t2_rf_array_opts'].insert(
                     0,
-                    self.t2_rf_array_opts.pop(self.t2_rf_array_opts.index(saved_params['array_type']))
+                    self.all_defaults['t2_rf_array_opts'].pop(self.all_defaults['t2_rf_array_opts'].index(saved_params['array_type']))
                 )
-                saved_params['array_type'] = self.t2_rf_array_opts
+                saved_params['array_type'] = self.all_defaults['t2_rf_array_opts']
 
             case 'T2':
-                self.t2_array_opts.insert(
+                self.all_defaults['t2_array_opts'].insert(
                     0,
-                    self.t2_array_opts.pop(self.t2_array_opts.index(saved_params['array_type']))
+                    self.all_defaults['t2_array_opts'].pop(self.all_defaults['t2_array_opts'].index(saved_params['array_type']))
                 )
-                saved_params['array_type'] = self.t2_array_opts
+                saved_params['array_type'] = self.all_defaults['t2_array_opts']
 
-                self.t2_seq_opts.insert(
+                self.all_defaults['t2_seq_opts'].insert(
                     0,
-                    self.t2_seq_opts.pop(self.t2_seq_opts.index(saved_mw_params['t2_seq']))
+                    self.all_defaults['t2_seq_opts'].pop(self.all_defaults['t2_seq_opts'].index(saved_mw_params['t2_seq']))
                 )
-                saved_mw_params['t2_seq'] = self.t2_seq_opts
+                saved_mw_params['t2_seq'] = self.all_defaults['t2_seq_opts']
 
             case 'DEER':
-                self.deer_drive_opts.insert(
+                self.all_defaults['deer_drive_opts'].insert(
                     0,
-                    self.deer_drive_opts.pop(self.deer_drive_opts.index(saved_mw_params['drive_type']))
+                    self.all_defaults['deer_drive_opts'].pop(self.all_defaults['deer_drive_opts'].index(saved_mw_params['drive_type']))
                 )
-                saved_mw_params['drive_type'] = self.deer_drive_opts
+                saved_mw_params['drive_type'] = self.all_defaults['deer_drive_opts']
 
             case 'DEER FID':
-                self.fid_array_opts.insert(
+                self.all_defaults['fid_array_opts'].insert(
                     0,
-                    self.fid_array_opts.pop(self.fid_array_opts.index(saved_params['array_type']))
+                    self.all_defaults['fid_array_opts'].pop(self.all_defaults['fid_array_opts'].index(saved_params['array_type']))
                 )
-                saved_params['array_type'] = self.fid_array_opts
+                saved_params['array_type'] = self.all_defaults['fid_array_opts']
 
             case 'DEER FID Continuous Drive':
-                self.fid_cd_array_opts.insert(
+                self.all_defaults['fid_cd_array_opts'].insert(
                     0,
-                    self.fid_cd_array_opts.pop(self.fid_cd_array_opts.index(saved_params['array_type']))
+                    self.all_defaults['fid_cd_array_opts'].pop(self.all_defaults['fid_cd_array_opts'].index(saved_params['array_type']))
                 )
-                saved_params['array_type'] = self.fid_cd_array_opts
+                saved_params['array_type'] = self.all_defaults['fid_cd_array_opts']
 
             case 'DEER T1':
-                self.corr_t1_array_opts.insert(
+                self.all_defaults['corr_t1_array_opts'].insert(
                     0,
-                    self.corr_t1_array_opts.pop(self.corr_t1_array_opts.index(saved_params['array_type']))
+                    self.all_defaults['corr_t1_array_opts'].pop(self.all_defaults['corr_t1_array_opts'].index(saved_params['array_type']))
                 )
-                saved_params['array_type'] = self.corr_t1_array_opts
+                saved_params['array_type'] = self.all_defaults['corr_t1_array_opts']
 
             case 'NMR CASR':
-                self.casr_sig_opts.insert(
+                self.all_defaults['casr_sig_opts'].insert(
                     0,
-                    self.casr_sig_opts.pop(self.casr_sig_opts.index(saved_params['sig_opt']))
+                    self.all_defaults['casr_sig_opts'].pop(self.all_defaults['casr_sig_opts'].index(saved_params['sig_opt']))
                 )
-                saved_params['sig_opt'] = self.casr_sig_opts
+                saved_params['sig_opt'] = self.all_defaults['casr_sig_opts']
 
-                self.dnp_opts.insert(
+                self.all_defaults['dnp_opts'].insert(
                     0,
-                    self.dnp_opts.pop(self.dnp_opts.index(saved_params['dnp']))
+                    self.all_defaults['dnp_opts'].pop(self.all_defaults['dnp_opts'].index(saved_params['dnp']))
                 )
-                saved_params['dnp'] = self.dnp_opts
+                saved_params['dnp'] = self.all_defaults['dnp_opts']
 
         self.exp_dict[self.experiments.currentText()][1] = saved_params
         if self.experiments.currentText() != 'Signal vs Time':
@@ -2213,7 +2325,7 @@ class ExpWidget(QWidget):
 
     def exp_selector(self):
         # reset params widgets each time new experiment selected
-        self.status.setStyleSheet("color: black; background-color: #00b8ff; border: 4px solid black;")
+        self.status.setStyleSheet("color: black; background-color: #00b8ff; padding: 2px; font-weight: bold;")
         self.status.setText("Set parameters and press 'Run' to begin experiment.")
         self.progress_bar.setValue(0)
 
@@ -2261,7 +2373,7 @@ class ExpWidget(QWidget):
                 self.opacity_effects[i].setEnabled(True)
 
             self.params_widget.setEnabled(False)
-            self.dataset_label.setText("Data Set: N/A")
+            self.dataset_label.setText("Data Set Name: N/A")
             self.save_params.setText("Save Experiment Parameters")
             self.save_params.setEnabled(False)
             self.mw_params_widget.setEnabled(False)
@@ -2278,7 +2390,7 @@ class ExpWidget(QWidget):
             self.auto_fit_checkbox.setChecked(False)
 
         else:
-            self.dataset_label.setText(f"Data Set: '{self.exp_dict[self.experiments.currentText()][3]}'")
+            self.dataset_label.setText(f"Data Set Name: '{self.exp_dict[self.experiments.currentText()][3]}'")
             self.daq_b1.setEnabled(True)
             self.daq_b2.setEnabled(True)
             self.detector_b1.setEnabled(True)
@@ -2359,9 +2471,7 @@ class ExpWidget(QWidget):
             self.dig_params_layout.insertWidget(1, self.dig_params_widget)
 
             save_row = QHBoxLayout()
-            save_row.addStretch()
             save_row.addWidget(self.save_params)
-            save_row.addStretch()
             self.detector_layout.addLayout(save_row,1,0)
             self.fit_layout.addWidget(self.auto_fit_checkbox,1,1,1,1)
             self.fit_layout.addWidget(self.fit_select,1,2,1,2)
@@ -2491,7 +2601,7 @@ class ExpWidget(QWidget):
 
             return
 
-        self.status.setStyleSheet("color: black; background-color: gold; border: 4px solid black;")
+        self.status.setStyleSheet("color: black; background-color: gold; padding: 2px; font-weight: bold;")
         self.status.setText(f"{self.experiments.currentText()} scan in progress...")
 
         self.extra_kwarg_params['save'] = self.to_save
@@ -2500,7 +2610,7 @@ class ExpWidget(QWidget):
         try:
             self.extra_kwarg_params['dataset'] = self.exp_dict[self.experiments.currentText()][3]
         except KeyError as e:
-            self.status.setStyleSheet("color: black; background-color: red; border: 4px solid black;")
+            self.status.setStyleSheet("color: black; background-color: red; padding: 2px; font-weight: bold;")
             self.status.setText(f"No experiment selected: {e}")
             return
         else:
@@ -2537,11 +2647,11 @@ class ExpWidget(QWidget):
 
             # reload the module at runtime in case any changes were made to the code
             if self.daq_b1.isChecked(): # digitizer settings
-                reload(nv_experiments_2026_03_20)
+                reload(nv_experiments_2026_03_24)
                 # call the function in a new process
                 self.run_proc.run(
                     run_experiment,
-                    exp_cls = nv_experiments_2026_03_20.SpinMeasurements,
+                    exp_cls = nv_experiments_2026_03_24.SpinMeasurements,
                     fun_name = self.exp_dict[self.experiments.currentText()][0],
                     constructor_args = list(),
                     constructor_kwargs=dict(queue_to_inst=self.exp_inst_queue),
@@ -2567,7 +2677,7 @@ class ExpWidget(QWidget):
                 )
 
             else:
-                self.status.setStyleSheet("color: black; background-color: red; border: 4px solid black;")
+                self.status.setStyleSheet("color: black; background-color: red; padding: 2px; font-weight: bold;")
                 self.status.setText(f"No acquisition mode selected. Choose 'Digitizer' or 'NI DAQ'.")
                 raise ValueError(f"{self.experiments.currentText()} scan couldn't start because no data acquisition mode selected. Choose either 'Digitizer' or 'NI DAQ'.")
 
@@ -2609,7 +2719,7 @@ class ExpWidget(QWidget):
         if self.run_proc.running():
             self.run_proc.kill()
             logging.info('Processed killed.')
-            self.status.setStyleSheet("color: black; background-color: red; border: 4px solid black;")
+            self.status.setStyleSheet("color: black; background-color: red; padding: 2px; font-weight: bold;")
             self.status.setText(f"{self.experiments.currentText()} scan killed.")
             self.experiments.setEnabled(True)
             self.params_widget.setEnabled(True)
