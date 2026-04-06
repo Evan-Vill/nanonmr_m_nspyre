@@ -3,6 +3,7 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class SignalScanCfg:
     dataset: str
+    enable_pl_trace: bool
     exp_sampling_rate: float
     exp_sampling_rate_0: float
     segment_size: int
