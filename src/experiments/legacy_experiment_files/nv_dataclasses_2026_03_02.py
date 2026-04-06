@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 @dataclass(frozen=True)
-class OdmrScanCfg:
+class ODMRScanCfg:
     dataset: str
     num_pts: int
     iters: int
@@ -33,7 +33,7 @@ class OdmrScanCfg:
     sideband_power: float
 
 @dataclass(frozen=True)
-class OdmrSmartScanCfg:
+class ODMRSmartScanCfg:
     dataset: str
     num_pts: int
     iters: int
@@ -102,7 +102,7 @@ class RabiScanCfg:
     sideband_power: float
 
 @dataclass(frozen=True)
-class PulsedOdmrScanCfg:
+class PulsedODMRScanCfg:
     dataset: str
     num_pts: int
     iters: int
@@ -136,7 +136,7 @@ class PulsedOdmrScanCfg:
     sideband_power: float
 
 @dataclass(frozen=True)
-class PulsedOdmrRfScanCfg:
+class PulsedODMRRFScanCfg:
     dataset: str
     num_pts: int
     iters: int
@@ -173,7 +173,7 @@ class PulsedOdmrRfScanCfg:
     sideband_power: float
 
 @dataclass(frozen=True)
-class MwT1ScanCfg:
+class MWT1ScanCfg:
     dataset: str
     start: float
     stop: float
@@ -253,7 +253,7 @@ class T2ScanCfg:
     t2_seq: str
 
 @dataclass(frozen=True)
-class T2RfScanCfg:
+class T2RFScanCfg:
     dataset: str
     start: float
     stop: float
@@ -296,7 +296,7 @@ class T2RfScanCfg:
     t2_seq: str
 
 @dataclass(frozen=True)
-class DqScanCfg:
+class DQScanCfg:
     dataset: str
     start: float
     stop: float
@@ -332,7 +332,7 @@ class DqScanCfg:
     sideband_power: float
 
 @dataclass(frozen=True)
-class DeerScanCfg:
+class DEERScanCfg:
     dataset: str
     start: float
     stop: float
@@ -373,7 +373,7 @@ class DeerScanCfg:
     tau: float
 
 @dataclass(frozen=True)
-class DeerRabiScanCfg:
+class DEERRabiScanCfg:
     dataset: str
     start: float
     stop: float
@@ -413,7 +413,7 @@ class DeerRabiScanCfg:
     tau: float
 
 @dataclass(frozen=True)
-class DeerFidScanCfg:
+class DEERFidScanCfg:
     dataset: str
     start: float
     stop: float
@@ -452,7 +452,7 @@ class DeerFidScanCfg:
     sideband_power: float
 
 @dataclass(frozen=True)
-class DeerFidCdScanCfg:
+class DEERFidCdScanCfg:
     dataset: str
     start: float
     stop: float
@@ -492,7 +492,7 @@ class DeerFidCdScanCfg:
     sideband_power: float
 
 @dataclass(frozen=True)
-class DeerCorrRabiScanCfg:
+class DEERCorrRabiScanCfg:
     dataset: str
     start: float
     stop: float
@@ -531,7 +531,7 @@ class DeerCorrRabiScanCfg:
     tau: float
 
 @dataclass(frozen=True)
-class DeerT1ScanCfg:
+class DEERT1ScanCfg:
     dataset: str
     start: float
     stop: float
@@ -570,7 +570,7 @@ class DeerT1ScanCfg:
     tau: float
 
 @dataclass(frozen=True)
-class DeerT2ScanCfg:
+class DEERT2ScanCfg:
     dataset: str
     start: float
     stop: float
@@ -610,7 +610,7 @@ class DeerT2ScanCfg:
     tau: float
 
 @dataclass(frozen=True)
-class CorrSpecScanCfg:
+class DEERCorrSpecScanCfg:
     dataset: str
     start: float
     stop: float
@@ -646,7 +646,7 @@ class CorrSpecScanCfg:
     tau: float
 
 @dataclass(frozen=True)
-class CasrCoilScanCfg:
+class CASRCoilScanCfg:
     dataset: str
     num_pts: int
     iters: int
@@ -685,7 +685,7 @@ class CasrCoilScanCfg:
     tau: float
 
 @dataclass(frozen=True)
-class CasrOrigScanCfg:
+class CASROrigScanCfg:
     dataset: str
     num_pts: int
     iters: int
@@ -724,7 +724,7 @@ class CasrOrigScanCfg:
     tau: float
 
 @dataclass(frozen=True)
-class CasrScanCfg:
+class CASRScanCfg:
     dataset: str
     num_pts: int
     iters: int

@@ -28,7 +28,7 @@ import numpy as np
 import warnings
 from scipy.optimize import OptimizeWarning, curve_fit
 
-from digitizer_driver import SpectrumDigitizer
+from digitizer_driver_2026_03_16 import SpectrumDigitizer
 import daq_read_samples as daq
 from pulsestreamer import (
     PulseStreamer,
@@ -42,7 +42,7 @@ from nspyre import StreamingList, experiment_widget_process_queue
 
 from saveUtils import flexSave
 
-import nv_dataclasses_2026_03_05 as nvcfg
+import legacy_experiment_files.nv_dataclasses_2026_03_02 as nvcfg
 
 _HERE = Path(__file__).parent
 _logger = logging.getLogger(__name__)
@@ -5170,22 +5170,22 @@ class SpinMeasurements:
 
         
         
-        elif exp == 'odmr rf':
-            initial_guess[1] /= 1e9 # convert [Hz] to [GHz]
-            initial_guess[2] /= 1e9 # convert [Hz] to [GHz]
-            initial_guess[5] /= 1e9 # convert [Hz] to [GHz]
-            initial_guess[6] /= 1e9 # convert [Hz] to [GHz]
-        elif exp == 't1':
-            initial_guess[1] *= 1e3 # convert [s] to [ms]
-        elif exp == 't2':
-            initial_guess[1] *= 1e6 # convert [s] to [ms]
-            initial_guess[4] /= 1e6 # convert [Hz] to [MHz]
-            initial_guess[7] /= 1e6 # convert [Hz] to [MHz]
-        elif exp == 'nmr':
-            initial_guess[1] /= 1e6 # convert [Hz] to [MHz]
-            initial_guess[2] /= 1e3 # convert [Hz] to [kHz]
-        elif exp == 'casr':
-            initial_guess[1] /= 1e3 # convert [Hz] to [kHz]
+        # elif exp == 'odmr rf':
+        #     initial_guess[1] /= 1e9 # convert [Hz] to [GHz]
+        #     initial_guess[2] /= 1e9 # convert [Hz] to [GHz]
+        #     initial_guess[5] /= 1e9 # convert [Hz] to [GHz]
+        #     initial_guess[6] /= 1e9 # convert [Hz] to [GHz]
+        # elif exp == 't1':
+        #     initial_guess[1] *= 1e3 # convert [s] to [ms]
+        # elif exp == 't2':
+        #     initial_guess[1] *= 1e6 # convert [s] to [ms]
+        #     initial_guess[4] /= 1e6 # convert [Hz] to [MHz]
+        #     initial_guess[7] /= 1e6 # convert [Hz] to [MHz]
+        # elif exp == 'nmr':
+        #     initial_guess[1] /= 1e6 # convert [Hz] to [MHz]
+        #     initial_guess[2] /= 1e3 # convert [Hz] to [kHz]
+        # elif exp == 'casr':
+        #     initial_guess[1] /= 1e3 # convert [Hz] to [kHz]
 
         # Perform curve fitting 
         """
