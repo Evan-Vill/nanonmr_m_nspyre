@@ -56,7 +56,7 @@ class _LinePlotData(QThreadSafeObject):
         """
         with QtCore.QMutexLocker(self.mutex):
             if name in self.plots:
-                _logger.info(
+                _logger.debug(
                     f'A plot with the name [{name}] already exists. Ignoring add_plot '
                     'request.'
                 )
@@ -74,7 +74,7 @@ class _LinePlotData(QThreadSafeObject):
         """
         with QtCore.QMutexLocker(self.mutex):
             if name not in self.plots:
-                _logger.info(
+                _logger.debug(
                     f'A plot with the name [{name}] does not exist. Ignoring '
                     'remove_plot request.'
                 )
@@ -106,7 +106,7 @@ class _LinePlotData(QThreadSafeObject):
         """
         with QtCore.QMutexLocker(self.mutex):
             if name not in self.plots:
-                _logger.info(
+                _logger.debug(
                     f'A plot with the name [{name}] does not exist. Ignoring hide_plot '
                     'request.'
                 )
@@ -126,7 +126,7 @@ class _LinePlotData(QThreadSafeObject):
         """
         with QtCore.QMutexLocker(self.mutex):
             if name not in self.plots:
-                _logger.info(
+                _logger.debug(
                     f'A plot with the name [{name}] does not exist. Ignoring show_plot '
                     'request.'
                 )
@@ -151,7 +151,7 @@ class _LinePlotData(QThreadSafeObject):
 
         with QtCore.QMutexLocker(self.mutex):
             if name not in self.plots:
-                _logger.info(
+                _logger.debug(
                     f'A plot with the name [{name}] does not exist. Ignoring set_data '
                     'request.'
                 )
