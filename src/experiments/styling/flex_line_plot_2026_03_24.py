@@ -542,8 +542,13 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
         """
         super().__init__()
 
+        # Setup professional font and styling
+        self._setup_fonts_and_styles()
+
         self.line_plot = _FlexLinePlotWidget(timeout=timeout)
         """Underlying LinePlotWidget."""
+        # Store reference back to parent so ch2 detection can be triggered from update()
+        self.line_plot._parent_flex_line_plot_widget = self
 
         self.current_exp_type = None
         self.fits = dict()
@@ -551,44 +556,85 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
 
         # data source lineedit
         self.datasource_lineedit = QtWidgets.QLineEdit()
+        self.datasource_lineedit.setFont(self.base_font)
+        self.datasource_lineedit.setStyleSheet(self.lineedit_stylesheet)
 
         # data source connect button
         connect_button = QtWidgets.QPushButton('Connect')
+        connect_button.setFont(self.base_font)
+        connect_button_stylesheet = """
+            QPushButton {
+                background-color: #4166F5;
+                color: white;
+                border: 1px solid #3252D1;
+                border-radius: 4px;
+                padding: 8px 14px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #5178FF;
+            }
+            QPushButton:pressed {
+                background-color: #3252D1;
+            }
+        """
+        connect_button.setStyleSheet(connect_button_stylesheet)
         connect_button.clicked.connect(self._update_source_clicked)
 
-        # channel-2 plot visibility toggle
-        self.show_ch2_checkbox = QtWidgets.QCheckBox('Show Ch2 Plots')
-        self.show_ch2_checkbox.setChecked(False)
-        self.show_ch2_checkbox.setEnabled(False)
-        self.show_ch2_checkbox.stateChanged.connect(self._ch2_toggle_changed)
-        # Remember the user's latest manual Ch2 checkbox choice.
-        self._ch2_manual_preference = True
+        # channel-2 status label (auto-managed, no user interaction)
+        self.ch2_status_label = QtWidgets.QLabel('One Dig. Channel')
+        self.ch2_status_label.setFont(self.bold_font)
+        self.ch2_status_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.ch2_status_label.setStyleSheet(self.status_label_stylesheet)
+        self.ch2_status_label.setSizePolicy(
+            QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
+        )
+        self.ch2_status_label.setMinimumWidth(120)
+        self.ch2_status_label.setFixedHeight(42)  # match button height for visual consistency
+        
+        # Track ch2 state for ch2 visibility memory
         self._ch2_visibility_memory = {}
         self._ch2_default_hidden = {}
         self._twoch_derived_visibility_memory = {}
 
-        # Poll ch2 availability so the checkbox updates without reconnecting.
-        self._ch2_poll_timer = QtCore.QTimer(self)
-        self._ch2_poll_timer.setInterval(750)
-        self._ch2_poll_timer.timeout.connect(self._refresh_ch2_checkbox_for_source)
-        self._ch2_poll_timer.start()
+        # Track previous has_ch2 state to debounce visibility reapplication.
+        # ch2 detection now triggers on data arrivals instead of polling.
+        self._ch2_has_ch2_previous = None
+        
+        # Track which ch2 plots have been created to avoid re-creating them
+        # Format: {plot_name: True} if created, allows safe multiple attempts
+        self._ch2_plots_created = {}
+        
+        # Flag to prevent ch2 detection from running during setup phase
+        self._setup_complete = True
 
         # plot settings label
         plot_settings_label = QtWidgets.QLabel('Plot Settings')
+        plot_settings_label.setFont(self.bold_font)
         plot_settings_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
+        plot_settings_label.setStyleSheet(self.section_label_stylesheet)
 
         # plot name lineedit
         self.plot_name_lineedit = QtWidgets.QLineEdit('avg')
+        self.plot_name_lineedit.setFont(self.base_font)
+        self.plot_name_lineedit.setStyleSheet(self.lineedit_stylesheet)
 
         # data series lineedit
         self.plot_series_lineedit = QtWidgets.QLineEdit('series1')
+        self.plot_series_lineedit.setFont(self.base_font)
+        self.plot_series_lineedit.setStyleSheet(self.lineedit_stylesheet)
 
         # scan indices lineedits
         self.add_plot_scan_i_textbox = QtWidgets.QLineEdit()
+        self.add_plot_scan_i_textbox.setFont(self.base_font)
+        self.add_plot_scan_i_textbox.setStyleSheet(self.lineedit_stylesheet)
         self.add_plot_scan_j_textbox = QtWidgets.QLineEdit()
+        self.add_plot_scan_j_textbox.setFont(self.base_font)
+        self.add_plot_scan_j_textbox.setStyleSheet(self.lineedit_stylesheet)
 
         # avg/append label
         plot_processing_label = QtWidgets.QLabel('Processing: ')
+        plot_processing_label.setFont(self.base_font)
         plot_processing_label.setSizePolicy(
             QtWidgets.QSizePolicy(
                 QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed
@@ -597,12 +643,15 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
 
         # avg/append dropdown
         self.plot_processing_dropdown = QtWidgets.QComboBox()
+        self.plot_processing_dropdown.setFont(self.base_font)
+        self.plot_processing_dropdown.setStyleSheet(self.combobox_stylesheet)
         self.plot_processing_dropdown.addItem('Average')  # index 0
         self.plot_processing_dropdown.addItem('Append')  # index 1
         # default to average
         self.plot_processing_dropdown.setCurrentIndex(0)
 
         plot_boxcar_label = QtWidgets.QLabel('Boxcar FFT Width (Bins)')
+        plot_boxcar_label.setFont(self.base_font)
         plot_boxcar_label.setSizePolicy(
             QtWidgets.QSizePolicy(
                 QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed
@@ -610,6 +659,8 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
         )
 
         self.plot_boxcar_spinbox = QtWidgets.QSpinBox()
+        self.plot_boxcar_spinbox.setFont(self.base_font)
+        self.plot_boxcar_spinbox.setStyleSheet(self.spinbox_stylesheet)
         self.plot_boxcar_spinbox.setMinimum(1)
         self.plot_boxcar_spinbox.setMaximum(100000)
         self.plot_boxcar_spinbox.setValue(1)
@@ -617,34 +668,82 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
 
         # show button
         show_button = QtWidgets.QPushButton('Show')
+        show_button.setFont(self.base_font)
+        plot_control_button_stylesheet = """
+            QPushButton {
+                background-color: #D2B48C;
+                color: black;
+                border: 1px solid #A0826D;
+                border-radius: 4px;
+                padding: 8px 14px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #DCC9B8;
+            }
+            QPushButton:pressed {
+                background-color: #A0826D;
+            }
+        """
+        show_button.setStyleSheet(plot_control_button_stylesheet)
         show_button.clicked.connect(self._show_plot_clicked)
 
         # hide button
         hide_button = QtWidgets.QPushButton('Hide')
+        hide_button.setFont(self.base_font)
+        hide_button.setStyleSheet(plot_control_button_stylesheet)
         hide_button.clicked.connect(self._hide_plot_clicked)
 
         # update button
         update_plot_button = QtWidgets.QPushButton('Update')
+        update_plot_button.setFont(self.base_font)
+        update_plot_button.setStyleSheet(plot_control_button_stylesheet)
         update_plot_button.clicked.connect(self._update_plot_clicked)
 
         # add button
         add_plot_button = QtWidgets.QPushButton('Add')
+        add_plot_button.setFont(self.base_font)
+        add_plot_button.setStyleSheet(plot_control_button_stylesheet)
         add_plot_button.clicked.connect(self._add_plot_clicked)
 
         # del button
         remove_button = QtWidgets.QPushButton('Remove')
+        remove_button.setFont(self.base_font)
+        remove_button.setStyleSheet(plot_control_button_stylesheet)
         remove_button.clicked.connect(self._remove_plot_clicked)
 
         # plots label
         plots_label = QtWidgets.QLabel('Plots')
+        plots_label.setFont(self.bold_font)
         plots_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
+        plots_label.setStyleSheet(self.section_label_stylesheet)
 
         # list of plots
         self.plots_list_widget = QtWidgets.QListWidget()
+        self.plots_list_widget.setFont(self.base_font)
+        self.plots_list_widget.setStyleSheet(self.listwidget_stylesheet)
         self.plots_list_widget.currentItemChanged.connect(self._plot_selection_changed)
 
         # cursor
         self.cursor_button = QPushButton("Cursor")
+        self.cursor_button.setFont(self.base_font)
+        cursor_button_stylesheet = """
+            QPushButton {
+                background-color: #90EE90;
+                color: black;
+                border: 1px solid #66BB6A;
+                border-radius: 4px;
+                padding: 8px 14px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #A8F5A8;
+            }
+            QPushButton:pressed {
+                background-color: #66BB6A;
+            }
+        """
+        self.cursor_button.setStyleSheet(cursor_button_stylesheet)
         self.cursor_button.clicked.connect(self._cursor_clicked)
                 
         self.v_line = InfiniteLine(angle = 90, label = 'x={value:0.2f}', pen = (241,196,15), labelOpts={'position': 0.1, 'color': (241,196,15), 'fill': (154,125,10,50), 'movable': False})
@@ -662,15 +761,23 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
 
         # fit window
         self.fit_button = QPushButton("Fit")
+        self.fit_button.setFont(self.base_font)
+        self.fit_button.setStyleSheet(self.button_stylesheet)
         self.fit_button.clicked.connect(self._fit_clicked)
         self.curvefit_lineedit = QtWidgets.QLineEdit('div_avg')
+        self.curvefit_lineedit.setFont(self.base_font)
+        self.curvefit_lineedit.setStyleSheet(self.lineedit_stylesheet)
 
         # fit window
         self.remove_fits_button = QPushButton("Remove Fits")
+        self.remove_fits_button.setFont(self.base_font)
+        self.remove_fits_button.setStyleSheet(self.button_stylesheet)
         self.remove_fits_button.clicked.connect(self._remove_fits_clicked)
 
         # fit window
         self.view_fits_button = QPushButton("View Fits")
+        self.view_fits_button.setFont(self.base_font)
+        self.view_fits_button.setStyleSheet(self.button_stylesheet)
         self.view_fits_button.clicked.connect(self._view_fits_clicked)
         
         # spacer
@@ -687,11 +794,30 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
         )
 
         # layout
+        # Create and style inline labels before layout config
+        data_set_label = QtWidgets.QLabel('Data Set: ')
+        data_set_label.setFont(self.base_font)
+        
+        plot_name_label = QtWidgets.QLabel('Plot Name: ')
+        plot_name_label.setFont(self.base_font)
+        
+        data_series_label = QtWidgets.QLabel('Data Series: ')
+        data_series_label.setFont(self.base_font)
+        
+        scan_l1_label = QtWidgets.QLabel('Scan')
+        scan_l1_label.setFont(self.base_font)
+        
+        scan_l2_label = QtWidgets.QLabel(' to ')
+        scan_l2_label.setFont(self.base_font)
+        
+        curve_fit_label = QtWidgets.QLabel('Curve Fit: ')
+        curve_fit_label.setFont(self.base_font)
+
         settings_layout_config = {
             'type': QtWidgets.QVBoxLayout,
             'data_source': {
                 'type': QtWidgets.QHBoxLayout,
-                'label': QtWidgets.QLabel('Data Set: '),
+                'label': data_set_label,
                 'edit': self.datasource_lineedit,
                 'button': connect_button,
             },
@@ -704,19 +830,19 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
                         'type': QtWidgets.QVBoxLayout,
                         'name': {
                             'type': QtWidgets.QHBoxLayout,
-                            'label': QtWidgets.QLabel('Plot Name: '),
+                            'label': plot_name_label,
                             'edit': self.plot_name_lineedit,
                         },
                         'series': {
                             'type': QtWidgets.QHBoxLayout,
-                            'label': QtWidgets.QLabel('Data Series: '),
+                            'label': data_series_label,
                             'edit': self.plot_series_lineedit,
                         },
                         'index': {
                             'type': QtWidgets.QHBoxLayout,
-                            'l1': QtWidgets.QLabel('Scan'),
+                            'l1': scan_l1_label,
                             'i': self.add_plot_scan_i_textbox,
-                            'l2': QtWidgets.QLabel(' to '),
+                            'l2': scan_l2_label,
                             'j': self.add_plot_scan_j_textbox,
                         },
                         'processing': {
@@ -759,11 +885,10 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
             },
             'curve_fit_source': {
                 'type': QtWidgets.QHBoxLayout,
-                'label': QtWidgets.QLabel('Curve Fit: '),
+                'label': curve_fit_label,
                 'edit': self.curvefit_lineedit,
                 'fit_buttons': {
-                    'type': QtWidgets.QVBoxLayout,
-                    'spacer_t': fixed_spacer,
+                    'type': QtWidgets.QHBoxLayout,
                     'fit': self.fit_button,
                     'remove': self.remove_fits_button,
                     'view': self.view_fits_button,
@@ -773,7 +898,7 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
         self.layout_tree = tree_layout(settings_layout_config)
         # make the plots list (index=2) take up all extra space (stretch=1)
         self.layout_tree.config.layout.setStretch(2, 1)
-        self.layout_tree.data_source.layout.addWidget(self.show_ch2_checkbox)
+        self.layout_tree.data_source.layout.addWidget(self.ch2_status_label)
 
         # splitter
         splitter = QtWidgets.QSplitter()
@@ -792,6 +917,131 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
         if color_flip:
             self.plot_color_manager = PlotColorManager(self)
             layout.addWidget(self.plot_color_manager.color_flip_button)
+
+    def _setup_fonts_and_styles(self):
+        """Setup professional fonts and stylesheets for all widgets."""
+        # Define fonts
+        self.base_font = QtGui.QFont("Segoe UI", 14)
+        self.bold_font = QtGui.QFont("Segoe UI", 14)
+        self.bold_font.setBold(True)
+        
+        # Define stylesheets with professional appearance
+        self.button_stylesheet = """
+            QPushButton {
+                background-color: #663399;
+                color: white;
+                border: 1px solid #4C2470;
+                border-radius: 4px;
+                padding: 8px 14px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #7D3FC0;
+            }
+            QPushButton:pressed {
+                background-color: #4C2470;
+            }
+        """
+        
+        self.lineedit_stylesheet = """
+            QLineEdit {
+                background-color: #3D3D3D;
+                color: white;
+                border: 1px solid #505050;
+                border-radius: 4px;
+                padding: 6px 8px;
+            }
+            QLineEdit:focus {
+                border: 2px solid #4166F5;
+                background-color: #4A4A4A;
+            }
+        """
+        
+        self.combobox_stylesheet = """
+            QComboBox {
+                background-color: #3D3D3D;
+                color: white;
+                border: 1px solid #505050;
+                border-radius: 4px;
+                padding: 6px 8px;
+            }
+            QComboBox:focus {
+                border: 2px solid #4166F5;
+                background-color: #4A4A4A;
+            }
+            QComboBox::drop-down {
+                border: none;
+                background-color: #3D3D3D;
+            }
+            QComboBox::down-arrow {
+                image: none;
+            }
+            QComboBox QAbstractItemView {
+                background-color: #3D3D3D;
+                color: white;
+                selection-background-color: #4166F5;
+                border: 1px solid #505050;
+            }
+        """
+        
+        self.spinbox_stylesheet = """
+            QSpinBox {
+                background-color: #3D3D3D;
+                color: white;
+                border: 1px solid #505050;
+                border-radius: 4px;
+                padding: 6px 8px;
+            }
+            QSpinBox:focus {
+                border: 2px solid #4166F5;
+                background-color: #4A4A4A;
+            }
+            QSpinBox::up-button, QSpinBox::down-button {
+                background-color: #3D3D3D;
+                border: none;
+            }
+            QSpinBox::up-button:hover, QSpinBox::down-button:hover {
+                background-color: #4A4A4A;
+            }
+        """
+        
+        self.status_label_stylesheet = """
+            QLabel {
+                background-color: #ADD8E6;
+                color: black;
+                border: 1px solid #82B8D8;
+                border-radius: 4px;
+                padding: 6px 8px;
+                font-weight: bold;
+            }
+        """
+        
+        self.section_label_stylesheet = """
+            QLabel {
+                color: #CCCCCC;
+                font-weight: bold;
+                background-color: transparent;
+            }
+        """
+        
+        self.listwidget_stylesheet = """
+            QListWidget {
+                background-color: #3D3D3D;
+                color: white;
+                border: 1px solid #505050;
+                border-radius: 4px;
+            }
+            QListWidget::item {
+                padding: 4px;
+            }
+            QListWidget::item:selected {
+                background-color: #4166F5;
+                color: white;
+            }
+            QListWidget::item:hover {
+                background-color: #4A4A4A;
+            }
+        """
 
     def _plot_selection_changed(self):
         """Called when the selected plot changes."""
@@ -907,27 +1157,29 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
         )
 
     def _add_plot_callback(self, name: str):
-        """Called in main thread after a plot is added."""
+        """Called in main thread after a plot is added.
+        
+        ROBUSTNESS: Use deferred styling for newly added plots to ensure they're fully
+        integrated into pyqtgraph before styling is applied. This fixes issues where
+        dynamically created plots appear with incorrect styling on first render.
+        """
         self.plots_list_widget.addItem(name)
         self.line_plot.add_plot(name)
 
-        # NEW: assign shuffled color + apply current mode styling
+        # Apply styling with deferred call to ensure plot is fully added to pyqtgraph
         if hasattr(self, "plot_color_manager"):
+            # Immediate styling attempt
             self.plot_color_manager.apply_current_style_all()
+            # Deferred styling to catch plots that weren't ready on first call
+            QtCore.QTimer.singleShot(50, self.plot_color_manager.apply_current_style_all)
 
     def _find_plot_item(self, name):
-        """Return the index of the list widget plot item with the given name."""
-        list_widget_index = None
+        """Return the index of the list widget plot item with the given name.
+        Returns None if not found (instead of raising), allowing graceful handling."""
         for i in range(self.plots_list_widget.count()):
             if self.plots_list_widget.item(i).text() == name:
-                list_widget_index = i
-                break
-        if list_widget_index is None:
-            raise RuntimeError(
-                f'Internal error: plot [{name}] not found in list widget.'
-            )
-
-        return list_widget_index
+                return i
+        return None
 
     def _remove_plot_clicked(self):
         """Called when the user clicks the remove button."""
@@ -984,14 +1236,11 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
         self.line_plot.hide_plot(name)
         # change the list widget item color scheme
         idx = self._find_plot_item(name)
-
-        if hasattr(self, "plot_color_manager"):
-            self.plot_color_manager.apply_current_style_all()
-
-        self.plots_list_widget.item(idx).setForeground(QtCore.Qt.GlobalColor.gray)
-        self.plots_list_widget.item(idx).setBackground(
-            self.palette().color(QtGui.QPalette.ColorRole.Mid)
-        )
+        if idx is not None:
+            self.plots_list_widget.item(idx).setForeground(QtCore.Qt.GlobalColor.gray)
+            self.plots_list_widget.item(idx).setBackground(
+                self.palette().color(QtGui.QPalette.ColorRole.Mid)
+            )
 
     def _show_plot_clicked(self):
         """Called when the user clicks the show button."""
@@ -1015,20 +1264,33 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
         )
 
     def _show_plot_callback(self, name: str):
-        """Called after a plot is shown."""
+        """Called after plot show request. Validates ch2 plots have data support.
+        
+        ROBUSTNESS: Prevents showing ch2 plots when data doesn't have corresponding _ch2 series.
+        This prevents user mistakes that lead to rendering errors and crashes.
+        """
+        # Validate ch2 plots can only be shown if data supports them
+        if name.endswith('_ch2') and not self.line_plot._current_has_ch2:
+            _logger.warning(f'Cannot show plot [{name}] - no _ch2 data available. Keeping hidden.')
+            return  # Don't show it
+        
         # show the plot in the pyqtgraph plotting widget
         self.line_plot.show_plot(name)
+        
+        # Apply styling - use deferred call to ensure plot is fully integrated
+        if hasattr(self, "plot_color_manager"):
+            # Immediate styling
+            self.plot_color_manager.apply_current_style_all()
+            # Deferred styling as backup for plots that were hidden or newly created
+            QtCore.QTimer.singleShot(50, self.plot_color_manager.apply_current_style_all)
+        
         # return list widget item to normal color scheme
         idx = self._find_plot_item(name)
-
-        # NEW: re-style when shown (important if it was hidden initially)
-        if hasattr(self, "plot_color_manager"):
-            self.plot_color_manager.apply_current_style_all()
-
-        normal_text_color = self.palette().color(QtGui.QPalette.ColorRole.Text)
-        normal_bg_color = self.palette().color(QtGui.QPalette.ColorRole.Base)
-        self.plots_list_widget.item(idx).setForeground(normal_text_color)
-        self.plots_list_widget.item(idx).setBackground(normal_bg_color)
+        if idx is not None:
+            normal_text_color = self.palette().color(QtGui.QPalette.ColorRole.Text)
+            normal_bg_color = self.palette().color(QtGui.QPalette.ColorRole.Base)
+            self.plots_list_widget.item(idx).setForeground(normal_text_color)
+            self.plots_list_widget.item(idx).setBackground(normal_bg_color)
 
     @staticmethod
     def _supports_ch2_series(series: str) -> bool:
@@ -1044,76 +1306,345 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
             return False
         return True
 
-    def _add_default_ch2_plots(self):
-        """Mirror existing defaults as `_ch2` plots for dual-channel datasets."""
-        with QtCore.QMutexLocker(self.line_plot.plot_settings.mutex):
-            existing_settings = [
-                (
-                    plot_name,
-                    settings.series,
-                    settings.scan_i,
-                    settings.scan_j,
-                    settings.processing,
-                    settings.hidden,
-                    settings.boxcar_width,
-                )
-                for plot_name, settings in self.line_plot.plot_settings.series_settings.items()
-            ]
+    def _queued_finalize_ch2_setup(self):
+        """Run on settings thread after all plot additions complete.
+        This queues back to main thread to finalize ch2 setup."""
+        # By running on settings thread, this automatically waits for all
+        # previous queued plot additions to complete before reading series_settings
+        self.line_plot.plot_settings.run_main(
+            self._finalize_ch2_setup_on_main_thread,
+            blocking=False
+        )
+    
+    def _finalize_ch2_setup_on_main_thread(self):
+        """Run on main thread to finalize connection setup.
+        
+        ARCHITECTURE CHANGE: No longer pre-creates ch2 plots speculatively.
+        Instead, ch2 plots are ONLY created dynamically in the update() loop
+        when _ch2 data actually appears. This eliminates stale state issues
+        where user could manually show invalid plots.
+        
+        This method now only handles styling and setup completion.
+        Ch2 detection happens in update() loop in real-time.
+        """
+        try:
+            _logger.info('Starting connection finalization...')
+            
+            # Skip speculative ch2 plot creation - only create when data has them
+            # This is now handled dynamically in update() loop
+            _logger.info('Ch2 plots will be created dynamically when _ch2 data appears')
+            
+            # Apply styling to all newly created plots to match PlotColorManager theme
+            # This ensures the initial render has proper line thickness and marker styling
+            if hasattr(self, 'plot_color_manager'):
+                # CRITICAL: Process pending Qt events to ensure all plots are fully added to pyqtgraph
+                # before applying styling. On reconnections, there's a race condition where plots
+                # are queued for addition but not yet in the plot widget's item list when we try to style them.
+                QtWidgets.QApplication.processEvents()
+                
+                # DEBUG: log how many items we're about to style
+                items = self.plot_color_manager._data_items()
+                _logger.info(f'Found {len(items)} plot items to style after processEvents()')
+                
+                # Schedule styling to run after all pending events are processed
+                # This ensures all plot callbacks have completed
+                QtCore.QTimer.singleShot(50, self._apply_styling_deferred)
+            else:
+                _logger.warning('plot_color_manager not available, skipping styling')
+            
+            # Reset ch2 status label to default state for fresh connection
+            # This ensures the label is correct even before first data arrives
+            # If ch2 data appears later, it will be updated by ch2 detection
+            self.ch2_status_label.setText('One Dig. Channel')
+            self.ch2_status_label.setStyleSheet(self.status_label_stylesheet)
+            self.line_plot._current_has_ch2 = False
+            # Reset debouncing flag so first ch2 state update is NOT skipped
+            # This allows bidirectional transitions (1ch->2ch->1ch->2ch, etc.) to work smoothly
+            self._ch2_has_ch2_previous = None
+            _logger.info('Status label reset to "One Dig. Channel" for fresh connection')
+            
+            # NOW safe to enable ch2 detection on incoming data
+            self._setup_complete = True
+            _logger.info('Ch2 setup complete - ch2 detection enabled')
+            
+            # CRITICAL FIX: RESUME the update loop that was paused at start of connection
+            # Without this, the update loop will remain frozen and no data will render
+            self.line_plot._update_paused = False
+            _logger.info('Update loop resumed - plots ready for data rendering')
+        except Exception as e:
+            _logger.error(f'Failed to finalize ch2 setup: {e}', exc_info=True)
+            # Still mark setup as complete to avoid indefinite blocking
+            # The system will continue to work, just without ch2 auto-detection
+            self._setup_complete = True
+            
+            # Even on error, apply styling to plots that were successfully created
+            # Use deferred styling to ensure all plot additions are complete
+            if hasattr(self, 'plot_color_manager'):
+                QtCore.QTimer.singleShot(50, self._apply_styling_deferred)
+            
+            # CRITICAL: Always resume update loop on error to prevent permanent freeze
+            self.line_plot._update_paused = False
+            _logger.warning('Setup failed - update loop resumed anyway to prevent freeze')
 
-        for plot_name, series, scan_i, scan_j, processing, hidden, boxcar_width in existing_settings:
-            if not self._supports_ch2_series(series):
-                continue
-            self.add_plot(
-                f'{plot_name}_ch2',
-                series=f'{series}_ch2',
-                scan_i=scan_i,
-                scan_j=scan_j,
-                processing=processing,
-                boxcar_width=boxcar_width,
-            )
-            self._ch2_default_hidden[f'{plot_name}_ch2'] = hidden
-            if hidden:
-                self.hide_plot(f'{plot_name}_ch2')
+    def _apply_styling_deferred(self):
+        """Apply plot styling after a brief delay to ensure all plot additions are complete.
+        
+        Called via QTimer.singleShot() to work around timing issues where plot items
+        haven't been fully added to the pyqtgraph widget by the time we try to style them.
+        """
+        try:
+            if hasattr(self, 'plot_color_manager'):
+                items = self.plot_color_manager._data_items()
+                _logger.info(f'Deferred styling: found {len(items)} plot items to style')
+                
+                self.plot_color_manager.apply_current_style_all()
+                _logger.info(f'Applied {self.plot_color_manager.mode} plot styling (deferred)')
+            else:
+                _logger.warning('plot_color_manager not available in deferred styling')
+        except Exception as e:
+            _logger.warning(f'Error in deferred styling: {e}')
+
+    def _add_default_ch2_plots(self):
+        """Create ch2-related plots when dual-channel data is detected.
+        
+        ARCHITECTURE:
+        1. Mirror existing _supports_ch2_series() plots as _ch2 variants (e.g., div_avg → div_avg_ch2)
+        2. Create special two-channel combined plots (div_2ch_avg, div_2ch_latest)
+        
+        div_2ch plots are COMPUTED by update() loop (never appear in incoming data).
+        They combine signal, background, and background_ch2 for normalized two-channel display.
+        
+        ROBUSTNESS: Error handling to log failures without breaking other plot creation.
+        """
+        try:
+            # Get copy of existing plots to avoid mutation during iteration
+            try:
+                with QtCore.QMutexLocker(self.line_plot.plot_settings.mutex):
+                    existing_settings = [
+                        (
+                            plot_name,
+                            settings.series,
+                            settings.scan_i,
+                            settings.scan_j,
+                            settings.processing,
+                            settings.hidden,
+                            settings.boxcar_width,
+                        )
+                        for plot_name, settings in self.line_plot.plot_settings.series_settings.items()
+                    ]
+            except Exception as e:
+                _logger.warning(f'Could not access series_settings: {e}')
+                existing_settings = []
+            
+            # Silently build list of existing plots - verbose logging spam during experiments
+
+            # PHASE 1: Create _ch2 variants for all plots that support it
+            ch2_created_count = 0
+            for plot_name, series, scan_i, scan_j, processing, hidden, boxcar_width in existing_settings:
+                if not self._supports_ch2_series(series):
+                    continue
+                
+                ch2_plot_name = f'{plot_name}_ch2'
+                
+                # Skip if already created (avoid re-creation on reconnections)
+                if ch2_plot_name in self._ch2_plots_created:
+                    continue
+                
+                try:
+                    ch2_series_name = f'{series}_ch2'
+                    self.add_plot(
+                        ch2_plot_name,
+                        series=ch2_series_name,
+                        scan_i=scan_i,
+                        scan_j=scan_j,
+                        processing=processing,
+                        boxcar_width=boxcar_width,
+                    )
+                    self._ch2_default_hidden[ch2_plot_name] = hidden
+                    self._ch2_plots_created[ch2_plot_name] = True  # Mark as created
+                    if hidden:
+                        self.hide_plot(ch2_plot_name)
+                    ch2_created_count += 1
+                except Exception as e:
+                    _logger.error(f'Failed to create ch2 plot "{ch2_plot_name}": {e}', exc_info=True)
+                    continue
+            
+            # PHASE 2: Create special div_2ch plots (two-channel normalized) 
+            # These are COMPUTED by update() loop, not from incoming data series.
+            # Only create if div_avg and div_latest plots exist.
+            div_plots = {}  # {suffix: (plot_name, scan_i, scan_j, processing, boxcar_width)}
+            for plot_name, series, scan_i, scan_j, processing, hidden, boxcar_width in existing_settings:
+                if series == 'div':
+                    if plot_name == 'div_avg':
+                        div_plots['avg'] = (plot_name, scan_i, scan_j, processing, boxcar_width)
+                    elif plot_name == 'div_latest':
+                        div_plots['latest'] = (plot_name, scan_i, scan_j, processing, boxcar_width)
+            
+            # Create div_2ch plots corresponding to existing div plots
+            div_2ch_created_count = 0
+            for suffix, (orig_plot_name, scan_i, scan_j, processing, boxcar_width) in div_plots.items():
+                div_2ch_plot_name = f'div_2ch_{suffix}'
+                
+                # Skip if already created
+                if div_2ch_plot_name in self._ch2_plots_created:
+                    continue
+                
+                try:
+                    # Create with series='div_2ch' (computed by update() loop)
+                    self.add_plot(
+                        div_2ch_plot_name,
+                        series='div_2ch',
+                        scan_i=scan_i,
+                        scan_j=scan_j,
+                        processing=processing,
+                        boxcar_width=boxcar_width,
+                    )
+                    # div_2ch plots (avg and latest) both hidden by default
+                    self._ch2_default_hidden[div_2ch_plot_name] = True
+                    self.hide_plot(div_2ch_plot_name)
+                    self._ch2_plots_created[div_2ch_plot_name] = True  # Mark as created
+                    div_2ch_created_count += 1
+                except Exception as e:
+                    _logger.error(f'Failed to create div_2ch plot "{div_2ch_plot_name}": {e}', exc_info=True)
+                    continue
+            
+        except Exception as e:
+            _logger.error(f'Failed during ch2 plot creation: {e}', exc_info=True)
+            # Don't re-raise - allows setup to continue even if ch2 setup fails
 
     def _set_ch2_plot_visibility(self, show_ch2: bool):
-        """Show or hide all `_ch2` plots while preserving the user's previous choice."""
+        """Queue ch2 visibility update to settings thread to avoid mutex deadlock.
+        
+        CRITICAL FIX: Previous version acquired mutex on MAIN thread, causing deadlock
+        if settings thread was busy. Now queues entire operation to settings thread.
+        """
+        self.line_plot.plot_settings.run_safe(
+            self._set_ch2_plot_visibility_on_settings_thread,
+            show_ch2,
+        )
+
+    def _set_ch2_plot_visibility_on_settings_thread(self, show_ch2: bool):
+        """Run on settings thread to get ch2 plots and update visibility.
+        No mutex deadlock risk since we're already on the settings thread.
+        
+        ROBUSTNESS: Handles case where _ch2_default_hidden is not yet populated
+        (race condition during initial setup when data arrives early).
+        """
         with QtCore.QMutexLocker(self.line_plot.plot_settings.mutex):
-            ch2_states = [
-                (name, settings.hidden)
-                for name, settings in self.line_plot.plot_settings.series_settings.items()
-                if settings.series.endswith('_ch2')
+            ch2_plot_names = [
+                pname
+                for pname in self.line_plot.plot_settings.series_settings
+                if pname.endswith('_ch2')
             ]
 
-        if not ch2_states:
+        if not ch2_plot_names:
             return
+
+        # Collect all visibility changes to apply in one batch
+        visibility_changes = {}  # {plot_name: should_be_hidden}
 
         if show_ch2:
-            for plot_name, hidden in ch2_states:
-                visible = self._ch2_visibility_memory.get(
-                    plot_name,
-                    not self._ch2_default_hidden.get(plot_name, hidden),
-                )
-                if visible:
-                    self.show_plot(plot_name)
+            # Show ch2 plots: restore to default hidden state
+            # DEFENSIVE: _ch2_default_hidden might not be populated yet if data arrives during setup
+            for plot_name in ch2_plot_names:
+                # Check if this plot's default state was recorded during _add_default_ch2_plots()
+                if plot_name in self._ch2_default_hidden:
+                    should_hide = self._ch2_default_hidden[plot_name]
                 else:
-                    self.hide_plot(plot_name)
+                    # Not yet populated - default to showing (not hidden)
+                    # This is safe: worst case is plot appears briefly before correct state applied
+                    should_hide = False
+                visibility_changes[plot_name] = should_hide
+        else:
+            # Hide all ch2 plots
+            for plot_name in ch2_plot_names:
+                visibility_changes[plot_name] = True  # True = hide
+
+        # Apply all visibility changes in one batch operation
+        if visibility_changes:
+            self._batch_set_plot_visibility(visibility_changes)
+
+    def _batch_set_plot_visibility(self, visibility_changes: dict):
+        """Apply batched visibility changes in a single thread-safe operation.
+        visibility_changes: {plot_name: should_be_hidden}
+        """
+        for plot_name, should_hide in visibility_changes.items():
+            with QtCore.QMutexLocker(self.line_plot.plot_settings.mutex):
+                if plot_name not in self.line_plot.plot_settings.series_settings:
+                    continue
+                current_hidden = self.line_plot.plot_settings.series_settings[plot_name].hidden
+            
+            # Only update if state actually differs
+            if should_hide and not current_hidden:
+                self.line_plot.hide_plot(plot_name)
+                idx = self._find_plot_item(plot_name)
+                if idx is not None:
+                    self.plots_list_widget.item(idx).setForeground(QtCore.Qt.GlobalColor.gray)
+                    self.plots_list_widget.item(idx).setBackground(
+                        self.palette().color(QtGui.QPalette.ColorRole.Mid)
+                    )
+            elif not should_hide and current_hidden:
+                self.line_plot.show_plot(plot_name)
+                # apply current mode styling to ensure consistent formatting
+                if hasattr(self, "plot_color_manager"):
+                    self.plot_color_manager.apply_current_style_all()
+                idx = self._find_plot_item(plot_name)
+                if idx is not None:
+                    normal_text_color = self.palette().color(QtGui.QPalette.ColorRole.Text)
+                    normal_bg_color = self.palette().color(QtGui.QPalette.ColorRole.Base)
+                    self.plots_list_widget.item(idx).setForeground(normal_text_color)
+                    self.plots_list_widget.item(idx).setBackground(normal_bg_color)
+
+    def _remove_ch2_plots(self):
+        """Remove all ch2 plots when ch2 data disappears (2ch -> 1ch transition).
+        
+        CRITICAL: Removes plots completely from series_settings, list widget, and pyqtgraph.
+        Not just hiding - the plots disappear from the UI list entirely.
+        This prevents stale plots from trying to render data that no longer exists.
+        
+        Removes both:
+        - _ch2 suffix plots (e.g., div_avg_ch2, diff_avg_ch2)
+        - div_2ch computed plots (e.g., div_2ch_avg, div_2ch_latest)
+        """
+        # Get all ch2 plot names to remove
+        with QtCore.QMutexLocker(self.line_plot.plot_settings.mutex):
+            ch2_plot_names = [
+                pname
+                for pname in self.line_plot.plot_settings.series_settings.keys()
+                if pname.endswith('_ch2') or 'div_2ch' in pname
+            ]
+        
+        if not ch2_plot_names:
+            _logger.info('No ch2 plots to remove')
             return
-
-        # Save current visibility before hiding so it can be restored.
-        self._ch2_visibility_memory = {
-            plot_name: not hidden for plot_name, hidden in ch2_states
-        }
-        for plot_name, _ in ch2_states:
-            self.hide_plot(plot_name)
-
-    def _ch2_toggle_changed(self, state: int):
-        """Handle checkbox state changes for channel-2 plot visibility."""
-        show_ch2 = state == QtCore.Qt.CheckState.Checked.value
-        self._ch2_manual_preference = show_ch2
-        self._set_ch2_plot_visibility(show_ch2)
+        
+        _logger.info(f'Removing {len(ch2_plot_names)} ch2 plots on 2ch->1ch transition: {ch2_plot_names}')
+        
+        # Clear all ch2 tracking dicts so plots can be recreated fresh when ch2 data returns
+        for plot_name in ch2_plot_names:
+            self._ch2_plots_created.pop(plot_name, None)
+            self._ch2_visibility_memory.pop(plot_name, None)
+            self._ch2_default_hidden.pop(plot_name, None)
+            self._twoch_derived_visibility_memory.pop(plot_name, None)
+        
+        # Remove each ch2 plot completely (calls remove_plot which handles callbacks and cleanup)
+        for plot_name in ch2_plot_names:
+            self.remove_plot(plot_name)
 
     def _set_twoch_derived_plot_visibility(self, has_ch2: bool):
-        """Show or hide two-channel-derived plots (e.g. `div_2ch`) based on availability."""
+        """Queue two-channel-derived plot visibility update to settings thread.
+        
+        CRITICAL FIX: Moved to settings thread to avoid mutex deadlock on main thread.
+        """
+        self.line_plot.plot_settings.run_safe(
+            self._set_twoch_derived_plot_visibility_on_settings_thread,
+            has_ch2,
+        )
+
+    def _set_twoch_derived_plot_visibility_on_settings_thread(self, has_ch2: bool):
+        """Show or hide two-channel-derived plots (e.g. `div_2ch`) based on availability.
+        Runs on settings thread to safely acquire mutex.
+        Batches all visibility changes into a single thread-safe operation for efficiency."""
         with QtCore.QMutexLocker(self.line_plot.plot_settings.mutex):
             twoch_states = [
                 (name, settings.hidden)
@@ -1124,761 +1655,825 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
         if not twoch_states:
             return
 
+        # Collect all visibility changes to apply in one batch
+        visibility_changes = {}  # {plot_name: should_be_hidden}
+
         if has_ch2:
             for plot_name, hidden in twoch_states:
                 visible = self._twoch_derived_visibility_memory.get(plot_name, not hidden)
-                if visible:
-                    self.show_plot(plot_name)
-                else:
-                    self.hide_plot(plot_name)
-            return
+                # Track if state should change
+                if visible and hidden:
+                    visibility_changes[plot_name] = False  # show
+                elif not visible and not hidden:
+                    visibility_changes[plot_name] = True   # hide
+        else:
+            # Save current visibility before hiding so it can be restored when ch2 returns.
+            self._twoch_derived_visibility_memory = {
+                plot_name: not hidden for plot_name, hidden in twoch_states
+            }
+            for plot_name, hidden in twoch_states:
+                if not hidden:
+                    visibility_changes[plot_name] = True  # hide all
 
-        # Save current visibility before hiding so it can be restored when ch2 returns.
-        self._twoch_derived_visibility_memory = {
-            plot_name: not hidden for plot_name, hidden in twoch_states
-        }
-        for plot_name, _ in twoch_states:
-            self.hide_plot(plot_name)
+        # Apply all visibility changes in one batch operation
+        if visibility_changes:
+            self._batch_set_plot_visibility(visibility_changes)
 
     def _refresh_ch2_checkbox_for_source(self):
         """Query the connected source and auto-configure Channel 2 checkbox state."""
         self.line_plot.plot_settings.run_safe(self._check_source_has_ch2)
 
     def _check_source_has_ch2(self):
-        """Run on the plot settings thread to detect whether current datasets include `_ch2` entries."""
+        """Run on the plot settings thread to detect whether current datasets include `_ch2` entries.
+        
+        ROBUSTNESS: Comprehensive error handling to prevent any crash from propagating.
+        Checks ACTUAL data series availability, not just plot names.
+        """
         has_ch2 = False
-        with QtCore.QMutexLocker(self.line_plot.plot_settings.sink_mutex):
-            sink = self.line_plot.plot_settings.sink
-            if sink is not None:
-                try:
-                    datasets = sink.datasets
-                except AttributeError:
-                    datasets = {}
-                if isinstance(datasets, dict):
-                    has_ch2 = any(name.endswith('_ch2') for name in datasets)
+        
+        try:
+            # Inspect incoming data to see what series are actually available
+            # This is more reliable than checking plot names
+            with QtCore.QMutexLocker(self.line_plot.plot_settings.sink_mutex):
+                sink = self.line_plot.plot_settings.sink
+                if sink is not None:
+                    try:
+                        datasets = sink.datasets
+                        if isinstance(datasets, dict):
+                            # Check if ANY series ending in _ch2 exist in the actual data
+                            # This is the ground truth for whether ch2 data is available
+                            available_series = set(datasets.keys())
+                            has_ch2 = any(name.endswith('_ch2') for name in available_series)
+                            _logger.info(f'Ch2 detection: checking {len(available_series)} available series, has_ch2={has_ch2}')
+                    except AttributeError as e:
+                        _logger.warning(f'Could not access datasets: {e}')
+                        has_ch2 = False
+        except Exception as e:
+            _logger.error(f'Error detecting ch2 in source: {e}')
+            has_ch2 = False
 
-        self.line_plot.plot_settings.run_main(self._apply_ch2_source_state, has_ch2, blocking=True)
+        # Only proceed with ch2 setup if we actually found ch2 data
+        if has_ch2:
+            self.line_plot.plot_settings.run_main(self._apply_ch2_source_state, has_ch2, blocking=False)
+        else:
+            # No ch2 data, just set status immediately on main thread
+            self.line_plot.plot_settings.run_main(self._apply_ch2_source_state, False, blocking=False)
 
     def _apply_ch2_source_state(self, has_ch2: bool):
-        """Apply auto-detected Channel 2 availability in the main thread."""
-        show_ch2 = has_ch2 and self._ch2_manual_preference
-        self.show_ch2_checkbox.blockSignals(True)
-        self.show_ch2_checkbox.setEnabled(has_ch2)
-        self.show_ch2_checkbox.setChecked(show_ch2)
-        self.show_ch2_checkbox.blockSignals(False)
-        self._set_twoch_derived_plot_visibility(has_ch2)
-        self._set_ch2_plot_visibility(show_ch2)
+        """Apply auto-detected Channel 2 availability in the main thread.
+        
+        ROBUSTNESS: Error handling to prevent visibility sync issues from crashing.
+        """
+        try:
+            # Store ch2 status so update loop can use it to suppress warnings about missing two-channel-derived plots
+            self.line_plot._current_has_ch2 = has_ch2
+            
+            # ALWAYS update status label regardless of debounce state
+            # This ensures visual feedback even if visibility logic is debounced
+            if has_ch2:
+                self.ch2_status_label.setText('Two Dig. Channels')
+                self.ch2_status_label.setStyleSheet(
+                    'QLabel { background-color: lightgreen; color: black; padding: 4px; border-radius: 3px; font-weight: bold; }'
+                )
+            else:
+                self.ch2_status_label.setText('One Dig. Channel')
+                self.ch2_status_label.setStyleSheet(
+                    'QLabel { background-color: lightblue; color: black; padding: 4px; border-radius: 3px; font-weight: bold; }'
+                )
+            
+            # Only reapply visibility/plots if has_ch2 state has actually changed
+            if has_ch2 == self._ch2_has_ch2_previous:
+                return
+            self._ch2_has_ch2_previous = has_ch2
+            
+            # Apply visibility changes
+            if has_ch2:
+                # Auto-show ch2 plots when detected
+                self._set_ch2_plot_visibility(True)
+            else:
+                # Auto-hide ch2 plots when not detected
+                self._set_ch2_plot_visibility(False)
+            
+            self._set_twoch_derived_plot_visibility(has_ch2)
+        except Exception as e:
+            _logger.error(f'Error applying ch2 source state: {e}')
+            # Don't re-raise - allows plot updates to continue even if ch2 visibility fails
+
 
     def _update_source_clicked(self):
         """Called when the user clicks the connect button."""
-        self.current_exp_type = self.datasource_lineedit.text()
-        self.line_plot.new_source(self.current_exp_type)
-
-        if hasattr(self, "plot_color_manager"):
-            self.plot_color_manager.reshuffle_for_new_connection()
-
-        self.line_plot.plot_widget.getPlotItem().setDownsampling(ds=True, auto=True, mode='mean')
-        # clear previously loaded plots
-        for plot_name in list(self.line_plot.plot_settings.series_settings):
-            self.remove_plot(plot_name)
-        
-        match self.current_exp_type:
-            case 'sigvstime':
-                self.add_plot('monitor 1',        series='signal',   scan_i='',     scan_j='',  processing='Append')
-                self.add_plot('monitor 2',        series='background',   scan_i='',     scan_j='',  processing='Append')
-                self.hide_plot('monitor 2')
-
-            case 'odmr':
-                # create default fit plot
-                self.add_plot('fit',            series='fit',   scan_i='',      scan_j='',  processing='Average')
-                self.hide_plot('fit')
-                # create some default diff plots
-                self.add_plot('diff_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('diff_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('diff_avg')
-                self.hide_plot('diff_latest')
-
-                # create some default div plots
-                self.add_plot('div_avg',       series='div',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('div_latest',    series='div',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('div_latest')
-
-                # create some default 2-channel normalization plots
-                self.add_plot('div_2ch_avg',       series='div_2ch',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('div_2ch_latest',    series='div_2ch',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('div_2ch_latest')
-                
-                # create some default signal plots
-                self.add_plot('sig_avg',        series='signal',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('sig_latest',     series='signal',   scan_i='-1',   scan_j='',  processing='Average')
-                self.add_plot('sig_first',      series='signal',   scan_i='0',    scan_j='1', processing='Average')
-                self.add_plot('sig_latest_10',  series='signal',   scan_i='-10',  scan_j='',  processing='Average')
-                self.hide_plot('sig_avg')
-                self.hide_plot('sig_latest')
-                self.hide_plot('sig_first')
-                self.hide_plot('sig_latest_10')
-
-                # create some default background plots
-                self.add_plot('bg_avg',         series='background',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('bg_latest',      series='background',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('bg_avg')
-                self.hide_plot('bg_latest')
-
-            case 'odmr pl':                
-                # create some default signal plots
-                self.add_plot('sig_avg_pl',        series='signal_pl',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('sig_latest_pl',     series='signal_pl',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('sig_latest_pl')
-
-                # create some default background plots
-                self.add_plot('bg_avg_pl',         series='background_pl',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('bg_latest_pl',      series='background_pl',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('bg_latest_pl')
-
-                # create some default diff plots
-                self.add_plot('diff_avg_pl',       series='diff_pl',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('diff_latest_pl',    series='diff_pl',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('diff_avg_pl')
-                self.hide_plot('diff_latest_pl')
-
-            case 'odmr rf':
-                # # create default fit plot
-                # self.add_plot('fit',            series='fit',   scan_i='',      scan_j='',  processing='Average')
-                # self.hide_plot('fit')
-                # create some default dark, echo plots for DEER. Otherwise, just duplicate div plots
-                self.add_plot('rf_avg',       series='div_rf',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('no_rf_avg',       series='div',  scan_i='',    scan_j='',  processing='Average')
-                
-                # create some default dark signal plots
-                self.add_plot('rf_sig_avg',        series='rf_signal',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('rf_sig_latest',     series='rf_signal',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('rf_sig_avg')
-                self.hide_plot('rf_sig_latest')
-
-                # create some default dark background plots
-                self.add_plot('rf_bg_avg',         series='rf_background',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('rf_bg_latest',      series='rf_background',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('rf_bg_avg')
-                self.hide_plot('rf_bg_latest')                
-
-                # create some default echo signal plots
-                self.add_plot('no_rf_sig_avg',        series='signal',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('no_rf_sig_latest',     series='signal',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('no_rf_sig_avg')
-                self.hide_plot('no_rf_sig_latest')
-
-                # create some default echo background plots
-                self.add_plot('no_rf_bg_avg',         series='background',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('no_rf_bg_latest',      series='background',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('no_rf_bg_avg')
-                self.hide_plot('no_rf_bg_latest')
-
-            case 'rabi':
-                # create default fit plot
-                self.add_plot('fit',            series='fit',   scan_i='',      scan_j='',  processing='Average')
-                self.hide_plot('fit')
-                # create some default diff plots
-                self.add_plot('diff_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('diff_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('diff_avg')
-                self.hide_plot('diff_latest')
-
-                # create some default div plots
-                self.add_plot('div_avg',       series='div',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('div_latest',    series='div',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('div_latest')
-
-                # create some default 2-channel normalization plots
-                self.add_plot('div_2ch_avg',       series='div_2ch',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('div_2ch_latest',    series='div_2ch',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('div_2ch_latest')
-                
-                # create some default signal plots
-                self.add_plot('sig_avg',        series='signal',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('sig_latest',     series='signal',   scan_i='-1',   scan_j='',  processing='Average')
-                self.add_plot('sig_first',      series='signal',   scan_i='0',    scan_j='1', processing='Average')
-                self.add_plot('sig_latest_10',  series='signal',   scan_i='-10',  scan_j='',  processing='Average')
-                self.hide_plot('sig_avg')
-                self.hide_plot('sig_latest')
-                self.hide_plot('sig_first')
-                self.hide_plot('sig_latest_10')
-
-                # create some default background plots
-                self.add_plot('bg_avg',         series='background',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('bg_latest',      series='background',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('bg_avg')
-                self.hide_plot('bg_latest')
-
-            case 'rabi pl':                
-                # create some default signal plots
-                self.add_plot('sig_avg_pl',        series='signal_pl',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('sig_latest_pl',     series='signal_pl',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('sig_latest_pl')
-
-                # create some default background plots
-                self.add_plot('bg_avg_pl',         series='background_pl',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('bg_latest_pl',      series='background_pl',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('bg_latest_pl')
-
-                # create some default diff plots
-                self.add_plot('diff_avg_pl',       series='diff_pl',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('diff_latest_pl',    series='diff_pl',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('diff_avg_pl')
-                self.hide_plot('diff_latest_pl')
-
-            case 't1':
-                # create default fit plot
-                self.add_plot('fit',            series='fit',   scan_i='',      scan_j='',  processing='Average')
-                self.hide_plot('fit')
-                # create some default diff plots
-                self.add_plot('diff_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('diff_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('diff_latest')
-
-                # create some default contrast plots
-                self.add_plot('contrast_avg',       series='contrast',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('contrast_latest',    series='contrast',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('contrast_avg')
-                self.hide_plot('contrast_latest')
-                
-                # create some default signal plots
-                self.add_plot('sig_avg',        series='signal',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('sig_latest',     series='signal',   scan_i='-1',   scan_j='',  processing='Average')
-                self.add_plot('sig_first',      series='signal',   scan_i='0',    scan_j='1', processing='Average')
-                self.add_plot('sig_latest_10',  series='signal',   scan_i='-10',  scan_j='',  processing='Average')
-                self.hide_plot('sig_avg')
-                self.hide_plot('sig_latest')
-                self.hide_plot('sig_first')
-                self.hide_plot('sig_latest_10')
-
-                # create some default background plots
-                self.add_plot('bg_avg',         series='background',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('bg_latest',      series='background',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('bg_avg')
-                self.hide_plot('bg_latest')
-
-            case 't1 pl':                
-                # create some default signal plots
-                self.add_plot('sig_avg_pl',        series='signal_pl',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('sig_latest_pl',     series='signal_pl',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('sig_latest_pl')
-
-                # create some default background plots
-                self.add_plot('bg_avg_pl',         series='background_pl',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('bg_latest_pl',      series='background_pl',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('bg_latest_pl')
-
-                # create some default diff plots
-                self.add_plot('diff_avg_pl',       series='diff_pl',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('diff_latest_pl',    series='diff_pl',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('diff_avg_pl')
-                self.hide_plot('diff_latest_pl')
-
-            case 't2':
-                # create default fit plot
-                self.add_plot('fit',            series='fit',   scan_i='',      scan_j='',  processing='Average')
-                self.hide_plot('fit')
-                # create some default diff plots
-                self.add_plot('diff_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('diff_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('diff_latest')
-
-                # create some default contrast plots
-                self.add_plot('contrast_avg',       series='contrast',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('contrast_latest',    series='contrast',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('contrast_avg')
-                self.hide_plot('contrast_latest')
-                
-                # create some default signal plots
-                self.add_plot('sig_avg',        series='signal',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('sig_latest',     series='signal',   scan_i='-1',   scan_j='',  processing='Average')
-                self.add_plot('sig_first',      series='signal',   scan_i='0',    scan_j='1', processing='Average')
-                self.add_plot('sig_latest_10',  series='signal',   scan_i='-10',  scan_j='',  processing='Average')
-                self.hide_plot('sig_avg')
-                self.hide_plot('sig_latest')
-                self.hide_plot('sig_first')
-                self.hide_plot('sig_latest_10')
-
-                # create some default background plots
-                self.add_plot('bg_avg',         series='background',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('bg_latest',      series='background',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('bg_avg')
-                self.hide_plot('bg_latest')
-
-                # create some default fft plots
-                self.add_plot('fft_avg',       series='fft',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('fft_latest',    series='fft',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('fft_avg')
-                self.hide_plot('fft_latest')
-
-            case 't2 pl':                
-                # create some default signal plots
-                self.add_plot('sig_avg_pl',        series='signal_pl',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('sig_latest_pl',     series='signal_pl',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('sig_latest_pl')
-
-                # create some default background plots
-                self.add_plot('bg_avg_pl',         series='background_pl',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('bg_latest_pl',      series='background_pl',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('bg_latest_pl')
-
-                # create some default diff plots
-                self.add_plot('diff_avg_pl',       series='diff_pl',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('diff_latest_pl',    series='diff_pl',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('diff_avg_pl')
-                self.hide_plot('diff_latest_pl')
-
-            case 'dq':
-                # create some default diff plots
-                self.add_plot('S0,0 - S0,-1 avg',       series='diff dq1',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('S0,0 - S0,-1 latest',    series='diff dq1',  scan_i='-1',    scan_j='',  processing='Average')
-
-                self.add_plot('S-1,-1 - S-1,+1 avg',       series='diff dq2',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('S-1,-1 - S-1,+1 latest',    series='diff dq2',  scan_i='-1',    scan_j='',  processing='Average')
-
-                self.hide_plot('S0,0 - S0,-1 latest')
-                self.hide_plot('S-1,-1 - S-1,+1 latest')
-
-                # create some default contrast plots
-                # self.add_plot('contrast_avg',       series='contrast',  scan_i='',      scan_j='',  processing='Average')
-                # self.add_plot('contrast_latest',    series='contrast',  scan_i='-1',    scan_j='',  processing='Average')
-                # self.hide_plot('contrast_latest')
-                
-                # create some default S0,0 plots
-                self.add_plot('S0,0 avg',        series='S0,0',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('S0,0 latest',     series='S0,0',   scan_i='-1',   scan_j='',  processing='Average')
-                # self.add_plot('S0,0 first',      series='S0,0',   scan_i='0',    scan_j='1', processing='Average')
-                # self.add_plot('S0,0 latest 10',  series='S0,0',   scan_i='-10',  scan_j='',  processing='Average')
-                self.hide_plot('S0,0 avg')
-                self.hide_plot('S0,0 latest')
-                # self.hide_plot('S0,0 first')
-                # self.hide_plot('S0,0 latest 10')
-
-                # create some default S0,-1 plots
-                self.add_plot('S0,-1 avg',        series='S0,-1',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('S0,-1 latest',     series='S0,-1',   scan_i='-1',   scan_j='',  processing='Average')
-                # self.add_plot('S0,-1 first',      series='S0,-1',   scan_i='0',    scan_j='1', processing='Average')
-                # self.add_plot('S0,-1 latest 10',  series='S0,-1',   scan_i='-10',  scan_j='',  processing='Average')
-                self.hide_plot('S0,-1 avg')
-                self.hide_plot('S0,-1 latest')
-                # self.hide_plot('S0,-1 first')
-                # self.hide_plot('S0,-1 latest 10')
-
-                # create some default S-1,-1 plots
-                self.add_plot('S-1,-1 avg',        series='S-1,-1',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('S-1,-1 latest',     series='S-1,-1',   scan_i='-1',   scan_j='',  processing='Average')
-                # self.add_plot('S-1,-1 first',      series='S-1,-1',   scan_i='0',    scan_j='1', processing='Average')
-                # self.add_plot('S-1,-1 latest 10',  series='S-1,-1',   scan_i='-10',  scan_j='',  processing='Average')
-                self.hide_plot('S-1,-1 avg')
-                self.hide_plot('S-1,-1 latest')
-                # self.hide_plot('S-1,-1 first')
-                # self.hide_plot('S-1,-1 latest 10')
-
-                # create some default S-1,+1 plots
-                self.add_plot('S-1,+1 avg',        series='S-1,+1',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('S-1,+1 latest',     series='S-1,+1',   scan_i='-1',   scan_j='',  processing='Average')
-                # self.add_plot('S-1,+1 first',      series='S-1,+1',   scan_i='0',    scan_j='1', processing='Average')
-                # self.add_plot('S-1,+1 latest 10',  series='S-1,+1',   scan_i='-10',  scan_j='',  processing='Average')
-                self.hide_plot('S-1,+1 avg')
-                self.hide_plot('S-1,+1 latest')
-                # self.hide_plot('S-1,+1 first')
-                # self.hide_plot('S-1,+1 latest 10')
-
-            case 'deer':
-                # create default fit plot
-                self.add_plot('fit',            series='fit',   scan_i='',      scan_j='',  processing='Average')
-                self.hide_plot('fit')
-                # create some default dark, echo plots for DEER. Otherwise, just duplicate div plots
-                self.add_plot('dark_avg',       series='dark_contrast',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('echo_avg',       series='echo_contrast',  scan_i='',    scan_j='',  processing='Average')
-                self.hide_plot('dark_avg')
-                self.hide_plot('echo_avg')
-
-                # create some default contrast plots
-                self.add_plot('contrast_avg',       series='deer_contrast',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('contrast_latest',    series='deer_contrast',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('contrast_latest')
-                
-                # create some default dark signal plots
-                self.add_plot('dark_sig_avg',        series='dark_signal',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('dark_sig_latest',     series='dark_signal',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('dark_sig_avg')
-                self.hide_plot('dark_sig_latest')
-
-                # create some default dark background plots
-                self.add_plot('dark_bg_avg',         series='dark_background',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('dark_bg_latest',      series='dark_background',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('dark_bg_avg')
-                self.hide_plot('dark_bg_latest')                
-
-                # create some default echo signal plots
-                self.add_plot('echo_sig_avg',        series='echo_signal',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('echo_sig_latest',     series='echo_signal',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('echo_sig_avg')
-                self.hide_plot('echo_sig_latest')
-
-                # create some default echo background plots
-                self.add_plot('echo_bg_avg',         series='echo_background',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('echo_bg_latest',      series='echo_background',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('echo_bg_avg')
-                self.hide_plot('echo_bg_latest') 
-
-            case 'deer rabi':
-                # create default fit plot
-                self.add_plot('fit',            series='fit',   scan_i='',      scan_j='',  processing='Average')
-                self.hide_plot('fit')
-                # create some default dark, echo plots for DEER. Otherwise, just duplicate div plots
-                self.add_plot('dark_avg',       series='dark_contrast',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('echo_avg',       series='echo_contrast',  scan_i='',    scan_j='',  processing='Average')
-                self.hide_plot('dark_avg')
-                self.hide_plot('echo_avg')
-
-                # create some default contrast plots
-                self.add_plot('contrast_avg',       series='deer_contrast',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('contrast_latest',    series='deer_contrast',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('contrast_latest')
-                
-                # create some default dark signal plots
-                self.add_plot('dark_sig_avg',        series='dark_signal',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('dark_sig_latest',     series='dark_signal',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('dark_sig_avg')
-                self.hide_plot('dark_sig_latest')
-
-                # create some default dark background plots
-                self.add_plot('dark_bg_avg',         series='dark_background',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('dark_bg_latest',      series='dark_background',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('dark_bg_avg')
-                self.hide_plot('dark_bg_latest')                
-
-                # create some default echo signal plots
-                self.add_plot('echo_sig_avg',        series='echo_signal',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('echo_sig_latest',     series='echo_signal',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('echo_sig_avg')
-                self.hide_plot('echo_sig_latest')
-
-                # create some default echo background plots
-                self.add_plot('echo_bg_avg',         series='echo_background',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('echo_bg_latest',      series='echo_background',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('echo_bg_avg')
-                self.hide_plot('echo_bg_latest') 
-
-            case 'fid':
-                # create some default dark, echo plots for DEER. Otherwise, just duplicate div plots
-                self.add_plot('dark_avg',       series='dark_contrast',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('echo_avg',       series='echo_contrast',  scan_i='',    scan_j='',  processing='Average')
-                self.hide_plot('dark_avg')
-                self.hide_plot('echo_avg')
-
-                # create some default contrast plots
-                self.add_plot('contrast_avg',       series='deer_contrast',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('contrast_latest',    series='deer_contrast',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('contrast_latest')
-                
-                # TODO: create a double log plot - fix the unsolvable values in array
-                # self.add_plot('doublelog_avg',       series='deer_log_contrast',  scan_i='',      scan_j='',  processing='Average')
-                # self.add_plot('doublelog_latest',    series='deer_log_contrast',  scan_i='-1',    scan_j='',  processing='Average')
-                # self.hide_plot('doublelog_avg')
-                # self.hide_plot('doublelog_latest')
-
-                # create some default dark signal plots
-                self.add_plot('dark_sig_avg',        series='dark_signal',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('dark_sig_latest',     series='dark_signal',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('dark_sig_avg')
-                self.hide_plot('dark_sig_latest')
-
-                # create some default dark background plots
-                self.add_plot('dark_bg_avg',         series='dark_background',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('dark_bg_latest',      series='dark_background',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('dark_bg_avg')
-                self.hide_plot('dark_bg_latest')                
-
-                # create some default echo signal plots
-                self.add_plot('echo_sig_avg',        series='echo_signal',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('echo_sig_latest',     series='echo_signal',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('echo_sig_avg')
-                self.hide_plot('echo_sig_latest')
-
-                # create some default echo background plots
-                self.add_plot('echo_bg_avg',         series='echo_background',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('echo_bg_latest',      series='echo_background',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('echo_bg_avg')
-                self.hide_plot('echo_bg_latest') 
-
-            case 'fid cd':
-                # create some default dark, echo plots for DEER. Otherwise, just duplicate div plots
-                self.add_plot('dark_avg',       series='dark_contrast',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('echo_avg',       series='echo_contrast',  scan_i='',    scan_j='',  processing='Average')
-                self.add_plot('cd_avg',       series='cd_contrast',  scan_i='',    scan_j='',  processing='Average')
-                # self.hide_plot('dark_avg')
-                # self.hide_plot('echo_avg')
-                # self.hide_plot('cd_avg')
-
-                # create some default dark signal plots
-                self.add_plot('dark_sig_avg',        series='dark_signal',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('dark_sig_latest',     series='dark_signal',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('dark_sig_avg')
-                self.hide_plot('dark_sig_latest')
-
-                # create some default dark background plots
-                self.add_plot('dark_bg_avg',         series='dark_background',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('dark_bg_latest',      series='dark_background',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('dark_bg_avg')
-                self.hide_plot('dark_bg_latest')                
-
-                # create some default echo signal plots
-                self.add_plot('echo_sig_avg',        series='echo_signal',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('echo_sig_latest',     series='echo_signal',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('echo_sig_avg')
-                self.hide_plot('echo_sig_latest')
-
-                # create some default echo background plots
-                self.add_plot('echo_bg_avg',         series='echo_background',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('echo_bg_latest',      series='echo_background',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('echo_bg_avg')
-                self.hide_plot('echo_bg_latest')
-
-                # create some default cd signal plots
-                self.add_plot('cd_sig_avg',        series='cd_signal',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('cd_sig_latest',     series='cd_signal',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('cd_sig_avg')
-                self.hide_plot('cd_sig_latest')
-
-                # create some default cd background plots
-                self.add_plot('cd_bg_avg',         series='cd_background',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('cd_bg_latest',      series='cd_background',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('cd_bg_avg')
-                self.hide_plot('cd_bg_latest')
-
-            case 'corr rabi':
-                # create some default contrast plots
-                self.add_plot('contrast_avg',       series='contrast',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('contrast_latest',    series='contrast',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('contrast_latest')
-
-                # create some default diff plots
-                self.add_plot('diff_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('diff_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('diff_avg')
-                self.hide_plot('diff_latest')
-
-                # create some default fft plots
-                self.add_plot('fft_avg',       series='fft',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('fft_latest',    series='fft',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('fft_avg')
-                self.hide_plot('fft_latest')
-
-                # create some default signal plots
-                self.add_plot('sig_avg',        series='signal',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('sig_latest',     series='signal',   scan_i='-1',   scan_j='',  processing='Average')
-                self.add_plot('sig_first',      series='signal',   scan_i='0',    scan_j='1', processing='Average')
-                self.add_plot('sig_latest_10',  series='signal',   scan_i='-10',  scan_j='',  processing='Average')
-                self.hide_plot('sig_avg')
-                self.hide_plot('sig_latest')
-                self.hide_plot('sig_first')
-                self.hide_plot('sig_latest_10')
-
-                # create some default background plots
-                self.add_plot('bg_avg',         series='background',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('bg_latest',      series='background',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('bg_avg')
-                self.hide_plot('bg_latest')
+        try:
+            # CRITICAL: Pause the update loop immediately to prevent ANY data processing
+            # during reconnection. This prevents race conditions where the update loop tries
+            # to access plots that are being torn down and recreated.
+            self.line_plot._update_paused = True
             
-            case 'corr t1 simple':
-                # create some default contrast plots
-                self.add_plot('contrast_avg',       series='contrast',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('contrast_latest',    series='contrast',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('contrast_latest')
+            # Prevent ch2 detection from running until setup completes
+            self._setup_complete = False
+            
+            # Clear ch2 state for fresh connection
+            # This ensures _ch2_default_hidden is empty at start, populated during _add_default_ch2_plots()
+            # and won't have stale entries from previous connections
+            self._ch2_default_hidden.clear()
+            self._ch2_plots_created.clear()  # CRITICAL: Clear this to allow re-creation on reconnection
+            self._ch2_has_ch2_previous = None  # Reset ch2 detection state
+            
+            self.current_exp_type = self.datasource_lineedit.text()
+            
+            # CRITICAL: Close the old source FIRST before attempting reconnection
+            # This ensures the update loop is fully stopped and the old sink is cleaned up
+            # before we try to create a new one. Without this, reconnection can crash due
+            # to the update loop trying to access a sink that's being replaced.
+            self.line_plot.teardown()
+            
+            # LONGER delay to allow update loop to fully recognize _update_paused flag
+            # and exit all processing. The update loop checks this flag at the start of
+            # each cycle, so we need to wait for at least one full cycle to complete.
+            # Default timeout is 1 second, so 200ms gives 5+ chances for the loop to exit.
+            time.sleep(0.2)
+            
+            # Delay setting _setup_complete to False even longer - keep it False during new_source
+            # This prevents ch2 detection from running while the sink is being reconnected
+            self.line_plot.new_source(self.current_exp_type)
 
-                # create some default diff plots
-                self.add_plot('diff_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('diff_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('diff_avg')
-                self.hide_plot('diff_latest')
+            if hasattr(self, "plot_color_manager"):
+                self.plot_color_manager.reshuffle_for_new_connection()
 
-                # create some default fft plots
-                self.add_plot('fft_avg',       series='fft',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('fft_latest',    series='fft',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('fft_avg')
-                self.hide_plot('fft_latest')
+            self.line_plot.plot_widget.getPlotItem().setDownsampling(ds=True, auto=True, mode='mean')
+            # clear previously loaded plots
+            for plot_name in list(self.line_plot.plot_settings.series_settings):
+                self.remove_plot(plot_name)
+            
+            match self.current_exp_type:
+                case 'sigvstime':
+                    self.add_plot('monitor 1',        series='signal',   scan_i='',     scan_j='',  processing='Append')
+                    self.add_plot('monitor 2',        series='background',   scan_i='',     scan_j='',  processing='Append')
+                    self.hide_plot('monitor 2')
 
-                # create some default signal plots
-                self.add_plot('sig_avg',        series='signal',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('sig_latest',     series='signal',   scan_i='-1',   scan_j='',  processing='Average')
-                self.add_plot('sig_first',      series='signal',   scan_i='0',    scan_j='1', processing='Average')
-                self.add_plot('sig_latest_10',  series='signal',   scan_i='-10',  scan_j='',  processing='Average')
-                self.hide_plot('sig_avg')
-                self.hide_plot('sig_latest')
-                self.hide_plot('sig_first')
-                self.hide_plot('sig_latest_10')
+                case 'odmr':
+                    # create default fit plot
+                    self.add_plot('fit',            series='fit',   scan_i='',      scan_j='',  processing='Average')
+                    self.hide_plot('fit')
+                    # create some default diff plots
+                    self.add_plot('diff_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('diff_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('diff_avg')
+                    self.hide_plot('diff_latest')
 
-                # create some default background plots
-                self.add_plot('bg_avg',         series='background',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('bg_latest',      series='background',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('bg_avg')
-                self.hide_plot('bg_latest')
+                    # create some default div plots
+                    self.add_plot('div_avg',       series='div',  scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('div_latest',    series='div',  scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('div_latest')
+                    # NOTE: div_2ch plots created lazily when 2-ch data detected
+                    
+                    # create some default signal plots
+                    self.add_plot('sig_avg',        series='signal',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('sig_latest',     series='signal',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.add_plot('sig_first',      series='signal',   scan_i='0',    scan_j='1', processing='Average')
+                    self.add_plot('sig_latest_10',  series='signal',   scan_i='-10',  scan_j='',  processing='Average')
+                    self.hide_plot('sig_avg')
+                    self.hide_plot('sig_latest')
+                    self.hide_plot('sig_first')
+                    self.hide_plot('sig_latest_10')
 
-            case 'deer t1':
-                # create some default dark, echo plots for DEER. Otherwise, just duplicate div plots
-                self.add_plot('diff +y surface T1 decay',       series='diff_py',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('diff -y surface T1 decay',       series='diff_ny',  scan_i='',    scan_j='',  processing='Average')
-                self.add_plot('diff overall surface T1 decay',       series='diff_overall',  scan_i='',      scan_j='',  processing='Average')
+                    # create some default background plots
+                    self.add_plot('bg_avg',         series='background',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('bg_latest',      series='background',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('bg_avg')
+                    self.hide_plot('bg_latest')
+
+                case 'odmr pl':                
+                    # create some default signal plots
+                    self.add_plot('sig_avg_pl',        series='signal_pl',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('sig_latest_pl',     series='signal_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('sig_latest_pl')
+
+                    # create some default background plots
+                    self.add_plot('bg_avg_pl',         series='background_pl',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('bg_latest_pl',      series='background_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('bg_latest_pl')
+
+                    # create some default diff plots
+                    self.add_plot('diff_avg_pl',       series='diff_pl',  scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('diff_latest_pl',    series='diff_pl',  scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('diff_avg_pl')
+                    self.hide_plot('diff_latest_pl')
+
+                case 'odmr rf':
+                    # # create default fit plot
+                    # self.add_plot('fit',            series='fit',   scan_i='',      scan_j='',  processing='Average')
+                    # self.hide_plot('fit')
+                    # create some default dark, echo plots for DEER. Otherwise, just duplicate div plots
+                    self.add_plot('rf_avg',       series='div_rf',  scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('no_rf_avg',       series='div',  scan_i='',    scan_j='',  processing='Average')
+                    
+                    # create some default dark signal plots
+                    self.add_plot('rf_sig_avg',        series='rf_signal',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('rf_sig_latest',     series='rf_signal',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('rf_sig_avg')
+                    self.hide_plot('rf_sig_latest')
+
+                    # create some default dark background plots
+                    self.add_plot('rf_bg_avg',         series='rf_background',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('rf_bg_latest',      series='rf_background',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('rf_bg_avg')
+                    self.hide_plot('rf_bg_latest')                
+
+                    # create some default echo signal plots
+                    self.add_plot('no_rf_sig_avg',        series='signal',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('no_rf_sig_latest',     series='signal',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('no_rf_sig_avg')
+                    self.hide_plot('no_rf_sig_latest')
+
+                    # create some default echo background plots
+                    self.add_plot('no_rf_bg_avg',         series='background',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('no_rf_bg_latest',      series='background',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('no_rf_bg_avg')
+                    self.hide_plot('no_rf_bg_latest')
+
+                case 'rabi':
+                    # create default fit plot
+                    self.add_plot('fit',            series='fit',   scan_i='',      scan_j='',  processing='Average')
+                    self.hide_plot('fit')
+                    # create some default diff plots
+                    self.add_plot('diff_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('diff_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('diff_avg')
+                    self.hide_plot('diff_latest')
+
+                    # create some default div plots
+                    self.add_plot('div_avg',       series='div',  scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('div_latest',    series='div',  scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('div_latest')
+                    # NOTE: div_2ch plots created lazily when 2-ch data detected
+                    
+                    # create some default signal plots
+                    self.add_plot('sig_avg',        series='signal',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('sig_latest',     series='signal',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.add_plot('sig_first',      series='signal',   scan_i='0',    scan_j='1', processing='Average')
+                    self.add_plot('sig_latest_10',  series='signal',   scan_i='-10',  scan_j='',  processing='Average')
+                    self.hide_plot('sig_avg')
+                    self.hide_plot('sig_latest')
+                    self.hide_plot('sig_first')
+                    self.hide_plot('sig_latest_10')
+
+                    # create some default background plots
+                    self.add_plot('bg_avg',         series='background',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('bg_latest',      series='background',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('bg_avg')
+                    self.hide_plot('bg_latest')
+
+                case 'rabi pl':                
+                    # create some default signal plots
+                    self.add_plot('sig_avg_pl',        series='signal_pl',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('sig_latest_pl',     series='signal_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('sig_latest_pl')
+
+                    # create some default background plots
+                    self.add_plot('bg_avg_pl',         series='background_pl',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('bg_latest_pl',      series='background_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('bg_latest_pl')
+
+                    # create some default diff plots
+                    self.add_plot('diff_avg_pl',       series='diff_pl',  scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('diff_latest_pl',    series='diff_pl',  scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('diff_avg_pl')
+                    self.hide_plot('diff_latest_pl')
+
+                case 't1':
+                    # create default fit plot
+                    self.add_plot('fit',            series='fit',   scan_i='',      scan_j='',  processing='Average')
+                    self.hide_plot('fit')
+                    # create some default diff plots
+                    self.add_plot('diff_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('diff_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('diff_latest')
+
+                    # create some default contrast plots
+                    self.add_plot('contrast_avg',       series='contrast',  scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('contrast_latest',    series='contrast',  scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('contrast_avg')
+                    self.hide_plot('contrast_latest')
+                    
+                    # create some default signal plots
+                    self.add_plot('sig_avg',        series='signal',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('sig_latest',     series='signal',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.add_plot('sig_first',      series='signal',   scan_i='0',    scan_j='1', processing='Average')
+                    self.add_plot('sig_latest_10',  series='signal',   scan_i='-10',  scan_j='',  processing='Average')
+                    self.hide_plot('sig_avg')
+                    self.hide_plot('sig_latest')
+                    self.hide_plot('sig_first')
+                    self.hide_plot('sig_latest_10')
+
+                    # create some default background plots
+                    self.add_plot('bg_avg',         series='background',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('bg_latest',      series='background',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('bg_avg')
+                    self.hide_plot('bg_latest')
+
+                case 't1 pl':                
+                    # create some default signal plots
+                    self.add_plot('sig_avg_pl',        series='signal_pl',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('sig_latest_pl',     series='signal_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('sig_latest_pl')
+
+                    # create some default background plots
+                    self.add_plot('bg_avg_pl',         series='background_pl',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('bg_latest_pl',      series='background_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('bg_latest_pl')
+
+                    # create some default diff plots
+                    self.add_plot('diff_avg_pl',       series='diff_pl',  scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('diff_latest_pl',    series='diff_pl',  scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('diff_avg_pl')
+                    self.hide_plot('diff_latest_pl')
+
+                case 't2':
+                    # create default fit plot
+                    self.add_plot('fit',            series='fit',   scan_i='',      scan_j='',  processing='Average')
+                    self.hide_plot('fit')
+                    # create some default diff plots
+                    self.add_plot('diff_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('diff_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('diff_latest')
+
+                    # create some default contrast plots
+                    self.add_plot('contrast_avg',       series='contrast',  scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('contrast_latest',    series='contrast',  scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('contrast_avg')
+                    self.hide_plot('contrast_latest')
+                    
+                    # create some default signal plots
+                    self.add_plot('sig_avg',        series='signal',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('sig_latest',     series='signal',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.add_plot('sig_first',      series='signal',   scan_i='0',    scan_j='1', processing='Average')
+                    self.add_plot('sig_latest_10',  series='signal',   scan_i='-10',  scan_j='',  processing='Average')
+                    self.hide_plot('sig_avg')
+                    self.hide_plot('sig_latest')
+                    self.hide_plot('sig_first')
+                    self.hide_plot('sig_latest_10')
+
+                    # create some default background plots
+                    self.add_plot('bg_avg',         series='background',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('bg_latest',      series='background',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('bg_avg')
+                    self.hide_plot('bg_latest')
+
+                    # create some default fft plots
+                    self.add_plot('fft_avg',       series='fft',  scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('fft_latest',    series='fft',  scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('fft_avg')
+                    self.hide_plot('fft_latest')
+
+                case 't2 pl':                
+                    # create some default signal plots
+                    self.add_plot('sig_avg_pl',        series='signal_pl',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('sig_latest_pl',     series='signal_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('sig_latest_pl')
+
+                    # create some default background plots
+                    self.add_plot('bg_avg_pl',         series='background_pl',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('bg_latest_pl',      series='background_pl',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('bg_latest_pl')
+
+                    # create some default diff plots
+                    self.add_plot('diff_avg_pl',       series='diff_pl',  scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('diff_latest_pl',    series='diff_pl',  scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('diff_avg_pl')
+                    self.hide_plot('diff_latest_pl')
+
+                case 'dq':
+                    # create some default diff plots
+                    self.add_plot('S0,0 - S0,-1 avg',       series='diff dq1',    scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('S0,0 - S0,-1 latest',    series='diff dq1',    scan_i='-1',    scan_j='',  processing='Average')
+
+                    self.add_plot('S-1,-1 - S-1,+1 avg',       series='diff dq2',  scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('S-1,-1 - S-1,+1 latest',    series='diff dq2',  scan_i='-1',    scan_j='',  processing='Average')
+
+                    self.hide_plot('S0,0 - S0,-1 latest')
+                    self.hide_plot('S-1,-1 - S-1,+1 latest')
+
+                    # create some default S0,0 plots
+                    self.add_plot('S0,0 avg',        series='S0,0',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('S0,0 latest',     series='S0,0',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('S0,0 avg')
+                    self.hide_plot('S0,0 latest')
+
+                    # create some default S0,-1 plots
+                    self.add_plot('S0,-1 avg',        series='S0,-1',  scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('S0,-1 latest',     series='S0,-1',  scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('S0,-1 avg')
+                    self.hide_plot('S0,-1 latest')
+
+                    # create some default S-1,-1 plots
+                    self.add_plot('S-1,-1 avg',        series='S-1,-1', scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('S-1,-1 latest',     series='S-1,-1', scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('S-1,-1 avg')
+                    self.hide_plot('S-1,-1 latest')
+
+                    # create some default S-1,+1 plots
+                    self.add_plot('S-1,+1 avg',        series='S-1,+1', scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('S-1,+1 latest',     series='S-1,+1', scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('S-1,+1 avg')
+                    self.hide_plot('S-1,+1 latest')
+
+                case 'deer':
+                    # create default fit plot
+                    self.add_plot('fit',            series='fit',   scan_i='',      scan_j='',  processing='Average')
+                    self.hide_plot('fit')
+                    # create some default dark, echo plots for DEER. Otherwise, just duplicate div plots
+                    self.add_plot('dark_avg',       series='dark_contrast',       scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('echo_avg',       series='echo_contrast',       scan_i='',    scan_j='',  processing='Average')
+                    self.hide_plot('dark_avg')
+                    self.hide_plot('echo_avg')
+
+                    # create some default contrast plots
+                    self.add_plot('contrast_avg',       series='deer_contrast',   scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('contrast_latest',    series='deer_contrast',   scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('contrast_latest')
+
+                    # create some default dark signal plots
+                    self.add_plot('dark_sig_avg',        series='dark_signal',    scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('dark_sig_latest',     series='dark_signal',    scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('dark_sig_avg')
+                    self.hide_plot('dark_sig_latest')
+
+                    # create some default dark background plots
+                    self.add_plot('dark_bg_avg',         series='dark_background',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('dark_bg_latest',      series='dark_background',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('dark_bg_avg')
+                    self.hide_plot('dark_bg_latest')
+
+                    # create some default echo signal plots
+                    self.add_plot('echo_sig_avg',        series='echo_signal',    scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('echo_sig_latest',     series='echo_signal',    scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('echo_sig_avg')
+                    self.hide_plot('echo_sig_latest')
+
+                    # create some default echo background plots
+                    self.add_plot('echo_bg_avg',         series='echo_background',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('echo_bg_latest',      series='echo_background',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('echo_bg_avg')
+                    self.hide_plot('echo_bg_latest')
+
+                case 'deer rabi':
+                    # create default fit plot
+                    self.add_plot('fit',            series='fit',   scan_i='',      scan_j='',  processing='Average')
+                    self.hide_plot('fit')
+                    # create some default dark, echo plots for DEER. Otherwise, just duplicate div plots
+                    self.add_plot('dark_avg',       series='dark_contrast',       scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('echo_avg',       series='echo_contrast',       scan_i='',    scan_j='',  processing='Average')
+                    self.hide_plot('dark_avg')
+                    self.hide_plot('echo_avg')
+
+                    # create some default contrast plots
+                    self.add_plot('contrast_avg',       series='deer_contrast',   scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('contrast_latest',    series='deer_contrast',   scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('contrast_latest')
+
+                    # create some default dark signal plots
+                    self.add_plot('dark_sig_avg',        series='dark_signal',    scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('dark_sig_latest',     series='dark_signal',    scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('dark_sig_avg')
+                    self.hide_plot('dark_sig_latest')
+
+                    # create some default dark background plots
+                    self.add_plot('dark_bg_avg',         series='dark_background',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('dark_bg_latest',      series='dark_background',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('dark_bg_avg')
+                    self.hide_plot('dark_bg_latest')
+
+                    # create some default echo signal plots
+                    self.add_plot('echo_sig_avg',        series='echo_signal',    scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('echo_sig_latest',     series='echo_signal',    scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('echo_sig_avg')
+                    self.hide_plot('echo_sig_latest')
+
+                    # create some default echo background plots
+                    self.add_plot('echo_bg_avg',         series='echo_background',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('echo_bg_latest',      series='echo_background',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('echo_bg_avg')
+                    self.hide_plot('echo_bg_latest')
+
+                case 'fid':
+                    # create some default dark, echo plots for DEER. Otherwise, just duplicate div plots
+                    self.add_plot('dark_avg',       series='dark_contrast',       scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('echo_avg',       series='echo_contrast',       scan_i='',    scan_j='',  processing='Average')
+                    self.hide_plot('dark_avg')
+                    self.hide_plot('echo_avg')
+
+                    # create some default contrast plots
+                    self.add_plot('contrast_avg',       series='deer_contrast',   scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('contrast_latest',    series='deer_contrast',   scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('contrast_latest')
+
+                    # create some default dark signal plots
+                    self.add_plot('dark_sig_avg',        series='dark_signal',    scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('dark_sig_latest',     series='dark_signal',    scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('dark_sig_avg')
+                    self.hide_plot('dark_sig_latest')
+
+                    # create some default dark background plots
+                    self.add_plot('dark_bg_avg',         series='dark_background',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('dark_bg_latest',      series='dark_background',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('dark_bg_avg')
+                    self.hide_plot('dark_bg_latest')
+
+                    # create some default echo signal plots
+                    self.add_plot('echo_sig_avg',        series='echo_signal',    scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('echo_sig_latest',     series='echo_signal',    scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('echo_sig_avg')
+                    self.hide_plot('echo_sig_latest')
+
+                    # create some default echo background plots
+                    self.add_plot('echo_bg_avg',         series='echo_background',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('echo_bg_latest',      series='echo_background',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('echo_bg_avg')
+                    self.hide_plot('echo_bg_latest')
+
+                case 'fid cd':
+                    # create some default dark, echo plots for DEER. Otherwise, just duplicate div plots
+                    self.add_plot('dark_avg',       series='dark_contrast',       scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('echo_avg',       series='echo_contrast',       scan_i='',    scan_j='',  processing='Average')
+                    self.add_plot('cd_avg',       series='cd_contrast',    scan_i='',    scan_j='',  processing='Average')
+
+                    # create some default dark signal plots
+                    self.add_plot('dark_sig_avg',        series='dark_signal',    scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('dark_sig_latest',     series='dark_signal',    scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('dark_sig_avg')
+                    self.hide_plot('dark_sig_latest')
+
+                    # create some default dark background plots
+                    self.add_plot('dark_bg_avg',         series='dark_background',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('dark_bg_latest',      series='dark_background',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('dark_bg_avg')
+                    self.hide_plot('dark_bg_latest')
+
+                    # create some default echo signal plots
+                    self.add_plot('echo_sig_avg',        series='echo_signal',    scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('echo_sig_latest',     series='echo_signal',    scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('echo_sig_avg')
+                    self.hide_plot('echo_sig_latest')
+
+                    # create some default echo background plots
+                    self.add_plot('echo_bg_avg',         series='echo_background',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('echo_bg_latest',      series='echo_background',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('echo_bg_avg')
+                    self.hide_plot('echo_bg_latest')
+
+                    # create some default cd signal plots
+                    self.add_plot('cd_sig_avg',        series='cd_signal',        scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('cd_sig_latest',     series='cd_signal',        scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('cd_sig_avg')
+                    self.hide_plot('cd_sig_latest')
+
+                    # create some default cd background plots
+                    self.add_plot('cd_bg_avg',         series='cd_background',    scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('cd_bg_latest',      series='cd_background',    scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('cd_bg_avg')
+                    self.hide_plot('cd_bg_latest')
+
+                case 'corr rabi':
+                    # create some default contrast plots
+                    self.add_plot('contrast_avg',       series='contrast',        scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('contrast_latest',    series='contrast',  scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('contrast_latest')
+
+                    # create some default diff plots
+                    self.add_plot('diff_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('diff_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('diff_avg')
+                    self.hide_plot('diff_latest')
+
+                    # create some default fft plots
+                    self.add_plot('fft_avg',       series='fft',  scan_i='',       scan_j='',  processing='Average')
+                    self.add_plot('fft_latest',    series='fft',  scan_i='-1',     scan_j='',  processing='Average')
+                    self.hide_plot('fft_avg')
+                    self.hide_plot('fft_latest')
+
+                    # create some default signal plots
+                    self.add_plot('sig_avg',        series='signal',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('sig_latest',     series='signal',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.add_plot('sig_first',      series='signal',   scan_i='0',    scan_j='1', processing='Average')
+                    self.add_plot('sig_latest_10',  series='signal',   scan_i='-10',  scan_j='',  processing='Average')
+                    self.hide_plot('sig_avg')
+                    self.hide_plot('sig_latest')
+                    self.hide_plot('sig_first')
+                    self.hide_plot('sig_latest_10')
+
+                    # create some default background plots
+                    self.add_plot('bg_avg',         series='background',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('bg_latest',      series='background',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('bg_avg')
+                    self.hide_plot('bg_latest')
                 
-                self.add_plot('diff nuclear oscillation with pi pulse',       series='diff_osc_with_pulse',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('diff nuclear oscillation no pi pulse',       series='diff_osc_without_pulse',  scan_i='',    scan_j='',  processing='Average')
-                self.add_plot('sum pure nuclear oscillation',       series='sum_nuclear',  scan_i='',      scan_j='',  processing='Average')
-                
-                self.hide_plot('diff -y surface T1 decay')
-                self.hide_plot('diff overall surface T1 decay')
-                self.hide_plot('diff nuclear oscillation with pi pulse')
-                self.hide_plot('diff nuclear oscillation no pi pulse')
-                self.hide_plot('sum pure nuclear oscillation')
+                case 'corr t1 simple':
+                    # create some default contrast plots
+                    self.add_plot('contrast_avg',       series='contrast',        scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('contrast_latest',    series='contrast',        scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('contrast_latest')
 
-                # create some default signal plots (norm method 1 - pi/no pi pulse)
-                self.add_plot('with pi pulse +y avg',        series='with_py',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('with pi pulse +y latest',     series='with_py',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('with pi pulse +y avg')
-                self.hide_plot('with pi pulse +y latest')
+                    # create some default diff plots
+                    self.add_plot('diff_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('diff_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('diff_avg')
+                    self.hide_plot('diff_latest')
 
-                # create some default signal plots (norm method 1 - pi/no pi pulse)
-                self.add_plot('with pi pulse -y avg',        series='with_ny',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('with pi pulse -y latest',     series='with_ny',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('with pi pulse -y avg')
-                self.hide_plot('with pi pulse -y latest')
+                    # create some default fft plots
+                    self.add_plot('fft_avg',       series='fft',  scan_i='',       scan_j='',  processing='Average')
+                    self.add_plot('fft_latest',    series='fft',  scan_i='-1',     scan_j='',  processing='Average')
+                    self.hide_plot('fft_avg')
+                    self.hide_plot('fft_latest')
 
-                # create some default signal plots (norm method 1 - pi/no pi pulse)
-                self.add_plot('no pi pulse +y avg',        series='without_py',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('no pi pulse +y latest',     series='without_py',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('no pi pulse +y avg')
-                self.hide_plot('no pi pulse +y latest')
+                    # create some default signal plots
+                    self.add_plot('sig_avg',        series='signal',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('sig_latest',     series='signal',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.add_plot('sig_first',      series='signal',   scan_i='0',    scan_j='1', processing='Average')
+                    self.add_plot('sig_latest_10',  series='signal',   scan_i='-10',  scan_j='',  processing='Average')
+                    self.hide_plot('sig_avg')
+                    self.hide_plot('sig_latest')
+                    self.hide_plot('sig_first')
+                    self.hide_plot('sig_latest_10')
 
-                # create some default signal plots (norm method 1 - pi/no pi pulse)
-                self.add_plot('no pi pulse -y avg',        series='without_ny',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('no pi pulse -y latest',     series='without_ny',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('no pi pulse -y avg')
-                self.hide_plot('no pi pulse -y latest')
+                    # create some default background plots
+                    self.add_plot('bg_avg',         series='background',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('bg_latest',      series='background',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('bg_avg')
+                    self.hide_plot('bg_latest')
 
-            case 'deer t2':
-                # create some default contrast plots
-                self.add_plot('contrast_avg',       series='contrast',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('contrast_latest',    series='contrast',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('contrast_latest')
+                case 'deer t1':
+                    # create some default dark, echo plots for DEER. Otherwise, just duplicate div plots
+                    self.add_plot('diff +y surface T1 decay',        series='diff_py',  scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('diff -y surface T1 decay',        series='diff_ny',  scan_i='',    scan_j='',  processing='Average')
+                    self.add_plot('diff overall surface T1 decay',    series='diff_overall',  scan_i='',      scan_j='',  processing='Average')
 
-                # create some default diff plots
-                self.add_plot('diff_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('diff_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('diff_avg')
-                self.hide_plot('diff_latest')
+                    self.add_plot('diff nuclear oscillation with pi pulse',       series='diff_osc_with_pulse',  scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('diff nuclear oscillation no pi pulse',         series='diff_osc_without_pulse',  scan_i='',    scan_j='',  processing='Average')
+                    self.add_plot('sum pure nuclear oscillation',                 series='sum_nuclear',  scan_i='',      scan_j='',  processing='Average')
 
-                # create some default fft plots
-                self.add_plot('fft_avg',       series='fft',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('fft_latest',    series='fft',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('fft_avg')
-                self.hide_plot('fft_latest')
+                    self.hide_plot('diff -y surface T1 decay')
+                    self.hide_plot('diff overall surface T1 decay')
+                    self.hide_plot('diff nuclear oscillation with pi pulse')
+                    self.hide_plot('diff nuclear oscillation no pi pulse')
+                    self.hide_plot('sum pure nuclear oscillation')
 
-                # create some default signal plots
-                self.add_plot('sig_avg',        series='signal',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('sig_latest',     series='signal',   scan_i='-1',   scan_j='',  processing='Average')
-                self.add_plot('sig_first',      series='signal',   scan_i='0',    scan_j='1', processing='Average')
-                self.add_plot('sig_latest_10',  series='signal',   scan_i='-10',  scan_j='',  processing='Average')
-                self.hide_plot('sig_avg')
-                self.hide_plot('sig_latest')
-                self.hide_plot('sig_first')
-                self.hide_plot('sig_latest_10')
+                    # create some default signal plots (norm method 1 - pi/no pi pulse)
+                    self.add_plot('with pi pulse +y avg',        series='with_py',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('with pi pulse +y latest',      series='with_py',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('with pi pulse +y avg')
+                    self.hide_plot('with pi pulse +y latest')
 
-                # create some default background plots
-                self.add_plot('bg_avg',         series='background',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('bg_latest',      series='background',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('bg_avg')
-                self.hide_plot('bg_latest')
+                    # create some default signal plots (norm method 1 - pi/no pi pulse)
+                    self.add_plot('with pi pulse -y avg',        series='with_ny',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('with pi pulse -y latest',      series='with_ny',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('with pi pulse -y avg')
+                    self.hide_plot('with pi pulse -y latest')
 
-            case 'nmr':
-                # create some default contrast plots
-                self.add_plot('contrast_avg',       series='contrast',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('contrast_latest',    series='contrast',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('contrast_avg')
-                self.hide_plot('contrast_latest')
-                
-                # create some default diff plots
-                self.add_plot('diff_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('diff_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('diff_avg')
-                self.hide_plot('diff_latest')
+                    # create some default signal plots (norm method 1 - pi/no pi pulse)
+                    self.add_plot('no pi pulse +y avg',           series='without_py',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('no pi pulse +y latest',        series='without_py',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('no pi pulse +y avg')
+                    self.hide_plot('no pi pulse +y latest')
 
-                # create some default fft plots
-                self.add_plot('fft_avg',       series='fft',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('fft_latest',    series='fft',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('fft_latest')
+                    # create some default signal plots (norm method 1 - pi/no pi pulse)
+                    self.add_plot('no pi pulse -y avg',           series='without_ny',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('no pi pulse -y latest',        series='without_ny',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('no pi pulse -y avg')
+                    self.hide_plot('no pi pulse -y latest')
 
-                # create some default signal plots
-                self.add_plot('sig_avg',        series='signal',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('sig_latest',     series='signal',   scan_i='-1',   scan_j='',  processing='Average')
-                self.add_plot('sig_first',      series='signal',   scan_i='0',    scan_j='1', processing='Average')
-                self.add_plot('sig_latest_10',  series='signal',   scan_i='-10',  scan_j='',  processing='Average')
-                self.hide_plot('sig_avg')
-                self.hide_plot('sig_latest')
-                self.hide_plot('sig_first')
-                self.hide_plot('sig_latest_10')
+                case 'deer t2':
+                    # create some default contrast plots
+                    self.add_plot('contrast_avg',       series='contrast',        scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('contrast_latest',    series='contrast',        scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('contrast_latest')
 
-                # create some default background plots
-                self.add_plot('bg_avg',         series='background',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('bg_latest',      series='background',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('bg_avg')
-                self.hide_plot('bg_latest')
+                    # create some default diff plots
+                    self.add_plot('diff_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('diff_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('diff_avg')
+                    self.hide_plot('diff_latest')
 
-            case 'nmr pl':                
-                # create some default signal plots
-                self.add_plot('sig_avg_pl',        series='signal_pl',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('sig_latest_pl',     series='signal_pl',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('sig_latest_pl')
+                    # create some default fft plots
+                    self.add_plot('fft_avg',       series='fft',  scan_i='',       scan_j='',  processing='Average')
+                    self.add_plot('fft_latest',    series='fft',  scan_i='-1',     scan_j='',  processing='Average')
+                    self.hide_plot('fft_avg')
+                    self.hide_plot('fft_latest')
 
-                # create some default background plots
-                self.add_plot('bg_avg_pl',         series='background_pl',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('bg_latest_pl',      series='background_pl',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('bg_latest_pl')
+                    # create some default signal plots
+                    self.add_plot('sig_avg',        series='signal',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('sig_latest',     series='signal',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.add_plot('sig_first',      series='signal',   scan_i='0',    scan_j='1', processing='Average')
+                    self.add_plot('sig_latest_10',  series='signal',   scan_i='-10',  scan_j='',  processing='Average')
+                    self.hide_plot('sig_avg')
+                    self.hide_plot('sig_latest')
+                    self.hide_plot('sig_first')
+                    self.hide_plot('sig_latest_10')
 
-                # create some default diff plots
-                self.add_plot('diff_avg_pl',       series='diff_pl',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('diff_latest_pl',    series='diff_pl',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('diff_avg_pl')
-                self.hide_plot('diff_latest_pl')
+                    # create some default background plots
+                    self.add_plot('bg_avg',         series='background',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('bg_latest',      series='background',   scan_i='-1',   scan_j='',  processing='Average')
 
-            case 'casr':
-                self.line_plot.plot_widget.getPlotItem().setDownsampling(ds=10, auto=False, mode='mean')
-                # create some default contrast plots
-                self.add_plot('contrast_avg',       series='contrast',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('contrast_latest',    series='contrast',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('contrast_avg')
-                self.hide_plot('contrast_latest')
+                case 'nmr':
+                    # create some default contrast plots
+                    self.add_plot('contrast_avg',       series='contrast',        scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('contrast_latest',    series='contrast',        scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('contrast_avg')
+                    self.hide_plot('contrast_latest')
 
-                # create some default diff plots
-                self.add_plot('diff_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('diff_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('diff_avg')
-                self.hide_plot('diff_latest')
+                    # create some default diff plots
+                    self.add_plot('diff_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('diff_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('diff_avg')
+                    self.hide_plot('diff_latest')
 
-                # create some default fft plots
-                self.add_plot('fft_avg',       series='fft',  scan_i='',      scan_j='',  processing='Average')
-                self.add_plot('fft_latest',    series='fft',  scan_i='-1',    scan_j='',  processing='Average')
-                self.hide_plot('fft_latest')
+                    # create some default fft plots
+                    self.add_plot('fft_avg',       series='fft',  scan_i='',       scan_j='',  processing='Average')
+                    self.add_plot('fft_latest',    series='fft',  scan_i='-1',     scan_j='',  processing='Average')
+                    self.hide_plot('fft_latest')
 
-                # create some default signal plots
-                self.add_plot('sig_avg',        series='signal',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('sig_latest',     series='signal',   scan_i='-1',   scan_j='',  processing='Average')
-                self.add_plot('sig_first',      series='signal',   scan_i='0',    scan_j='1', processing='Average')
-                self.add_plot('sig_latest_10',  series='signal',   scan_i='-10',  scan_j='',  processing='Average')
-                self.hide_plot('sig_avg')
-                self.hide_plot('sig_latest')
-                self.hide_plot('sig_first')
-                self.hide_plot('sig_latest_10')
+                    # create some default signal plots
+                    self.add_plot('sig_avg',        series='signal',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('sig_latest',     series='signal',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.add_plot('sig_first',      series='signal',   scan_i='0',    scan_j='1', processing='Average')
+                    self.add_plot('sig_latest_10',  series='signal',   scan_i='-10',  scan_j='',  processing='Average')
+                    self.hide_plot('sig_avg')
+                    self.hide_plot('sig_latest')
+                    self.hide_plot('sig_first')
+                    self.hide_plot('sig_latest_10')
 
-                # create some default background plots
-                self.add_plot('bg_avg',         series='background',   scan_i='',     scan_j='',  processing='Average')
-                self.add_plot('bg_latest',      series='background',   scan_i='-1',   scan_j='',  processing='Average')
-                self.hide_plot('bg_avg')
-                self.hide_plot('bg_latest')
+                    # create some default background plots
+                    self.add_plot('bg_avg',         series='background',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('bg_latest',      series='background',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('bg_avg')
+                    self.hide_plot('bg_latest')
 
-        self._add_default_ch2_plots()
-        self._refresh_ch2_checkbox_for_source()
+                case 'nmr pl':
+                    # create some default signal plots
+                    self.add_plot('sig_avg_pl',        series='signal_pl',        scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('sig_latest_pl',     series='signal_pl',        scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('sig_latest_pl')
+
+                    # create some default background plots
+                    self.add_plot('bg_avg_pl',         series='background_pl',    scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('bg_latest_pl',      series='background_pl',    scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('bg_latest_pl')
+
+                    # create some default diff plots
+                    self.add_plot('diff_avg_pl',       series='diff_pl',  scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('diff_latest_pl',    series='diff_pl',  scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('diff_avg_pl')
+                    self.hide_plot('diff_latest_pl')
+
+                case 'casr':
+                    self.line_plot.plot_widget.getPlotItem().setDownsampling(ds=10, auto=False, mode='mean')
+                    # create some default contrast plots
+                    self.add_plot('contrast_avg',       series='contrast',        scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('contrast_latest',    series='contrast',        scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('contrast_avg')
+                    self.hide_plot('contrast_latest')
+
+                    # create some default diff plots
+                    self.add_plot('diff_avg',       series='diff',  scan_i='',      scan_j='',  processing='Average')
+                    self.add_plot('diff_latest',    series='diff',  scan_i='-1',    scan_j='',  processing='Average')
+                    self.hide_plot('diff_avg')
+                    self.hide_plot('diff_latest')
+
+                    # create some default fft plots
+                    self.add_plot('fft_avg',       series='fft',  scan_i='',       scan_j='',  processing='Average')
+                    self.add_plot('fft_latest',    series='fft',  scan_i='-1',     scan_j='',  processing='Average')
+                    self.hide_plot('fft_latest')
+
+                    # create some default signal plots
+                    self.add_plot('sig_avg',        series='signal',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('sig_latest',     series='signal',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.add_plot('sig_first',      series='signal',   scan_i='0',    scan_j='1', processing='Average')
+                    self.add_plot('sig_latest_10',  series='signal',   scan_i='-10',  scan_j='',  processing='Average')
+                    self.hide_plot('sig_avg')
+                    self.hide_plot('sig_latest')
+                    self.hide_plot('sig_first')
+                    self.hide_plot('sig_latest_10')
+
+                    # create some default background plots
+                    self.add_plot('bg_avg',         series='background',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('bg_latest',      series='background',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.hide_plot('bg_avg')
+                    self.hide_plot('bg_latest')
+
+            # Queue ch2 plot creation on settings thread to run AFTER all plot additions complete
+            # This prevents race condition where we try to read series_settings before queued operations finish
+            self.line_plot.plot_settings.run_safe(
+                self._queued_finalize_ch2_setup
+            )
+            
+            # NOTE: Do NOT call _check_source_has_ch2() here anymore
+            # Ch2 detection is now fully dynamic in update() loop - it detects mode changes in real-time
+            # This eliminates stale state issues from connection-time detection
+        except Exception as e:
+            _logger.error(f'Error in _update_source_clicked: {e}', exc_info=True)
+            # Restore setup complete flag to allow retry
+            self._setup_complete = True
+            # CRITICAL: Resume update loop even on error so it doesn't stay paused forever
+            self.line_plot._update_paused = False
 
     def _cursor_clicked(self):
         def _get_cursor_data():
@@ -1958,6 +2553,16 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
         if self.cursor_button.text() == "Cursor":
             self.cursor_button.setText("Delete Cursor")
 
+            # Create label stylesheet for professional appearance
+            cursor_label_stylesheet = """
+                QLabel {
+                    color: white;
+                    background-color: transparent;
+                    padding: 4px 6px;
+                    font-weight: normal;
+                }
+            """
+
             if self.datasource_lineedit.text() in ("odmr", "odmr rf"):
                 self.cursor_label1 = QLabel("Frequency [GHz] = ")
             elif self.datasource_lineedit.text() in ("rabi", "deer rabi", "corr rabi"):
@@ -1977,6 +2582,12 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
             self.cursor_label2 = QLabel()
             self.cursor_label4 = QLabel()
             self.cursor_label6 = QLabel()
+
+            # Apply font and styling to all cursor labels
+            for label in [self.cursor_label1, self.cursor_label2, self.cursor_label3, 
+                          self.cursor_label4, self.cursor_label5, self.cursor_label6]:
+                label.setFont(self.base_font)
+                label.setStyleSheet(cursor_label_stylesheet)
 
             self.layout_tree.cursor_source.layout.addWidget(self.cursor_label1)
             self.layout_tree.cursor_source.layout.addWidget(self.cursor_label2)
@@ -2190,6 +2801,12 @@ class _FlexLinePlotWidget(LinePlotWidget):
         self.processed_data_dict = dict()
         self.plot_settings = _FlexLinePlotSettings()
         self.plot_settings.start()
+        # CRITICAL: Flag to pause update loop during reconnection to prevent race conditions
+        # When True, update() will skip all processing and sleep, allowing clean disconnect/reconnect
+        self._update_paused = False
+        # Track current ch2 status to suppress warnings about missing two-channel-derived plots
+        # when running in single-channel mode
+        self._current_has_ch2 = False
         super().__init__()
 
     def _stop(self):
@@ -2207,84 +2824,94 @@ class _FlexLinePlotWidget(LinePlotWidget):
         self.plot_settings.run_safe(self._new_source, data_set_name)
 
     def _new_source(self, data_set_name: str):
-        
+        """Connect to a new data source. Handles reconnection with proper cleanup."""
         self.dataset_name = data_set_name
-        # connect to a new data set
-        with QtCore.QMutexLocker(self.plot_settings.sink_mutex):
-            self.clear_plots()
-            try:
-                # connect to the new data source
-                self.plot_settings.sink = DataSink(data_set_name)
-                self.plot_settings.sink.start()
-                
-                # try to get the plot title and x/y labels
-                self.plot_settings.sink.pop(timeout=self.timeout)
-
-                # set title
+        # Reset ch2 status flag for fresh detection on new connection
+        self._current_has_ch2 = False
+        # Reset tracking of created ch2 plots to allow re-creation on reconnections
+        self._parent_flex_line_plot_widget._ch2_plots_created.clear()
+        try:
+            # connect to a new data set
+            with QtCore.QMutexLocker(self.plot_settings.sink_mutex):
+                self.clear_plots()
                 try:
-                    title = self.plot_settings.sink.title
-                except AttributeError:
-                    _logger.info(
-                        f'Data source [{data_set_name}] has no "title" '
-                        'attribute. Not setting the plot title...'
-                    )
-                    title = None
+                    # connect to the new data source
+                    self.plot_settings.sink = DataSink(data_set_name)
+                    self.plot_settings.sink.start()
+                    
+                    # try to get the plot title and x/y labels
+                    self.plot_settings.sink.pop(timeout=self.timeout)
 
-                # set xlabel
-                try:
-                    xlabel = self.plot_settings.sink.xlabel
-                except AttributeError:
-                    _logger.info(
-                        f'Data source [{data_set_name}] has no "xlabel" '
-                        'attribute. Not setting the plot x-axis label...'
-                    )
-                    xlabel = None
-
-                # set ylabel
-                try:
-                    ylabel = self.plot_settings.sink.ylabel
-                except AttributeError:
-                    _logger.info(
-                        f'Data source [{data_set_name}] has no "ylabel" '
-                        'attribute. Not setting the plot y-axis label...'
-                    )
-                    ylabel = None
-
-                # try to access datasets
-                try:
-                    dsets = self.plot_settings.sink.datasets
-                except AttributeError as err:
-                    raise RuntimeError(
-                        f'Data source [{data_set_name}] has no "datasets" attribute - '
-                        'exiting...'
-                    ) from err
-                else:
-                    if not isinstance(dsets, dict):
-                        raise RuntimeError(
-                            f'Data source [{data_set_name}] "datasets" attribute is '
-                            'not a dictionary - exiting...'
+                    # set title
+                    try:
+                        title = self.plot_settings.sink.title
+                    except AttributeError:
+                        _logger.info(
+                            f'Data source [{data_set_name}] has no "title" '
+                            'attribute. Not setting the plot title...'
                         )
+                        title = None
 
-                # set the new title/labels in the main thread
-                self.plot_settings.run_main(
-                    self._new_source_callback, title, xlabel, ylabel, blocking=True
-                )
+                    # set xlabel
+                    try:
+                        xlabel = self.plot_settings.sink.xlabel
+                    except AttributeError:
+                        _logger.info(
+                            f'Data source [{data_set_name}] has no "xlabel" '
+                            'attribute. Not setting the plot x-axis label...'
+                        )
+                        xlabel = None
 
-                # add the existing plots
-                with QtCore.QMutexLocker(self.plot_settings.mutex):
-                    for plot_name in self.plot_settings.series_settings:
-                        self.add_plot(plot_name)
-                        if self.plot_settings.series_settings[plot_name].hidden:
-                            self.hide_plot(plot_name)
+                    # set ylabel
+                    try:
+                        ylabel = self.plot_settings.sink.ylabel
+                    except AttributeError:
+                        _logger.info(
+                            f'Data source [{data_set_name}] has no "ylabel" '
+                            'attribute. Not setting the plot y-axis label...'
+                        )
+                        ylabel = None
 
-                # force plot the data since we used the first pop() to extract the
-                # plot info
-                self.plot_settings.force_update = True
-            except (TimeoutError, RuntimeError) as err:
-                self.teardown()
-                raise RuntimeError(
-                    f'Could not connect to new data source [{data_set_name}]'
-                ) from err
+                    # try to access datasets
+                    try:
+                        dsets = self.plot_settings.sink.datasets
+                    except AttributeError as err:
+                        raise RuntimeError(
+                            f'Data source [{data_set_name}] has no "datasets" attribute - '
+                            'exiting...'
+                        ) from err
+                    else:
+                        if not isinstance(dsets, dict):
+                            raise RuntimeError(
+                                f'Data source [{data_set_name}] "datasets" attribute is '
+                                'not a dictionary - exiting...'
+                            )
+
+                    # set the new title/labels in the main thread
+                    self.plot_settings.run_main(
+                        self._new_source_callback, title, xlabel, ylabel, blocking=True
+                    )
+
+                    # add the existing plots
+                    with QtCore.QMutexLocker(self.plot_settings.mutex):
+                        for plot_name in self.plot_settings.series_settings:
+                            self.add_plot(plot_name)
+                            if self.plot_settings.series_settings[plot_name].hidden:
+                                self.hide_plot(plot_name)
+
+                    # force plot the data since we used the first pop() to extract the
+                    # plot info
+                    self.plot_settings.force_update = True
+                except (TimeoutError, RuntimeError) as err:
+                    self.teardown()
+                    raise RuntimeError(
+                        f'Could not connect to new data source [{data_set_name}]'
+                    ) from err
+        except Exception as e:
+            # Catch any exception during reconnection and ensure cleanup
+            _logger.error(f"Critical error in _new_source during reconnection: {type(e).__name__}: {e}")
+            self.teardown()
+            raise
 
     def _new_source_callback(self, title, xlabel, ylabel):
         """Callback for when a new data source connects."""
@@ -2302,30 +2929,64 @@ class _FlexLinePlotWidget(LinePlotWidget):
 
     def _close_source(self):
         """Disconnect from the data source."""
-        with QtCore.QMutexLocker(self.plot_settings.sink_mutex):
-            if self.plot_settings.sink is not None:
-                self.plot_settings.sink.stop()
-                self.plot_settings.sink = None
+        try:
+            with QtCore.QMutexLocker(self.plot_settings.sink_mutex):
+                if self.plot_settings.sink is not None:
+                    try:
+                        self.plot_settings.sink.stop()
+                    except Exception as e:
+                        _logger.warning(f"Error stopping sink during reconnect: {e}")
+                    finally:
+                        self.plot_settings.sink = None
+        except Exception as e:
+            _logger.error(f"Error in _close_source: {e}")
 
     def update(self):
-        """Update the plot if there is new data available."""
-        with QtCore.QMutexLocker(self.plot_settings.sink_mutex):
-            if self.plot_settings.sink is None:
-                # rate limit how often update() runs if there is no sink connected
-                time.sleep(0.1)
-                return
-
-            if self.plot_settings.force_update:
-                self.plot_settings.force_update = False
-            else:
-                try:
-                    # wait for new data to be available from the sink
-                    self.plot_settings.sink.pop(timeout=self.timeout)
-                except TimeoutError:
+        """Update the plot if there is new data available.
+        
+        ROBUSTNESS FIX: Wrapped entire update in try/except to handle reconnection crashes.
+        During reconnection, the sink can become None or be torn down while we're in the 
+        middle of processing. This ensures we gracefully handle those race conditions.
+        
+        CRITICAL: Check _update_paused flag FIRST to allow clean reconnection without
+        the update loop interfering. This prevents deadlocks and race conditions during
+        source reconnection.
+        """
+        # CRITICAL: If update loop is paused for reconnection, skip all processing immediately
+        # This gives the reconnection logic time to cleanly tear down the old source and
+        # set up the new one without the update loop trying to access old/new plots simultaneously
+        if self._update_paused:
+            time.sleep(0.05)  # Rate limit while paused
+            return
+            
+        try:
+            with QtCore.QMutexLocker(self.plot_settings.sink_mutex):
+                if self.plot_settings.sink is None:
+                    # rate limit how often update() runs if there is no sink connected
+                    time.sleep(0.1)
                     return
 
-            with QtCore.QMutexLocker(self.plot_settings.mutex):
-                datasets = self.plot_settings.sink.datasets
+                if self.plot_settings.force_update:
+                    self.plot_settings.force_update = False
+                else:
+                    try:
+                        # wait for new data to be available from the sink
+                        self.plot_settings.sink.pop(timeout=self.timeout)
+                    except TimeoutError:
+                        return
+                    except Exception:
+                        # Sink died or was replaced during pop() - likely reconnection
+                        return
+
+                # Check sink is still valid before proceeding
+                if self.plot_settings.sink is None:
+                    return
+
+                with QtCore.QMutexLocker(self.plot_settings.mutex):
+                    # Double-check sink still exists (might have been cleared during reconnect)
+                    if self.plot_settings.sink is None:
+                        return
+                    datasets = self.plot_settings.sink.datasets
                 avg_cache = {}
 
                 for plot_name in self.plot_settings.series_settings:
@@ -2352,12 +3013,12 @@ class _FlexLinePlotWidget(LinePlotWidget):
                             data_sig = datasets[sig_name]
                             data_bg = datasets[bg_name]
                         elif base_series == 'div_2ch':
-                            sig_name = 'signal'
-                            bg_name = 'background'
+                            sig_ch2_name = 'signal_ch2'
                             bg_ch2_name = 'background_ch2'
-                            data_sig = datasets[sig_name]
-                            data_bg = datasets[bg_name]
+                            bg_name = 'background'
+                            data_sig_ch2 = datasets[sig_ch2_name]
                             data_bg_ch2 = datasets[bg_ch2_name]
+                            data_bg = datasets[bg_name]
                         elif base_series == 'diff_pl':
                             sig_name = dataset_name('signal_pl')
                             bg_name = dataset_name('background_pl')
@@ -2429,8 +3090,14 @@ class _FlexLinePlotWidget(LinePlotWidget):
                         else:
                             data = datasets[dataset_name(base_series)]
 
-                    except KeyError:
-                        # _logger.error(f'Data series [{series}] does not exist.')
+                    except KeyError as ke:
+                        # Suppress warnings for two-channel-derived plots when not in two-channel mode
+                        # These plots (div_2ch, contrast_2ch, etc.) only make sense with actual dual-channel data
+                        is_twoch_derived = series.endswith('_2ch') or channel_suffix == '_2ch'
+                        if is_twoch_derived and not self._current_has_ch2:
+                            # Silently skip two-channel-derived plots when not in dual-channel mode
+                            continue
+                        _logger.warning(f'Data series [{series}] (channel: {channel_suffix}) not found. Available: {list(datasets.keys())}')
                         continue
 
                     else:
@@ -2455,21 +3122,21 @@ class _FlexLinePlotWidget(LinePlotWidget):
                                     data_subset_bg = data_bg[int(scan_i) : int(scan_j)]
                             elif base_series == 'div_2ch':
                                 if scan_i == '' and scan_j == '':
-                                    data_subset_sig = data_sig[:]
-                                    data_subset_bg = data_bg[:]
+                                    data_subset_sig_ch2 = data_sig_ch2[:]
                                     data_subset_bg_ch2 = data_bg_ch2[:]
+                                    data_subset_bg = data_bg[:]
                                 elif scan_j == '':
-                                    data_subset_sig = data_sig[int(scan_i) :]
-                                    data_subset_bg = data_bg[int(scan_i) :]
+                                    data_subset_sig_ch2 = data_sig_ch2[int(scan_i) :]
                                     data_subset_bg_ch2 = data_bg_ch2[int(scan_i) :]
+                                    data_subset_bg = data_bg[int(scan_i) :]
                                 elif scan_i == '':
-                                    data_subset_sig = data_sig[: int(scan_j)]
-                                    data_subset_bg = data_bg[: int(scan_j)]
+                                    data_subset_sig_ch2 = data_sig_ch2[: int(scan_j)]
                                     data_subset_bg_ch2 = data_bg_ch2[: int(scan_j)]
+                                    data_subset_bg = data_bg[: int(scan_j)]
                                 else:
-                                    data_subset_sig = data_sig[int(scan_i) : int(scan_j)]
-                                    data_subset_bg = data_bg[int(scan_i) : int(scan_j)]
+                                    data_subset_sig_ch2 = data_sig_ch2[int(scan_i) : int(scan_j)]
                                     data_subset_bg_ch2 = data_bg_ch2[int(scan_i) : int(scan_j)]
+                                    data_subset_bg = data_bg[int(scan_i) : int(scan_j)]
                             elif base_series in ('deer_contrast', 'deer_log_contrast', 'deer_diff'):
                                 if scan_i == '' and scan_j == '':
                                     data_subset_dark_sig = data_dark_sig[:]
@@ -2557,22 +3224,22 @@ class _FlexLinePlotWidget(LinePlotWidget):
                                     avg_cache[cache_key] = (processed_data_sig, processed_data_bg)
 
                             elif base_series == 'div_2ch':
-                                cache_key = (sig_name, bg_name, bg_ch2_name, scan_key)
+                                cache_key = (sig_ch2_name, bg_ch2_name, bg_name, scan_key)
 
                                 if cache_key in avg_cache:
-                                    processed_data_sig, processed_data_bg, processed_data_bg_ch2 = avg_cache[cache_key]
+                                    processed_data_sig_ch2, processed_data_bg_ch2, processed_data_bg = avg_cache[cache_key]
                                 else:
                                     # create a single numpy array
-                                    stacked_data_sig = np.stack(data_subset_sig)
-                                    stacked_data_bg = np.stack(data_subset_bg)
+                                    stacked_data_sig_ch2 = np.stack(data_subset_sig_ch2)
                                     stacked_data_bg_ch2 = np.stack(data_subset_bg_ch2)
+                                    stacked_data_bg = np.stack(data_subset_bg)
 
                                     # average the numpy arrays
-                                    processed_data_sig = np.nanmean(stacked_data_sig, axis=0)
-                                    processed_data_bg = np.nanmean(stacked_data_bg, axis=0)
+                                    processed_data_sig_ch2 = np.nanmean(stacked_data_sig_ch2, axis=0)
                                     processed_data_bg_ch2 = np.nanmean(stacked_data_bg_ch2, axis=0)
+                                    processed_data_bg = np.nanmean(stacked_data_bg, axis=0)
 
-                                    avg_cache[cache_key] = (processed_data_sig, processed_data_bg, processed_data_bg_ch2)
+                                    avg_cache[cache_key] = (processed_data_sig_ch2, processed_data_bg_ch2, processed_data_bg)
 
                             elif base_series in ('deer_contrast', 'deer_log_contrast', 'deer_diff'):
                                 # create a single numpy array
@@ -2627,8 +3294,8 @@ class _FlexLinePlotWidget(LinePlotWidget):
                             processed_data = [processed_data_sig[0], processed_data_bg[1] - processed_data_sig[1]]                        
                         elif base_series == 'div_2ch':
                             processed_data = [
-                                processed_data_sig[0],
-                                1 - (processed_data_bg[1] - processed_data_sig[1]) / processed_data_bg_ch2[1],
+                                processed_data_sig_ch2[0],
+                                1 - (processed_data_bg_ch2[1] - processed_data_sig_ch2[1]) / processed_data_bg[1],
                             ]
                         elif base_series in ('div', 'div_rf'):
                             processed_data = [processed_data_sig[0], processed_data_sig[1] / processed_data_bg[1]]
@@ -2687,6 +3354,68 @@ class _FlexLinePlotWidget(LinePlotWidget):
                         
                         # print("updating data in dictionary...")
                         self.processed_data_dict[plot_name] = processed_data
+            
+            # DYNAMIC CH2 DETECTION with AUTO-MANAGEMENT: Check if ch2 mode changes and auto-update UI
+            # This eliminates need for manual reconnect to see ch2 changes mid-experiment
+            try:
+                parent = self._parent_flex_line_plot_widget
+                if parent is not None and parent._setup_complete:
+                    current_series = set(datasets.keys())
+                    
+                    # Check if any ch2 series exist in current data
+                    ch2_series_present = any(s.endswith('_ch2') for s in current_series)
+                    ch2_mode_changed = ch2_series_present != self._current_has_ch2
+                    
+                    # CASE 1: New ch2 data appeared (1ch -> 2ch transition)
+                    if ch2_series_present and not self._current_has_ch2:
+                        _logger.info('Ch2 data detected - creating ch2 plots and updating UI')
+                        
+                        # Create ch2 plots on settings thread (no UI involved yet)
+                        parent._add_default_ch2_plots()
+                        
+                        # CRITICAL: Add delay to ensure ch2 plots are actually added to series_settings dict
+                        # before we try to show them. The add_plot() calls use run_safe() which queues
+                        # the plot additions asynchronously. Without this delay, visibility updates run
+                        # before plots exist in series_settings, causing them to be silently skipped.
+                        time.sleep(0.05)  # 50ms should be enough for queued add_plot() calls to complete
+                        
+                        # CRITICAL: Marshal all UI updates to main thread!
+                        # update() runs on settings thread, UI must be updated on main thread
+                        self.plot_settings.run_main(
+                            parent._apply_ch2_source_state,
+                            has_ch2=True,
+                            blocking=False
+                        )
+                        
+                        # Apply styling on main thread
+                        if hasattr(parent, 'plot_color_manager'):
+                            self.plot_settings.run_main(
+                                parent.plot_color_manager.apply_current_style_all,
+                                blocking=False
+                            )
+                            QtCore.QTimer.singleShot(100, parent.plot_color_manager.apply_current_style_all)
+                    
+                    # CASE 2: Ch2 data disappeared (2ch -> 1ch transition)
+                    elif not ch2_series_present and self._current_has_ch2:
+                        _logger.info('Ch2 data disappeared - removing ch2 plots')
+                        
+                        # Remove ch2 plots completely (not just hide them)
+                        self.plot_settings.run_main(
+                            parent._remove_ch2_plots,
+                            blocking=False
+                        )
+                        self.plot_settings.run_main(
+                            parent._apply_ch2_source_state,
+                            has_ch2=False,
+                            blocking=False
+                        )
+            except Exception as e:
+                _logger.warning(f'Error in dynamic ch2 detection: {e}', exc_info=True)
+        
+        except Exception as e:
+            # Robustly handle any errors during update (e.g., sink died, reconnection race condition)
+            _logger.warning(f"Update loop error (likely reconnection race): {type(e).__name__}: {e}")
+            return
 
 
 class PlotColorManager:
@@ -2719,6 +3448,32 @@ class PlotColorManager:
 
         self.light_plot_button.clicked.connect(self.light_plot)
         self.dark_plot_button.clicked.connect(self.dark_plot)
+
+        # Apply professional styling to buttons
+        base_font = QtGui.QFont("Segoe UI", 14)
+        plot_button_stylesheet = """
+            QPushButton {
+                background-color: #FFB6D9;
+                color: black;
+                border: 1px solid #FF9CC4;
+                border-radius: 4px;
+                padding: 8px 14px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #FFC9E3;
+            }
+            QPushButton:pressed {
+                background-color: #FF9CC4;
+            }
+        """
+        
+        self.light_plot_button.setFont(base_font)
+        self.light_plot_button.setStyleSheet(plot_button_stylesheet)
+        self.light_plot_button.setFixedHeight(45)
+        self.dark_plot_button.setFont(base_font)
+        self.dark_plot_button.setStyleSheet(plot_button_stylesheet)
+        self.dark_plot_button.setFixedHeight(45)
 
         # index 0: Light button shown, index 1: Dark button shown
         self.color_flip_button.addWidget(self.light_plot_button)
@@ -2791,8 +3546,10 @@ class PlotColorManager:
         is_fit = (plot_name == "fit")
         is_pl = str(plot_name).lower().endswith("_pl")
 
-        # keep existing pen color unless caller provides a color
-        pen = pg.mkPen(item.opts.get("pen", None))
+        # Get existing pen to preserve its color
+        existing_pen = item.opts.get("pen", None)
+        # Create a new pen based on the existing one
+        pen = pg.mkPen(existing_pen)
 
         # Special styling for fit only
         if is_fit:
@@ -2817,11 +3574,7 @@ class PlotColorManager:
             pen.setColor(color)
 
         if is_pl:
-            if self.mode == "light":
-                pen.setWidth(6) 
-            else:
-                pen.setWidth(6) 
-
+            pen.setWidth(6) 
             item.setPen(pen)
 
             # no data point markers for PL traces
@@ -2837,14 +3590,26 @@ class PlotColorManager:
             pen.setWidth(8)
             item.setPen(pen)
 
-            # hard kill symbols
+            # **Aggressively** remove all markers in light mode
+            # This must be done in strict order to override any previous settings
             item.setSymbol(None)
             item.setSymbolBrush(None)
             item.setSymbolPen(None)
-
+            
+            # Force update plot item options to ensure no symbols
+            item.opts['symbol'] = None
+            item.opts['symbolBrush'] = None
+            item.opts['symbolPen'] = None
+            
             # hide the internal scatter item if it exists
-            if getattr(item, "scatter", None) is not None:
-                item.scatter.setVisible(False)
+            scatter = getattr(item, "scatter", None)
+            if scatter is not None:
+                scatter.setVisible(False)
+                # Also try to clear scatter data
+                try:
+                    scatter.setData(x=[], y=[])
+                except:
+                    pass
 
         else:
             pen.setWidth(6)
