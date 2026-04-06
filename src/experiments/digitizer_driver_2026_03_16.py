@@ -180,8 +180,8 @@ class SpectrumDigitizer():
     def acquire(self):
         try:
             data_block = next(self.multiple_recording) # dim (mem_size/4, segment_size, 1)
-            print(f"shape of dig data block: {np.shape(data_block)}")  
-            print(f"ravel shape: {np.shape(np.asarray(data_block).ravel())}")      
+            # print(f"shape of dig data block: {np.shape(data_block)}")  
+            # print(f"ravel shape: {np.shape(np.asarray(data_block).ravel())}")      
 
         except spcm.SpcmTimeout:
             self.card.stop(spcm.M2CMD_DATA_STOPDMA)
@@ -197,5 +197,5 @@ class SpectrumDigitizer():
         
         ch0_data = raw_data[:, :, 0]
         ch1_data = raw_data[:, :, 1]
-        print(f"shape of ch0_data: {np.shape(ch0_data)}")
+        
         return ch0_data * scale * units.V, ch1_data * scale * units.V
