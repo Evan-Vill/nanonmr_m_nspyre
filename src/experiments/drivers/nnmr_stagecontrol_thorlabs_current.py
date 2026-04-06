@@ -106,7 +106,7 @@ class NanoNMRThorlabs:
     def check_standby(self):
         '''
         Standby for Thorlabs stages is when:
-        1) AZI = 130 deg position
+        1) AZI = 100 deg position
         2) POLAR = 0 deg position
         
         This function checks whether the polar & azimuthal stages are at their 
