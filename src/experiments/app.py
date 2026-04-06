@@ -18,7 +18,7 @@ from multiprocessing import Queue
 # in order for dynamic reloading of code to work, you must pass the specifc
 # module containing your class to MainWidgetItem, since the python reload()
 # function does not recursively reload modules
-import gui_all_instruments_2026_03_02
+import gui_all_instruments_2026_03_25
 import gui_experiments_2026_03_20
 import gui_calculations_2026_03_06
 
@@ -46,7 +46,7 @@ def main():
         main_widget = MainWidget(
             {
                 'Instruments': MainWidgetItem(
-                    gui_all_instruments_2026_03_02, 
+                    gui_all_instruments_2026_03_25, 
                     'InstWidget', 
                     args=[status_queue],
                     stretch = (1, 1),
