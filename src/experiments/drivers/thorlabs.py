@@ -10,6 +10,7 @@ from ctypes import c_short, c_int, c_char_p
 from thorlabs_kinesis import benchtop_stepper_motor as bsm
 
 import logging
+import time
 logger = logging.getLogger(__name__)
 
 class BSC201:
@@ -33,8 +34,12 @@ class BSC201:
             self.serial_no = c_char_p(bytes(self.stage_serial_id, 'utf-8'))
             
             if bsm.SBC_Open(self.serial_no) == 0:
+                ok = bsm.SBC_LoadSettings(self.serial_no, self.channel)
+                print(f"Load settings returned: {ok}")
+                
                 bsm.SBC_StartPolling(self.serial_no, self.channel, self.millisecs)
                 logger.debug(f"Found Thorlabs stage {self.key} with serial no. {int(self.stage_serial_id)}.")
+
             else:
                 print(f"Can't open Thorlabs stage {self.key} (serial no. {int(self.stage_serial_id)}). Check if Kinesis software is already open with devices connected. If so, close the Kinesis software w/o disconnecting devices.")
         else:
