@@ -406,11 +406,11 @@ def build_experiment_defaults():
     } # defaults = 1% contrast, 1 GHz central freq, 6 MHz linewidth, 1 vertical offset
     fit_decaying_cosine_defaults = {
         "A": 0.02,
-        "t_decay": 1e-6,
+        "t_decay": 0.2e-6,
         "T": 200e-9,
         "phi": 0,
         "c": 1
-    } # defaults = 2% contrast, 1 us decay time, 200 ns period, 0 phase, 1 vertical offset
+    } # defaults = 2% contrast, 0.2 us decay time, 200 ns period, 0 phase, 1 vertical offset
     fit_two_neg_lorentz_defaults = {
         "A": 0.01,
         "x0": 1e9,
