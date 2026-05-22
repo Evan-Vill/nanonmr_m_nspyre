@@ -33,19 +33,25 @@ class BSC201:
 
             self.serial_no = c_char_p(bytes(self.stage_serial_id, 'utf-8'))
             
-            if bsm.SBC_Open(self.serial_no) == 0:
-                ok = bsm.SBC_LoadSettings(self.serial_no, self.channel)
-                print(f"Load settings returned: {ok}")
-                
+            if bsm.SBC_Open(self.serial_no) == 0:                
                 bsm.SBC_StartPolling(self.serial_no, self.channel, self.millisecs)
                 logger.debug(f"Found Thorlabs stage {self.key} with serial no. {int(self.stage_serial_id)}.")
 
+                time.sleep(1) # wait for stage to start polling before requesting position
+
+                self.microstep_2_deg(int(bsm.SBC_GetPosition(self.serial_no, self.channel)))
+                time.sleep(0.2) # wait to retrieve position
+
+                bsm.SBC_RequestBacklash(self.serial_no, self.channel)
+                time.sleep(0.2) # wait to retrieve backlash
             else:
                 print(f"Can't open Thorlabs stage {self.key} (serial no. {int(self.stage_serial_id)}). Check if Kinesis software is already open with devices connected. If so, close the Kinesis software w/o disconnecting devices.")
         else:
             print("Can't build Thorlabs device list.")
 
-   
+    def microstep_2_deg(self, step):
+        return step*13.3e-6
+    
     def __getitem__(self, key):
         '''
         Return the Thorlabs stage object associated with the given key.
