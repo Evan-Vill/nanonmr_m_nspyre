@@ -55,7 +55,9 @@ def flexSave(
 
     with DataSink(datasetName) as dataSink:
         # Ensure we have at least one data point ready
-        dataSink.pop(1)
+        # For large datasets from long experiments, increase timeout substantially
+        print(f"Waiting for data from DataSink '{datasetName}'... (this may take a while for large datasets)")
+        dataSink.pop(600)  # 600-second timeout (10 min) for very large datasets
 
         data_obtained = None
         pickle_direct_ok = (file_format == "pickle")
