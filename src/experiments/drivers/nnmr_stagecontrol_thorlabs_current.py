@@ -10,7 +10,7 @@ from re import L
 from thorlabs_kinesis import benchtop_stepper_motor as bsm
 import numpy as np
 
-from time import sleep 
+import time
 
 from thorlabs import BSC201
 
@@ -28,6 +28,8 @@ class NanoNMRThorlabs:
         # define stages object to map Zaber stages to their respective axes
         self.Tstage = BSC201(stage_serial_no)
         
+        time.sleep(0.5) # short sleep to ensure stage object is fully initialized before proceeding with rest of init function
+
         self.Tstage.__enter__()
 
         self.Tstage_serial = stage_serial_no
@@ -49,8 +51,11 @@ class NanoNMRThorlabs:
 
         # set velocity parameters for movements
         self.current_position = None
+        
         self.update_positions_callback() # record positions on instrument server startup
         self.set_vel_params(3, 7) # initialize acceleration = 3 deg/s/s and velocity = 7 deg/s
+        
+        self.set_zero_backlash(zero_backlash=True) # set zero backlash compensation for initial testing; can be set to False to keep current backlash compensation setting
 
     def convert_accl_units(self, accl, accl_type = None):
         if accl_type is not None:
@@ -70,6 +75,28 @@ class NanoNMRThorlabs:
         self.max_vel = int(self.convert_vel_units(vel, 'deg/s'))
         self.max_vel = c_int(self.max_vel)
         bsm.SBC_SetVelParams(self.Tstage.serial_no, self.Tstage.channel, self.accl, self.max_vel)
+
+    def request_backlash(self):
+        bsm.SBC_RequestBacklash(self.Tstage.serial_no, self.Tstage.channel)
+        time.sleep(0.2)
+        return bsm.SBC_GetBacklash(self.Tstage.serial_no, self.Tstage.channel)
+
+    def set_zero_backlash(self, zero_backlash=True):
+        if not zero_backlash:
+            backlash = self.request_backlash()
+            print(f"Zero backlash not set. Current backlash: {backlash} microsteps.")
+            return
+
+        before = self.request_backlash()
+        print(f"Backlash before setting: {before} microsteps.")
+        print(f"Backlash before setting: {self.microstep_2_deg(before)} deg.")
+
+        err = bsm.SBC_SetBacklash(self.Tstage.serial_no, self.Tstage.channel, 0)
+        print(f"SBC_SetBacklash return code: {err}")
+
+        after = self.request_backlash()
+        print(f"Backlash after setting: {after} microsteps.")
+        print(f"Backlash after setting: {self.microstep_2_deg(after)} deg.")
 
     def deg_2_microstep(self, angle_d):
         return int(angle_d/13.3e-6)
@@ -165,7 +192,7 @@ class NanoNMRThorlabs:
             return 
 
         logger.info(f"Homing Thorlabs stage {int(self.Tstage_serial)}...")
-        sleep(0.2)
+        time.sleep(0.2)
         # setting the velocity in init function wasn't working
         bsm.SBC_SetHomingVelocity(self.Tstage.serial_no, self.Tstage.channel, c_uint(10000000))
         bsm.SBC_Home(self.Tstage.serial_no, self.Tstage.channel)
@@ -193,7 +220,12 @@ class NanoNMRThorlabs:
                 logger.info(f"Moving Thorlabs stage {int(self.Tstage_serial)} to {round(condition[1], 3)} deg...")
                 bsm.SBC_MoveRelative(self.Tstage.serial_no, self.Tstage.channel, c_int(self.deg_2_microstep(angle)))
                 logger.info(f"Thorlabs stage {int(self.Tstage_serial)} set to {round(condition[1], 3)} deg.")
-            
+
+        bsm.SBC_RequestBacklash(self.Tstage.serial_no, self.Tstage.channel) # request backlash compensation after move
+        print(f"Backlash compensation requested for stage {int(self.Tstage_serial)}.")
+        print(f"Current backlash setting: {bsm.SBC_GetBacklash(self.Tstage.serial_no, self.Tstage.channel)} microsteps.")
+        print(f"Current backlash in degrees: {self.microstep_2_deg(bsm.SBC_GetBacklash(self.Tstage.serial_no, self.Tstage.channel))} deg.")
+        
     def is_move_safe(self, condition = [None, None]):
         '''
         Check if requested movement command is safe 
