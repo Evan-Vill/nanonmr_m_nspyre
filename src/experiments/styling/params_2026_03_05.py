@@ -315,10 +315,14 @@ class FitParamsWidget(QtWidgets.QWidget):
             return fun(widget)
         return self.__getattribute__(attr)
 
-    def set_fit_labels(self, fit_text: list):
+    def set_fit_labels(self, fit_text: list, units: list = None):
         val_list, err_list = fit_text
         for i, p in enumerate(self.params_config):
             if i < len(val_list) and i < len(err_list):
-                self.fit_labels[p].setText(f"{val_list[i]} ± {err_list[i]}")
+                label_text = f"{val_list[i]} ± {err_list[i]}"
+                # Append units if provided and non-empty for this parameter
+                if units and i < len(units) and units[i]:
+                    label_text += f" {units[i]}"
+                self.fit_labels[p].setText(label_text)
             else:
                 self.fit_labels[p].setText("<span style='color:#888;'>---</span>")
