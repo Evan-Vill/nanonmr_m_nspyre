@@ -34,7 +34,7 @@ from nspyre import (
 from pulsestreamer import NextAction, PulseStreamer, When
 from saveUtils import flexSave
 import nv_dataclasses_2026_03_05 as nvcfg
-import nv_data_fitting_2026_03_24 as nvfit
+# import nv_data_fitting_2026_03_24 as nvfit
 
 _logger = logging.getLogger(__name__)
 SUBSEQ_COUNT = {
@@ -47,6 +47,8 @@ SUBSEQ_COUNT = {
     "CASR_alt": 2,
     "Cal": 1,
     "Opt T1": 1,
+    "Pulsed ODMR RF": 4,
+    "T2 RF": 4,
 }
 
 def format_hhmmss(seconds: float) -> str:
@@ -108,6 +110,44 @@ def _rf_on(sig_gen):
 def _hdawg_seq_name(drive_type: str) -> str:
     return "DEER CD" if drive_type == "Continuous" else "DEER"
 
+def _format_exception_msg(e: Exception) -> str:
+    """Format an exception with its type and message for user display.
+    
+    Also logs the full traceback to help with debugging and prints to stderr.
+    """
+    import sys
+    import traceback
+    _logger.error(f"Exception occurred: {type(e).__name__}")
+    
+    # Extract useful info from exception
+    exc_str = str(e) if str(e) else repr(e)
+    if hasattr(e, 'args') and e.args:
+        exc_args = "; ".join(str(arg) for arg in e.args)
+    else:
+        exc_args = ""
+    
+    # Print to stderr so user sees it immediately in terminal
+    print(f"\n{'='*70}", file=sys.stderr, flush=True)
+    print(f"❌ EXPERIMENT ERROR: {type(e).__name__}", file=sys.stderr, flush=True)
+    print(f"{'='*70}", file=sys.stderr, flush=True)
+    if exc_str:
+        print(f"Message: {exc_str}", file=sys.stderr, flush=True)
+    if exc_args:
+        print(f"Args: {exc_args}", file=sys.stderr, flush=True)
+    print(f"\nFull Traceback:", file=sys.stderr, flush=True)
+    traceback.print_exc(file=sys.stderr)
+    print(f"{'='*70}\n", file=sys.stderr, flush=True)
+    
+    # Combine all info for return value
+    if exc_str:
+        msg = f"{type(e).__name__}: {exc_str}"
+    elif exc_args:
+        msg = f"{type(e).__name__}: {exc_args}"
+    else:
+        msg = f"{type(e).__name__}"
+    
+    return msg
+
 def managed_experiment(*, token_prefix: str, dataset_key: str = "dataset"):
     """Decorator to run an experiment inside the standard lifecycle.
 
@@ -125,7 +165,13 @@ def managed_experiment(*, token_prefix: str, dataset_key: str = "dataset"):
             dataset = kwargs[dataset_key]
 
             def body(*, mgr, data, pl_data, token):
-                return fn(self, mgr=mgr, data=data, pl_data=pl_data, token=token, **kwargs)
+                try:
+                    return fn(self, mgr=mgr, data=data, pl_data=pl_data, token=token, **kwargs)
+                except Exception as e:
+                    # Print exception to stderr immediately
+                    _format_exception_msg(e)
+                    # Re-raise to be caught by run_experiment
+                    raise
 
             enable_pl_trace = kwargs.pop("enable_pl_trace", False)
 
@@ -215,7 +261,7 @@ class SpinMeasurements:
                 term = 1
 
         num_pts_in_exp = SUBSEQ_COUNT.get(kwargs['exp_type'], 2) * kwargs['num_pts']
-
+        
         dig_config = {'num_pts_in_exp': num_pts_in_exp, # includes all subsequences
                       # 'num_pts_in_exp': 2*kwargs['num_pts_in_exp'], # MW ON + OFF subsequences
                       'num_iters': kwargs['iters'], # number of exp. iterations
@@ -379,7 +425,7 @@ class SpinMeasurements:
             },
             "Pulsed ODMR RF": {
                 'title': 'Pulsed ODMR RF',
-                'xlabel': 'RF Frequency (MHz)',
+                'xlabel': 'Frequency (GHz)',
                 'ylabel': 'Signal (V) or Norm. Signal',
                 'pl_title': 'Pulsed ODMR RF PL Time Trace',
                 'pl_xlabel': 'Readout Window (ns)',
@@ -427,7 +473,7 @@ class SpinMeasurements:
             },
             "DEER": {
                 'title': 'DEER',
-                'xlabel': 'Evolution Time (ns)',
+                'xlabel': 'Frequency (MHz)',
                 'ylabel': 'Signal (V) or Norm. Signal',
                 'pl_title': 'DEER PL Time Trace',
                 'pl_xlabel': 'Readout Window (ns)',
@@ -443,7 +489,7 @@ class SpinMeasurements:
             },
             "DEER FID": {
                 'title': 'DEER FID',
-                'xlabel': 'Time (ns)',
+                'xlabel': 'Free Precession Interval (µs)',
                 'ylabel': 'Signal (V) or Norm. Signal',
                 'pl_title': 'DEER FID PL Time Trace',
                 'pl_xlabel': 'Readout Window (ns)',
@@ -451,7 +497,7 @@ class SpinMeasurements:
             },
             "DEER FID CD": {
                 'title': 'DEER FID CD',
-                'xlabel': 'Time (ns)',
+                'xlabel': 'Free Precession Interval (µs)',
                 'ylabel': 'Signal (V) or Norm. Signal',
                 'pl_title': 'DEER FID CD PL Time Trace',
                 'pl_xlabel': 'Readout Window (ns)',
@@ -489,17 +535,17 @@ class SpinMeasurements:
                 'pl_xlabel': 'Readout Window (ns)',
                 'pl_ylabel': 'Signal (V)',
             },
-            "Correlation Spectrum": {
-                'title': 'Correlation Spectrum',
+            "Noise Spectroscopy": {
+                'title': 'Noise Spectroscopy',
                 'xlabel': 'Frequency (MHz)',
                 'ylabel': 'Signal (V) or Norm. Signal',
-                'pl_title': 'Correlation Spectrum PL Time Trace',
+                'pl_title': 'Noise Spectroscopy PL Time Trace',
                 'pl_xlabel': 'Readout Window (ns)',
                 'pl_ylabel': 'Signal (V)',
             },
             "CASR": {
                 'title': 'CASR',
-                'xlabel': 'Frequency (MHz)',
+                'xlabel': 'Free Precession Interval (ms) or Frequency (kHz)',
                 'ylabel': 'Signal (V) or Norm. Signal',
                 'pl_title': 'CASR PL Time Trace',
                 'pl_xlabel': 'Readout Window (ns)',
@@ -507,7 +553,7 @@ class SpinMeasurements:
             },
             "CASR IR": {
                 'title': 'CASR IR',
-                'xlabel': 'Frequency (MHz)',
+                'xlabel': 'Free Precession Interval (ms) or Frequency (kHz)',
                 'ylabel': 'Signal (V) or Norm. Signal',
                 'pl_title': 'CASR IR PL Time Trace',
                 'pl_xlabel': 'Readout Window (ns)',
@@ -552,9 +598,6 @@ class SpinMeasurements:
         except ValueError:
             return
 
-        if slice_start is not None or slice_end is not None:
-            x_data = x_data[slice_start:slice_end]
-
         metadata = self.get_plot_metadata(exp_type)
         if not metadata:
             raise ValueError(f"No metadata for exp_type {exp_type}")
@@ -583,7 +626,8 @@ class SpinMeasurements:
                 raise ValueError(
                     f"Container for '{name}' must be pre-created by the experiment function"
                 )
-            container.append(np.stack([x_axis, value]))
+            stacked = np.stack([x_axis, value])
+            container.append(stacked)
             container.updated_item(-1)
             datasets[name] = container
             return container
@@ -593,6 +637,11 @@ class SpinMeasurements:
 
         if cfg.both_channels and subseq_2_sweeps is None:
             raise ValueError("subseq_2_sweeps must be provided for both_channels experiments")
+
+        # SLICING LOGIC: If slice_start/slice_end are specified, both x_data and parsed 
+        # subsequence data are trimmed identically BEFORE stacking into StreamingLists.
+        # This ensures x-axis and signal values always align. Any data before slice_start
+        # is permanently discarded and never reaches fitting or plot export.
 
         if cfg.both_channels:
             if not (isinstance(parsed, (list, tuple)) and len(parsed) == 2):
@@ -610,21 +659,35 @@ class SpinMeasurements:
             if len(names) != n:
                 raise ValueError("subseq_sweeps must have exactly one container per subsequence")
 
+            # Apply slicing to x_data if specified (CRITICAL: must align with data slicing)
+            x_data_sliced = x_data
+            if slice_start is not None or slice_end is not None:
+                x_data_sliced = x_data[slice_start:slice_end]
+
             for idx, name in enumerate(names):
                 value0 = ch0[idx]
                 value1 = ch1[idx]
+                
+                if slice_start is not None or slice_end is not None:
+                    value0 = value0[slice_start:slice_end]
+                    value1 = value1[slice_start:slice_end]
 
                 c0 = subseq_sweeps.get(name)
                 if c0 is None:
                     raise ValueError(f"Missing subseq_sweeps container for '{name}'")
-                append_series(name, x_data, value0, c0)
+                append_series(name, x_data_sliced, value0, c0)
 
                 c2 = subseq_2_sweeps.get(name) if subseq_2_sweeps is not None else None
                 if c2 is None:
                     raise ValueError(f"Missing subseq_2_sweeps container for '{name}'")
-                append_series(f"{name}_ch2", x_data, value1, c2)
+                append_series(f"{name}_ch2", x_data_sliced, value1, c2)
 
         else:
+            # Apply slicing to x_data if specified (CRITICAL: must align with data slicing)
+            x_data_sliced = x_data
+            if slice_start is not None or slice_end is not None:
+                x_data_sliced = x_data[slice_start:slice_end]
+            
             if isinstance(parsed, (list, tuple)) and len(parsed) != 2:  # one channel, num_sub_seqs != 2
                 n = len(parsed)
                 if len(subseq_sweeps) != n:
@@ -638,7 +701,7 @@ class SpinMeasurements:
                     if slice_start is not None or slice_end is not None:
                         data_arr = data_arr[slice_start:slice_end]
                     c = subseq_sweeps.get(name)
-                    append_series(name, x_data, data_arr, c)
+                    append_series(name, x_data_sliced, data_arr, c)
             else:
                 sig, bg = parsed
                 if slice_start is not None or slice_end is not None:
@@ -654,8 +717,8 @@ class SpinMeasurements:
                         raise ValueError("subseq_sweeps must include at least two containers for 2-subsequence data")
                     sig_name, bg_name = keys[0], keys[1]
 
-                append_series(sig_name, x_data, sig, subseq_sweeps[sig_name])
-                append_series(bg_name, x_data, bg, subseq_sweeps[bg_name])
+                append_series(sig_name, x_data_sliced, sig, subseq_sweeps[sig_name])
+                append_series(bg_name, x_data_sliced, bg, subseq_sweeps[bg_name])
 
         if pl_data is not None:
             if signal_pl_sweeps is None or background_pl_sweeps is None:
@@ -692,6 +755,8 @@ class SpinMeasurements:
         iters_completed: int,
         fit_value2: Optional[float] = None,
         fit_error2: Optional[float] = None,
+        fit_units: Optional[list] = None,
+        fit_units2: Optional[list] = None,
         exception: Optional[str] = None,
     ) -> dict:
         now = time.perf_counter()
@@ -712,9 +777,11 @@ class SpinMeasurements:
 
             "fit_value": fit_value,
             "fit_error": fit_error,
+            "fit_units": fit_units,
 
             "fit_value2": fit_value2,
             "fit_error2": fit_error2,
+            "fit_units2": fit_units2,
 
             "elapsed_s": elapsed,
             "remaining_s": remaining,
@@ -838,31 +905,44 @@ class SpinMeasurements:
         """
         token = f"{token_prefix}_{time.strftime('%Y%m%d_%H%M%S')}"
 
-        with ExitStack() as stack:
-            mgr = stack.enter_context(InstrumentManager())
-            data = stack.enter_context(DataSource(dataset))
+        try:
+            with ExitStack() as stack:
+                mgr = stack.enter_context(InstrumentManager())
+                data = stack.enter_context(DataSource(dataset))
 
-            pl_data = None
-            if enable_pl_trace:
-                if pl_dataset is None:
-                    pl_dataset = f"{dataset} pl"
-                pl_data = stack.enter_context(DataSource(pl_dataset))
+                pl_data = None
+                if enable_pl_trace:
+                    if pl_dataset is None:
+                        pl_dataset = f"{dataset} pl"
+                    pl_data = stack.enter_context(DataSource(pl_dataset))
 
-            laser_shutter = mgr.laser_shutter
-            sig_gen = mgr.sg
-            ps = mgr.ps
-            hdawg = mgr.awg
+                laser_shutter = mgr.laser_shutter
+                sig_gen = mgr.sg
+                ps = mgr.ps
+                hdawg = mgr.awg
 
-            with _exclusive_ps(ps, token):
-                try:
-                    return body(mgr=mgr, data=data, pl_data=pl_data, token=token)
-                finally:
-                    self.equipment_off_handles(
-                        laser_shutter=laser_shutter,
-                        sig_gen=sig_gen,
-                        ps=ps,
-                        hdawg=hdawg,
-                    )
+                with _exclusive_ps(ps, token):
+                    try:
+                        return body(mgr=mgr, data=data, pl_data=pl_data, token=token)
+                    finally:
+                        self.equipment_off_handles(
+                            laser_shutter=laser_shutter,
+                            sig_gen=sig_gen,
+                            ps=ps,
+                            hdawg=hdawg,
+                        )
+        except Exception as e:
+            # Print to stderr immediately for visibility
+            import sys
+            print(f"\n{'='*70}", file=sys.stderr, flush=True)
+            print(f"❌ UNCAUGHT EXCEPTION IN run_experiment", file=sys.stderr, flush=True)
+            print(f"{'='*70}", file=sys.stderr, flush=True)
+            print(f"Type: {type(e).__name__}", file=sys.stderr, flush=True)
+            print(f"Message: {str(e)}", file=sys.stderr, flush=True)
+            import traceback
+            traceback.print_exc(file=sys.stderr)
+            print(f"{'='*70}\n", file=sys.stderr, flush=True)
+            raise
 
     def sigvstime_scan(self, **kwargs):     
         cfg = nvcfg.SignalScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
@@ -881,7 +961,7 @@ class SpinMeasurements:
             # configure digitizer (need to use DC coupling for signal vs time)           
             dig_config = self.digitizer_configure(exp_type="Sig vs Time", num_pts = 1, iters = 1, 
                                                 segment_size = cfg.segment_size, sampling_freq = cfg.dig_sampling_freq, dig_amplitude = cfg.dig_amplitude, 
-                                                read_channel = cfg.read_channel, coupling = 'DC', termination = '1M', 
+                                                read_channel = cfg.read_channel, both_channels = cfg.both_channels, coupling = 'DC', termination = '1M', 
                                                 pretrig_size = cfg.pretrig_size, dig_timeout = cfg.dig_timeout, runs = 400)
                 
             time_start = time.time()
@@ -996,7 +1076,8 @@ class SpinMeasurements:
             
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
-        fit_x = real_freqs / 1e9
+        fit_units = []
+        fit_x = real_freqs.copy()  # No scaling here; inline scaling in acquire_data call
         fit_y = np.ones(len(fit_x))
 
         ### --- Set up pulse streamer and digitizer for experiment --- ###
@@ -1035,10 +1116,11 @@ class SpinMeasurements:
                 percent_completed=0,
                 fit_value=fit_value,
                 fit_error=fit_error,
+                fit_units=fit_units,
                 start_time=time.perf_counter(),
                 total_iters=cfg.iters,
                 iters_completed=0,
-                exception=type(e).__name__,
+                exception=_format_exception_msg(e),
             ))
             return
             
@@ -1073,10 +1155,11 @@ class SpinMeasurements:
                     percent_completed=0,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=time.perf_counter(),
                     total_iters=cfg.iters,
                     iters_completed=0,
-                    exception=type(e).__name__,
+                    exception=_format_exception_msg(e),
                 ))
                 return        
             
@@ -1103,7 +1186,7 @@ class SpinMeasurements:
                         exp_type="CW ODMR",
                         x_data=real_freqs / 1e9,
                         data=data,
-                        fit_x=fit_x,
+                        fit_x=fit_x / 1e9,
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
@@ -1118,7 +1201,7 @@ class SpinMeasurements:
                     )
                 except Exception as e:
                     failed = True
-                    exception_type = type(e).__name__
+                    exception_type = _format_exception_msg(e)
                     iters_completed = i
                     percent_completed = int(100 * iters_completed / cfg.iters)
                     break
@@ -1127,7 +1210,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(cfg.fit_type, 
+                            fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(cfg.fit_type, 
                                 cfg.dataset, subseq_sweeps["signal"], subseq_sweeps["background"], *cfg.fit_params
                             )
                         except (RuntimeError, OptimizeWarning) as e:
@@ -1141,6 +1224,7 @@ class SpinMeasurements:
                     percent_completed=percent_completed,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=exp_start_time,
                     total_iters=cfg.iters,
                     iters_completed=iters_completed,
@@ -1154,7 +1238,7 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(cfg.fit_type, 
+                    fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(cfg.fit_type, 
                         cfg.dataset, subseq_sweeps["signal"], subseq_sweeps["background"], *cfg.fit_params
                     )
                 except (RuntimeError, OptimizeWarning) as e:
@@ -1169,6 +1253,7 @@ class SpinMeasurements:
             percent_completed=int(percent_completed),
             fit_value=fit_value,
             fit_error=fit_error,
+            fit_units=fit_units,
             start_time=exp_start_time,
             total_iters=cfg.iters,
             iters_completed=iters_completed,
@@ -1222,7 +1307,7 @@ class SpinMeasurements:
             # configure digitizer
             dig_config = self.digitizer_configure(exp_type = "ODMR", num_pts = cfg.num_pts, iters = cfg.iters, 
                                                   segment_size = cfg.segment_size, sampling_freq = cfg.dig_sampling_freq, dig_amplitude = cfg.dig_amplitude, 
-                                                  read_channel = cfg.read_channel, coupling = cfg.dig_coupling, termination = cfg.dig_termination, 
+                                                  read_channel = cfg.read_channel, both_channels = cfg.both_channels, coupling = cfg.dig_coupling, termination = cfg.dig_termination, 
                                                   pretrig_size = cfg.pretrig_size, dig_timeout = cfg.dig_timeout, runs = cfg.runs)
             
             # configure signal generator for NV drive
@@ -1256,6 +1341,9 @@ class SpinMeasurements:
                 signal_sweeps = StreamingList()
                 background_sweeps = StreamingList()
                 angle_fits = StreamingList()
+                
+                # Track previous fit frequency for adaptive initial guess
+                prev_freq_fit = cfg.center_freq / 1e9  # Start with center frequency
 
                 # open laser shutter
                 laser_shutter.open_shutter()
@@ -1309,20 +1397,21 @@ class SpinMeasurements:
                     background_sweeps.updated_item(-1)
 
                     # Fit the data
-                    initial_guess = [0.01, cfg.center_freq/1e9, 6e-3, 1]  # [A, x0, gamma, c]
+                    initial_guess = [0.01, prev_freq_fit, 6e-3, 1]  # [A, x0, gamma, c] — x0 uses previous fit
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
                             params, params_covariance = curve_fit(self.negative_lorentzian, real_freqs/1e9, sig/bg, p0=initial_guess)
-                            # fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(cfg.fit_type, cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
+                            # fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(cfg.fit_type, cfg.dataset, signal_sweeps, background_sweeps, *cfg.fit_params)
                         except (RuntimeError, OptimizeWarning) as e:
                             _logger.warning(f"For {cfg.dataset} measurement, {e}")
 
                     # Extract fitted parameters
                     freq_fit = params[1]
+                    prev_freq_fit = freq_fit  # Update for next iteration
                     angle_fits.append(np.stack([azi_angles[i], freq_fit]))
                     angle_fits.updated_item(-1) 
-                    print(f"ODMR = {params} GHz at angle {azi_angles[i]} degrees")
+                    print(f"ODMR = {round(freq_fit, 3)} GHz at angle {azi_angles[i]} degrees")
 
                     # update GUI progress bar & ETA
                     iter_completed = i + 1                      
@@ -1448,7 +1537,7 @@ class SpinMeasurements:
         hdawg = mgr.awg
 
         ### --- Default parameter array for sweep --- ###
-        mw_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
+        mw_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts)
 
         ### --- Define NV drive parameters --- ###  
         sig_gen_freq, iq_phases = self.choose_sideband(
@@ -1459,11 +1548,12 @@ class SpinMeasurements:
     
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
+        fit_units = []
         fit_x = mw_times.copy()
         fit_y = np.ones(len(fit_x))
 
         ### --- Set up pulse streamer and digitizer for experiment --- ###
-        sequence = ps.Rabi(cfg.laser_init * 1e9, mw_times, cfg.laser_readout * 1e9)
+        sequence = ps.Rabi(cfg.laser_init * 1e9, mw_times * 1e9, cfg.laser_readout * 1e9)
         dig_cfg = self.digitizer_configure(
             exp_type="Rabi",
             num_pts=cfg.num_pts,
@@ -1489,7 +1579,7 @@ class SpinMeasurements:
                 "sideband_power": cfg.sideband_power,
                 "sideband_freq": cfg.sideband_freq,
                 "iq_phases": iq_phases,
-                "pi_pulses": mw_times / 1e9,
+                "pi_pulses": mw_times,
                 "num_pts": cfg.num_pts,
                 "runs": cfg.runs,
             })   
@@ -1499,10 +1589,11 @@ class SpinMeasurements:
                 percent_completed=0,
                 fit_value=fit_value,
                 fit_error=fit_error,
+                fit_units=fit_units,
                 start_time=time.perf_counter(),
                 total_iters=cfg.iters,
                 iters_completed=0,
-                exception=type(e).__name__,
+                exception=_format_exception_msg(e),
             ))
             return
 
@@ -1537,10 +1628,11 @@ class SpinMeasurements:
                     percent_completed=0,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=time.perf_counter(),
                     total_iters=cfg.iters,
                     iters_completed=0,
-                    exception=type(e).__name__,
+                    exception=_format_exception_msg(e),
                 ))
                 return
 
@@ -1565,9 +1657,9 @@ class SpinMeasurements:
                     self.acquire_data(
                         cfg=cfg,
                         exp_type="Rabi",
-                        x_data=mw_times,
+                        x_data=mw_times * 1e9,
                         data=data,
-                        fit_x=fit_x,
+                        fit_x=fit_x * 1e9,
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
@@ -1582,7 +1674,7 @@ class SpinMeasurements:
                     )
                 except Exception as e:
                     failed = True
-                    exception_type = type(e).__name__
+                    exception_type = _format_exception_msg(e)
                     iters_completed = i
                     percent_completed = int(100 * iters_completed / cfg.iters)
                     break
@@ -1591,7 +1683,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(cfg.fit_type, 
+                            fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(cfg.fit_type, 
                                 cfg.dataset, subseq_sweeps["signal"], subseq_sweeps["background"], *cfg.fit_params
                             )
                         except (RuntimeError, OptimizeWarning) as e:
@@ -1605,6 +1697,7 @@ class SpinMeasurements:
                     percent_completed=percent_completed,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=exp_start_time,
                     total_iters=cfg.iters,
                     iters_completed=iters_completed,
@@ -1618,7 +1711,7 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(cfg.fit_type, 
+                    fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(cfg.fit_type, 
                         cfg.dataset, subseq_sweeps["signal"], subseq_sweeps["background"], *cfg.fit_params
                     )
                 except (RuntimeError, OptimizeWarning) as e:
@@ -1633,6 +1726,7 @@ class SpinMeasurements:
             percent_completed=int(percent_completed),
             fit_value=fit_value,
             fit_error=fit_error,
+            fit_units=fit_units,
             start_time=exp_start_time,
             total_iters=cfg.iters,
             iters_completed=iters_completed,
@@ -1666,7 +1760,8 @@ class SpinMeasurements:
             
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
-        fit_x = real_freqs / 1e9
+        fit_units = []
+        fit_x = real_freqs.copy()  # No scaling here; inline scaling in acquire_data call
         fit_y = np.ones(len(fit_x))
 
         ### --- Set up pulse streamer and digitizer for experiment --- ###
@@ -1706,10 +1801,11 @@ class SpinMeasurements:
                 percent_completed=0,
                 fit_value=fit_value,
                 fit_error=fit_error,
+                fit_units=fit_units,
                 start_time=time.perf_counter(),
                 total_iters=cfg.iters,
                 iters_completed=0,
-                exception=type(e).__name__,
+                exception=_format_exception_msg(e),
             ))
             return
             
@@ -1745,10 +1841,11 @@ class SpinMeasurements:
                     percent_completed=0,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=time.perf_counter(),
                     total_iters=cfg.iters,
                     iters_completed=0,
-                    exception=type(e).__name__,
+                    exception=_format_exception_msg(e),
                 ))
                 return 
             
@@ -1775,7 +1872,7 @@ class SpinMeasurements:
                         exp_type="Pulsed ODMR",
                         x_data=real_freqs / 1e9,
                         data=data,
-                        fit_x=fit_x,
+                        fit_x=fit_x / 1e9,
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
@@ -1790,7 +1887,7 @@ class SpinMeasurements:
                     )
                 except Exception as e:
                     failed = True
-                    exception_type = type(e).__name__
+                    exception_type = _format_exception_msg(e)
                     iters_completed = i
                     percent_completed = int(100 * iters_completed / cfg.iters)
                     break
@@ -1799,7 +1896,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(cfg.fit_type, 
+                            fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(cfg.fit_type, 
                                 cfg.dataset, subseq_sweeps["signal"], subseq_sweeps["background"], *cfg.fit_params
                             )
                         except (RuntimeError, OptimizeWarning) as e:
@@ -1813,6 +1910,7 @@ class SpinMeasurements:
                     percent_completed=percent_completed,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=exp_start_time,
                     total_iters=cfg.iters,
                     iters_completed=iters_completed,
@@ -1826,7 +1924,7 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(cfg.fit_type, 
+                    fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(cfg.fit_type, 
                         cfg.dataset, subseq_sweeps["signal"], subseq_sweeps["background"], *cfg.fit_params
                     )
                 except (RuntimeError, OptimizeWarning) as e:
@@ -1841,6 +1939,7 @@ class SpinMeasurements:
             percent_completed=int(percent_completed),
             fit_value=fit_value,
             fit_error=fit_error,
+            fit_units=fit_units,
             start_time=exp_start_time,
             total_iters=cfg.iters,
             iters_completed=iters_completed,
@@ -1877,13 +1976,15 @@ class SpinMeasurements:
         fit_error = None
         fit_no_rf_value = None
         fit_no_rf_error = None
-        fit_x = real_freqs / 1e9
+        fit_x = real_freqs.copy()  # No scaling here; inline scaling in acquire_data call
         fit_y = np.ones(len(fit_x))
-        fit_no_rf_x = real_freqs / 1e9
+        fit_no_rf_x = real_freqs.copy()  # No scaling here; inline scaling in acquire_data call
         fit_no_rf_y = fit_y.copy()
         fitted_diff = 0
         coil_b_field_gauss = None
         proton_pi_half = None
+        fit_units = []  # Initialize for error handling
+        fit_units2 = []  # Initialize for error handling
 
         pi_pulse = cfg.pi*1e9 # [ns] units for pulse streamer
         rf_period = 1/cfg.rf_pulse_freq*1e9 # rf pulse period [ns] units for pulse streamer
@@ -1932,10 +2033,11 @@ class SpinMeasurements:
             fit_error=fit_error,
             fit_value2=fit_no_rf_value,
             fit_error2=fit_no_rf_error,
+            fit_units2=fit_units2,
             start_time=time.perf_counter(),
             total_iters=cfg.iters,
             iters_completed=0,
-            exception=type(e).__name__,
+            exception=_format_exception_msg(e),
         ))
             return
             
@@ -1983,10 +2085,11 @@ class SpinMeasurements:
                     fit_error=fit_error,
                     fit_value2=fit_no_rf_value,
                     fit_error2=fit_no_rf_error,
+                    fit_units2=fit_units2,
                     start_time=time.perf_counter(),
                     total_iters=cfg.iters,
                     iters_completed=0,
-                    exception=type(e).__name__,
+                    exception=_format_exception_msg(e),
                 ))
                 return 
             
@@ -2006,7 +2109,7 @@ class SpinMeasurements:
                         exp_type="Pulsed ODMR RF",
                         x_data=real_freqs / 1e9,
                         data=data,
-                        fit_x=fit_x,
+                        fit_x=fit_x / 1e9,
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
@@ -2021,7 +2124,7 @@ class SpinMeasurements:
                     )
                 except Exception as e:
                     failed = True
-                    exception_type = type(e).__name__
+                    exception_type = _format_exception_msg(e)
                     iters_completed = i
                     percent_completed = int(100 * iters_completed / cfg.iters)
                     break
@@ -2030,16 +2133,16 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                            fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(
                                 cfg.fit_type,
-                                "odmr",
+                                "odmr rf",
                                 subseq_sweeps["rf_signal"],
                                 subseq_sweeps["rf_background"],
                                 *cfg.fit_params[:4],
                             )
-                            fit_no_rf_value, fit_no_rf_error, fit_no_rf_x, fit_no_rf_y = nvfit.fit_data(
+                            fit_no_rf_value, fit_no_rf_error, fit_no_rf_x, fit_no_rf_y, fit_units2 = self.fit_data(
                                 cfg.fit_type,
-                                "odmr",
+                                "odmr rf",
                                 subseq_sweeps["no_rf_signal"],
                                 subseq_sweeps["no_rf_background"],
                                 *cfg.fit_params[4:],
@@ -2059,8 +2162,10 @@ class SpinMeasurements:
                     percent_completed=percent_completed,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     fit_value2=fit_no_rf_value,
                     fit_error2=fit_no_rf_error,
+                    fit_units2=fit_units2,
                     start_time=exp_start_time,
                     total_iters=cfg.iters,
                     iters_completed=iters_completed,
@@ -2074,16 +2179,16 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                    fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(
                         cfg.fit_type, 
-                        "odmr", 
+                        "odmr rf", 
                         subseq_sweeps["rf_signal"], 
                         subseq_sweeps["rf_background"], 
                         *cfg.fit_params[:4]
                     )
-                    fit_no_rf_value, fit_no_rf_error, fit_no_rf_x, fit_no_rf_y = nvfit.fit_data(
+                    fit_no_rf_value, fit_no_rf_error, fit_no_rf_x, fit_no_rf_y, fit_units2 = self.fit_data(
                         cfg.fit_type, 
-                        "odmr", 
+                        "odmr rf", 
                         subseq_sweeps["no_rf_signal"], 
                         subseq_sweeps["no_rf_background"], 
                         *cfg.fit_params[4:]
@@ -2106,6 +2211,7 @@ class SpinMeasurements:
             fit_error=fit_error,
             fit_value2=fit_no_rf_value,
             fit_error2=fit_no_rf_error,
+            fit_units2=fit_units2,
             start_time=exp_start_time,
             total_iters=cfg.iters,
             iters_completed=iters_completed,
@@ -2133,17 +2239,18 @@ class SpinMeasurements:
         ### --- Default parameter array for sweep --- ###
         match cfg.array_type:
             case 'geomspace':
-                tau_times = np.geomspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
+                tau_times = np.geomspace(cfg.start, cfg.stop, cfg.num_pts)
             case 'linspace':
-                tau_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
+                tau_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts)
 
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
-        fit_x = tau_times[1:]/1e6
+        fit_units = []
+        fit_x = tau_times
         fit_y = np.ones(len(fit_x))
 
         ### --- Set up pulse streamer and digitizer for experiment --- ###      
-        sequence = ps.Optical_T1(tau_times, cfg.laser_readout*1e9)
+        sequence = ps.Optical_T1(tau_times * 1e9, cfg.laser_readout*1e9)
         dig_cfg = self.digitizer_configure(
             exp_type="Opt T1",
             num_pts=cfg.num_pts,
@@ -2187,10 +2294,11 @@ class SpinMeasurements:
                     percent_completed=0,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=time.perf_counter(),
                     total_iters=cfg.iters,
                     iters_completed=0,
-                    exception=type(e).__name__,
+                    exception=_format_exception_msg(e),
                 ))
                 return
 
@@ -2208,9 +2316,9 @@ class SpinMeasurements:
                     self.acquire_data(
                         cfg=cfg,
                         exp_type="Opt T1",
-                        x_data=tau_times[1:] / 1e6,
+                        x_data=tau_times * 1e3,
                         data=data,
-                        fit_x=fit_x,
+                        fit_x=fit_x * 1e3,
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
@@ -2222,7 +2330,7 @@ class SpinMeasurements:
                     )
                 except Exception as e:
                     failed = True
-                    exception_type = type(e).__name__
+                    exception_type = _format_exception_msg(e)
                     iters_completed = i
                     percent_completed = int(100 * iters_completed / cfg.iters)
                     break
@@ -2237,6 +2345,7 @@ class SpinMeasurements:
                     percent_completed=percent_completed,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=exp_start_time,
                     total_iters=cfg.iters,
                     iters_completed=iters_completed,
@@ -2258,6 +2367,7 @@ class SpinMeasurements:
             percent_completed=int(percent_completed),
             fit_value=fit_value,
             fit_error=fit_error,
+            fit_units=fit_units,
             start_time=exp_start_time,
             total_iters=cfg.iters,
             iters_completed=iters_completed,
@@ -2280,9 +2390,13 @@ class SpinMeasurements:
         ### --- Default parameter array for sweep --- ###
         match cfg.array_type:
             case 'geomspace':
-                tau_times = np.geomspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
+                tau_times = np.geomspace(cfg.start, cfg.stop, cfg.num_pts)
             case 'linspace':
-                tau_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
+                tau_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts)
+        
+        # Validate that we have enough points for slicing
+        if cfg.num_pts < 2:
+            raise ValueError(f"cfg.num_pts must be at least 2 for MW T1 scan (got {cfg.num_pts})")
         
         ### --- Define NV drive parameters --- ###  
         sig_gen_freq, iq_phases = self.choose_sideband(
@@ -2294,11 +2408,12 @@ class SpinMeasurements:
 
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
-        fit_x = tau_times[1:]/1e6
+        fit_units = []
+        fit_x = tau_times
         fit_y = np.ones(len(fit_x))
 
         ### --- Set up pulse streamer and digitizer for experiment --- ###
-        sequence = ps.Diff_T1(cfg.laser_init*1e9, tau_times, cfg.pulse_axis, pi_pulse, cfg.laser_readout*1e9)
+        sequence = ps.Diff_T1(cfg.laser_init*1e9, tau_times * 1e9, cfg.pulse_axis, pi_pulse, cfg.laser_readout*1e9)
         dig_cfg = self.digitizer_configure(
             exp_type="MW T1",
             num_pts=cfg.num_pts,
@@ -2335,10 +2450,11 @@ class SpinMeasurements:
                 percent_completed=0,
                 fit_value=fit_value,
                 fit_error=fit_error,
+                fit_units=fit_units,
                 start_time=time.perf_counter(),
                 total_iters=cfg.iters,
                 iters_completed=0,
-                exception=type(e).__name__,
+                exception=_format_exception_msg(e),
             ))
             return
             
@@ -2374,10 +2490,11 @@ class SpinMeasurements:
                     percent_completed=0,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=time.perf_counter(),
                     total_iters=cfg.iters,
                     iters_completed=0,
-                    exception=type(e).__name__,
+                    exception=_format_exception_msg(e),
                 ))
                 return
             
@@ -2402,9 +2519,9 @@ class SpinMeasurements:
                     self.acquire_data(
                         cfg=cfg,
                         exp_type="MW T1",
-                        x_data=tau_times[1:]/1e6,
+                        x_data=tau_times * 1e3,
                         data=data,
-                        fit_x=fit_x,
+                        fit_x=fit_x * 1e3,
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
@@ -2420,16 +2537,17 @@ class SpinMeasurements:
                     )
                 except Exception as e:
                     failed = True
-                    exception_type = type(e).__name__
+                    exception_type = _format_exception_msg(e)
+                    _logger.error(f"MW_T1_scan acquire_data failed: {exception_type}: {str(e)}", exc_info=True)
                     iters_completed = i
                     percent_completed = int(100 * iters_completed / cfg.iters)
                     break
-
+                
                 if kwargs.get("fit_live", False):
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                            fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(
                                 cfg.fit_type,
                                 cfg.dataset, 
                                 subseq_sweeps["signal"], 
@@ -2447,6 +2565,7 @@ class SpinMeasurements:
                     percent_completed=percent_completed,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=exp_start_time,
                     total_iters=cfg.iters,
                     iters_completed=iters_completed,
@@ -2460,7 +2579,7 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                    fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(
                         cfg.fit_type, 
                         cfg.dataset, 
                         subseq_sweeps["signal"], 
@@ -2479,6 +2598,7 @@ class SpinMeasurements:
             percent_completed=int(percent_completed),
             fit_value=fit_value,
             fit_error=fit_error,
+            fit_units=fit_units,
             start_time=exp_start_time,
             total_iters=cfg.iters,
             iters_completed=iters_completed,
@@ -2501,9 +2621,9 @@ class SpinMeasurements:
         ### --- Define parameter array for sweep --- ###
         match cfg.array_type:
             case 'geomspace':
-                tau_times = np.geomspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
+                tau_times = np.geomspace(cfg.start, cfg.stop, cfg.num_pts)
             case 'linspace':
-                tau_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
+                tau_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts)
 
         ### --- Define NV drive parameters --- ###
         sig_gen_freq, iq_phases = self.choose_sideband(cfg.sideband, cfg.freq, cfg.sideband_freq)
@@ -2517,50 +2637,51 @@ class SpinMeasurements:
 
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
-        fit_x = tau_times[1:]
+        fit_units = []
+        fit_x = tau_times
         fit_y = np.ones(len(fit_x))
 
         ### --- Set up pulse streamer and digitizer for experiment --- ###
         match cfg.t2_seq:
             case 'Ramsey':
-                sequence = ps.Ramsey(cfg.laser_init*1e9, tau_times, pi_half[0], pi_half[1], cfg.laser_readout*1e9)
-                x_tau_times = tau_times
+                sequence = ps.Ramsey(cfg.laser_init*1e9, tau_times * 1e9, pi_half[0], pi_half[1], cfg.laser_readout*1e9)
+                x_tau_times = tau_times * 1e9
             case 'Echo':
-                sequence = ps.Echo(cfg.laser_init*1e9, tau_times, pi_half[0], pi_half[1], 
+                sequence = ps.Echo(cfg.laser_init*1e9, tau_times * 1e9, pi_half[0], pi_half[1], 
                                         pi[0], pi[1], cfg.laser_readout*1e9)
-                x_tau_times = 2*tau_times + pi[1] # for definition of pi/2 - tau - pi - tau - pi/2
+                x_tau_times = 2 * tau_times * 1e9 + pi[1] # for definition of pi/2 - tau - pi - tau - pi/2
             case 'XY4':
-                sequence = ps.XY4_N(cfg.laser_init*1e9, tau_times, 'xy', 
+                sequence = ps.XY4_N(cfg.laser_init*1e9, tau_times * 1e9, 'xy', 
                                     pi_half[0], pi_half[1], 
                                     pi[0], pi[1], cfg.n, cfg.laser_readout*1e9)
-                x_tau_times = 4*tau_times + 2*pi[0] + 2*pi[1] # for definition of (tau/2 - pi - tau - pi - tau - pi - tau - pi - tau/2)*n
+                x_tau_times = 4 * tau_times * 1e9 + 2 * pi[0] + 2 * pi[1] # for definition of (tau/2 - pi - tau - pi - tau - pi - tau - pi - tau/2)*n
                 # x_tau_times = 2*pi_half[0] + (2*(x_tau_times/2)/(4*cfg.n) + 2*pi[0] + \
                 #             2*pi[1] + 3*x_tau_times/(4*cfg.n))*cfg.n
             case 'YY4':
-                sequence = ps.XY4_N(cfg.laser_init*1e9, tau_times, 'yy', 
+                sequence = ps.XY4_N(cfg.laser_init*1e9, tau_times * 1e9, 'yy', 
                                     pi_half[0], pi_half[1], 
                                     pi[0], pi[1], cfg.n, cfg.laser_readout*1e9)
-                x_tau_times = 4*tau_times + 4*pi[1] # for definition of (tau/2 - pi - tau - pi - tau - pi - tau - pi - tau/2)*n
+                x_tau_times = 4 * tau_times * 1e9 + 4 * pi[1] # for definition of (tau/2 - pi - tau - pi - tau - pi - tau - pi - tau/2)*n
                 # x_tau_times = 2*pi_half[0] + (2*(x_tau_times/2)/(4*cfg.n) + 4*pi[1] + 3*x_tau_times/(4*cfg.n))*cfg.n
             case 'XY8':
-                sequence = ps.XY8_N(cfg.laser_init*1e9, tau_times, 'xy', 
+                sequence = ps.XY8_N(cfg.laser_init*1e9, tau_times * 1e9, 'xy', 
                                     pi_half[0], pi_half[1], 
                                     pi[0], pi[1], cfg.n, cfg.laser_readout*1e9)
-                x_tau_times = 8*tau_times + 4*pi[0] + 4*pi[1] # for definition of (tau/2 - pi - tau - pi - tau - pi - tau - pi - tau/2)*n
+                x_tau_times = 8 * tau_times * 1e9 + 4*pi[0] + 4*pi[1] # for definition of (tau/2 - pi - tau - pi - tau - pi - tau - pi - tau/2)*n
                 # x_tau_times = 2*pi_half[0] + ((x_tau_times/2)/(8*cfg.n) + 4*pi[0] + \
                 #             4*pi[1] + 7*x_tau_times/(8*cfg.n) + (x_tau_times/2)/(8*cfg.n))*cfg.n
             case 'YY8':
-                sequence = ps.XY8_N(cfg.laser_init*1e9, tau_times, 'yy', 
+                sequence = ps.XY8_N(cfg.laser_init*1e9, tau_times * 1e9, 'yy', 
                                     pi_half[0], pi_half[1], 
                                     pi[0], pi[1], cfg.n, cfg.laser_readout*1e9)
-                x_tau_times = 8*tau_times + 8*pi[1] # for definition of (tau/2 - pi - tau - pi - tau - pi - tau - pi - tau/2)*n
+                x_tau_times = 8 * tau_times * 1e9 + 8 * pi[1] # for definition of (tau/2 - pi - tau - pi - tau - pi - tau - pi - tau/2)*n
                 # x_tau_times = 2*pi_half[0] + ((x_tau_times/2)/(8*cfg.n) + 8*pi[1] + \
                 #         7*x_tau_times/(8*cfg.n) + (x_tau_times/2)/(8*cfg.n))*cfg.n
             case 'CPMG':
-                sequence = ps.CPMG_N(cfg.laser_init*1e9, tau_times, cfg.pulse_axis, 
+                sequence = ps.CPMG_N(cfg.laser_init*1e9, tau_times * 1e9, cfg.pulse_axis, 
                                     pi_half[0], pi_half[1], 
                                     pi[0], pi[1], cfg.n, cfg.laser_readout*1e9)
-                x_tau_times = tau_times + (cfg.n-1)*(pi[1]+tau_times) # for definition of (tau/2 - pi - tau - pi - tau - pi - tau - pi - tau/2)*n
+                x_tau_times = tau_times * 1e9 + (cfg.n - 1) * (pi[1] + tau_times * 1e9) # for definition of (tau/2 - pi - tau - pi - tau - pi - tau - pi - tau/2)*n
                 # x_tau_times = 2*pi_half[0] + x_tau_times/cfg.n + (pi[0] + x_tau_times/cfg.n)*(cfg.n-1) + pi[0]
             # case 'PulsePol':
             #     sequence = ps.PulsePol(tau_times, 
@@ -2608,10 +2729,11 @@ class SpinMeasurements:
                 percent_completed=0,
                 fit_value=fit_value,
                 fit_error=fit_error,
+                fit_units=fit_units,
                 start_time=time.perf_counter(),
                 total_iters=cfg.iters,
                 iters_completed=0,
-                exception=type(e).__name__,
+                exception=_format_exception_msg(e),
             ))
             return
         
@@ -2646,10 +2768,11 @@ class SpinMeasurements:
                     percent_completed=0,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=time.perf_counter(),
                     total_iters=cfg.iters,
                     iters_completed=0,
-                    exception=type(e).__name__,
+                    exception=_format_exception_msg(e),
                 ))
                 return
                 
@@ -2674,9 +2797,9 @@ class SpinMeasurements:
                     self.acquire_data(
                         cfg=cfg,
                         exp_type="T2",
-                        x_data=tau_times[1:]/1e3,
+                        x_data=tau_times * 1e6,
                         data=data,
-                        fit_x=fit_x,
+                        fit_x=fit_x * 1e6,
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
@@ -2692,7 +2815,7 @@ class SpinMeasurements:
                     )
                 except Exception as e:
                     failed = True
-                    exception_type = type(e).__name__
+                    exception_type = _format_exception_msg(e)
                     iters_completed = i
                     percent_completed = int(100 * iters_completed / cfg.iters)
                     break
@@ -2701,7 +2824,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                            fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(
                                 cfg.fit_type,
                                 cfg.dataset, 
                                 subseq_sweeps["signal"], 
@@ -2719,6 +2842,7 @@ class SpinMeasurements:
                     percent_completed=percent_completed,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=exp_start_time,
                     total_iters=cfg.iters,
                     iters_completed=iters_completed,
@@ -2732,7 +2856,7 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                    fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(
                         cfg.fit_type,
                         cfg.dataset, 
                         subseq_sweeps["signal"], 
@@ -2751,6 +2875,7 @@ class SpinMeasurements:
             percent_completed=int(percent_completed),
             fit_value=fit_value,
             fit_error=fit_error,
+            fit_units=fit_units,
             start_time=exp_start_time,
             total_iters=cfg.iters,
             iters_completed=iters_completed,
@@ -2773,9 +2898,9 @@ class SpinMeasurements:
         ### --- Define parameter array for sweep --- ###
         match cfg.array_type:
             case 'geomspace':
-                tau_times = np.geomspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
+                tau_times = np.geomspace(cfg.start, cfg.stop, cfg.num_pts)
             case 'linspace':
-                tau_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
+                tau_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts)
 
         ### --- Define NV drive parameters --- ###
         sig_gen_freq, iq_phases = self.choose_sideband(cfg.sideband, cfg.freq, cfg.sideband_freq)
@@ -2789,14 +2914,16 @@ class SpinMeasurements:
 
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
-        fit_x = tau_times[1:]
+        fit_units = []
+        fit_x = tau_times
         fit_y = np.ones(len(fit_x))
 
         ### --- Set up pulse streamer and digitizer for experiment --- ###
-        sequence = ps.XY8_N_RF(cfg.laser_init*1e9, tau_times, 'yy', 
+        sequence = ps.XY8_N_RF(cfg.laser_init*1e9, tau_times * 1e9, 'yy', 
                             pi_half[0], pi_half[1], 
                             pi[0], pi[1], cfg.n, cfg.laser_readout*1e9)
-        x_tau_times = 8*tau_times + 8*pi[1] # for definition of (tau/2 - pi - tau - pi - tau - pi - tau - pi - tau/2)*n
+                            
+        x_tau_times = 8 * tau_times * 1e9 + 8*pi[1] # for definition of (tau/2 - pi - tau - pi - tau - pi - tau - pi - tau/2)*n
         # x_tau_times = 2*pi_half[0] + ((x_tau_times/2)/(8*cfg.n) + 8*pi[1] + \
         #         7*x_tau_times/(8*cfg.n) + (x_tau_times/2)/(8*cfg.n))*cfg.n
 
@@ -2854,10 +2981,11 @@ class SpinMeasurements:
                 percent_completed=0,
                 fit_value=fit_value,
                 fit_error=fit_error,
+                fit_units=fit_units,
                 start_time=time.perf_counter(),
                 total_iters=cfg.iters,
                 iters_completed=0,
-                exception=type(e).__name__,
+                exception=_format_exception_msg(e),
             ))
             return
 
@@ -2893,10 +3021,11 @@ class SpinMeasurements:
                     percent_completed=0,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=time.perf_counter(),
                     total_iters=cfg.iters,
                     iters_completed=0,
-                    exception=type(e).__name__,
+                    exception=_format_exception_msg(e),
                 ))
                 return
                 
@@ -2914,9 +3043,9 @@ class SpinMeasurements:
                     self.acquire_data(
                         cfg=cfg,
                         exp_type="T2 RF",
-                        x_data=tau_times[1:]/1e3,
+                        x_data=tau_times * 1e6,
                         data=data,
-                        fit_x=fit_x,
+                        fit_x=fit_x * 1e6,
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
@@ -2932,7 +3061,7 @@ class SpinMeasurements:
                     )
                 except Exception as e:
                     failed = True
-                    exception_type = type(e).__name__
+                    exception_type = _format_exception_msg(e)
                     iters_completed = i
                     percent_completed = int(100 * iters_completed / cfg.iters)
                     break
@@ -2941,7 +3070,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                            fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(
                                 cfg.fit_type,
                                 cfg.dataset, 
                                 subseq_sweeps["signal"], 
@@ -2959,6 +3088,7 @@ class SpinMeasurements:
                     percent_completed=percent_completed,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=exp_start_time,
                     total_iters=cfg.iters,
                     iters_completed=iters_completed,
@@ -2972,11 +3102,11 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                    fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(
                         cfg.fit_type,
-                        cfg.dataset, 
-                        subseq_sweeps["signal"], 
-                        subseq_sweeps["background"], 
+                        cfg.dataset,
+                        subseq_sweeps["signal"],
+                        subseq_sweeps["background"],
                         *cfg.fit_params
                     )
                 except (RuntimeError, OptimizeWarning) as e:
@@ -2991,12 +3121,13 @@ class SpinMeasurements:
             percent_completed=int(percent_completed),
             fit_value=fit_value,
             fit_error=fit_error,
+            fit_units=fit_units,
             start_time=exp_start_time,
             total_iters=cfg.iters,
             iters_completed=iters_completed,
             exception=exception_type if failed else None,
         ))
-    
+
     @managed_experiment(token_prefix="DQ", dataset_key="dataset")
     def DQ_scan(self, *, mgr, data, pl_data, token, **kwargs):
         """Run a DQ sweep over a set of precession time intervals."""
@@ -3013,9 +3144,9 @@ class SpinMeasurements:
         ### --- Define parameter array for sweep --- ###
         match cfg.array_type:
             case 'geomspace':
-                tau_times = np.geomspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
+                tau_times = np.geomspace(cfg.start, cfg.stop, cfg.num_pts)
             case 'linspace':
-                tau_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
+                tau_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts)
 
         ### --- Define NV drive parameters --- ###
         if cfg.pulse_axis == 'y':
@@ -3032,11 +3163,12 @@ class SpinMeasurements:
 
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
-        fit_x = tau_times[1:]/1e6
+        fit_units = []
+        fit_x = tau_times
         fit_y = np.ones(len(fit_x))
 
         ### --- Set up pulse streamer and digitizer for experiment --- ###
-        sequence = ps.DQ(cfg.laser_init * 1e9, tau_times, cfg.pulse_axis, pi_pulse_minus, pi_pulse_plus, cfg.laser_readout * 1e9)
+        sequence = ps.DQ(cfg.laser_init * 1e9, tau_times * 1e9, cfg.pulse_axis, pi_pulse_minus, pi_pulse_plus, cfg.laser_readout * 1e9)
         dig_cfg = self.digitizer_configure(
             exp_type="DQ",
             num_pts=cfg.num_pts,
@@ -3074,10 +3206,11 @@ class SpinMeasurements:
                 percent_completed=0,
                 fit_value=fit_value,
                 fit_error=fit_error,
+                fit_units=fit_units,
                 start_time=time.perf_counter(),
                 total_iters=cfg.iters,
                 iters_completed=0,
-                exception=type(e).__name__,
+                exception=_format_exception_msg(e),
             ))
             return
 
@@ -3122,10 +3255,11 @@ class SpinMeasurements:
                     percent_completed=0,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=time.perf_counter(),
                     total_iters=cfg.iters,
                     iters_completed=0,
-                    exception=type(e).__name__,
+                    exception=_format_exception_msg(e),
                 ))
                 return    
                 
@@ -3143,9 +3277,9 @@ class SpinMeasurements:
                     self.acquire_data(
                         cfg=cfg,
                         exp_type="DQ",
-                        x_data=tau_times/1e3,
+                        x_data=tau_times * 1e6,
                         data=data,
-                        fit_x=fit_x,
+                        fit_x=fit_x * 1e6,
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
@@ -3156,11 +3290,12 @@ class SpinMeasurements:
                         background_pl_sweeps=background_pl_sweeps if pl_data is not None else None,
                         iters_completed=i + 1,
                         exp_start_time=exp_start_time,
+                        slice_start=1,
                         **kwargs,
                     )
                 except Exception as e:
                     failed = True
-                    exception_type = type(e).__name__
+                    exception_type = _format_exception_msg(e)
                     iters_completed = i
                     percent_completed = int(100 * iters_completed / cfg.iters)
                     break
@@ -3169,7 +3304,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                            fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(
                                 cfg.fit_type,
                                 cfg.dataset, 
                                 subseq_sweeps["S0,0"], 
@@ -3187,6 +3322,7 @@ class SpinMeasurements:
                     percent_completed=percent_completed,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=exp_start_time,
                     total_iters=cfg.iters,
                     iters_completed=iters_completed,
@@ -3200,7 +3336,7 @@ class SpinMeasurements:
         #     with warnings.catch_warnings():
         #         warnings.simplefilter("error", OptimizeWarning)
         #         try:
-        #             fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(cfg.fit_type, 
+        #             fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(cfg.fit_type, 
         #                 cfg.dataset, subseq_sweeps["S0,0"], subseq_sweeps["S0,-1"], *cfg.fit_params
         #             )
         #         except (RuntimeError, OptimizeWarning) as e:
@@ -3215,6 +3351,7 @@ class SpinMeasurements:
             percent_completed=int(percent_completed),
             fit_value=fit_value,
             fit_error=fit_error,
+            fit_units=fit_units,
             start_time=exp_start_time,
             total_iters=cfg.iters,
             iters_completed=iters_completed,
@@ -3244,6 +3381,7 @@ class SpinMeasurements:
         ### --- Default fit parameters for live fitting --- ###
         fit_value: list[float] = []
         fit_error: list[float] = []
+        fit_units = []
         fit_x = np.linspace(cfg.start, cfg.stop, cfg.num_pts) / 1e6
         fit_y = np.ones(len(fit_x))
 
@@ -3311,10 +3449,11 @@ class SpinMeasurements:
                 percent_completed=0,
                 fit_value=fit_value,
                 fit_error=fit_error,
+                fit_units=fit_units,
                 start_time=time.perf_counter(),
                 total_iters=cfg.iters,
                 iters_completed=0,
-                exception=type(e).__name__,
+                exception=_format_exception_msg(e),
             ))
             return
         
@@ -3356,10 +3495,11 @@ class SpinMeasurements:
                     percent_completed=0,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=time.perf_counter(),
                     total_iters=cfg.iters,
                     iters_completed=0,
-                    exception=type(e).__name__,
+                    exception=_format_exception_msg(e),
                 ))
                 return
 
@@ -3391,7 +3531,7 @@ class SpinMeasurements:
                     )
                 except Exception as e:
                     failed = True
-                    exception_type = type(e).__name__
+                    exception_type = _format_exception_msg(e)
                     iters_completed = i
                     percent_completed = int(100 * iters_completed / cfg.iters)
                     break
@@ -3400,7 +3540,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_deer_data(
+                            fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_deer_data(
                                 cfg.fit_type,
                                 cfg.dataset,
                                 subseq_sweeps["dark_signal"],
@@ -3420,6 +3560,7 @@ class SpinMeasurements:
                     percent_completed=percent_completed,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=exp_start_time,
                     total_iters=cfg.iters,
                     iters_completed=iters_completed,
@@ -3433,7 +3574,7 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_deer_data(
+                    fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_deer_data(
                         cfg.fit_type, 
                         cfg.dataset,
                         subseq_sweeps["dark_signal"],
@@ -3454,6 +3595,7 @@ class SpinMeasurements:
             percent_completed=int(percent_completed),
             fit_value=fit_value,
             fit_error=fit_error,
+            fit_units=fit_units,
             start_time=exp_start_time,
             total_iters=cfg.iters,
             iters_completed=iters_completed,
@@ -3474,7 +3616,7 @@ class SpinMeasurements:
         hdawg = mgr.awg
         
         ### --- Default parameter array for sweep --- ###
-        dark_taus = np.linspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9            
+        dark_taus = np.linspace(cfg.start, cfg.stop, cfg.num_pts)        
  
         ### --- Define NV drive parameters --- ###
         sig_gen_freq, iq_phases = self.choose_sideband(
@@ -3490,6 +3632,7 @@ class SpinMeasurements:
 
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
+        fit_units = []
         fit_x = dark_taus   
         fit_y = np.ones(len(fit_x))
 
@@ -3531,7 +3674,7 @@ class SpinMeasurements:
                 'num_pts': cfg.num_pts,
                 'runs': cfg.runs, 
                 'iters': cfg.iters,
-                'pi_pulses': dark_taus/1e9
+                'pi_pulses': dark_taus
             })
         except Exception as e:
             self.queue_from_exp.put_nowait(self.build_status_msg(
@@ -3539,10 +3682,11 @@ class SpinMeasurements:
                 percent_completed=0,
                 fit_value=fit_value,
                 fit_error=fit_error,
+                fit_units=fit_units,
                 start_time=time.perf_counter(),
                 total_iters=cfg.iters,
                 iters_completed=0,
-                exception=type(e).__name__,
+                exception=_format_exception_msg(e),
             ))
             return
             
@@ -3584,10 +3728,11 @@ class SpinMeasurements:
                     percent_completed=0,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=time.perf_counter(),
                     total_iters=cfg.iters,
                     iters_completed=0,
-                    exception=type(e).__name__,
+                    exception=_format_exception_msg(e),
                 ))
                 return
 
@@ -3605,9 +3750,9 @@ class SpinMeasurements:
                     self.acquire_data(
                         cfg=cfg,
                         exp_type="DEER",
-                        x_data=dark_taus,
+                        x_data=dark_taus * 1e9,
                         data=data,
-                        fit_x=fit_x,
+                        fit_x=fit_x * 1e9,
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
@@ -3619,7 +3764,7 @@ class SpinMeasurements:
                     )
                 except Exception as e:
                     failed = True
-                    exception_type = type(e).__name__
+                    exception_type = _format_exception_msg(e)
                     iters_completed = i
                     percent_completed = int(100 * iters_completed / cfg.iters)
                     break
@@ -3628,7 +3773,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_deer_data(
+                            fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_deer_data(
                                 cfg.fit_type,
                                 cfg.dataset,
                                 subseq_sweeps["dark_signal"],
@@ -3648,6 +3793,7 @@ class SpinMeasurements:
                     percent_completed=percent_completed,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=exp_start_time,
                     total_iters=cfg.iters,
                     iters_completed=iters_completed,
@@ -3661,7 +3807,7 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_deer_data(
+                    fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_deer_data(
                         cfg.fit_type, 
                         cfg.dataset, 
                         subseq_sweeps["dark_signal"], 
@@ -3682,6 +3828,7 @@ class SpinMeasurements:
             percent_completed=int(percent_completed),
             fit_value=fit_value,
             fit_error=fit_error,
+            fit_units=fit_units,
             start_time=exp_start_time,
             total_iters=cfg.iters,
             iters_completed=iters_completed,
@@ -3704,9 +3851,9 @@ class SpinMeasurements:
         ### --- Default parameter array for sweep --- ###
         match cfg.array_type:
             case 'geomspace':
-                tau_times = np.geomspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
+                tau_times = np.geomspace(cfg.start, cfg.stop, cfg.num_pts)
             case 'linspace':
-                tau_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
+                tau_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts)
 
         ### --- Define NV drive parameters --- ###
         sig_gen_freq, iq_phases = self.choose_sideband(
@@ -3723,11 +3870,12 @@ class SpinMeasurements:
 
         ### --- Define fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
-        fit_x = tau_times/1e6
+        fit_units = []
+        fit_x = tau_times
         fit_y = np.ones(len(fit_x))
 
         ### --- Set up pulse streamer and digitizer for experiment --- ###
-        sequence = ps.DEER_FID(cfg.laser_init*1e9, tau_times, pi_half[0], pi_half[1], 
+        sequence = ps.DEER_FID(cfg.laser_init*1e9, tau_times * 1e9, pi_half[0], pi_half[1], 
                             pi[0], pi[1], cfg.n, cfg.laser_readout*1e9)
         dig_cfg = self.digitizer_configure(
             exp_type="DEER",
@@ -3772,10 +3920,11 @@ class SpinMeasurements:
                 percent_completed=0,
                 fit_value=fit_value,
                 fit_error=fit_error,
+                fit_units=fit_units,
                 start_time=time.perf_counter(),
                 total_iters=cfg.iters,
                 iters_completed=0,
-                exception=type(e).__name__,
+                exception=_format_exception_msg(e),
             ))
             return
             
@@ -3817,10 +3966,11 @@ class SpinMeasurements:
                     percent_completed=0,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=time.perf_counter(),
                     total_iters=cfg.iters,
                     iters_completed=0,
-                    exception=type(e).__name__,
+                    exception=_format_exception_msg(e),
                 ))
                 return
 
@@ -3838,9 +3988,9 @@ class SpinMeasurements:
                     self.acquire_data(
                         cfg=cfg,
                         exp_type="DEER",
-                        x_data=tau_times[1:]/1e3,
+                        x_data=tau_times * 1e6,
                         data=data,
-                        fit_x=fit_x,
+                        fit_x=fit_x * 1e6,
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
@@ -3853,7 +4003,7 @@ class SpinMeasurements:
                     )
                 except Exception as e:
                     failed = True
-                    exception_type = type(e).__name__
+                    exception_type = _format_exception_msg(e)
                     iters_completed = i
                     percent_completed = int(100 * iters_completed / cfg.iters)
                     break
@@ -3862,7 +4012,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_deer_data(
+                            fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_deer_data(
                                 cfg.fit_type, 
                                 cfg.dataset, 
                                 subseq_sweeps["dark_signal"], 
@@ -3882,6 +4032,7 @@ class SpinMeasurements:
                     percent_completed=percent_completed,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=exp_start_time,
                     total_iters=cfg.iters,
                     iters_completed=iters_completed,
@@ -3892,6 +4043,7 @@ class SpinMeasurements:
                     percent_completed=percent_completed,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=exp_start_time,
                     total_iters=cfg.iters,
                     iters_completed=iters_completed,
@@ -3905,7 +4057,7 @@ class SpinMeasurements:
         #     with warnings.catch_warnings():
         #         warnings.simplefilter("error", OptimizeWarning)
         #         try:
-        #             fit_value, fit_error, fit_x, fit_y = nvfit.fit_deer_data(
+        #             fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_deer_data(
         #                 cfg.fit_type, 
         #                 cfg.dataset, 
         #                 subseq_sweeps["dark_signal"], 
@@ -3926,6 +4078,7 @@ class SpinMeasurements:
             percent_completed=int(percent_completed),
             fit_value=fit_value,
             fit_error=fit_error,
+            fit_units=fit_units,
             start_time=exp_start_time,
             total_iters=cfg.iters,
             iters_completed=iters_completed,
@@ -3948,9 +4101,9 @@ class SpinMeasurements:
         ### --- Default parameter array for sweep --- ###
         match cfg.array_type:
             case 'geomspace':
-                tau_times = np.geomspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
+                tau_times = np.geomspace(cfg.start, cfg.stop, cfg.num_pts)
             case 'linspace':
-                tau_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
+                tau_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts)
 
         ### --- Define NV drive parameters --- ###
         sig_gen_freq, iq_phases = self.choose_sideband(cfg.sideband, cfg.freq, cfg.sideband_freq) # iq_phases for y pulse by default
@@ -3965,13 +4118,14 @@ class SpinMeasurements:
 
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
-        fit_x = tau_times/1e6
+        fit_units = []
+        fit_x = tau_times * 1e9
         fit_y = np.ones(len(fit_x))
 
         ### --- Set up pulse streamer and digitizer for experiment --- ###
-        sequence = ps.DEER_FID_CD(cfg.laser_init*1e9, tau_times, pi_half[0], pi_half[1], 
+        sequence = ps.DEER_FID_CD(cfg.laser_init*1e9, tau_times * 1e9, pi_half[0], pi_half[1], 
                                 pi[0], pi[1], cfg.n, cfg.laser_readout*1e9)
-        # dark_pulses = cfg.pi/2 + tau_times/1e9 + (cfg.pi + 2*tau_times/1e9)*(cfg.n-1) + cfg.pi + tau_times/1e9 + cfg.pi/2 
+        # dark_pulses = cfg.pi/2 + tau_times + (cfg.pi + 2*tau_times)*(cfg.n-1) + cfg.pi + tau_times + cfg.pi/2 
         
         dig_cfg = self.digitizer_configure(
             exp_type="CD",
@@ -4004,7 +4158,7 @@ class SpinMeasurements:
                 'pi_y': pi[1]/1e9,
                 'dark_freq': cfg.dark_freq,
                 'pi_pulse': dark_pi,
-                'taus': tau_times/1e9,
+                'taus': tau_times,
                 'mw_power': cfg.awg_power,
                 'cd_mw_power': cfg.awg_cd_power, 
                 'num_pts': cfg.num_pts,
@@ -4018,10 +4172,11 @@ class SpinMeasurements:
                 percent_completed=0,
                 fit_value=fit_value,
                 fit_error=fit_error,
+                fit_units=fit_units,
                 start_time=time.perf_counter(),
                 total_iters=cfg.iters,
                 iters_completed=0,
-                exception=type(e).__name__,
+                exception=_format_exception_msg(e),
             ))
             return
             
@@ -4067,10 +4222,11 @@ class SpinMeasurements:
                     percent_completed=0,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=time.perf_counter(),
                     total_iters=cfg.iters,
                     iters_completed=0,
-                    exception=type(e).__name__,
+                    exception=_format_exception_msg(e),
                 ))
                 return
 
@@ -4088,9 +4244,9 @@ class SpinMeasurements:
                     self.acquire_data(
                         cfg=cfg,
                         exp_type="CD",
-                        x_data=tau_times[1:]/1e3,
+                        x_data=tau_times * 1e6,
                         data=data,
-                        fit_x=fit_x,
+                        fit_x=fit_x * 1e6,
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
@@ -4103,7 +4259,7 @@ class SpinMeasurements:
                     )
                 except Exception as e:
                     failed = True
-                    exception_type = type(e).__name__
+                    exception_type = _format_exception_msg(e)
                     iters_completed = i
                     percent_completed = int(100 * iters_completed / cfg.iters)
                     break
@@ -4112,7 +4268,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_deer_data(
+                            fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_deer_data(
                                 cfg.fit_type, 
                                 cfg.dataset, 
                                 subseq_sweeps["dark_signal"], 
@@ -4132,6 +4288,7 @@ class SpinMeasurements:
                     percent_completed=percent_completed,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=exp_start_time,
                     total_iters=cfg.iters,
                     iters_completed=iters_completed,
@@ -4142,6 +4299,7 @@ class SpinMeasurements:
                     percent_completed=percent_completed,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=exp_start_time,
                     total_iters=cfg.iters,
                     iters_completed=iters_completed,
@@ -4155,7 +4313,7 @@ class SpinMeasurements:
         #     with warnings.catch_warnings():
         #         warnings.simplefilter("error", OptimizeWarning)
         #         try:
-        #             fit_value, fit_error, fit_x, fit_y = nvfit.fit_deer_data(
+        #             fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_deer_data(
         #                 cfg.fit_type, 
         #                 cfg.dataset, 
         #                 subseq_sweeps["dark_signal"], 
@@ -4176,6 +4334,7 @@ class SpinMeasurements:
             percent_completed=int(percent_completed),
             fit_value=fit_value,
             fit_error=fit_error,
+            fit_units=fit_units,
             start_time=exp_start_time,
             total_iters=cfg.iters,
             iters_completed=iters_completed,
@@ -4258,10 +4417,11 @@ class SpinMeasurements:
                 percent_completed=0,
                 fit_value=fit_value,
                 fit_error=fit_error,
+                fit_units=fit_units,
                 start_time=time.perf_counter(),
                 total_iters=cfg.iters,
                 iters_completed=0,
-                exception=type(e).__name__,
+                exception=_format_exception_msg(e),
             ))
             return
 
@@ -4304,10 +4464,11 @@ class SpinMeasurements:
                     percent_completed=0,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=time.perf_counter(),
                     total_iters=cfg.iters,
                     iters_completed=0,
-                    exception=type(e).__name__,
+                    exception=_format_exception_msg(e),
                 ))
                 return
 
@@ -4339,7 +4500,7 @@ class SpinMeasurements:
                     )
                 except Exception as e:
                     failed = True
-                    exception_type = type(e).__name__
+                    exception_type = _format_exception_msg(e)
                     iters_completed = i
                     percent_completed = int(100 * iters_completed / cfg.iters)
                     break
@@ -4348,7 +4509,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                            fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(
                                 cfg.fit_type, 
                                 cfg.dataset,
                                 subseq_sweeps["dark_signal"], 
@@ -4368,6 +4529,7 @@ class SpinMeasurements:
                     percent_completed=percent_completed,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=exp_start_time,
                     total_iters=cfg.iters,
                     iters_completed=iters_completed,
@@ -4378,6 +4540,7 @@ class SpinMeasurements:
                     percent_completed=percent_completed,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=exp_start_time,
                     total_iters=cfg.iters,
                     iters_completed=iters_completed,
@@ -4391,7 +4554,7 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                    fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(
                         cfg.fit_type, 
                         cfg.dataset,
                         subseq_sweeps["dark_signal"], 
@@ -4412,6 +4575,7 @@ class SpinMeasurements:
             percent_completed=int(percent_completed),
             fit_value=fit_value,
             fit_error=fit_error,
+            fit_units=fit_units,
             start_time=exp_start_time,
             total_iters=cfg.iters,
             iters_completed=iters_completed,
@@ -4447,6 +4611,7 @@ class SpinMeasurements:
 
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
+        fit_units = []
         fit_x = dark_taus
         fit_y = np.ones(len(fit_x))
 
@@ -4498,10 +4663,11 @@ class SpinMeasurements:
                 percent_completed=0,
                 fit_value=fit_value,
                 fit_error=fit_error,
+                fit_units=fit_units,
                 start_time=time.perf_counter(),
                 total_iters=cfg.iters,
                 iters_completed=0,
-                exception=type(e).__name__,
+                exception=_format_exception_msg(e),
             ))
             return
             
@@ -4533,10 +4699,11 @@ class SpinMeasurements:
                     percent_completed=0,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=time.perf_counter(),
                     total_iters=cfg.iters,
                     iters_completed=0,
-                    exception=type(e).__name__,
+                    exception=_format_exception_msg(e),
                 ))
                 return
 
@@ -4554,9 +4721,9 @@ class SpinMeasurements:
                     self.acquire_data(
                         cfg=cfg,
                         exp_type="Corr",
-                        x_data=dark_taus*1e9,
+                        x_data=dark_taus * 1e9,
                         data=data,
-                        fit_x=fit_x,
+                        fit_x=fit_x * 1e9,
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
@@ -4568,7 +4735,7 @@ class SpinMeasurements:
                     )
                 except Exception as e:
                     failed = True
-                    exception_type = type(e).__name__
+                    exception_type = _format_exception_msg(e)
                     iters_completed = i
                     percent_completed = int(100 * iters_completed / cfg.iters)
                     break
@@ -4577,7 +4744,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                            fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(
                                 cfg.fit_type, 
                                 cfg.dataset, 
                                 subseq_sweeps["signal"], 
@@ -4594,6 +4761,7 @@ class SpinMeasurements:
                     percent_completed=percent_completed,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=exp_start_time,
                     total_iters=cfg.iters,
                     iters_completed=iters_completed,
@@ -4604,6 +4772,7 @@ class SpinMeasurements:
                     percent_completed=percent_completed,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=exp_start_time,
                     total_iters=cfg.iters,
                     iters_completed=iters_completed,
@@ -4617,7 +4786,7 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                    fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(
                         cfg.fit_type, 
                         cfg.dataset, 
                         subseq_sweeps["signal"], 
@@ -4636,6 +4805,7 @@ class SpinMeasurements:
             percent_completed=int(percent_completed),
             fit_value=fit_value,
             fit_error=fit_error,
+            fit_units=fit_units,
             start_time=exp_start_time,
             total_iters=cfg.iters,
             iters_completed=iters_completed,
@@ -4678,7 +4848,8 @@ class SpinMeasurements:
 
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
-        fit_x = t_corr_times/1e6
+        fit_units = []
+        fit_x = t_corr_times
         fit_y = np.ones(len(fit_x))
 
         ### --- Set up pulse streamer and digitizer for experiment --- ###
@@ -4725,10 +4896,11 @@ class SpinMeasurements:
                 percent_completed=0,
                 fit_value=fit_value,
                 fit_error=fit_error,
+                fit_units=fit_units,
                 start_time=time.perf_counter(),
                 total_iters=cfg.iters,
                 iters_completed=0,
-                exception=type(e).__name__,
+                exception=_format_exception_msg(e),
             ))
             return
                 
@@ -4770,10 +4942,11 @@ class SpinMeasurements:
                     percent_completed=0,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=time.perf_counter(),
                     total_iters=cfg.iters,
                     iters_completed=0,
-                    exception=type(e).__name__,
+                    exception=_format_exception_msg(e),
                 ))
                 return
 
@@ -4792,9 +4965,9 @@ class SpinMeasurements:
                         cfg=cfg,
                         exp_type="DEER T1",
                         parse_type="DEER",
-                        x_data=t_corr_times[1:]*1e6,
+                        x_data=t_corr_times * 1e6,
                         data=data,
-                        fit_x=fit_x,
+                        fit_x=fit_x * 1e6,
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
@@ -4807,7 +4980,7 @@ class SpinMeasurements:
                     )
                 except Exception as e:
                     failed = True
-                    exception_type = type(e).__name__
+                    exception_type = _format_exception_msg(e)
                     iters_completed = i
                     percent_completed = int(100 * iters_completed / cfg.iters)
                     break
@@ -4816,7 +4989,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_deer_t1_data(
+                            fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_deer_t1_data(
                                 cfg.fit_type, 
                                 cfg.dataset, 
                                 subseq_sweeps["with_py"], 
@@ -4836,6 +5009,7 @@ class SpinMeasurements:
                     percent_completed=percent_completed,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=exp_start_time,
                     total_iters=cfg.iters,
                     iters_completed=iters_completed,
@@ -4849,7 +5023,7 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_deer_t1_data(
+                    fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_deer_t1_data(
                         cfg.fit_type, 
                         cfg.dataset, 
                         subseq_sweeps["with_py"], 
@@ -4870,6 +5044,7 @@ class SpinMeasurements:
             percent_completed=int(percent_completed),
             fit_value=fit_value,
             fit_error=fit_error,
+            fit_units=fit_units,
             start_time=exp_start_time,
             total_iters=cfg.iters,
             iters_completed=iters_completed,
@@ -4911,7 +5086,8 @@ class SpinMeasurements:
 
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
-        fit_x = t_times/1e6
+        fit_units = []
+        fit_x = t_times
         fit_y = np.ones(len(fit_x))
 
         # define pulse sequence
@@ -4960,10 +5136,11 @@ class SpinMeasurements:
                 percent_completed=0,
                 fit_value=fit_value,
                 fit_error=fit_error,
+                fit_units=fit_units,
                 start_time=time.perf_counter(),
                 total_iters=cfg.iters,
                 iters_completed=0,
-                exception=type(e).__name__,
+                exception=_format_exception_msg(e),
             ))
             return
         
@@ -4995,10 +5172,11 @@ class SpinMeasurements:
                     percent_completed=0,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=time.perf_counter(),
                     total_iters=cfg.iters,
                     iters_completed=0,
-                    exception=type(e).__name__,
+                    exception=_format_exception_msg(e),
                 ))
                 return
             
@@ -5016,9 +5194,9 @@ class SpinMeasurements:
                     self.acquire_data(
                         cfg=cfg,
                         exp_type="DEER T2",
-                        x_data=t_times*1e9,
+                        x_data=t_times * 1e9,
                         data=data,
-                        fit_x=fit_x,
+                        fit_x=fit_x * 1e9,
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
@@ -5030,7 +5208,7 @@ class SpinMeasurements:
                     )
                 except Exception as e:
                     failed = True
-                    exception_type = type(e).__name__
+                    exception_type = _format_exception_msg(e)
                     iters_completed = i
                     percent_completed = int(100 * iters_completed / cfg.iters)
                     break
@@ -5039,7 +5217,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                            fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(
                                 cfg.fit_type, 
                                 cfg.dataset, 
                                 subseq_sweeps["signal"], 
@@ -5057,6 +5235,7 @@ class SpinMeasurements:
                     percent_completed=percent_completed,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=exp_start_time,
                     total_iters=cfg.iters,
                     iters_completed=iters_completed,
@@ -5067,6 +5246,7 @@ class SpinMeasurements:
                     percent_completed=percent_completed,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=exp_start_time,
                     total_iters=cfg.iters,
                     iters_completed=iters_completed,
@@ -5080,7 +5260,7 @@ class SpinMeasurements:
         #     with warnings.catch_warnings():
         #         warnings.simplefilter("error", OptimizeWarning)
         #         try:
-        #             fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+        #             fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(
         #                 cfg.fit_type, 
         #                 cfg.dataset, 
         #                 subseq_sweeps["signal"], 
@@ -5099,6 +5279,7 @@ class SpinMeasurements:
             percent_completed=int(percent_completed),
             fit_value=fit_value,
             fit_error=fit_error,
+            fit_units=fit_units,
             start_time=exp_start_time,
             total_iters=cfg.iters,
             iters_completed=iters_completed,
@@ -5109,7 +5290,7 @@ class SpinMeasurements:
     def Corr_Spec_scan(self, *, mgr, data, pl_data, token, **kwargs):
         """Run a Correlation Spectroscopy NMR sweep over a set of precession time intervals."""
         cfg = nvcfg.CorrSpecScanCfg(**kwargs) # validate and parse kwargs into a dataclass for easier access and type safety
-
+        
         ### --- Devices --- ###  
         laser = mgr.laser
         laser_shutter = mgr.laser_shutter
@@ -5119,7 +5300,7 @@ class SpinMeasurements:
         hdawg = mgr.awg
             
         ### --- Default parameter array for sweep --- ###
-        t_corr_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts) * 1e9
+        t_corr_times = np.linspace(cfg.start, cfg.stop, cfg.num_pts) 
 
         ### --- Define NV drive parameters --- ###
         sig_gen_freq, iq_phases = self.choose_sideband(cfg.sideband, cfg.freq, cfg.sideband_freq) # iq_phases for x pulse by default
@@ -5133,11 +5314,12 @@ class SpinMeasurements:
 
         ### --- Default fit parameters for live fitting --- ###
         fit_value, fit_error = [], []
-        fit_x = t_corr_times/1e9
+        fit_units = []
+        fit_x = t_corr_times
         fit_y = np.ones(len(fit_x))
             
         ### --- Set up pulse streamer and digitizer for experiment --- ###
-        sequence = ps.Corr_Spectroscopy(cfg.laser_init*1e9, t_corr_times, cfg.tau*1e9, 
+        sequence = ps.Corr_Spectroscopy(cfg.laser_init*1e9, t_corr_times*1e9, cfg.tau*1e9, 
                                     pi_half[0], pi_half[1], 
                                     pi[0], pi[1], cfg.n, cfg.laser_readout*1e9)
         dig_cfg = self.digitizer_configure(
@@ -5162,6 +5344,7 @@ class SpinMeasurements:
         total_exp_time = 100 + cfg.laser_init*1e9 + 500 + corr_spec_time + 100 + cfg.laser_readout + 100
 
         ### --- Upload AWG sequence --- ###
+        print(f"cfg.sig_opt: {cfg.sig_opt}")
         try:
             if cfg.sig_opt == "Coil":
                 hdawg.set_sequence(**{
@@ -5208,10 +5391,11 @@ class SpinMeasurements:
                 percent_completed=0,
                 fit_value=fit_value,
                 fit_error=fit_error,
+                fit_units=fit_units,
                 start_time=time.perf_counter(),
                 total_iters=cfg.iters,
                 iters_completed=0,
-                exception=type(e).__name__,
+                exception=_format_exception_msg(e),
             ))
             return
             
@@ -5246,10 +5430,11 @@ class SpinMeasurements:
                     percent_completed=0,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=time.perf_counter(),
                     total_iters=cfg.iters,
                     iters_completed=0,
-                    exception=type(e).__name__,
+                    exception=_format_exception_msg(e),
                 ))
                 return
 
@@ -5273,11 +5458,11 @@ class SpinMeasurements:
                 try:
                     self.acquire_data(
                         cfg=cfg,
-                        exp_type="NMR",
-                        x_data=t_corr_times / 1e3,
+                        exp_type="Noise Spectroscopy",
+                        x_data=t_corr_times * 1e6,
                         data=data,
                         pl_data=pl_data,
-                        fit_x=fit_x,
+                        fit_x=fit_x * 1e6,
                         fit_y=fit_y,
                         fit_value=fit_value,
                         fit_error=fit_error,
@@ -5291,7 +5476,7 @@ class SpinMeasurements:
                     )
                 except Exception as e:
                     failed = True
-                    exception_type = type(e).__name__
+                    exception_type = _format_exception_msg(e)
                     iters_completed = i
                     percent_completed = int(100 * iters_completed / cfg.iters)
                     break
@@ -5300,7 +5485,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                            fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(
                                 cfg.fit_type, 
                                 cfg.dataset, 
                                 subseq_sweeps["signal"], 
@@ -5318,6 +5503,7 @@ class SpinMeasurements:
                     percent_completed=percent_completed,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=exp_start_time,
                     total_iters=cfg.iters,
                     iters_completed=iters_completed,
@@ -5328,6 +5514,7 @@ class SpinMeasurements:
                     percent_completed=percent_completed,
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=exp_start_time,
                     total_iters=cfg.iters,
                     iters_completed=iters_completed,
@@ -5341,7 +5528,7 @@ class SpinMeasurements:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", OptimizeWarning)
                 try:
-                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                    fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(
                         cfg.fit_type, 
                         cfg.dataset, 
                         subseq_sweeps["signal"], 
@@ -5360,6 +5547,7 @@ class SpinMeasurements:
             percent_completed=int(percent_completed),
             fit_value=fit_value,
             fit_error=fit_error,
+            fit_units=fit_units,
             start_time=exp_start_time,
             total_iters=cfg.iters,
             iters_completed=iters_completed,
@@ -5413,8 +5601,11 @@ class SpinMeasurements:
                     assert math.isclose(t_seq % period, period, abs_tol=1e-9), "Adjusted 't_seq' still not an integer multiple of 1/f0"
                 print(f"New wait time = {wait_time}")
                 print(f"t_seq = {t_seq} ns")
-                print(f"period = {period} ns")
+                # print(f"period = {period} ns")
+                print(f"f0 = {(0.5/((tau+pi[0])*1e-9))} Hz")
+                print(f"f = {cfg.rf_pulse_freq} Hz")
                 print(f"\u0394f = f - f0 = {(0.5/((tau+pi[0])*1e-9) - cfg.rf_pulse_freq)/1000} kHz")
+                print(f"Total sequence time = {2 * cfg.num_pts * t_seq * 1e-9} s") # multiply by 2 because of signal and background subsequences interleaving points
             except AssertionError as e:  
                 self.queue_from_exp.put_nowait(self.build_status_msg(
                     status="failed",
@@ -5424,7 +5615,7 @@ class SpinMeasurements:
                     start_time=time.perf_counter(),
                     total_iters=cfg.iters,
                     iters_completed=0,
-                    exception=type(e).__name__,
+                    exception=_format_exception_msg(e),
                 ))
             else:
                 ### --- Define time points for x-axis based on sequence parameters --- ###
@@ -5433,10 +5624,11 @@ class SpinMeasurements:
                 ### --- Define NV drive parameters --- ###
                 sig_gen_freq, iq_phases = self.choose_sideband(cfg.sideband, cfg.freq, cfg.sideband_freq) # iq_phases for x pulse by default
 
-                self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=cfg.rf_pulse_power) # configure signal generator for NV drive
+                self._configure_sig_gen_iq(sig_gen, carrier_freq=sig_gen_freq, rf_power=cfg.rf_power) # configure signal generator for NV drive
 
                 ### --- Default fit parameters for live fitting --- ###
                 fit_value, fit_error = [], []
+                fit_units = []
                 fit_x = times
                 fit_y = np.ones(len(fit_x))
 
@@ -5496,10 +5688,11 @@ class SpinMeasurements:
                         percent_completed=0,
                         fit_value=fit_value,
                         fit_error=fit_error,
+                        fit_units=fit_units,
                         start_time=time.perf_counter(),
                         total_iters=cfg.iters,
                         iters_completed=0,
-                        exception=type(e).__name__,
+                        exception=_format_exception_msg(e),
                     ))
                     return
                 
@@ -5540,10 +5733,11 @@ class SpinMeasurements:
                             percent_completed=0,
                             fit_value=fit_value,
                             fit_error=fit_error,
+                            fit_units=fit_units,
                             start_time=time.perf_counter(),
                             total_iters=cfg.iters,
                             iters_completed=0,
-                            exception=type(e).__name__,
+                            exception=_format_exception_msg(e),
                         ))
                         return
             
@@ -5563,7 +5757,7 @@ class SpinMeasurements:
                                 exp_type="CASR",
                                 x_data=times * 1e3,
                                 data=data,
-                                fit_x=fit_x,
+                                fit_x=fit_x * 1e3,
                                 fit_y=fit_y,
                                 fit_value=fit_value,
                                 fit_error=fit_error,
@@ -5576,7 +5770,7 @@ class SpinMeasurements:
                             )
                         except Exception as e:
                             failed = True
-                            exception_type = type(e).__name__
+                            exception_type = _format_exception_msg(e)
                             iters_completed = i
                             percent_completed = int(100 * iters_completed / cfg.iters)
                             break
@@ -5585,7 +5779,7 @@ class SpinMeasurements:
                             with warnings.catch_warnings():
                                 warnings.simplefilter("error", OptimizeWarning)
                                 try:
-                                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                                    fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(
                                         cfg.fit_type, 
                                         cfg.dataset, 
                                         subseq_sweeps["signal"], 
@@ -5603,6 +5797,7 @@ class SpinMeasurements:
                             percent_completed=percent_completed,
                             fit_value=fit_value,
                             fit_error=fit_error,
+                            fit_units=fit_units,
                             start_time=exp_start_time,
                             total_iters=cfg.iters,
                             iters_completed=iters_completed,
@@ -5616,7 +5811,7 @@ class SpinMeasurements:
                 #     with warnings.catch_warnings():
                 #         warnings.simplefilter("error", OptimizeWarning)
                 #         try:
-                #             fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                #             fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(
                 #                 cfg.fit_type, 
                 #                 cfg.dataset, 
                 #                 subseq_sweeps["signal"], 
@@ -5635,6 +5830,7 @@ class SpinMeasurements:
                     percent_completed=int(percent_completed),
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=exp_start_time,
                     total_iters=cfg.iters,
                     iters_completed=iters_completed,
@@ -5699,7 +5895,7 @@ class SpinMeasurements:
                     start_time=time.perf_counter(),
                     total_iters=cfg.iters,
                     iters_completed=0,
-                    exception=type(e).__name__,
+                    exception=_format_exception_msg(e),
                 ))
             else:
                 ### --- Define time points for x-axis based on sequence parameters --- ###
@@ -5712,6 +5908,7 @@ class SpinMeasurements:
 
                 ### --- Default fit parameters for live fitting --- ###
                 fit_value, fit_error = [], []
+                fit_units = []
                 fit_x = times
                 fit_y = np.ones(len(fit_x))
 
@@ -5771,10 +5968,11 @@ class SpinMeasurements:
                         percent_completed=0,
                         fit_value=fit_value,
                         fit_error=fit_error,
+                        fit_units=fit_units,
                         start_time=time.perf_counter(),
                         total_iters=cfg.iters,
                         iters_completed=0,
-                        exception=type(e).__name__,
+                        exception=_format_exception_msg(e),
                     ))
                     return
                 
@@ -5815,10 +6013,11 @@ class SpinMeasurements:
                             percent_completed=0,
                             fit_value=fit_value,
                             fit_error=fit_error,
+                            fit_units=fit_units,
                             start_time=time.perf_counter(),
                             total_iters=cfg.iters,
                             iters_completed=0,
-                            exception=type(e).__name__,
+                            exception=_format_exception_msg(e),
                         ))
                         return
             
@@ -5838,7 +6037,7 @@ class SpinMeasurements:
                                 exp_type="CASR",
                                 x_data=times * 1e3,
                                 data=data,
-                                fit_x=fit_x,
+                                fit_x=fit_x * 1e3,
                                 fit_y=fit_y,
                                 fit_value=fit_value,
                                 fit_error=fit_error,
@@ -5851,7 +6050,7 @@ class SpinMeasurements:
                             )
                         except Exception as e:
                             failed = True
-                            exception_type = type(e).__name__
+                            exception_type = _format_exception_msg(e)
                             iters_completed = i
                             percent_completed = int(100 * iters_completed / cfg.iters)
                             break
@@ -5860,7 +6059,7 @@ class SpinMeasurements:
                             with warnings.catch_warnings():
                                 warnings.simplefilter("error", OptimizeWarning)
                                 try:
-                                    fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                                    fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(
                                         cfg.fit_type, 
                                         cfg.dataset, 
                                         subseq_sweeps["signal"], 
@@ -5878,6 +6077,7 @@ class SpinMeasurements:
                             percent_completed=percent_completed,
                             fit_value=fit_value,
                             fit_error=fit_error,
+                            fit_units=fit_units,
                             start_time=exp_start_time,
                             total_iters=cfg.iters,
                             iters_completed=iters_completed,
@@ -5891,7 +6091,7 @@ class SpinMeasurements:
                     with warnings.catch_warnings():
                         warnings.simplefilter("error", OptimizeWarning)
                         try:
-                            fit_value, fit_error, fit_x, fit_y = nvfit.fit_data(
+                            fit_value, fit_error, fit_x, fit_y, fit_units = self.fit_data(
                                 cfg.fit_type, 
                                 cfg.dataset, 
                                 subseq_sweeps["signal"], 
@@ -5910,6 +6110,7 @@ class SpinMeasurements:
                     percent_completed=int(percent_completed),
                     fit_value=fit_value,
                     fit_error=fit_error,
+                    fit_units=fit_units,
                     start_time=exp_start_time,
                     total_iters=cfg.iters,
                     iters_completed=iters_completed,
@@ -5948,6 +6149,31 @@ class SpinMeasurements:
         return A * np.exp(-(x / T1_nv)**n_nv - (x / T1_e)**n_e) + c
 
     def fit_data(self, fit_type, exp, sig_data, back_data, *args):
+        """Fit experimental data to a model function.
+        
+        NOTE: sig_data and back_data are StreamingLists populated by acquire_data().
+        If slice_start was specified during acquisition, these lists contain ONLY 
+        the sliced data (first point already removed). Fitting operates on the 
+        sliced data only, never on the discarded points.
+        """
+        # Check if data is available before attempting to fit
+        if len(sig_data) == 0 or len(back_data) == 0:
+            return [], [], [], [], []
+        
+        # Check all shapes are consistent before stacking
+        sig_shapes = [arr.shape for arr in sig_data]
+        back_shapes = [arr.shape for arr in back_data]
+        
+        if len(set(sig_shapes)) > 1:
+            print(f"ERROR: sig_data has inconsistent shapes: {sig_shapes}")
+            _logger.error(f"sig_data shape mismatch: {sig_shapes}")
+            return [], [], [], [], []
+        
+        if len(set(back_shapes)) > 1:
+            print(f"ERROR: back_data has inconsistent shapes: {back_shapes}")
+            _logger.error(f"back_data shape mismatch: {back_shapes}")
+            return [], [], [], [], []
+        
         # Combine all signal sweeps into a single 3D array and average
         all_signal_data = np.stack(sig_data, axis=-1)  # Shape: (2, 10, 5)
         averaged_sig = np.mean(all_signal_data[1, :, :], axis=1)  # Shape: (10,)
@@ -5957,17 +6183,43 @@ class SpinMeasurements:
         averaged_bg = np.mean(all_background_data[1, :, :], axis=1)  # Shape: (10,)
 
         # Compute the microwave_times (assumed constant across sweeps)
-        x_values = all_signal_data[0, :, 0]  # Shape: (10,)
-        x_fit = np.linspace(min(x_values), max(x_values), 1000) # finer resolution for fitting
+        x_values = all_signal_data[0, :, 0]  # Shape: (10,) — x_data from experiment in display units
+        
+        # Convert x_values to SI units based on experiment type for consistent fitting
+        if exp in ('odmr', 'odmr rf'):
+            # ODMR experiments: x_values in GHz, convert to Hz (SI)
+            x_values = x_values * 1e9
+        elif exp in ('nmr', 'casr'):
+            # NMR/CASR experiments: frequency in MHz/kHz, convert to Hz (SI)
+            if exp == 'nmr':
+                x_values = x_values / 1e6  # MHz → Hz
+            else:  # casr
+                x_values = x_values / 1e3  # kHz → Hz
+        elif exp in ('rabi', 'corr rabi', 'deer t2'):
+            # Time-domain in nanoseconds: convert to seconds (SI)
+            x_values = x_values / 1e9
+        elif exp == 't1':
+            # T1 in milliseconds: convert to seconds (SI)
+            x_values = x_values / 1e3
+        elif exp in ('t2', 'dq'):
+            # Time-domain in microseconds: convert to seconds (SI)
+            x_values = x_values / 1e6
+        else:
+            # Default: assume time in milliseconds
+            x_values = x_values / 1e3
+        
+        x_fit = np.linspace(min(x_values), max(x_values), 1000) # finer resolution for fitting in SI
 
         # Compute the ratio/difference of averaged signal and background for fitting
         if exp == 'odmr' or exp == 'rabi':
             y_values = averaged_sig / averaged_bg  # Shape: (10,)
-        elif exp == 't1' or exp == 't2':
+        else:  # t1, t2, dq, and DEER time-domain experiments
             y_values = averaged_bg - averaged_sig
 
-        # Initial guesses for parameters: A, gamma, f, phi, C
-        # initial_guess = [0.02, 0.001, 200, 0, 1]
+        # Normalize exp to lowercase for consistent matching throughout fit cases
+        exp_lower = exp.lower() if isinstance(exp, str) else exp
+
+        # Initial guesses: kept in SI units (no conversions before fitting)
         initial_guess = list(args)
         
         # Perform curve fitting 
@@ -5982,93 +6234,241 @@ class SpinMeasurements:
         """
         match fit_type:
             case 'Neg. Lorentz.':
-                if exp == 'odmr':
-                    initial_guess[1] /= 1e9 # convert [Hz] to [GHz]
-                    initial_guess[2] /= 1e9 # convert [Hz] to [GHz]
-                
+                # Keep initial_guess in SI units (Hz) for fitting
                 ### --- Perform fit --- ###
                 params, covariance = curve_fit(self.negative_lorentzian, x_values, y_values, p0=initial_guess)
                 y_fit = self.negative_lorentzian(x_fit, *params)
                 param_errors = np.sqrt(np.diag(covariance))
-                fitted_values = [round(i, 4) for i in params]
-                fitted_errors = [round(i, 4) for i in param_errors]
+                
+                # Convert fitted parameters to display units
+                display_params = list(params)
+                display_errors = list(param_errors)
+                if exp_lower in ('odmr', 'odmr rf'):
+                    # Display center frequency and linewidth in GHz
+                    display_params[1] /= 1e9  # x0: Hz → GHz
+                    display_errors[1] /= 1e9
+                    display_params[2] /= 1e9  # gamma: Hz → GHz
+                    display_errors[2] /= 1e9
+                elif exp_lower == 'deer':
+                    # Display center frequency and linewidth in MHz
+                    display_params[1] /= 1e6  # x0: Hz → MHz
+                    display_errors[1] /= 1e6
+                    display_params[2] /= 1e6  # gamma: Hz → MHz
+                    display_errors[2] /= 1e6
+                elif exp_lower == 'nmr':
+                    # Display center frequency in MHz, linewidth in kHz
+                    display_params[1] /= 1e6  # x0: Hz → MHz
+                    display_errors[1] /= 1e6
+                    display_params[2] /= 1e3  # gamma: Hz → kHz
+                    display_errors[2] /= 1e3
+                elif exp_lower == 'casr':
+                    # Display center frequency and linewidth in kHz
+                    display_params[1] /= 1e3  # x0: Hz → kHz
+                    display_errors[1] /= 1e3
+                    display_params[2] /= 1e3  # gamma: Hz → kHz
+                    display_errors[2] /= 1e3
+                
+                fitted_values = [round(i, 4) for i in display_params]
+                fitted_errors = [round(i, 4) for i in display_errors]
+                # Units for Neg. Lorentz: [amplitude, freq, linewidth, vertical_offset]
+                if exp_lower in ('odmr', 'odmr rf'):
+                    fit_units = ['', 'GHz', 'GHz', '']
+                elif exp_lower == 'deer':
+                    fit_units = ['', 'MHz', 'MHz', '']
+                elif exp_lower == 'nmr':
+                    fit_units = ['', 'MHz', 'kHz', '']
+                elif exp_lower == 'casr':
+                    fit_units = ['', 'kHz', 'kHz', '']
+                else:
+                    fit_units = ['', '', '', '']
             
             case 'Pos. Lorentz.':
-                if exp == 'nmr':
-                    initial_guess[1] /= 1e6 # convert [Hz] to [MHz]
-                    initial_guess[2] /= 1e3 # convert [Hz] to [kHz]
-                elif exp == 'casr':
-                    initial_guess[1] /= 1e3 # convert [Hz] to [kHz]
-                
+                # Keep initial_guess in SI units (Hz) for fitting
                 ### --- Perform fit --- ###
                 params, covariance = curve_fit(self.positive_lorentzian, x_values, y_values, p0=initial_guess)
-                y_fit = self.negative_lorentzian(x_fit, *params)
+                y_fit = self.positive_lorentzian(x_fit, *params)
                 param_errors = np.sqrt(np.diag(covariance))
-                fitted_values = [round(i, 4) for i in params]
-                fitted_errors = [round(i, 4) for i in param_errors]
+                
+                # Convert fitted parameters to display units
+                display_params = list(params)
+                display_errors = list(param_errors)
+                if exp_lower == 'nmr':
+                    # Display center frequency in MHz, linewidth in kHz
+                    display_params[1] /= 1e6  # x0: Hz → MHz
+                    display_errors[1] /= 1e6
+                    display_params[2] /= 1e3  # gamma: Hz → kHz
+                    display_errors[2] /= 1e3
+                elif exp_lower == 'casr':
+                    # Display center frequency and linewidth in kHz
+                    display_params[1] /= 1e3  # x0: Hz → kHz
+                    display_errors[1] /= 1e3
+                    display_params[2] /= 1e3  # gamma: Hz → kHz
+                    display_errors[2] /= 1e3
+                
+                fitted_values = [round(i, 4) for i in display_params]
+                fitted_errors = [round(i, 4) for i in display_errors]
+                # Units for Pos. Lorentz: [amplitude, freq, linewidth, vertical_offset]
+                if exp_lower == 'nmr':
+                    fit_units = ['', 'MHz', 'kHz', '']
+                elif exp_lower == 'casr':
+                    fit_units = ['', 'kHz', 'kHz', '']
+                else:
+                    fit_units = ['', '', '', '']
 
             case 'Two Neg. Lorentz.':
-                if exp == 'odmr rf':
-                    initial_guess[1] /= 1e9 # convert [Hz] to [GHz]
-                    initial_guess[2] /= 1e9 # convert [Hz] to [GHz]
-                    initial_guess[5] /= 1e9 # convert [Hz] to [GHz]
-                    initial_guess[6] /= 1e9 # convert [Hz] to [GHz]
-                
+                # Keep initial_guess in SI units (Hz) for fitting
                 ### --- Perform fit --- ###
                 params, covariance = curve_fit(self.negative_lorentzian, x_values, y_values, p0=initial_guess)
                 y_fit = self.negative_lorentzian(x_fit, *params)
                 param_errors = np.sqrt(np.diag(covariance))
-                fitted_values = [round(i, 4) for i in params]
-                fitted_errors = [round(i, 4) for i in param_errors]
+                
+                # Convert fitted parameters to display units (GHz for ODMR RF)
+                display_params = list(params)
+                display_errors = list(param_errors)
+                if exp_lower == 'odmr rf':
+                    # Display frequencies in GHz
+                    for idx in [1, 5]:  # x0 and x0_rf for two Lorentzians
+                        if idx < len(display_params):
+                            display_params[idx] /= 1e9
+                            display_errors[idx] /= 1e9
+                    for idx in [2, 6]:  # gamma and gamma_rf
+                        if idx < len(display_params):
+                            display_params[idx] /= 1e9
+                            display_errors[idx] /= 1e9
+                
+                fitted_values = [round(i, 4) for i in display_params]
+                fitted_errors = [round(i, 4) for i in display_errors]
+                # Units for Two Neg. Lorentz: [amp1, freq1, linewidth1, offset1, amp2, freq2, linewidth2, offset2]
+                if exp_lower == 'odmr rf':
+                    fit_units = ['', 'GHz', 'GHz', '', '', 'GHz', 'GHz', '']
+                else:
+                    fit_units = ['', '', '', '', '', '', '', '']
 
             case 'Decaying Cos.':
-                if exp in ('rabi', 't2'):
-                    initial_guess[1] *= 1e9 # convert [s] to [us]
-                    initial_guess[2] *= 1e9 # convert [s] to [ns]
-
+                # Keep initial_guess in SI units (seconds) for fitting
+                
                 ### --- Perform fit --- ###
                 params, covariance = curve_fit(self.decaying_cosine, x_values, y_values, p0=initial_guess)
                 y_fit = self.decaying_cosine(x_fit, *params)
                 param_errors = np.sqrt(np.diag(covariance))
-                fitted_values = [round(i, 2) for i in params]
-                fitted_errors = [round(i, 2) for i in param_errors]
-                fitted_values[2] = round(x_fit[np.argmin(y_fit)],2)
-                fitted_errors[2] = 0
+                
+                # Convert fitted parameters to display units based on experiment
+                display_params = list(params)
+                display_errors = list(param_errors)
+                if exp_lower in ('rabi', 'deer rabi', 'corr rabi', 'deer t2'):
+                    # Display t_decay and T in nanoseconds
+                    display_params[1] *= 1e9  # t_decay: s → ns
+                    display_errors[1] *= 1e9
+                    display_params[2] *= 1e9  # T: s → ns
+                    display_errors[2] *= 1e9
+                elif exp_lower in ('t2', 'dq'):
+                    # Display t_decay and T in microseconds
+                    display_params[1] *= 1e6  # t_decay: s → μs
+                    display_errors[1] *= 1e6
+                    display_params[2] *= 1e6  # T: s → μs
+                    display_errors[2] *= 1e6
+                    
+                fitted_values = [round(i, 2) for i in display_params]
+                fitted_errors = [round(i, 2) for i in display_errors]
+                
+                # For Rabi/DEER Rabi/FID experiments: Find pi pulse time as argmin of fitted curve
+                # This method captures the first minimum regardless of inhomogeneity or parameter stretching
+                if exp_lower in ('rabi', 'deer rabi', 'corr rabi', 'fid', 'fid cd'):
+                    i_min = np.argmin(y_fit)
+                    pi_time_si = x_fit[i_min]
+                    
+                    # Period uncertainty from covariance (param_errors[2])
+                    # The minimum location is most sensitive to the period parameter T
+                    pi_time_error_si = param_errors[2]
+                    
+                    # Convert to display units
+                    if exp_lower in ('rabi', 'deer rabi', 'corr rabi', 'deer t2'):
+                        scale = 1e9  # → ns
+                    else:  # 'fid', 'fid cd'
+                        scale = 1e6  # → μs
+                    
+                    fitted_values[2] = round(pi_time_si * scale, 2)
+                    fitted_errors[2] = round(pi_time_error_si * scale, 2)
+                
+                # Units for Decaying Cos: [amplitude, decay_time, period, phase, offset]
+                if exp_lower in ('rabi', 'deer rabi', 'corr rabi', 'deer t2'):
+                    fit_units = ['', 'ns', 'ns', '', '']
+                elif exp_lower in ('t2', 'dq'):
+                    fit_units = ['', 'μs', 'μs', '', '']
+                else:
+                    fit_units = ['', '', '', '', '']
             
             case 'Stretched Exp.':
-                if exp == 't1':
-                    initial_guess[1] *= 1e3 # convert [s] to [ms]
-                elif exp == 't2':
-                    initial_guess[1] *= 1e6 # convert [s] to [us]
+                # Keep initial_guess in SI units (seconds for time constants) for fitting
                 
                 ### --- Perform fit --- ###
                 params, covariance = curve_fit(self.stretched_exponential, x_values, y_values, p0=initial_guess)
                 y_fit = self.stretched_exponential(x_fit, *params)
                 param_errors = np.sqrt(np.diag(covariance))
-                fitted_values = [round(i, 3) for i in params]
-                fitted_errors = [round(i, 3) for i in param_errors]
+                
+                # Convert fitted parameters to display units based on experiment
+                display_params = list(params)
+                display_errors = list(param_errors)
+                if exp_lower == 't1':
+                    # Display time constant in milliseconds
+                    display_params[1] *= 1e3  # T: s → ms
+                    display_errors[1] *= 1e3
+                elif exp_lower in ('t2', 'dq', 'fid', 'fid cd', 'deer t1'):
+                    # Display time constant in microseconds
+                    display_params[1] *= 1e6  # T: s → μs
+                    display_errors[1] *= 1e6
+                
+                fitted_values = [round(i, 3) for i in display_params]
+                fitted_errors = [round(i, 3) for i in display_errors]
+                # Units for Stretched Exp: [amplitude, time_constant, exponent, offset]
+                if exp_lower == 't1':
+                    fit_units = ['', 'ms', '', '']
+                elif exp_lower in ('t2', 'dq', 'fid', 'fid cd', 'deer t1'):
+                    fit_units = ['', 'μs', '', '']
+                else:
+                    fit_units = ['', '', '', '']
             
             case 'Modulated Str. Exp.':
-                if exp == 't2':
-                    initial_guess[1] *= 1e6 # convert [s] to [ms]
-                    initial_guess[4] /= 1e6 # convert [Hz] to [MHz]
-                    initial_guess[7] /= 1e6 # convert [Hz] to [MHz]
+                # Keep initial_guess in SI units: T2 in seconds, frequencies in Hz (SI)
                 
                 ### --- Perform fit --- ###
                 params, covariance = curve_fit(self.mod_stretched_exponential, x_values, y_values, p0=initial_guess)
                 y_fit = self.mod_stretched_exponential(x_fit, *params)
                 param_errors = np.sqrt(np.diag(covariance))
-                # compute fitted value of interest (resonance for ODMR, pi pulse for Rabi, etc.)
-                fitted_values = [round(i, 3) for i in params]
-                fitted_errors = [round(i, 3) for i in param_errors]
+                
+                # Convert fitted parameters to display units (T2 for T2 experiments)
+                display_params = list(params)
+                display_errors = list(param_errors)
+                if exp_lower == 't2':
+                    # Display T2 in microseconds, modulation frequencies in MHz
+                    display_params[1] *= 1e6  # T2: s → μs
+                    display_errors[1] *= 1e6
+                    for idx in [4, 7]:  # f1, f2
+                        if idx < len(display_params):
+                            display_params[idx] /= 1e6  # Hz → MHz
+                            display_errors[idx] /= 1e6
+                
+                fitted_values = [round(i, 3) for i in display_params]
+                fitted_errors = [round(i, 3) for i in display_errors]
+                # Units for Modulated Str. Exp: [amplitude, T2, exponent, a1, f1, phi1, a2, f2, phi2]
+                if exp_lower == 't2':
+                    fit_units = ['', 'μs', '', '', 'MHz', '', '', 'MHz', '']
+                else:
+                    fit_units = ['', '', '', '', '', '', '', '', '']
             
             case _:
                 print("No fit type selected.")
-                return 0, 0, 0, 0
+                return 0, 0, 0, 0, []
               
-        return fitted_values, fitted_errors, x_fit, y_fit
+        return fitted_values, fitted_errors, x_fit, y_fit, fit_units
     
     def fit_deer_data(self, fit_type, exp, dark_sig_data, dark_back_data, echo_sig_data, echo_back_data, *args):
+        """Fit DEER experimental data to a model function.
+        
+        NOTE: Input StreamingLists contain ONLY sliced data. If slice_start was specified
+        during acquisition, the first points have already been permanently discarded 
+        before reaching this function. Fitting operates exclusively on the sliced data.
+        """
         # Combine all dark signal sweeps into a single 3D array and average
         all_dark_signal_data = np.stack(dark_sig_data, axis=-1)  # Shape: (2, 10, 5)
         averaged_dark_sig = np.mean(all_dark_signal_data[1, :, :], axis=1)  # Shape: (10,)
@@ -6086,8 +6486,21 @@ class SpinMeasurements:
         averaged_echo_bg = np.mean(all_echo_background_data[1, :, :], axis=1)  # Shape: (10,)
 
         # Compute the microwave_times (assumed constant across sweeps)
-        x_values = all_dark_signal_data[0, :, 0]  # Shape: (10,)
-        x_fit = np.linspace(min(x_values), max(x_values), 1000) # finer resolution for fitting
+        x_values = all_dark_signal_data[0, :, 0]  # Shape: (10,) — x_data from experiment in display units
+        
+        # Map dataset name to experiment code and convert x_values to SI units
+        exp_lower = exp.lower()
+        exp_code = exp_lower.replace(' ', '')
+        if exp_lower == 'deer':
+            x_values = x_values / 1e6  # MHz → Hz (SI)
+        elif exp_lower == 'deer rabi':
+            x_values = x_values / 1e9  # ns → s (SI)
+        elif exp_lower == 'fid':
+            x_values = x_values / 1e6  # μs → s (SI)
+        elif exp_lower == 'fid cd':
+            x_values = x_values / 1e6  # μs → s (SI)
+        
+        x_fit = np.linspace(min(x_values), max(x_values), 1000) # finer resolution for fitting in SI
 
         # Compute the ratio/difference of averaged signal and background for fitting
         deer = (averaged_dark_bg - averaged_dark_sig) / (averaged_dark_bg + averaged_dark_sig)
@@ -6100,41 +6513,96 @@ class SpinMeasurements:
         # Perform curve fitting 
         match fit_type:
             case 'Neg. Lorentz.':
-                if exp == 'deer':
-                    initial_guess[1] /= 1e6 # convert [Hz] to [MHz]
-                    initial_guess[2] /= 1e6 # convert [Hz] to [MHz]
-                
+                # Keep initial_guess in SI units (Hz) for fitting
                 ### --- Perform fit --- ###
                 params, covariance = curve_fit(self.negative_lorentzian, x_values, y_values, p0=initial_guess)
                 y_fit = self.negative_lorentzian(x_fit, *params)
                 param_errors = np.sqrt(np.diag(covariance))
-                fitted_values = [round(i, 3) for i in params]
-                fitted_errors = [round(i, 3) for i in param_errors]
-                # fitted_values[0] = 100*round(params[0], 3) # to display DEER contrast as percent
-                # fitted_errors[0] = 100*round(param_errors[0], 3)
+                
+                # Convert fitted parameters to display units based on experiment
+                display_params = list(params)
+                display_errors = list(param_errors)
+                if exp_lower == 'deer':
+                    # Display x0 and gamma in MHz
+                    display_params[1] /= 1e6  # x0: Hz → MHz
+                    display_errors[1] /= 1e6
+                    display_params[2] /= 1e6  # gamma: Hz → MHz
+                    display_errors[2] /= 1e6
+                
+                fitted_values = [round(i, 3) for i in display_params]
+                fitted_errors = [round(i, 3) for i in display_errors]
+                # Units for Neg. Lorentz (DEER): [amplitude, frequency, linewidth, offset]
+                if exp_lower == 'deer':
+                    fit_units = ['', 'MHz', 'MHz', '']
+                else:
+                    fit_units = ['', '', '', '']
 
             case 'Decaying Cos.':
-                if exp == 'deer rabi':
-                    initial_guess[1] /= 1e9 # convert [Hz] to [GHz]
-                    initial_guess[2] *= 1e9 # convert [s] to [ns]
-                
+                # Keep initial_guess in SI units (seconds) for fitting
                 ### --- Perform fit --- ###
                 params, covariance = curve_fit(self.decaying_cosine, x_values, y_values, p0=initial_guess)
                 y_fit = self.decaying_cosine(x_fit, *params)
                 param_errors = np.sqrt(np.diag(covariance))
-                fitted_values = [round(i, 2) for i in params]
-                fitted_errors = [round(i, 2) for i in param_errors]
-                fitted_values[2] = round(x_fit[np.argmin(y_fit)],2)
-                fitted_errors[2] = 0
+                
+                # Convert fitted parameters to display units based on experiment
+                display_params = list(params)
+                display_errors = list(param_errors)
+                if exp_lower == 'deer rabi':
+                    # Display t_decay and T in nanoseconds
+                    display_params[1] *= 1e9  # t_decay: s → ns
+                    display_errors[1] *= 1e9
+                    display_params[2] *= 1e9  # T: s → ns
+                    display_errors[2] *= 1e9
+                elif exp_lower in ('fid', 'fid cd'):
+                    # Display t_decay and T in microseconds
+                    display_params[1] *= 1e6  # t_decay: s → μs
+                    display_errors[1] *= 1e6
+                    display_params[2] *= 1e6  # T: s → μs
+                    display_errors[2] *= 1e6
+                
+                fitted_values = [round(i, 2) for i in display_params]
+                fitted_errors = [round(i, 2) for i in display_errors]
+                
+                # Find pi pulse time (or T point) as argmin of fitted curve
+                # This captures the first minimum
+                i_min = np.argmin(y_fit)
+                pi_time_si = x_fit[i_min]
+                
+                # Period uncertainty from covariance (param_errors[2])
+                # The minimum location is most sensitive to the period parameter T
+                pi_time_error_si = param_errors[2]
+                
+                # Convert to display units
+                if exp_lower == 'deer rabi':
+                    scale = 1e9  # → ns
+                else:  # 'fid', 'fid cd'
+                    scale = 1e6  # → μs
+                
+                fitted_values[2] = round(pi_time_si * scale, 2)
+                fitted_errors[2] = round(pi_time_error_si * scale, 2)
+                
+                # Units for Decaying Cos (DEER): [amplitude, decay_time, period, phase, offset]
+                if exp_lower == 'deer rabi':
+                    fit_units = ['', 'ns', 'ns', '', '']
+                elif exp_lower in ('fid', 'fid cd'):
+                    fit_units = ['', 'μs', 'μs', '', '']
+                else:
+                    fit_units = ['', '', '', '', '']
 
             case _:
                 print("No fit type selected.")
                 return 0, 0, 0, 0
 
-        return fitted_values, fitted_errors, x_fit, y_fit
+        return fitted_values, fitted_errors, x_fit, y_fit, fit_units
 
     # TODO: update this function to fit DEER T1
     def fit_deer_t1_data(self, fit_type, with_pulse_py_sweeps, without_pulse_py_sweeps, with_pulse_ny_sweeps, without_pulse_ny_sweeps, *args):
+        """Fit DEER T1 experimental data to a stretched exponential model.
+        
+        NOTE: Input StreamingLists contain ONLY sliced data. If slice_start was specified
+        during acquisition, the first points have already been permanently discarded 
+        before reaching this function. Fitting operates exclusively on the sliced data.
+        """
         # Combine all dark signal sweeps into a single 3D array and average
         all_with_pulse_py_data = np.stack(with_pulse_py_sweeps, axis=-1)  # Shape: (2, 10, 5)
         averaged_with_pulse_py = np.mean(all_with_pulse_py_data[1, :, :], axis=1)  # Shape: (10,)
@@ -6152,8 +6620,12 @@ class SpinMeasurements:
         averaged_without_pulse_ny = np.mean(all_without_pulse_ny_data[1, :, :], axis=1)  # Shape: (10,)
 
         # Compute the microwave_times (assumed constant across sweeps)
-        x_values = all_with_pulse_py_data[0, :, 0]  # Shape: (10,)
-        x_fit = np.linspace(min(x_values), max(x_values), 1000) # finer resolution for fitting
+        x_values = all_with_pulse_py_data[0, :, 0]  # Shape: (10,) — x_data from experiment in display units
+        
+        # Convert x_values from display units (μs) to SI (seconds)
+        x_values = x_values / 1e6  # μs → s (SI)
+        
+        x_fit = np.linspace(min(x_values), max(x_values), 1000) # finer resolution for fitting in SI
 
         # Compute the ratio/difference of averaged signal and background for fitting
         # deer = (averaged_dark_bg - averaged_dark_sig) / (averaged_dark_bg + averaged_dark_sig)
@@ -6168,18 +6640,29 @@ class SpinMeasurements:
         # Perform curve fitting 
         match fit_type:
             case 'DEER T1 Str. Exp.':
+                # Keep initial_guess in SI units (seconds for time constants) for fitting
                 ### --- Perform fit --- ### 
                 params, covariance = curve_fit(self.deer_t1_stretched_exponential, x_values, y_values, p0=initial_guess)
                 y_fit = self.deer_t1_stretched_exponential(x_fit, *params)
                 param_errors = np.sqrt(np.diag(covariance))
-                fitted_values = [round(i, 3) for i in params]
-                fitted_errors = [round(i, 3) for i in param_errors]
+                
+                # Convert fitted parameters to display units (microseconds for DEER T1)
+                display_params = list(params)
+                display_errors = list(param_errors)
+                # T1_e and n_e are time constants in seconds, display as microseconds
+                display_params[4] *= 1e6  # T1_e: s → μs
+                display_errors[4] *= 1e6
+                
+                fitted_values = [round(i, 3) for i in display_params]
+                fitted_errors = [round(i, 3) for i in display_errors]
+                # Units for DEER T1 Str. Exp: [amplitude, T1_nv, n_nv, T1_e, n_e, offset]
+                fit_units = ['', 'μs', '', 'μs', '', '']
 
             case _:
                 print("No fit type selected.")
                 return 0, 0, 0, 0
 
-        return fitted_values, fitted_errors, x_fit, y_fit
+        return fitted_values, fitted_errors, x_fit, y_fit, fit_units
     
 
 
@@ -6201,3 +6684,9 @@ class SpinMeasurements:
     # def __exit__(self):
     #     """Perform experiment teardown."""
     #     _logger.info('Destroyed SpinMeasurements instance.')
+
+
+
+
+
+
