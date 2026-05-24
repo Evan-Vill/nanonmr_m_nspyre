@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.metrics import r2_score
 
-mag_cal_file = "b_field_calibration_2x2x2Mag_May2026_neg35deg_cal_interpolated.xlsx"
+mag_cal_file = "b_field_calibration_2x2x2Mag_May2026_35deg_cal_interpolated.xlsx"
 df = pd.read_excel(mag_cal_file, sheet_name="Calibration Matrix", header=None)
 
 numeric_df = df.apply(pd.to_numeric, errors='coerce')  # convert all values to numeric, non-convertible values become NaN
@@ -139,10 +139,10 @@ b_field_cal_df = pd.DataFrame({
 })
 
 # Save the DataFrame to an Excel file
-with pd.ExcelWriter("b_field_calibration_fitted_params.xlsx", mode='a', engine='openpyxl') as writer:
-    b_field_cal_df.to_excel(writer, sheet_name="Polar = -35 deg", index=False)
+# with pd.ExcelWriter("b_field_calibration_fitted_params.xlsx", mode='a', engine='openpyxl') as writer:
+#     b_field_cal_df.to_excel(writer, sheet_name="Polar = -35 deg", index=False)
 
-# b_field_cal_df.to_excel("b_field_calibration_fitted_params.xlsx", sheet_name="Polar = 35 deg", index=False)
+b_field_cal_df.to_excel("b_field_calibration_fitted_params.xlsx", sheet_name="Polar = 35 deg", index=False)
 
 
 # %%
@@ -179,10 +179,10 @@ def find_z_for_b(b_target, popt, fit_func, z_min, z_max):
     z_solution = fsolve(z_solver, x0=(z_min + z_max) / 2)
     return z_solution[0]
 
-azi_choice = 53  # degrees
+azi_choice = 56  # degrees
 popt_inv_cube = b_field_calibration_data[azi_choice]['fit_parameters']
 
-b_target = 1456  # G
+b_target = 200  # G
 z_max, z_min = b_field_calibration_data[azi_choice]['z_max'], b_field_calibration_data[azi_choice]['z_min'] 
 print(f"Zmin: {z_min}, zmax: {z_max}")
 
@@ -220,9 +220,9 @@ def find_z_for_b_from_fits(b_target, azi, polar):
     z_solution = fsolve(z_solver, x0=(z_min + z_max) / 2)
     return z_solution[0]
 
-azi_choice = 53  # degrees
-polar_choice = -35  # degrees
-b_target = 1456  # G
+azi_choice = 56  # degrees
+polar_choice = 35  # degrees
+b_target = 2000  # G
 z_for_b_from_fits = find_z_for_b_from_fits(b_target, azi_choice, polar_choice)
 print(f"Estimated z position for B = {b_target} G using fit parameters from file for azi {azi_choice} degrees, polar {polar_choice} deg: {z_for_b_from_fits:.2f} mm")
 # %%
