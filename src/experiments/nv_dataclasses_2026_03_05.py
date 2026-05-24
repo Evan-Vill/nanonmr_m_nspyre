@@ -67,6 +67,7 @@ class ODMRScanCfg:
 @dataclass(frozen=True)
 class ODMRSmartScanCfg:
     dataset: str
+    enable_pl_trace: bool
     num_pts: int
     iters: int
     runs: int
@@ -79,6 +80,9 @@ class ODMRSmartScanCfg:
     dig_timeout: float
     directory: str
     filename: str
+    fit_type: str
+    fit: bool
+    fit_live: bool
     fit_params: dict
     half_span_sideband_freq: float
     i_offset: float
@@ -211,6 +215,8 @@ class PulsedODMRRFScanCfg:
     save: bool
     file_format: str
     segment_size: int
+    sideband: str
+    sideband_freq: float
     sideband_power: float
 
 @dataclass(frozen=True)
@@ -776,6 +782,10 @@ class CorrSpecScanCfg:
     dig_timeout: float
     directory: str
     filename: str
+    fit_type: str
+    fit: bool
+    fit_live: bool
+    fit_params: dict
     freq: float
     i_offset: float
     laser_init: float
@@ -813,6 +823,8 @@ class CASRScanCfg:
     dig_timeout: float
     directory: str
     filename: str
+    fit_type: str
+    fit: bool
     fit_live: bool
     fit_params: dict
     freq: float
@@ -823,21 +835,21 @@ class CASRScanCfg:
     n: int
     pi: float
     pretrig_size: int
-    pulse_axis: str
     q_offset: float
     read_channel: int
     both_channels: bool
+    rf_power: float
     rf_pi_half: float
     rf_pulse_freq: float
     rf_pulse_phase: float
     rf_pulse_power: float
     save: bool
     file_format: str
-    pl_pt: int
     segment_size: int
     sideband: str
     sideband_freq: float
     sideband_power: float
     sig_opt: str
+    dnp: str
     tau: float
 
