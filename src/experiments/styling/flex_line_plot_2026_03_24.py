@@ -1865,7 +1865,7 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
                     # self.hide_plot('fit')
                     # create some default dark, echo plots for DEER. Otherwise, just duplicate div plots
                     self.add_plot('rf_avg',       series='div_rf',  scan_i='',      scan_j='',  processing='Average')
-                    self.add_plot('no_rf_avg',       series='div',  scan_i='',    scan_j='',  processing='Average')
+                    self.add_plot('no_rf_avg',       series='div_no_rf',  scan_i='',    scan_j='',  processing='Average')
                     
                     # create some default dark signal plots
                     self.add_plot('rf_sig_avg',        series='rf_signal',   scan_i='',     scan_j='',  processing='Average')
@@ -1880,14 +1880,14 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
                     self.hide_plot('rf_bg_latest')                
 
                     # create some default echo signal plots
-                    self.add_plot('no_rf_sig_avg',        series='signal',   scan_i='',     scan_j='',  processing='Average')
-                    self.add_plot('no_rf_sig_latest',     series='signal',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.add_plot('no_rf_sig_avg',        series='no_rf_signal',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('no_rf_sig_latest',     series='no_rf_signal',   scan_i='-1',   scan_j='',  processing='Average')
                     self.hide_plot('no_rf_sig_avg')
                     self.hide_plot('no_rf_sig_latest')
 
                     # create some default echo background plots
-                    self.add_plot('no_rf_bg_avg',         series='background',   scan_i='',     scan_j='',  processing='Average')
-                    self.add_plot('no_rf_bg_latest',      series='background',   scan_i='-1',   scan_j='',  processing='Average')
+                    self.add_plot('no_rf_bg_avg',         series='no_rf_background',   scan_i='',     scan_j='',  processing='Average')
+                    self.add_plot('no_rf_bg_latest',      series='no_rf_background',   scan_i='-1',   scan_j='',  processing='Average')
                     self.hide_plot('no_rf_bg_avg')
                     self.hide_plot('no_rf_bg_latest')
 
@@ -3029,6 +3029,11 @@ class _FlexLinePlotWidget(LinePlotWidget):
                             bg_name = dataset_name('rf_background')
                             data_sig = datasets[sig_name]
                             data_bg = datasets[bg_name]
+                        elif base_series == 'div_no_rf':
+                            sig_name = dataset_name('no_rf_signal')
+                            bg_name = dataset_name('no_rf_background')
+                            data_sig = datasets[sig_name]
+                            data_bg = datasets[bg_name]
                         elif base_series == 'diff dq1':
                             sig_name = dataset_name('S0,-1')
                             bg_name = dataset_name('S0,0')
@@ -3104,7 +3109,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                         try:
                             if base_series in (
                                 'diff', 'diff_pl', 'diff dq1', 'diff dq2', 
-                                'div', 'div_rf', 'contrast', 
+                                'div', 'div_rf', 'div_no_rf', 'contrast', 
                                 'dark_contrast', 'echo_contrast', 'cd_contrast', 
                                 'fft', 'diff_py', 'diff_ny', 'diff_osc_with_pulse', 'diff_osc_without_pulse'
                             ):
@@ -3204,7 +3209,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
 
                         elif processing == 'Average':
                             if base_series in (
-                                'diff', 'diff_pl', 'diff dq1', 'diff dq2', 'div', 'div_rf', 'contrast', 
+                                'diff', 'diff_pl', 'diff dq1', 'diff dq2', 'div', 'div_rf', 'div_no_rf', 'contrast', 
                                 'dark_contrast', 'echo_contrast', 'cd_contrast', 'fft', 
                                 'diff_py', 'diff_ny', 'diff_osc_with_pulse', 'diff_osc_without_pulse'
                             ):
@@ -3297,7 +3302,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                                 processed_data_sig_ch2[0],
                                 1 - (processed_data_bg_ch2[1] - processed_data_sig_ch2[1]) / processed_data_bg[1],
                             ]
-                        elif base_series in ('div', 'div_rf'):
+                        elif base_series in ('div', 'div_rf', 'div_no_rf'):
                             processed_data = [processed_data_sig[0], processed_data_sig[1] / processed_data_bg[1]]
                         elif base_series in ('contrast', 'dark_contrast', 'echo_contrast', 'cd_contrast'):
                             contrast = (processed_data_bg[1] - processed_data_sig[1]) / (processed_data_bg[1] + processed_data_sig[1])
