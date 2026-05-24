@@ -166,7 +166,7 @@ class SpectrumDigitizer():
         
         # record forever 
         self.multiple_recording.to_transfer_samples(0)
-        self.multiple_recording.notify_samples(self.mem_size // 4)
+        self.multiple_recording.notify_samples(self.mem_size)
         self.multiple_recording.start_buffer_transfer(spcm.M2CMD_DATA_STARTDMA)
 
     def check_connection(self):
@@ -179,7 +179,7 @@ class SpectrumDigitizer():
     # TODO: check dual channel functionality and array interleaving to confirm correct processing   
     def acquire(self):
         try:
-            data_block = next(self.multiple_recording) # dim (mem_size/4, segment_size, 1)
+            data_block = next(self.multiple_recording) # dim (mem_size, segment_size, 1)
             # print(f"shape of dig data block: {np.shape(data_block)}")  
             # print(f"ravel shape: {np.shape(np.asarray(data_block).ravel())}")      
 
