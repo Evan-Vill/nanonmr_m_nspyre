@@ -89,11 +89,11 @@ class InstWidget(QWidget):
 
         ### --- Hardware status update handling --- ###
         self.hwTimer = QTimer(self)
-        self.hwTimer.timeout.connect(self.get_laser_status)
-        self.hwTimer.timeout.connect(self.get_interlock_status)
+        # self.hwTimer.timeout.connect(self.get_laser_status)
+        # self.hwTimer.timeout.connect(self.get_interlock_status)
         self.hwTimer.timeout.connect(self.check_ps_status)
         self.hwTimer.timeout.connect(self.check_laser_shutter_status)
-        self.hwTimer.timeout.connect(self.check_laser_temp_status)
+        # self.hwTimer.timeout.connect(self.check_laser_temp_status)
         self.hwTimer.start(self.EQUIP_STATUS_CHECK_TIME)
 
         self._gui_id = "GUI_Instruments"
@@ -123,6 +123,7 @@ class InstWidget(QWidget):
         self.magnet_label.setFixedHeight(40)
         self.magnet_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.magnet_label.setFont(self.header_font)
+        self.magnet_label.setStyleSheet(self.magnet_header_style)
 
         self.all_disable_button = QPushButton("Enable All")
         self.all_disable_button.setStyleSheet(self.all_disable_button_style)
@@ -137,9 +138,7 @@ class InstWidget(QWidget):
         self.all_standby_button.clicked.connect(self.all_standby_clicked)
 
         self.status_label = QLabel("Magnets status here")
-        self.status_label.setStyleSheet(
-            "color: white; background-color: black; border: 1px solid #555555;"
-        )
+        self.status_label.setStyleSheet(self.status_label_style)
         self.status_label.setFixedHeight(40)
         self.status_label.setFont(self.label_font)
 
@@ -175,6 +174,88 @@ class InstWidget(QWidget):
         self.larger_label_font = QtGui.QFont("Segoe UI", 13)
         self.header_font = QtGui.QFont("Segoe UI", 14)
         self.header_font.setBold(True)
+
+        # Frame header styles (colored bars at top of frames)
+        self.magnet_header_style = """
+            QLabel {
+                background-color: rgba(133, 65, 65, 0.10);
+                color: white;
+                padding: 8px;
+                font-weight: bold;
+                border-bottom: 2px solid #854141;
+                border-radius: 6px;
+            }
+        """
+        self.b_field_header_style = """
+            QLabel {
+                background-color: rgba(207, 97, 97, 0.10);
+                color: white;
+                padding: 8px;
+                font-weight: bold;
+                border-bottom: 2px solid #CF6161;
+                border-radius: 6px;
+            }
+        """
+        self.thor_header_style = """
+            QLabel {
+                background-color: rgba(133, 65, 65, 0.10);
+                color: white;
+                padding: 8px;
+                font-weight: bold;
+                border-bottom: 2px solid #854141;
+                border-radius: 6px;
+            }
+        """
+        self.status_header_style = """
+            QLabel {
+                background-color: rgba(113, 113, 113, 0.10);
+                color: white;
+                padding: 8px;
+                font-weight: bold;
+                border-bottom: 2px solid #717171;
+                border-radius: 6px;
+            }
+        """
+        self.sg396_header_style = """
+            QLabel {
+                background-color: rgba(152, 59, 179, 0.10);
+                color: white;
+                padding: 8px;
+                font-weight: bold;
+                border-bottom: 2px solid #983BB3;
+                border-radius: 6px;
+            }
+        """
+        self.awg_header_style = """
+            QLabel {
+                background-color: rgba(198, 134, 66, 0.10);
+                color: white;
+                padding: 8px;
+                font-weight: bold;
+                border-bottom: 2px solid #c68642;
+                border-radius: 6px;
+            }
+        """
+        self.laser_header_style = """
+            QLabel {
+                background-color: rgba(50, 205, 50, 0.10);
+                color: white;
+                padding: 8px;
+                font-weight: bold;
+                border-bottom: 2px solid limegreen;
+                border-radius: 6px;
+            }
+        """
+        self.detector_header_style = """
+            QLabel {
+                background-color: rgba(0, 0, 255, 0.10);
+                color: white;
+                padding: 8px;
+                font-weight: bold;
+                border-bottom: 2px solid blue;
+                border-radius: 6px;
+            }
+        """
 
         # Magnet control button: Dark Gray with white border
         self.magnet_button_style = """
@@ -305,21 +386,23 @@ class InstWidget(QWidget):
         # AWG combobox
         self.awg_combobox_style = """
             QComboBox {
-                background-color: #3D3D3D;
+                background-color: #2a2a2a;
                 color: white;
-                border: 1px solid #AB5E00;
+                border: 1px solid #505050;
                 border-radius: 4px;
                 padding: 4px;
             }
             QComboBox:focus {
-                border: 1px solid #D78100;
+                background-color: #323232;
+                border: 2px solid #D78100;
+                padding: 3px;
             }
             QComboBox::drop-down {
                 border: none;
-                background-color: #3D3D3D;
+                background-color: #2a2a2a;
             }
             QComboBox QAbstractItemView {
-                background-color: #3D3D3D;
+                background-color: #2a2a2a;
                 color: white;
                 selection-background-color: #AB5E00;
                 border: 1px solid #AB5E00;
@@ -329,21 +412,23 @@ class InstWidget(QWidget):
         # ND Filter combobox
         self.nd_filter_combobox_style = """
             QComboBox {
-                background-color: #3D3D3D;
+                background-color: #2a2a2a;
                 color: white;
-                border: 1px solid #4DA6D8;
+                border: 1px solid #505050;
                 border-radius: 4px;
                 padding: 4px;
             }
             QComboBox:focus {
-                border: 1px solid #4DA6D8;
+                background-color: #323232;
+                border: 2px solid #4DA6D8;
+                padding: 3px;
             }
             QComboBox::drop-down {
                 border: none;
-                background-color: #3D3D3D;
+                background-color: #2a2a2a;
             }
             QComboBox QAbstractItemView {
-                background-color: #3D3D3D;
+                background-color: #2a2a2a;
                 color: white;
                 selection-background-color: #4DA6D8;
                 border: 1px solid #4DA6D8;
@@ -353,14 +438,95 @@ class InstWidget(QWidget):
         # Text edit
         self.lineedit_style = """
             QLineEdit {
-                background-color: #3D3D3D;
+                background-color: #2a2a2a;
                 color: white;
                 border: 1px solid #505050;
                 border-radius: 4px;
                 padding: 4px;
             }
             QLineEdit:focus {
-                border: 1px solid #4166F5;
+                background-color: #323232;
+                border: 2px solid #4166F5;
+                padding: 3px;
+            }
+        """
+
+        # Status labels with colored left accent bars
+        self.status_label_style = """
+            QLabel {
+                color: white;
+                background-color: black;
+                border-left: 4px solid #854141;
+                border-top: 1px solid #555555;
+                border-right: 1px solid #555555;
+                border-bottom: 1px solid #555555;
+                border-radius: 2px;
+                padding-left: 8px;
+            }
+        """
+        
+        self.sg396_status_label_style = """
+            QLabel {
+                color: white;
+                background-color: black;
+                border-left: 4px solid #983BB3;
+                border-top: 1px solid #555555;
+                border-right: 1px solid #555555;
+                border-bottom: 1px solid #555555;
+                border-radius: 2px;
+                padding-left: 8px;
+            }
+        """
+        
+        self.awg_status_label_style = """
+            QLabel {
+                color: white;
+                background-color: black;
+                border-left: 4px solid #c68642;
+                border-top: 1px solid #555555;
+                border-right: 1px solid #555555;
+                border-bottom: 1px solid #555555;
+                border-radius: 2px;
+                padding-left: 8px;
+            }
+        """
+        
+        self.laser_status_label_style = """
+            QLabel {
+                color: white;
+                background-color: black;
+                border-left: 4px solid limegreen;
+                border-top: 1px solid #555555;
+                border-right: 1px solid #555555;
+                border-bottom: 1px solid #555555;
+                border-radius: 2px;
+                padding-left: 8px;
+            }
+        """
+        
+        self.ps_status_label_style = """
+            QLabel {
+                color: white;
+                background-color: #222;
+                border-left: 4px solid #717171;
+                border-top: 1px solid #555555;
+                border-right: 1px solid #555555;
+                border-bottom: 1px solid #555555;
+                border-radius: 2px;
+                padding-left: 8px;
+            }
+        """
+        
+        self.shutter_status_label_style = """
+            QLabel {
+                color: white;
+                background-color: black;
+                border-left: 4px solid #0088D7;
+                border-top: 1px solid #555555;
+                border-right: 1px solid #555555;
+                border-bottom: 1px solid #555555;
+                border-radius: 2px;
+                padding-left: 8px;
             }
         """
 
@@ -390,11 +556,11 @@ class InstWidget(QWidget):
             self._set_radio_safely(self.optics_flipper_b1, True)
 
         # hardware + UI sync (ONE TIME)
-        self.get_laser_status()
-        self.get_interlock_status()
+        # self.get_laser_status()
+        # self.get_interlock_status()
         self.check_ps_status()
         self.check_laser_shutter_status()
-        self.check_laser_temp_status()
+        # self.check_laser_temp_status()
 
         # get microscope detector mode (flip mirror 2 state) upon startup
         self.call_daq(lambda daq: daq.open_do_task("flip mirror 2"))
@@ -602,6 +768,8 @@ class InstWidget(QWidget):
         self.b_label = QLabel("Magnetic Field")
         self.b_label.setFixedHeight(40)
         self.b_label.setFont(self.header_font)
+        self.b_label.setStyleSheet(self.b_field_header_style)
+        self.b_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.phi_label = QLabel("Set \u03c6: ")
         self.phi_label.setFixedHeight(40)
@@ -638,6 +806,7 @@ class InstWidget(QWidget):
         self.r_label = QLabel("Step 3: R")
         self.r_label.setFixedHeight(40)
         self.r_label.setFont(self.header_font)
+        self.r_label.setStyleSheet(self.thor_header_style)
 
         self.r_move_checkbox = QCheckBox("R Move Type: ")
         self.r_move_checkbox.setChecked(False)
@@ -698,6 +867,7 @@ class InstWidget(QWidget):
         self.polar_label.setFixedHeight(40)
         self.polar_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.polar_label.setFont(self.header_font)
+        self.polar_label.setStyleSheet(self.thor_header_style)
 
         self.polar_move_checkbox = QCheckBox("\u03b8 Move Type: ")
         self.polar_move_checkbox.setChecked(False)
@@ -757,6 +927,7 @@ class InstWidget(QWidget):
         self.azi_label.setFixedHeight(40)
         self.azi_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.azi_label.setFont(self.header_font)
+        self.azi_label.setStyleSheet(self.thor_header_style)
 
         self.azi_move_checkbox = QCheckBox("\u03c6 Move Type: ")
         self.azi_move_checkbox.setChecked(False)
@@ -812,6 +983,7 @@ class InstWidget(QWidget):
         self.sg396_label.setFixedHeight(40)
         self.sg396_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.sg396_label.setFont(self.header_font)
+        self.sg396_label.setStyleSheet(self.sg396_header_style)
 
         self.sg396_checkbox = QCheckBox("Enable SG396 output")
         self.sg396_checkbox.setFont(self.label_font)
@@ -894,9 +1066,7 @@ class InstWidget(QWidget):
         self._set_font_recursive(self.sg396_params_widget_2, self.label_font)
 
         self.sg396_status_label = QLabel("SRS SG396 status here")
-        self.sg396_status_label.setStyleSheet(
-            "color: white; background-color: black; border: 1px solid #555555;"
-        )
+        self.sg396_status_label.setStyleSheet(self.sg396_status_label_style)
         self.sg396_status_label.setFixedHeight(40)
         self.sg396_status_label.setFont(self.label_font)
 
@@ -930,6 +1100,7 @@ class InstWidget(QWidget):
         self.laser_label.setFixedHeight(40)
         self.laser_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.laser_label.setFont(self.header_font)
+        self.laser_label.setStyleSheet(self.laser_header_style)
 
         laser_style = """
         QRadioButton::indicator {
@@ -1006,16 +1177,12 @@ class InstWidget(QWidget):
         self.laser_power_label.setFont(self.label_font)
 
         self.laser_baseplate_temp_label = QLabel("Baseplate Temp: ---")
-        self.laser_baseplate_temp_label.setStyleSheet(
-            "color: white; background-color: black; border: 1px solid #555555;"
-        )
+        self.laser_baseplate_temp_label.setStyleSheet(self.laser_status_label_style)
         self.laser_baseplate_temp_label.setFixedHeight(40)
         self.laser_baseplate_temp_label.setFont(self.label_font)
 
         self.laser_diode_temp_label = QLabel("Diode Temp: ---")
-        self.laser_diode_temp_label.setStyleSheet(
-            "color: white; background-color: black; border: 1px solid #555555;"
-        )
+        self.laser_diode_temp_label.setStyleSheet(self.laser_status_label_style)
         self.laser_diode_temp_label.setFixedHeight(40)
         self.laser_diode_temp_label.setFont(self.label_font)
 
@@ -1024,16 +1191,12 @@ class InstWidget(QWidget):
         self.laser_status_label.setFont(self.label_font)
 
         self.laser_interlock_status_label = QLabel("Interlock status")
-        self.laser_interlock_status_label.setStyleSheet(
-            "color: white; background-color: black; border: 1px solid #555555;"
-        )
+        self.laser_interlock_status_label.setStyleSheet(self.laser_status_label_style)
         self.laser_interlock_status_label.setFixedHeight(40)
         self.laser_interlock_status_label.setFont(self.label_font)
 
         self.laser_emit_status_label = QLabel("Emission status")
-        self.laser_emit_status_label.setStyleSheet(
-            "color: white; background-color: black; border: 1px solid #555555;"
-        )
+        self.laser_emit_status_label.setStyleSheet(self.laser_status_label_style)
         self.laser_emit_status_label.setFixedHeight(40)
         self.laser_emit_status_label.setFixedWidth(145)
         self.laser_emit_status_label.setFont(self.label_font)
@@ -1044,9 +1207,7 @@ class InstWidget(QWidget):
         self.laser_shutter_button.clicked.connect(self.laser_shutter_status_changed)
 
         self.laser_shutter_status_label = QLabel("Laser Shutter status")
-        self.laser_shutter_status_label.setStyleSheet(
-            "color: white; background-color: black; border: 1px solid #555555;"
-        )
+        self.laser_shutter_status_label.setStyleSheet(self.laser_status_label_style)
         self.laser_shutter_status_label.setFixedHeight(40)
         self.laser_shutter_status_label.setFixedWidth(225)
         self.laser_shutter_status_label.setFont(self.label_font)
@@ -1057,9 +1218,7 @@ class InstWidget(QWidget):
         self.laser_alarm_reset_button.clicked.connect(self.laser_alarm_reset_clicked)
 
         self.ps_status_label = QLabel("Pulse Streamer: CONSTANT")
-        self.ps_status_label.setStyleSheet(
-            "color: white; background-color: #222; border: 1px solid #555555;"
-        )
+        self.ps_status_label.setStyleSheet(self.ps_status_label_style)
         self.ps_status_label.setFixedHeight(40)
         self.ps_status_label.setFont(self.label_font)
 
@@ -1068,6 +1227,7 @@ class InstWidget(QWidget):
         self.awg_label.setFixedHeight(40)
         self.awg_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.awg_label.setFont(self.header_font)
+        self.awg_label.setStyleSheet(self.awg_header_style)
 
         self.awg_volt_range_ch3_label = QLabel("AWG Ch. 3 Volt. Range: ")
         self.awg_volt_range_ch3_label.setFont(self.label_font)
@@ -1128,9 +1288,7 @@ class InstWidget(QWidget):
         self.apply_awg_rates_button.clicked.connect(self.apply_awg_rates)
 
         self.awg_status_label = QLabel("AWG status here")
-        self.awg_status_label.setStyleSheet(
-            "color: white; background-color: black; border: 1px solid #555555;"
-        )
+        self.awg_status_label.setStyleSheet(self.awg_status_label_style)
         self.awg_status_label.setFixedHeight(40)
         self.awg_status_label.setFont(self.label_font)
 
@@ -1139,6 +1297,7 @@ class InstWidget(QWidget):
         self.flipper_label.setFixedHeight(40)
         self.flipper_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.flipper_label.setFont(self.header_font)
+        self.flipper_label.setStyleSheet(self.detector_header_style)
 
         flipper_style = """
         QRadioButton::indicator {
@@ -1196,9 +1355,7 @@ class InstWidget(QWidget):
         self.bpd_shutter_button.clicked.connect(self.bpd_shutter_status_changed)
 
         self.bpd_shutter_status_label = QLabel("BPD Shutter status")
-        self.bpd_shutter_status_label.setStyleSheet(
-            "color: white; background-color: black; border: 1px solid #555555;"
-        )
+        self.bpd_shutter_status_label.setStyleSheet(self.shutter_status_label_style)
         self.bpd_shutter_status_label.setFixedHeight(40)
         self.bpd_shutter_status_label.setFixedWidth(220)
         self.bpd_shutter_status_label.setFont(self.label_font)
@@ -1210,8 +1367,8 @@ class InstWidget(QWidget):
         self.magnet_frame = QFrame(self)
         self.magnet_frame.setObjectName("magFrame")
         self.magnet_frame.setStyleSheet(
-            "QFrame#magFrame {background-color: #331313; border: 1px solid #854141; "
-            "border-radius: 4px;}"
+            "QFrame#magFrame {background-color: #1a1a1a; border: 2px solid #854141; "
+            "border-radius: 8px;}"
         )
         self.magnet_layout = QGridLayout(self.magnet_frame)
         self.magnet_layout.setSpacing(0)
@@ -1230,8 +1387,8 @@ class InstWidget(QWidget):
         self.b_frame = QFrame(self)
         self.b_frame.setObjectName("bFrame")
         self.b_frame.setStyleSheet(
-            "QFrame#bFrame {background-color: #703F3F; border: 1px solid #CF6161; "
-            "border-radius: 4px;}"
+            "QFrame#bFrame {background-color: #1a1a1a; border: 2px solid #CF6161; "
+            "border-radius: 8px;}"
         )
         self.b_layout = QGridLayout(self.b_frame)
         self.b_layout.setSpacing(0)
@@ -1246,8 +1403,8 @@ class InstWidget(QWidget):
         self.zaber_frame = QFrame(self)
         self.zaber_frame.setObjectName("zaberFrame")
         self.zaber_frame.setStyleSheet(
-            "QFrame#zaberFrame {background-color: #331313; border: 1px solid #854141;"
-            " border-radius: 4px;}"
+            "QFrame#zaberFrame {background-color: #1a1a1a; border: 2px solid #854141;"
+            " border-radius: 8px;}"
         )
         self.r_layout = QGridLayout(self.zaber_frame)
         self.r_layout.setSpacing(0)
@@ -1263,8 +1420,8 @@ class InstWidget(QWidget):
         self.thor1_frame = QFrame(self)
         self.thor1_frame.setObjectName("thor1Frame")
         self.thor1_frame.setStyleSheet(
-            "QFrame#thor1Frame {background-color: #331313; border: 1px solid #854141;"
-            " border-radius: 4px;}"
+            "QFrame#thor1Frame {background-color: #1a1a1a; border: 2px solid #854141;"
+            " border-radius: 8px;}"
         )
         self.polar_layout = QGridLayout(self.thor1_frame)
         self.polar_layout.setSpacing(0)
@@ -1279,8 +1436,8 @@ class InstWidget(QWidget):
         self.thor2_frame = QFrame(self)
         self.thor2_frame.setObjectName("thor2Frame")
         self.thor2_frame.setStyleSheet(
-            "QFrame#thor2Frame {background-color: #331313; border: 1px solid #854141;"
-            " border-radius: 4px;}"
+            "QFrame#thor2Frame {background-color: #1a1a1a; border: 2px solid #854141;"
+            " border-radius: 8px;}"
         )
         self.azi_layout = QGridLayout(self.thor2_frame)
         self.azi_layout.setSpacing(0)
@@ -1296,8 +1453,8 @@ class InstWidget(QWidget):
         self.status_frame = QFrame(self)
         self.status_frame.setObjectName("statusFrame")
         self.status_frame.setStyleSheet(
-            "QFrame#statusFrame {background-color: #2b2b2b; border: 1px solid #717171;"
-            " border-radius: 4px;}"
+            "QFrame#statusFrame {background-color: #1a1a1a; border: 2px solid #717171;"
+            " border-radius: 8px;}"
         )
         self.status_bar_layout = QGridLayout(self.status_frame)
         self.status_bar_layout.setSpacing(0)
@@ -1319,9 +1476,9 @@ class InstWidget(QWidget):
         self.sg396_frame.setObjectName("sgFrame")
         self.sg396_frame.setStyleSheet(
             "QFrame#sgFrame {"
-            "background-color: #340F3B;"
-            "border: 1px solid #983BB3;"
-            " border-radius: 4px;"
+            "background-color: #1a1a1a;"
+            "border: 2px solid #983BB3;"
+            " border-radius: 8px;"
             "}"
         )
         self.sg396_layout = QGridLayout(self.sg396_frame)
@@ -1343,9 +1500,9 @@ class InstWidget(QWidget):
         self.awg_control_frame.setObjectName("awgControlFrame")
         self.awg_control_frame.setStyleSheet(
             "QFrame#awgControlFrame {"
-            "background-color: #3b1f0f;"
-            "border: 1px solid #c68642;"
-            "border-radius: 4px;"
+            "background-color: #1a1a1a;"
+            "border: 2px solid #c68642;"
+            "border-radius: 8px;"
             "}"
         )
         self.awg_control_layout = QGridLayout(self.awg_control_frame)
@@ -1371,8 +1528,8 @@ class InstWidget(QWidget):
         self.laser_control_frame = QFrame(self)
         self.laser_control_frame.setObjectName("laserControlFrame")
         self.laser_control_frame.setStyleSheet(
-            "QFrame#laserControlFrame {background-color: #003407; border: 1px solid limegreen;"
-            " border-radius: 4px;}"
+            "QFrame#laserControlFrame {background-color: #1a1a1a; border: 2px solid limegreen;"
+            " border-radius: 8px;}"
         )
         self.laser_controls_layout = QGridLayout(self.laser_control_frame)
         self.laser_controls_layout.setSpacing(0)
@@ -1392,9 +1549,9 @@ class InstWidget(QWidget):
         self.device_status_frame.setObjectName("deviceStatusFrame")
         self.device_status_frame.setStyleSheet(
             "QFrame#deviceStatusFrame {"
-            "background-color: #3b1f0f;"
-            "border: 1px solid #c68642;"
-            "border-radius: 4px;"
+            "background-color: #1a1a1a;"
+            "border: 2px solid #c68642;"
+            "border-radius: 8px;"
             "}"
         )
         self.device_status_layout = QGridLayout(self.device_status_frame)
@@ -1413,8 +1570,8 @@ class InstWidget(QWidget):
         self.detector_frame = QFrame(self)
         self.detector_frame.setObjectName("detectorFrame")
         self.detector_frame.setStyleSheet(
-            "QFrame#detectorFrame {background-color: #0A0034; border: 1px solid blue;"
-            " border-radius: 4px;}"
+            "QFrame#detectorFrame {background-color: #1a1a1a; border: 2px solid blue;"
+            " border-radius: 8px;}"
         )
         self.detector_layout = QGridLayout(self.detector_frame)
         self.detector_layout.setSpacing(0)
@@ -1607,9 +1764,6 @@ class InstWidget(QWidget):
                 except (TypeError, ValueError):
                     pass
                 else:
-                    # FIXME: make a more robust safety mechanism to not exceed certain B field value
-                    if b_val > 500.0:
-                        b_val = 100
                     new_position = find_mag_pos(phi_val, b_val)
 
                     self.status_label.setStyleSheet(
