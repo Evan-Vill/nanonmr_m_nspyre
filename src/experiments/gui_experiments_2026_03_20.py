@@ -37,7 +37,7 @@ from styling.flex_line_plot_2026_03_24 import FlexLinePlotWidget
 from styling.params_2026_03_05 import FitParamsWidget
 
 import experiment_defaults
-import nv_experiments_2026_03_24
+import nv_experiments_2026_04_16
 import nv_experiments_daq
 
 def ellipsize(text: str, max_chars: int) -> str:
@@ -1476,10 +1476,10 @@ class ExpWidget(QWidget):
                                 'widget': SpinBox(value = defaults['num_pts'], int = True, bounds=(1, None), dec = True)},
                         'tau': {'display_text': 'tau = 1/(2f_0): ',
                                 'widget': SpinBox(value = defaults['tau'], suffix = 's', siPrefix = True, bounds = (0, 1e-3), dec = True)},
-                        'sig_opt': {'display_text': 'Signal Source: ',
-                                        'widget': ComboBox(items = defaults['sig_opt'])},
-                        'dnp': {'display_text': 'Hyperpolarization: ',
-                                        'widget': ComboBox(items = defaults['dnp'])}}
+                    'sig_opt': {'display_text': 'Signal Source: ',
+                                'widget': ComboBox(items=defaults['sig_opt'])},
+                    'dnp': {'display_text': 'Hyperpolarization: ',
+                            'widget': ComboBox(items=defaults['dnp'])}}
 
         return params
 
@@ -1783,7 +1783,7 @@ class ExpWidget(QWidget):
                         'A': {'display_text': 'A: ',
                                 'widget': SpinBox(value = defaults.get('A', 0))},
                         't_decay': {'display_text': 't<sub>decay</sub>: ',
-                                'widget': SpinBox(value = defaults.get('t_decay', 0), suffix = 'Hz', siPrefix = True, dec = True)},
+                                'widget': SpinBox(value = defaults.get('t_decay', 0), suffix = 's', siPrefix = True, dec = True)},
                         'T': {'display_text': 'T: ',
                                 'widget': SpinBox(value = defaults.get('T', 0), suffix = 's', siPrefix = True, dec = True)},
                         'phi': {'display_text': '\u03C6: ',
@@ -1922,20 +1922,27 @@ class ExpWidget(QWidget):
         status = msg.get("status", "")
         fit_value = msg.get("fit_value", None)
         fit_error = msg.get("fit_error", None)
+        fit_units = msg.get("fit_units", None)
         fit_value2 = msg.get("fit_value2", None)
         fit_error2 = msg.get("fit_error2", None)
+        fit_units2 = msg.get("fit_units2", None)
         fit_val_list = []
         fit_err_list = []
+        fit_unit_list = []
 
         if fit_value is not None and fit_error is not None:
             fit_val_list.extend(fit_value)
             fit_err_list.extend(fit_error)
+            if fit_units is not None:
+                fit_unit_list.extend(fit_units)
         if fit_value2 is not None and fit_error2 is not None:
             fit_val_list.extend(fit_value2)
             fit_err_list.extend(fit_error2)
+            if fit_units2 is not None:
+                fit_unit_list.extend(fit_units2)
 
         if fit_value is not None and fit_error is not None:
-            self.fit_params_widget.set_fit_labels([fit_val_list, fit_err_list])
+            self.fit_params_widget.set_fit_labels([fit_val_list, fit_err_list], fit_unit_list if fit_unit_list else None)
 
         # Optional timers (strings are easiest for labels)
         elapsed_str = msg.get("elapsed_str", None)
@@ -1976,9 +1983,14 @@ class ExpWidget(QWidget):
         elif status == 'failed':
             self.status.setStyleSheet("color: black; background-color: red; padding: 2px; font-weight: bold;")
             if exc_text is not None:
-                self.status.setText(f"{self.experiments.currentText()} scan failed. Exception: '{exc_text}'.")
+                # Extract just the exception type (concise display in label)
+                exc_type = exc_text.split(':')[0] if ':' in exc_text else exc_text
+                self.status.setText(f"{self.experiments.currentText()} scan failed. Exception: {exc_type}")
+                # Add full exception as tooltip for hover display
+                self.status.setToolTip(f"Full error:\n{exc_text}\n\nCheck terminal output for full traceback.")
             else:
                 self.status.setText(f"{self.experiments.currentText()} scan failed.")
+                self.status.setToolTip("")
             self.experiments.setEnabled(True)
             self.params_widget.setEnabled(True)
             self.save_params.setEnabled(True)
@@ -2248,6 +2260,13 @@ class ExpWidget(QWidget):
                     self.all_defaults['corr_t1_array_opts'].pop(self.all_defaults['corr_t1_array_opts'].index(saved_params['array_type']))
                 )
                 saved_params['array_type'] = self.all_defaults['corr_t1_array_opts']
+
+            case 'NMR Correlation Spectroscopy':
+                self.all_defaults['corr_spec_sig_opts'].insert(
+                    0,
+                    self.all_defaults['corr_spec_sig_opts'].pop(self.all_defaults['corr_spec_sig_opts'].index(saved_params['sig_opt']))
+                )
+                saved_params['sig_opt'] = self.all_defaults['corr_spec_sig_opts']
 
             case 'NMR CASR':
                 self.all_defaults['casr_sig_opts'].insert(
@@ -2647,11 +2666,11 @@ class ExpWidget(QWidget):
 
             # reload the module at runtime in case any changes were made to the code
             if self.daq_b1.isChecked(): # digitizer settings
-                reload(nv_experiments_2026_03_24)
+                reload(nv_experiments_2026_04_16)
                 # call the function in a new process
                 self.run_proc.run(
                     run_experiment,
-                    exp_cls = nv_experiments_2026_03_24.SpinMeasurements,
+                    exp_cls = nv_experiments_2026_04_16.SpinMeasurements,
                     fun_name = self.exp_dict[self.experiments.currentText()][0],
                     constructor_args = list(),
                     constructor_kwargs=dict(queue_to_inst=self.exp_inst_queue),
