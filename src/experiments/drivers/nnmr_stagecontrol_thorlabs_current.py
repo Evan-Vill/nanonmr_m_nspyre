@@ -42,8 +42,8 @@ class NanoNMRThorlabs:
 
         elif self.Tstage_serial == '40251814': 
             'Polar stage parameters'
-            self.lower_bound = -65  # angular lower & upper bounds (degrees)
-            self.upper_bound = 65
+            self.lower_bound = -50  # angular lower & upper bounds (degrees)
+            self.upper_bound = 50
             self.standby_pos = 0  # standby position (degrees)
 
         else: 
