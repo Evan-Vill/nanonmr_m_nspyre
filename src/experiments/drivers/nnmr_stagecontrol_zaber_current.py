@@ -33,6 +33,10 @@ class NanoNMRZaber:
         self.current_positions = [None, None]
         self.update_positions_callback() # record positions on instrument server startup    
 
+        self.lower_bound = 0  # linear lower & upper bounds (mm)
+        self.upper_bound = 100 
+        self.standby_pos = 100  # standby position (mm)
+        
     def update_positions_callback(self):
         for axis in self.Zstages:
             pos = self.Zstages[axis].get_position(Units.LENGTH_MILLIMETRES)
