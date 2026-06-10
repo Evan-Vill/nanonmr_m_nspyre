@@ -20,7 +20,7 @@ from multiprocessing import Queue
 # function does not recursively reload modules
 import gui_all_instruments_2026_03_25
 import gui_experiments_2026_03_20
-import gui_calculations_2026_03_06
+import gui_calculations_2026_05_25
 
 from drivers.insmgr import MyInstrumentManager
 
@@ -65,7 +65,7 @@ def main():
                         stretch=(100, 100),
                     ),
                 },           
-                'Calculations': MainWidgetItem(gui_calculations_2026_03_06, 'CalcWidget', stretch = (1, 1)),
+                'Calculations': MainWidgetItem(gui_calculations_2026_05_25, 'CalcWidget', stretch = (1, 1)),
                 'Save': MainWidgetItem(nspyre.gui.widgets.save, 'SaveWidget', stretch=(1, 1)),
                 'Load': MainWidgetItem(nspyre.gui.widgets.load, 'LoadWidget', stretch=(1, 1)),
             }
