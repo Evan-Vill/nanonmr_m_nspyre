@@ -10,11 +10,13 @@ Date: 8/25/2022
 '''
 
 import logging
+import time
 logger = logging.getLogger(__name__)
 
 from collections import OrderedDict
 
 from pyvisa import ResourceManager
+from pyvisa.errors import VisaIOError
 
 logger = logging.getLogger(__name__)
 
@@ -55,134 +57,176 @@ class SG396:
         add pyvisa open function to connect to IP address
         '''
 
-        self.rm = ResourceManager('@py')
         self.address = address
-        self.device = self.rm.open_resource(self.address)
-        print(f"connected to SG396 [{self.address}]")
-        logger.info(f"Connected to SG396 [{self.address}].")
+        self.rm = ResourceManager('@py')
+        self.device = None
+        self._connect()
 
         self.output_en = False
         self._amplitude = 0.0
         self._frequency = 100e3
+
+    def _connect(self):
+        self.device = self.rm.open_resource(self.address)
+        self.device.write_termination = self.DEFAULTS['COMMON']['write_termination']
+        self.device.read_termination = self.DEFAULTS['COMMON']['read_termination']
+        self.device.timeout = 5000
+        print(f"connected to SG396 [{self.address}]")
+        logger.info(f"Connected to SG396 [{self.address}].")
+
+    def _reconnect(self):
+        logger.warning("Reconnecting to SG396 after VISA I/O error.")
+        try:
+            if self.device is not None:
+                self.device.close()
+        except Exception:
+            logger.debug("Ignoring SG396 close failure during reconnect.", exc_info=True)
+
+        time.sleep(0.5)
+        self._connect()
+        time.sleep(0.2)
+
+    def _retry_io(self, operation, description):
+        last_exception = None
+        for attempt in range(2):
+            try:
+                return operation()
+            except VisaIOError as exc:
+                last_exception = exc
+                if attempt == 1:
+                    break
+                logger.warning(
+                    "SG396 %s failed with %s; reconnecting and retrying once.",
+                    description,
+                    exc,
+                )
+                self._reconnect()
+        raise last_exception
+
+    def _write(self, command):
+        return self._retry_io(lambda: self.device.write(command), f"write {command!r}")
+
+    def _query(self, command):
+        return self._retry_io(lambda: self.device.query(command), f"query {command!r}")
 
 
     def get_lf_amplitude(self):
         """
         low frequency amplitude (BNC output)
         """
-        return float(self.device.query('AMPL?'))
+        return float(self._query('AMPL?'))
 
     def set_lf_amplitude(self, value):
-        self.device.write('AMPL{:.2f}'.format(W_to_dBm(value)))
+        self._write('AMPL{:.2f}'.format(W_to_dBm(value)))
 
 
     def get_rf_amplitude(self):
         """
         RF amplitude (Type N output)
         """
-        return float(self.device.query('AMPR?'))
+        return float(self._query('AMPR?'))
 
     def set_rf_amplitude(self, value):
-       self.device.write(f"AMPR{W_to_dBm(value)}")    
+       self._write(f"AMPR{W_to_dBm(value)}")
 
 
     def get_lf_toggle(self):
         """
         low frequency output state
         """
-        return self.device.query('ENBL?')
+        return self._query('ENBL?')
     
     def set_lf_toggle(self, value):
-        self.device.write(f"ENBL{value}")
+        self._write(f"ENBL{value}")
 
 
     def get_rf_toggle(self):
         """
         RF output state
         """
-        return self.device.query('ENBR?')
+        return self._query('ENBR?')
 
     # 1 = True (on), 0 = False (off)
     def set_rf_toggle(self, value):
-        self.device.write(f"ENBR{value}")
+        self._write(f"ENBR{value}")
 
     def get_lf_offset(self):
         """
         low frequency offset voltage
         """
-        return self.device.query('OFSL?')
+        return self._query('OFSL?')
 
     def set_lf_offset(self, value):
-        self.device.write(f"OFSL{value}")
+        self._write(f"OFSL{value}")
 
     def get_phase(self):
         """
         carrier phase
         """
-        return self.device.query('PHAS?')
+        return self._query('PHAS?')
 
     def set_phase(self, value):
-        self.device.write(f"PHAS{value}")
+        self._write(f"PHAS{value}")
         
 
     def set_rel_phase(self):
         """
         sets carrier phase to 0 degrees
         """
-        self.device.write('RPHS')
+        self._write('RPHS')
 
     def get_mod_toggle(self):
         """
         Modulation State
         """
-        return int(self.device.query('MODL?'))
+        return int(self._query('MODL?'))
 
     def set_mod_toggle(self, value):
-        self.device.write(f"MODL {value}")
+        self._write(f"MODL {value}")
 
     def get_mod_type(self):
         """
         Modulation State
         """
-        return int(self.device.query('TYPE?'))
+        return int(self._query('TYPE?'))
 
     def set_mod_type(self, value):
-        self.device.write(f"TYPE {value}")
+        self._write(f"TYPE {value}")
 
     def set_mod_subtype(self, value):
-        self.device.write(f"STYP {value}")
+        self._write(f"STYP {value}")
 
     def get_mod_function(self):
         """
         Modulation Function
         """
-        return int(self.device.query('MFNC?'))
+        return int(self._query('MFNC?'))
 
     def set_mod_function(self, exp, value):
         match exp:
             case 'FM':
-                self.device.write(f"MFNC {value}")
+                self._write(f"MFNC {value}")
             case 'IQ':
-                self.device.write(f"QFNC {value}")
+                self._write(f"QFNC {value}")
 
     # units = "Hz", limits = (0.1, 100.e3))
     def get_mod_rate(self):
         """
         Modulation Rate
         """
-        return float(self.device.query('RATE?'))
+        return float(self._query('RATE?'))
     
     def set_mod_rate(self, value):
-        self.device.write(f"RATE {value}")
+        self._write(f"RATE {value}")
 
     def get_FM_mod_dev(self):
         """
         FM Modulation Deviation
         """
-        return float(self.device.query("FDEV?"))
+        return float(self._query("FDEV?"))
     
     def set_FM_mod_dev(self, value):
-        self.device.write(f"FDEV {value}")
+        self._write(f"FDEV {value}")
 
     # def get_mod_sweep_function(self):
     #     """
@@ -211,10 +255,10 @@ class SG396:
         """
         AM Modulation Depth
         """
-        return float(self.device.query('ADEP?'))
+        return float(self._query('ADEP?'))
 
     def set_AM_mod_depth(self, value):
-        self.device.write(f"ADEP {value}")
+        self._write(f"ADEP {value}")
     
     # units = "Hz", limits = (0.1, 8.e6))
     
@@ -222,14 +266,14 @@ class SG396:
         """
         signal frequency
         """
-        return self.device.query('FREQ?')
+        return self._query('FREQ?')
     
     def set_frequency(self, value):
         """Change the frequency (Hz)"""
         if value < 100e3 or value > 6e9:
             raise ValueError("Frequency must be in range [100 kHz, 6 GHz].")
         
-        self.device.write(f"FREQ{value}")
+        self._write(f"FREQ{value}")
         
         logger.info(f"Set frequency to {value} Hz")
 
