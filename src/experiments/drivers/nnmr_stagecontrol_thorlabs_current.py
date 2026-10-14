@@ -37,8 +37,8 @@ class NanoNMRThorlabs:
         if self.Tstage_serial == '40179174':
             'Azimuthal stage parameters'
             self.lower_bound = 0  # angular lower & upper bounds (degrees)
-            self.upper_bound = 100 
-            self.standby_pos = 100  # standby position (degrees)
+            self.upper_bound = 93 
+            self.standby_pos = 93  # standby position (degrees)
 
         elif self.Tstage_serial == '40251814': 
             'Polar stage parameters'
@@ -133,7 +133,7 @@ class NanoNMRThorlabs:
     def check_standby(self):
         '''
         Standby for Thorlabs stages is when:
-        1) AZI = 100 deg position
+        1) AZI = 93 deg position
         2) POLAR = 0 deg position
         
         This function checks whether the polar & azimuthal stages are at their 
