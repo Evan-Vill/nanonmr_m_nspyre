@@ -246,6 +246,7 @@ class K10CR2:
             ism.ISC_StopPolling(self.serial_no)
             ism.ISC_Close(self.serial_no)
             self._is_open = False
+            print(f"K10CR2 stage {int(self.stage_serial_id)} closed.")
 
     def __enter__(self):
         return self
@@ -254,14 +255,17 @@ class K10CR2:
         self.close()
 
 
-# if __name__ == "__main__":
-#     logging.basicConfig(
-#         level=logging.DEBUG,
-#         format="%(asctime)s.%(msecs)03d [%(levelname)8s] %(message)s",
-#         datefmt="%m-%d-%Y %H:%M:%S",
-#     )
-#
-#     with K10CR2("55543994") as stage:
-#         print(f"Needs homing: {stage.needs_homing()}")
-#         print(f"Current position: {stage.current_position} deg")
-#         stage.move_to_position(300.0)
+if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(asctime)s.%(msecs)03d [%(levelname)8s] %(message)s",
+        datefmt="%m-%d-%Y %H:%M:%S",
+    )
+
+    with K10CR2("55543994") as stage:
+        print(f"Needs homing: {stage.needs_homing()}")
+        print(f"Current position: {stage.current_position} deg")
+        stage.move_to_position(10.0)
+        # stage.jog_position(10.0)
+        # stage.home()
+        print(f"Current position: {stage.current_position} deg")
